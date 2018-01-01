@@ -1,0 +1,27 @@
+ENTRY(_start)
+
+SECTIONS
+{
+	. = 1M;
+	
+	.multiboot2 :
+	{
+		/* Ensure this is at the very beginning for sure. */
+		*(.multiboot2)
+	}
+
+	.text :
+	{
+		*(.text)
+	}
+
+	.rodata :
+	{
+		*(.rodata)
+	}
+
+	.bss :
+	{
+		*(.bss)
+	}
+}

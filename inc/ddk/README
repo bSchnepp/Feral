@@ -1,0 +1,10 @@
+Drivers are done in terms of layers: the higher the layer number, the more specific to the device.
+Each device is given a generic interface in which one of a higher level is expected to override for the specific device.
+This way, we can guarantee the device supports some common interface, and if it doesn't, we can make it emulate said interface in software.
+
+(this is to ensure we really really really support Vulkan on everything, even if it's as slow as molasses running partially in software.)
+
+
+Things we'll need to figure out:
+	- Supplemental drivers (ie, supporting OpenCL, OpenGL, etc., without writing a new driver or bloating up the existing one.)
+	- Exclusivity to a device (make sure we reeeeaaallly can't mess with a device with another driver.

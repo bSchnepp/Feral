@@ -1,0 +1,4 @@
+Following tradition, the 'bogus' folder just contains stuff with no real meaning behind it.
+(Things that might actually be useful, ie, the 'linux' folder for source compatibility with Linux, might get moved to an 'emu' directory above.)
+
+Just have defines and whatnot.
