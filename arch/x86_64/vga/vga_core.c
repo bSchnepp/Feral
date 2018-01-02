@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -30,6 +30,13 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 
 #include <arch/x86_64/vga/vga.h>
+#include <arch/x86_64/cpuio.h>
+
+#define VGA_FB_COMMAND_PORT 0x03D4
+#define VGA_FB_DATA_PORT    0x03D5
+
+#define VGA_HIGH_BYTE_COMMAND 14
+#define VGA_LOW_BYTE_COMMAND  15
 
 volatile DWORD* VGA_LOC = (DWORD*)0xB8000;
 static int VGA_CURRENT_LINE = 3;	// so we can leave 3 lines to cpu info
@@ -78,4 +85,14 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string
 		VgaStringEntry(foreground, background, string, length, 0, VGA_CURRENT_LINE);
 		VGA_CURRENT_LINE++;
 	}
+}
+
+VOID VgaMoveCursor(DWORD PosX, DWORD PosY)
+{
+	DWORD FinalPos = PosX + (40 * PosY);	//hack, make sure we update length of vga string when we need to.
+	x86outb(VGA_FB_COMMAND_PORT, VGA_HIGH_BYTE_COMMAND);
+	x86outb(VGA_FB_DATA_PORT, ((FinalPos >> 8) & (0x00FF)));
+
+	x86outb(VGA_FB_COMMAND_PORT, VGA_LOW_BYTE_COMMAND);
+	x86outb(VGA_FB_DATA_PORT, ((FinalPos) & (0x00FF)));
 }

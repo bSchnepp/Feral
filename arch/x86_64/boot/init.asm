@@ -224,6 +224,14 @@ mov [eax], edx
 pop rbp
 ret
 
+; Send a byte to an IO port.
+; We expect the arguments in RSI, RDX.
+global x86outb
+mov ax, si
+mov ah, 0x00
+mov dx, di
+out dx, al
+ret
 
 
 section .rodata

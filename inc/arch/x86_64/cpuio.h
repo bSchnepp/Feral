@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -29,19 +29,56 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 
-/* OK, these need to all be implemented in assembly language. */
-/* This *sure* will be fun to have multiple ASM files. Great. */
+/* These happen to be easier in inline assembly anyway, so why not? */
 
-BYTE x86inb(WORD port);
-VOID x86outb(WORD port, BYTE val);
+static inline BYTE  x86inb(WORD port)
+{
+	UINT8 RetVal;
+	__asm__ volatile ("inb %1, %0" : "=a"(RetVal) : "Nd"(port));
+	return RetVal;
+}
 
-WORD x86inw(WORD port);
-VOID x86outw(WORD port, WORD val);
+static inline WORD  x86inw(WORD port)
+{
+	UINT16 RetVal;
+	__asm__ volatile ("inw %1, %0" : "=a"(RetVal) : "Nd"(port));
+	return RetVal;
+}
 
-DWORD x86inl(WORD port);
-VOID x86outl(WORD port, DWORD val);
+static inline DWORD x86inl(WORD port)
+{
+	UINT32 RetVal;
+	__asm__ volatile ("inl %1, %0" : "=a"(RetVal) : "Nd"(port));
+	return RetVal;
+}
 
-QUAD x86inq(WORD port);
-VOID x86outq(WORD port, QUAD val);
+#if 0
+static inline QUAD  x86inq(WORD port)
+{
+	UINT64 RetVal;
+	__asm__ volatile ("inq %1, %0" : "=a"(RetVal) : "Nd"(port));
+	return RetVal;
+}
+#endif
+
+static inline VOID x86outb(WORD port, BYTE val)
+{
+	__asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
+}
+
+static inline VOID x86outw(WORD port, WORD val)
+{
+	__asm__ volatile ("outw %0, %1" : : "a"(val), "Nd"(port));
+}
+
+static inline VOID x86outl(WORD port, DWORD val)
+{
+	__asm__ volatile ("outl %0, %1" : : "a"(val), "Nd"(port));
+}
+
+static inline VOID x86outq(WORD port, QUAD val)
+{
+	__asm__ volatile ("outq %0, %1" : : "a"(val), "Nd"(port));
+}
 
 #endif

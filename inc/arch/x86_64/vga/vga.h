@@ -61,6 +61,8 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length); 
 
+VOID VgaMoveCursor(DWORD PosX, DWORD PosY);
+
 #if defined(__cplusplus)
 }
 #endif

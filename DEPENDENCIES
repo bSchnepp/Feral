@@ -1,0 +1,11 @@
+GNU xorriso
+BSD Make (installed as 'bmake'.) This is NOT compatible with GNU Make.
+LLVM/Clang
+YASM
+Rust Xargo manager
+Nightly Rust compiler
+
+For testing
+_______________
+QEMU (KVM optional, use qemu-nokvm instead if not on Linux)
+
