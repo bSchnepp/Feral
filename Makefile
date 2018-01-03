@@ -45,8 +45,8 @@ kernel:
 	# ok, im being lazy, since this doesn't really matter and we only have one assembly file.
 	mkdir -p build/$(ARCH)/	
 	$(AS) -felf64 $(ASM_FILES) -o multiboot.o
-	cd proc && make
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES) -o vga.o libprocmgr.a
+	cd proc && make && cd ../mm && make
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES) -o vga.o libmm.a libprocmgr.a
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(KERN_MAIN)
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o
 
@@ -61,7 +61,7 @@ clean:
 	rm -rf build/
 	rm -rf ./*.o
 	rm -rf ./*.a
-	cd proc && make clean
+	cd proc && make clean && cd ../mm && make clean
 	## TODO: clean up object files too.
 
 qemu:	iso

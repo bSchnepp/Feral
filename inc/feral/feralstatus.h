@@ -56,6 +56,8 @@ typedef uint32_t FERALSTATUS;
 #define STATUS_UNRECOGNIZED_MEDIA (0x00000014 | STATUS_SEVERITY_ERROR) 		/* We don't know the media.*/
 #define STATUS_NONEXISTENT_SECTOR (0x00000015 | STATUS_SEVERITY_ERROR)		/* Sector of the requested device doesn't exist. */
 
+#define STATUS_INVALID_MEMORY_LOCATION (0x000000A0 | STATUS_SEVERITY_ERROR)		/* Memory location attempted to access is invalid. */
+
 
 #if defined(__cplusplus)
 }

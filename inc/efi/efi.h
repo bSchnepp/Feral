@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -40,4 +40,3 @@ IN THE SOFTWARE.
 #define EFI_SPECIFICATION_MINOR_REVISION 07
 
 // stdtypes happens to define datatypes pretty much identical to the (U)EFI spec. Perfect!
-

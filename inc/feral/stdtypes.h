@@ -129,6 +129,11 @@ typedef DWORD COLORREF;	/* For when we eventually get to a desktop environment. 
 //Please avoid using this.
 #define PACKED __attribute__((packed))
 
+
+#ifndef NULL
+#define NULL ((void*)0)
+#endif
+
 #if defined(__cplusplus)
 }
 #endif

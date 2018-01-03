@@ -35,11 +35,12 @@ IN THE SOFTWARE.
 #define VGA_FB_COMMAND_PORT 0x03D4
 #define VGA_FB_DATA_PORT    0x03D5
 
-#define VGA_HIGH_BYTE_COMMAND 14
-#define VGA_LOW_BYTE_COMMAND  15
+#define VGA_HIGH_BYTE_COMMAND 0x0E
+#define VGA_LOW_BYTE_COMMAND  0x0F
 
 volatile DWORD* VGA_LOC = (DWORD*)0xB8000;
 static int VGA_CURRENT_LINE = 3;	// so we can leave 3 lines to cpu info
+BOOL TraceVga;
 
 VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy)
 {
@@ -63,7 +64,7 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 	for (DWORD index = 0; index < length; index++)
 	{
 		VgaEntry(foreground, background, string[index], posx+index, posy);
-	}	
+	}
 }
 
 
@@ -71,9 +72,9 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string
 {
 	if (VGA_CURRENT_LINE == 25)	// This is hardcoded for now, we'll change this later.
 	{
-		for (int i = 0; i < 25; i++)
+		for (int i = 0; i < 50; i++)
 		{
-			for (int k = 0; k < 40; k++)
+			for (int k = 0; k < 50; k++)
 			{
 				VGA_LOC[k + (i * 40)] = VGA_LOC[k + ((i + 1) * 40)];	//Copy everything over.
 			}
@@ -89,10 +90,32 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string
 
 VOID VgaMoveCursor(DWORD PosX, DWORD PosY)
 {
-	DWORD FinalPos = PosX + (40 * PosY);	//hack, make sure we update length of vga string when we need to.
+	UINT16 FinalPos = (UINT16)((PosY * 40) + PosX);
 	x86outb(VGA_FB_COMMAND_PORT, VGA_HIGH_BYTE_COMMAND);
 	x86outb(VGA_FB_DATA_PORT, ((FinalPos >> 8) & (0x00FF)));
 
 	x86outb(VGA_FB_COMMAND_PORT, VGA_LOW_BYTE_COMMAND);
 	x86outb(VGA_FB_DATA_PORT, ((FinalPos) & (0x00FF)));
+}
+
+VOID VgaTraceCharacters(BOOL value)
+{
+	TraceVga = value;
+}
+
+VOID VgaSetCursorEnabled(BOOL value)
+{
+	if (value)
+	{
+		x86outb(VGA_FB_COMMAND_PORT, 0x0A);
+		x86outb(VGA_FB_DATA_PORT, (x86inb(VGA_FB_DATA_PORT) & 0xC0) | 0);	//Don't question it, this is just how VGA works.
+
+		x86outb(VGA_FB_COMMAND_PORT, 0x0B);
+		x86outb(VGA_FB_DATA_PORT, (x86inb(0x3E0) & 0xE0) | 15);	//Don't question it, this is just how VGA works.
+	}
+	else
+	{
+		x86outb(VGA_FB_COMMAND_PORT, 0x0A);
+		x86outb(VGA_FB_DATA_PORT, 0x20);
+	}
 }

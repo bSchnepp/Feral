@@ -63,6 +63,11 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string
 
 VOID VgaMoveCursor(DWORD PosX, DWORD PosY);
 
+/* Whenever we set a character, set the position of the cursor to it + 1. */
+VOID VgaTraceCharacters(BOOL value);
+
+VOID VgaSetCursorEnabled(BOOL value);
+
 #if defined(__cplusplus)
 }
 #endif

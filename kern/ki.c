@@ -24,65 +24,61 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_X86_64_CPUIO_H_
-#define _FERAL_X86_64_CPUIO_H_
+
+// Define internal kernel functions here. (hence 'krnlfun'.)
 
 #include <feral/stdtypes.h>
+#include <feral/feralstatus.h>
+#include <feral/kern/ki.h>
 
-/* These happen to be easier in inline assembly anyway, so why not? */
-
-static inline BYTE  x86inb(WORD port)
+// Start, end, size.
+FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINTN Amount)
 {
-	UINT8 RetVal;
-	__asm__ volatile ("inb %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
+	UINTN* Destination = ((UINTN*)Dest);
+	UINTN* Src = ((UINTN*)Source);
+	if ((Source == NULL) || (Dest == NULL))
+	{
+		return STATUS_INVALID_MEMORY_LOCATION;
+	}
+	for (UINTN i = 0; i < Amount; i++)
+	{
+		Destination[i] = Src[i];
+	}
+	return STATUS_SUCCESS;
 }
 
-static inline WORD  x86inw(WORD port)
-{
-	UINT16 RetVal;
-	__asm__ volatile ("inw %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
-
-static inline DWORD x86inl(WORD port)
-{
-	UINT32 RetVal;
-	__asm__ volatile ("inl %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
-
+//TODO: Implement the rest of this stuff.
 #if 0
-static inline QUAD  x86inq(WORD port)
-{
-	UINT64 RetVal;
-	__asm__ volatile ("inq %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
-#endif
+//First, Second, Size, Equal
+FERALSTATUS KiCompareMemory(IN VOID*, IN VOID*, IN UINTN, OUT BOOL);
 
-static inline VOID x86outb(WORD port, BYTE val)
-{
-	__asm__ volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
-}
+//Start, New location, size
+FERALSTATUS KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINTN);
 
-static inline VOID x86outw(WORD port, WORD val)
-{
-	__asm__ volatile ( "outw %0, %1" : : "a"(val), "Nd"(port) );
-}
+//Where, with what, and how many UINTNs to set.
+FERALSTATUS KiSetMemory(INOUT VOID*, IN UINTN, IN UINTN);
 
-static inline VOID x86outl(WORD port, DWORD val)
-{
-	__asm__ volatile ( "outl %0, %1" : : "a"(val), "Nd"(port) );
-}
-
-static inline VOID x86outq(WORD port, QUAD val)
-{
-	__asm__ volatile ( "outq %0, %1" : : "a"(val), "Nd"(port) );
-}
-
+// Same as above, but with bytes.
+FERALSTATUS KiSetMemoryBytes(INOUT VOID*, IN UINT8, IN UINTN);
 #endif
 
 
-#if 0
-#endif
+FERALSTATUS KiGetStringLength(IN STRING String, OUT UINTN Length)
+{
+	if (String == NULL)
+	{
+		return STATUS_INVALID_MEMORY_LOCATION;
+	}
+	UINTN Len = 0;
+	while (String[Len])
+	{
+		Len++;
+	}
+	Length = Len;
+	return STATUS_SUCCESS;
+}
+/*
+//Same as above but with a wide string.
+FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT UINTN);
+*/
+

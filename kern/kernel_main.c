@@ -45,20 +45,16 @@ IN THE SOFTWARE.
 #include <feral/boot/kibootstruct.h>
 #include <feral/kern/ki.h>
 
-#ifndef NULL
-#define NULL ((void*)0)
-#endif
-
 static CHAR* cpu_vendor_msg = "CPU Vendor: ";
 
 
 /* 
 	Things to do in order:
 	Memory management subsystems
-	Simple filesystem (ext2 is enough)
-	Create libc, get C++ stuff working on Waypoint
+	Simple filesystem (ext2 is enough, 8.3 FAT would be OK to also support (possibly even needed).)
+	Create libc, get C++/Rust stuff working on Waypoint. (We would like to make it very easy to create GUI apps for Waypoint, after all.)
 	Port LLVM/Clang
-	Port LLD, YASM, and the rest of the toolchain
+	Port LLD, YASM, and the rest of the toolchain. Possibly port a command-line text editor, or just write one from scratch. No GUI, so FreedomEdit isn't possible.
 	Work on being self-hosting
 	Create a vega10 GPU driver
 	Create a desktop environment
@@ -66,30 +62,29 @@ static CHAR* cpu_vendor_msg = "CPU Vendor: ";
 	Implement Multiboot 2 support
 	New filesystem focused on getting as fast read times as possible on files (eliminate file fragmentation by not allowing fragmentation?, yes, more writes, but avoids non-sequential reads.)
 	Add some random hypervisor capability just for fun or something.
-	Get a working Vulkan driver for the vega10 GPU (Do some magic to port AMDVLK and/or RADV or something, then just modify them?).
+	Get a working Vulkan driver for the vega10 GPU (Do some magic to port AMDVLK (is this possible?) and/or RADV or something, then just modify them as needed?).
 	Port some open source games over, see if we can get it to outperform some other OSes just by running on Feral Waypoint.
 	???
+
+	Since we don't want to support anything older than the vega10 GPU, we should just cut out the unnecessary parts of whatever drivers we do adapt.
+	(Those are too old, and by the time this becomes usable as a serious OS, those would be *long* obsolete anyway.)
  */
 
 VOID KiSystemStartup(VOID)
 {
 	//TODO...
 	//We need to look for every core on the system (We should expect 8, as we're expecting to run on a ZEN 1700X CPU.)
-	//As such, we need to run a function called HalInitializeProcessor (for the remaining 7 cores... for 1950X support eventually, 15 remaining cores...)
+	//As such, we need to run a function called HalInitializeProcessor (for the remaining 7 cores... for playing with a 1950X eventually, 15 remaining cores...)
+	//I don't have a TR4-compatible CPU (or motherboard) yet, so at this point I'm kind of just hoping $1500 USD just falls out of the sky or something.
+	//I do expect the 1950X (as, to my knowledge, it's just a server Zen CPU with two empty areas, and on a different socket.) to act the same as the mainstream models.
+	//As such, having one (just to verify it works as intended with even more threads) is unnecessary anyway. (But it would be nice for compile times...)
 	//And then call KiInitializeKernel as needed. We'll also have to use SMT when we can, and probably just assume the hardware supports SMT.
 
-	//Of course, don't be bad, actually check if a feature is available before using it.
-}
+	//SMP support would also be nice, but I can't really imagine any desktop motherboards supporting a dual-CPU configuration. (though this would be AWESOME!)
+	//At best, only consoles would do it, and seeing as how console systems tend to be low on power consumption, a dual-CPU configuration seems fairly unlikely.
+	//(Especially since games right now don't really utilize that many cores to their full potential... not because the engines are bad, just that no reason to use them.)
 
-//temporary, replace soon.
-DWORD internalStrLen(char* string)
-{
-	int len = 0;
-	while (string[len])
-	{
-		len++;
-	}
-	return len;
+	//Of course, don't be bad, actually check if a feature is available before using it.
 }
 
 // temporary, turn into clean later.
@@ -105,11 +100,12 @@ VOID InternalPrintRegister(DWORD reg, DWORD posx, DWORD posy)
 // ugly hack, refactor sometime later.
 VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 {
-	DWORD len = internalStrLen(cpu_vendor_msg);
-	InternalPrintRegister(part1, len+0, 1);
-	InternalPrintRegister(part2, len+4, 1);
-	InternalPrintRegister(part3, len+8, 1);
-	VgaStringEntry(VGA_WHITE, VGA_BLACK, cpu_vendor_msg, len, 0, 1);
+	UINTN strLen = 0;
+	KiGetStringLength(cpu_vendor_msg, strLen);
+	InternalPrintRegister(part1, strLen+0, 1);
+	InternalPrintRegister(part2, strLen+4, 1);
+	InternalPrintRegister(part3, strLen+8, 1);
+	VgaStringEntry(VGA_WHITE, VGA_BLACK, cpu_vendor_msg, strLen, 0, 1);
 }
 
 //On my laptop, we start in 40x25 for some reason. We REALLY want 80x25 because 40 looks too wide.
@@ -121,14 +117,15 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 VOID kern_init(void)
 {
 	char* string = "Feral kernel booting...";
-	VgaStringEntry(VGA_WHITE, VGA_BLACK, string, internalStrLen(string), 0, 0);
-	//String entry up above isn't how I'd ideally handle this sort of stuff.
+	KiPrintLine(string);
 
 	// We'd like to have some information about the CPU before we boot further.
 	// Some things like saying CPU vendor, family, brand name, etc.
 	// Eventually, supporting a boot-time flag (and somehow emulating some useful CPU features
 	// in-software if not available on the real thing???) would be great.
 	// We'll probably use the crypto coprocessor (SHA, etc.) to our advantage with A:/Devices/Hash or something.
+
+	// We would like to claim we're a (very) distant relative to the Virtual Memory System family, but incorporate *NIX-isms when they make more sense.
 
 	/* This will represent the 4 core registers we need for CPU-specific stuff. */
 	DWORD part1 = 0;
@@ -156,7 +153,7 @@ VOID kern_init(void)
 		InternalPrintRegister(part4, 12 + (16 * i), 2);
 	}
 
-
+	VgaSetCursorEnabled(1);
 	/* Below are just tests to make sure the extremely primitive VGA driver works as intended. */
 	char* Stringy = "Hello, world!!!111";
 	for (int k = 0; k < 33; k++)
@@ -167,6 +164,7 @@ VOID kern_init(void)
 	{
 		KiPrintLine(" ");
 	}
+	VgaTraceCharacters(1);
 	KiPrintLine("HELLO!");
 	KiPrintLine("AAA");
 	KiPrintLine("BBB");
@@ -174,6 +172,5 @@ VOID kern_init(void)
 	KiPrintLine("HELLO!");
 	KiPrintLine("AAA");
 	KiPrintLine("BBB");
-	VgaMoveCursor(25, 25);
-	
+	VgaMoveCursor(4, 6);	//This doesn't seem to quite work as expected. Is my assembler code wrong?
 }
