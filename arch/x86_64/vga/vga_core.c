@@ -91,11 +91,11 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string
 VOID VgaMoveCursor(DWORD PosX, DWORD PosY)
 {
 	UINT16 FinalPos = (UINT16)((PosY * 40) + PosX);
-	x86outb(VGA_FB_COMMAND_PORT, VGA_HIGH_BYTE_COMMAND);
-	x86outb(VGA_FB_DATA_PORT, ((FinalPos >> 8) & (0x00FF)));
-
 	x86outb(VGA_FB_COMMAND_PORT, VGA_LOW_BYTE_COMMAND);
-	x86outb(VGA_FB_DATA_PORT, ((FinalPos) & (0x00FF)));
+	x86outb(VGA_FB_DATA_PORT, (UINT8)((FinalPos) & (0x00FF)));
+
+	x86outb(VGA_FB_COMMAND_PORT, VGA_HIGH_BYTE_COMMAND);
+	x86outb(VGA_FB_DATA_PORT, (UINT8)((FinalPos >> 8) & (0x00FF)));
 }
 
 VOID VgaTraceCharacters(BOOL value)

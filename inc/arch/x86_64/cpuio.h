@@ -63,22 +63,22 @@ static inline QUAD  x86inq(WORD port)
 
 static inline VOID x86outb(WORD port, BYTE val)
 {
-	__asm__ volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
+	__asm__ volatile ("outb %1, %0" :: "dN"(port), "a"(val));
 }
 
 static inline VOID x86outw(WORD port, WORD val)
 {
-	__asm__ volatile ( "outw %0, %1" : : "a"(val), "Nd"(port) );
+	__asm__ volatile ("outw %%ax, %%dx" :: "a"(val), "d"(port));
 }
 
 static inline VOID x86outl(WORD port, DWORD val)
 {
-	__asm__ volatile ( "outl %0, %1" : : "a"(val), "Nd"(port) );
+	__asm__ volatile ("outl %%eax, %%dx" :: "a"(val), "d"(port));
 }
 
 static inline VOID x86outq(WORD port, QUAD val)
 {
-	__asm__ volatile ( "outq %0, %1" : : "a"(val), "Nd"(port) );
+	__asm__ volatile ("outq %%rax, %%dx" :: "a"(val), "d"(port));
 }
 
 #endif

@@ -1,5 +1,8 @@
 [write some more sensible documentation and implement later]
 
+
+LIGHTNINGSHELL:
+
 Shell (commands are case-insensitive):
 Samples:
 ```
@@ -8,6 +11,22 @@ Samples:
 Define this as a hidden definition (only visible to the same user), and only available to that current shell. 
 
 ```
-	Brian | A:/Users/Brian/Games/!> run MGSVTPP.pro  
+	Brian | A:/Users/Brian/Games/!> run SUPERAWESOMEGAME.pro  
 ```
 Run a program, in this example, a video game. '.pro' is for 'program'.
+
+It's convention (but NOT required) to have commands in full uppercase, ie:
+
+DIR
+FIND
+REBOOT
+DEFINE
+
+etc.
+
+Next to the command, you can have a / and then some modifiers within two angle brackets, such as
+
+DEFINE/<flags="conceal" status="shell-only">
+
+
+Shell variables are expressed with $. It is convention to have them uppercase, but NOT necessary.

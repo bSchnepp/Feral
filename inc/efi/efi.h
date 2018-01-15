@@ -31,6 +31,7 @@ IN THE SOFTWARE.
 
 
 #include <feral/stdtypes.h>
+#include <bogus/fluff.h>
 
 // Technically, we're lying, in that we really only support the bare minimum needed to
 // load the kernel then leave the UEFI environment as fast as we can, but whatever.
@@ -38,5 +39,19 @@ IN THE SOFTWARE.
 // As Linux is with POSIX, "yes, this is a joke".
 #define EFI_SPECIFICATION_MAJOR_REVISION 2
 #define EFI_SPECIFICATION_MINOR_REVISION 07
+
+typedef struct
+{
+
+}EFI_HANDLE;
+
+typedef struct
+{
+
+}EFI_SYSTEM_TABLE;
+
+EFIAPI EfiMain(EFI_HANDLE Handle, EFI_SYSTEM_TABLE SystemTable);
+
+/* TODO: All the functions that need to be done... */
 
 // stdtypes happens to define datatypes pretty much identical to the (U)EFI spec. Perfect!
