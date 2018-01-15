@@ -1,0 +1,13 @@
+[write some more sensible documentation and implement later]
+
+Shell (commands are case-insensitive):
+Samples:
+```
+	Brian | A:/Users/Brian/Documents and Settings/!> DEFINE/<flags="conceal" status="shell-only"> $HOME .  
+```
+Define this as a hidden definition (only visible to the same user), and only available to that current shell. 
+
+```
+	Brian | A:/Users/Brian/Games/!> run MGSVTPP.pro  
+```
+Run a program, in this example, a video game. '.pro' is for 'program'.

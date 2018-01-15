@@ -1,0 +1,4 @@
+Any potential RISC-V port will __only__ work on hardware which implements at least RV64I.
+32-bit hardware (regardless of ISA) is *not* going to be supported by the Feral kernel. (or, at least, I won't write the code for it.)
+
+32-bit memory restrictions (with the *maybe* exception of special variants of Aarch32) are just too small for (big, graphics-heavy) games in general.

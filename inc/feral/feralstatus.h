@@ -24,10 +24,11 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-// Let's see how far self-taught C can go!
-
 #ifndef _FERAL_FERALSTATUS_H_
 #define _FERAL_FERALSTATUS_H_
+
+#include <stdint.h>
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -36,10 +37,10 @@ extern "C" {
 /* These are the only bits that actually matter, though I would suggest leaving bit 3 alone in case we do use it. */
 /* Since the kernel is already 'unstable' enough as it is, not going to bother with leaving things reserved for forward compatibility. We'll break everything until 1.0 anyway. */
 
-#define STATUS_SEVERITY_SUCCESS 0x00000000		/* Nothing wrong, do whatever. */
-#define STATUS_SEVERITY_INFORMATIONAL 0x40000000	/* Kernel felt the need to do some kind of warning. */
-#define STATUS_SEVERITY_WARNING	0x80000000		/* You really should catch this, something's not right. */
-#define STATUS_SEVERITY_ERROR 0xC0000000		/* Stopped by the kernel, something VERY bad has happened. (Disk doesn't exist, I/O error, etc.) */
+#define STATUS_SEVERITY_SUCCESS 		0x00000000		/* Nothing wrong, do whatever. */
+#define STATUS_SEVERITY_INFORMATIONAL 		0x40000000		/* Kernel felt the need to do some kind of warning. */
+#define STATUS_SEVERITY_WARNING			0x80000000		/* You really should catch this, something's not right. */
+#define STATUS_SEVERITY_ERROR	 		0xC0000000		/* Stopped by the kernel, something VERY bad has happened. (Disk doesn't exist, I/O error, etc.) */
 
 typedef uint32_t FERALSTATUS;
 
@@ -49,6 +50,7 @@ typedef uint32_t FERALSTATUS;
 /* Informational:  */
 
 /* Warnings: */
+#define STATUS_UNAUTHORIZED_MEMORY_LOCATION 	(0x000000A0 | STATUS_SEVERITY_WARNING)
 
 /* Errors: */
 #define STATUS_WRONG_VOLUME       (0x00000012 | STATUS_SEVERITY_ERROR)		/* A volume we're not expecting is there. */

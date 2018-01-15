@@ -8,9 +8,75 @@
 pub extern fn KiInitializeProcMgr(){}
 
 /* We should also fill out the rest of these as no_mangle so that we can call them from C. */
-pub extern fn KeCreateProcess(){}	//TODO
-pub extern fn KeDestroyProcess(){}	//TODO
-pub extern fn KeModifyProcess(){}	//TODO
+pub extern "C" fn KeCreateProcess(){}	//TODO
+pub extern "C" fn KeDestroyProcess(){}	//TODO
+pub extern "C" fn KeModifyProcess(){}	//TODO
+
+
+///	Definition for a FeralProcess.
+///	We define Process ID, Group ID, and Owner ID as UINT64.
+///	The C part of the kernel defines these accordingly: Each ID is unique.
+struct FeralProcess
+{
+	ProcId:		u64,
+	GroupId:	u64,
+	OwnerId:	u64,
+}
+
+struct FeralProcessConnector
+{
+	ProcIdSrc:	u64,
+	ProcIdDest:	u64,
+}
+
+struct FeralMessageUINT64
+{
+	Connector:	FeralProcessConnector,
+	Number:		u64,
+}
+
+struct FeralMessageINT64
+{
+	Connector:	FeralProcessConnector,
+	Number:		i64,
+}
+
+struct FeralMessageUINT32
+{
+	Connector:	FeralProcessConnector,
+	Number:		u32,
+}
+
+struct FeralMessageINT32
+{
+	Connector:	FeralProcessConnector,
+	Number:		i32,
+}
+
+struct FeralMessageUINT16
+{
+	Connector:	FeralProcessConnector,
+	Number:		u16,
+}
+
+struct FeralMessageINT16
+{
+	Connector:	FeralProcessConnector,
+	Number:		i16,
+}
+
+struct FeralMessageUINT8
+{
+	Connector:	FeralProcessConnector,
+	Number:		u8,
+}
+
+struct FeralMessageINT8
+{
+	Connector:	FeralProcessConnector,
+	Number:		i8,
+}
+
 
 #[lang = "eh_personality"] 
 extern fn eh_personality(){}

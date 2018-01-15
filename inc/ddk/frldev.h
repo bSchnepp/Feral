@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining a copy of the software and accompanying documentation covered by 
+obtaining  a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,65 +24,32 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_X86_64_CPUIO_H_
-#define _FERAL_X86_64_CPUIO_H_
+#ifndef _FERAL_FRL_DEV_
+#define _FERAL_FRL_DEV_
 
+#include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
+#include <bogus/fluff.h>	//Maybe give this a more 'appropriate' name later or something. Thos definitions don't have a real purpose other than readability.
 
-/* These happen to be easier in inline assembly anyway, so why not? */
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
-static inline BYTE x86inb(WORD port)
+/*
+	TODO: Definitions for the CSHORT Type below.
+ */
+
+typedef struct
 {
-	UINT8 RetVal;
-	__asm__ volatile ("inb %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
+	CSHORT	Type;
 
-static inline WORD x86inw(WORD port)
-{
-	UINT16 RetVal;
-	__asm__ volatile ("inw %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
+	// TODO	
+}DEVICE_OBJECT;
 
-static inline DWORD x86inl(WORD port)
-{
-	UINT32 RetVal;
-	__asm__ volatile ("inl %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
 
-#if 0
-static inline QUAD  x86inq(WORD port)
-{
-	UINT64 RetVal;
-	__asm__ volatile ("inq %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
+
+#if defined(__cplusplus)
 }
 #endif
 
-static inline VOID x86outb(WORD port, BYTE val)
-{
-	__asm__ volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
-}
-
-static inline VOID x86outw(WORD port, WORD val)
-{
-	__asm__ volatile ( "outw %0, %1" : : "a"(val), "Nd"(port) );
-}
-
-static inline VOID x86outl(WORD port, DWORD val)
-{
-	__asm__ volatile ( "outl %0, %1" : : "a"(val), "Nd"(port) );
-}
-
-static inline VOID x86outq(WORD port, QUAD val)
-{
-	__asm__ volatile ( "outq %0, %1" : : "a"(val), "Nd"(port) );
-}
-
-#endif
-
-
-#if 0
 #endif

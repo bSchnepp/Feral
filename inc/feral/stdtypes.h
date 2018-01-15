@@ -126,7 +126,12 @@ typedef DWORD COLORREF;	/* For when we eventually get to a desktop environment. 
 			/* We may need to bump this up to a higher bit count for better color stuff. */
 
 
-//Please avoid using this.
+
+typedef int16_t	CSHORT;
+
+typedef UINT64 TIMEUNIT;
+
+//Please avoid using this. (some archs don't like packed structs)
 #define PACKED __attribute__((packed))
 
 

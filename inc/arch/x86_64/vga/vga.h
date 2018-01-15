@@ -31,8 +31,6 @@ IN THE SOFTWARE.
 extern "C" {
 #endif
 
-
-
 typedef enum VgaColorValue
 {
 	VGA_BLACK = 0,

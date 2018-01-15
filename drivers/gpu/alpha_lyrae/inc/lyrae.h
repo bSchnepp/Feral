@@ -26,12 +26,18 @@ IN THE SOFTWARE.
 
 // Nothing really here, just so I don't forget to do the most important part of creating Feral.
 
+// (if I had lots of money, we'd probably fork this code for the upcoming Navi architecture too, and get whatever the top-of-the-line model is.)
+
+#ifndef _FERAL_TEAM_RED_ALPHA_LYRAE_GPU_DRIVER_LYRAE_H_
+#define _FERAL_TEAM_RED_ALPHA_LYRAE_GPU_DRIVER_LYRAE_H_
+
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 #include <ddk/frlddk.h>
 
 FERALSTATUS DriverEntry(HANDLE DeviceHandle, HANDLE RegistryHandle);
+FERALSTATUS DriverExit(FERAL_DRIVER Driver);
 
 // TODO: Read documentation and write a driver.
 
-
+#endif

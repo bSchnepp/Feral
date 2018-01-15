@@ -22,7 +22,7 @@ internalDoSomething();
 ```
 
 Functions intended to be stable should use:
-	
+
 	- Minimal characters prefixed to define what it does ('Hal', 'Vd', 'Ke', 'Vga', etc.
 
 Kernel-related functions should ALWAYS
@@ -31,15 +31,13 @@ Kernel-related functions should ALWAYS
 	- Return a FERALSTATUS type.
 	- Be named accordingly, ("Ki" for internal kernel-related functions (stuff only drivers/kernel internals should talk with), "Ke" for general purpose functionality (typically syscalls).)
 
-
-
 ## What APIs will be supported for graphics?
-	I'm intending to either port Mesa/amdgpu/whatever or AMDVLK, or just writing a brand new Vulkan driver from scratch.
+I'm intending to either port Mesa/amdgpu/whatever or AMDVLK, or just writing a brand new Vulkan driver from scratch.
 	OpenGL isn't intended to be supported (unless I do port the entirety of Mesa or something).
 	The desktop will be composited in Vulkan (so a Vulkan driver **is necessary**).
 
 ## How will frame creation be done on a desktop (when it gets there)
-	When this eventually happens, I'd like to have GUIs created something like as follows:
+When this eventually happens, I'd like to have GUIs created something like as follows:
 
 ```
 // (this is pseudocode of course). 'Wp' is for 'Waypoint'.
@@ -105,3 +103,21 @@ UiDestroyFrame(Frame);
 return 0;
 
 ```
+
+
+
+## Overall goals:
+ - Lightweight kernel, insist that processes do most of the work.
+   (NOT in the same way as a microkernel, more of the kernel avoiding management where unnecessary)
+
+ - Monolithic kernel design, supporting modules, but prefering to avoid them.
+   (This is to avoid driver conflicts... simply refer to a kernel version and maybe provide a loadable module just in case.)
+
+ - Support a new, high performance filesystem intended for modern storage hardware.
+ 
+ - Support Vulkan out of the box. Use Vulkan as "the native graphics language" of the OS.
+   (ie, everything graphics-wise, one way or another, goes through Vulkan rendering. OpenGL is implemented on top of Vulkan, if at all.)
+
+ - Integrate a high-performance virtual machine into the kernel, intended for use for "write once, run anywere" kinds of games that can take the performance hit. (Will never be close to native, but we can try...)
+ 
+ - __MAXIMIZE PERFORMANCE!!!!!__

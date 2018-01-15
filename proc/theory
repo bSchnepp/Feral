@@ -1,0 +1,12 @@
+Split everything into an allocation for runtime within a second.
+
+(Unless a program requests otherwise, this is what should happen)
+If there are two processes on the system, then both should run every other half second.
+If there are three, then every third of a second, they alternate in a loop.
+If there are four, then every fourth of a second, they alternate.
+
+When a program requests that it gets 70% of CPU time, then we should allow it to do so, then repeat the above loop for whatever is left.
+We however should never allow a single process to go to 100% CPU utilization without Administrator privledges. (No game should ever really need 100% of all the available threads...)
+
+This is done so we can allow an application to control when it should and should not be given too much or too little CPU time as it wants to.
+(ie, why slow down the system running a polling loop if the game is just requesting a file and waiting for the disk controller to give it?)

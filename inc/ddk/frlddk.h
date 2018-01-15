@@ -26,6 +26,9 @@ IN THE SOFTWARE.
 
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
+
+#include <ddk/frldev.h>
+
 #include <bogus/fluff.h>	//Maybe give this a more 'appropriate' name later or something. Thos definitions don't have a real purpose other than readability.
 
 #if defined(__cplusplus)
@@ -85,7 +88,7 @@ typedef struct
 	FERALSTATUS (*DriverInit)(HANDLE, HANDLE);
 	FERALSTATUS (*DriverExit)(UINT64);
 	
-	FERALSTATUS (*DriverInvoke)(VOID*)	/* Communication to the driver is to be done here. TODO. */
+	FERALSTATUS (*DriverInvoke)(VOID*);	/* Communication to the driver is to be done here. TODO. */
 
 	UINT32 	DriverFlags;
 	UINT8	DriverPriority;	//Two nibbles, one for waiting priority, one for running proprity (allow a higher priveledge driver to directly control a device, instead of being fallback?)

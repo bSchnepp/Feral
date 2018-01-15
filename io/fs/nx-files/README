@@ -1,0 +1,34 @@
+(aka 'FeralFS')
+
+Things to support:
+	- File versioning (intended for use so games can roll back patches if need be, configurable by the user (or programs) as to how many versions to store.
+	- Hierarchal filesystem
+	- Unicode filenames
+
+
+Permissions are done in 4 nibbles: [SYSTEM] [OWNER] [GROUP] [WORLD]
+SYSTEM can only have less than RW_D (Read Write Execute Delete) if this drive is being accessed over the network. (Executables would have the 'X' marked.)
+Owner should typically also have RW_D as well.
+
+(This is defined as a UINT16, we only need 4 bits each.)
+
+
+ACLs???
+
+(Obviously take ideas from reiser4, files-11, ext4, ext2, btrfs, new technology file system, high performance file system, xfs, zfs in that order roughly.)
+
+Hard requirements:
+	- Maximum filesize of 2^48 or greater (ideally 2^64)		(Games are going to need this.)
+	- Maximum filelength of 4096 Unicode characters
+	- Nanosecond time resolution					(Just to be easy.)
+	- Dancing B* trees						(Better performance for small files.)
+	- Support for hard and soft links				(Easier to port in some cases)
+	- File versioning (sort of like "invisible copy-on-write").	(So games can roll back patches easy, no re-download necessary.)
+
+	- Blocks and sub-blocks and sub-sub-blocks and all. We write *blocks*. (sub-blocks are intended to be used by games for storing "small" things.)
+
+Things that would be nice (but I dont have any idea how to implement):
+	- File caching: maximize read times for programs as much as possible (Games need to load models/textures/world maps/whatever AS FAST AS POSSIBLE.)
+		- Likewise, we should expect that most writes to the filesystem should be small (save files, simple data, overall game metadata, etc.)
+
+We do NOT expect to boot from it (the kernel should be on an EXT2 or DOSFS filesystem... this is NOT meant for mission-critical stuff (ie, the OS kernel))

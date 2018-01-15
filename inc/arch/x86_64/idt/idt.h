@@ -24,65 +24,38 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_X86_64_CPUIO_H_
-#define _FERAL_X86_64_CPUIO_H_
 
 #include <feral/stdtypes.h>
+#include <arch/x86_64/idt/idt.h>
 
-/* These happen to be easier in inline assembly anyway, so why not? */
-
-static inline BYTE x86inb(WORD port)
+#ifdef (__x86_64__)
+typedef struct
 {
-	UINT8 RetVal;
-	__asm__ volatile ("inb %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
-
-static inline WORD x86inw(WORD port)
+	UINT16 Offset;	 // First 16 bits of the address (0 - 15)
+	UINT16 Selector;
+	UINT8 IST;
+	UINT8 TypeAttr;
+	UINT16 Offset2;	 // Second 16 bits		(16 - 31)
+	UINT32 Offset3;	 // Last 4 bytes of the address	(32 - 61)
+	UINT32 RESERVED; // These are reserved.
+}IDTDescriptor PACKED;
+#elif defined(__i386__)
+typedef struct
 {
-	UINT16 RetVal;
-	__asm__ volatile ("inw %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
-
-static inline DWORD x86inl(WORD port)
-{
-	UINT32 RetVal;
-	__asm__ volatile ("inl %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
-
-#if 0
-static inline QUAD  x86inq(WORD port)
-{
-	UINT64 RetVal;
-	__asm__ volatile ("inq %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
+	UINT16 Offset;	// First 16 bits of the address
+	UINT16 Selector;
+	UINT8 IST;
+	UINT8 TypeAttr;
+	UINT16 Offset2;	// Second 16 bits
+}IDTDescriptor PACKED;
 #endif
 
-static inline VOID x86outb(WORD port, BYTE val)
+typedef struct
 {
-	__asm__ volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
-}
+	UINT16 Limit;
+	UINTN  Location;
+}IDTLocation PACKED;
 
-static inline VOID x86outw(WORD port, WORD val)
-{
-	__asm__ volatile ( "outw %0, %1" : : "a"(val), "Nd"(port) );
-}
+VOID x86LoadIDT(IN IDTLocation location);
 
-static inline VOID x86outl(WORD port, DWORD val)
-{
-	__asm__ volatile ( "outl %0, %1" : : "a"(val), "Nd"(port) );
-}
-
-static inline VOID x86outq(WORD port, QUAD val)
-{
-	__asm__ volatile ( "outq %0, %1" : : "a"(val), "Nd"(port) );
-}
-
-#endif
-
-
-#if 0
-#endif
+VOID x86StoreIDT(OUT IDTLocation location);

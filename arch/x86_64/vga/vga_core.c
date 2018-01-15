@@ -45,7 +45,7 @@ BOOL TraceVga;
 VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy)
 {
 	uint16_t color = ((background << 4) | foreground);
-	VGA_LOC[posx + (posy * 40)] = ((uint16_t)letter | (uint16_t) color << 8);
+	VGA_LOC[posx + (posy * 40)] = ((UINT16)letter | (UINT16) color << 8);
 }
 
 VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
@@ -54,7 +54,7 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 	{
 		for (DWORD w = 0; w < width; w++)
 		{
-			VGA_LOC[w + (h * 40)] = (uint32_t)color;
+			VGA_LOC[w + (h * 40)] = (UINT32)color;
 		}
 	}
 }
@@ -72,9 +72,9 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string
 {
 	if (VGA_CURRENT_LINE == 25)	// This is hardcoded for now, we'll change this later.
 	{
-		for (int i = 0; i < 50; i++)
+		for (UINT32 i = 0; i < 50; i++)
 		{
-			for (int k = 0; k < 50; k++)
+			for (UINT32 k = 0; k < 50; k++)
 			{
 				VGA_LOC[k + (i * 40)] = VGA_LOC[k + ((i + 1) * 40)];	//Copy everything over.
 			}
@@ -108,10 +108,10 @@ VOID VgaSetCursorEnabled(BOOL value)
 	if (value)
 	{
 		x86outb(VGA_FB_COMMAND_PORT, 0x0A);
-		x86outb(VGA_FB_DATA_PORT, (x86inb(VGA_FB_DATA_PORT) & 0xC0) | 0);	//Don't question it, this is just how VGA works.
+		x86outb(VGA_FB_DATA_PORT, (x86inb(VGA_FB_DATA_PORT) & 0xC0) | 0x00);	//Don't question it, this is just how VGA works.
 
 		x86outb(VGA_FB_COMMAND_PORT, 0x0B);
-		x86outb(VGA_FB_DATA_PORT, (x86inb(0x3E0) & 0xE0) | 15);	//Don't question it, this is just how VGA works.
+		x86outb(VGA_FB_DATA_PORT, (x86inb(0x3E0) & 0xE0) | 0x0F);	//Don't question it, this is just how VGA works.
 	}
 	else
 	{

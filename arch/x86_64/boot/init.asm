@@ -237,8 +237,9 @@ ret
 section .rodata
 gdt_64:
 	dq 0	; The zero entry, which is needed for the GDT.
+
 .code: equ $ - gdt_64
-	dq (1<<43) | (1<<44) | (1<<47) | (1<<53) ; The GDT needs to be done like this.
+	dq (1 << 40) | (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53) ; The GDT needs to be done like this.
 
 .gdtpointer:
 	dw $ - gdt_64 - 1
