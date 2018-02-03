@@ -34,6 +34,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <bogus/fluff.h>
 
 //TODO: do this properly for other archs.
 #if 0

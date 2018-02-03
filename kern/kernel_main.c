@@ -101,7 +101,7 @@ VOID InternalPrintRegister(DWORD reg, DWORD posx, DWORD posy)
 VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 {
 	UINTN strLen = 0;
-	KiGetStringLength(cpu_vendor_msg, strLen);
+	KiGetStringLength(cpu_vendor_msg, &strLen);
 	InternalPrintRegister(part1, strLen+0, 1);
 	InternalPrintRegister(part2, strLen+4, 1);
 	InternalPrintRegister(part3, strLen+8, 1);
@@ -116,6 +116,7 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 // Either way, getting to a vega10 driver is more or less inevitable, it just needs to happen if we want serious support for video games (the primary purpose of Waypoint!!!)
 VOID kern_init(void)
 {
+	UINT8 misc = VgaPrepareEnvironment();
 	char* string = "Feral kernel booting...";
 	KiPrintLine(string);
 
@@ -124,8 +125,6 @@ VOID kern_init(void)
 	// Eventually, supporting a boot-time flag (and somehow emulating some useful CPU features
 	// in-software if not available on the real thing???) would be great.
 	// We'll probably use the crypto coprocessor (SHA, etc.) to our advantage with A:/Devices/Hash or something.
-
-	// We would like to claim we're a (very) distant relative to the Virtual Memory System family, but incorporate *NIX-isms when they make more sense.
 
 	/* This will represent the 4 core registers we need for CPU-specific stuff. */
 	DWORD part1 = 0;
@@ -156,7 +155,7 @@ VOID kern_init(void)
 	VgaSetCursorEnabled(1);
 	/* Below are just tests to make sure the extremely primitive VGA driver works as intended. */
 	char* Stringy = "Hello, world!!!111";
-	for (int k = 0; k < 33; k++)
+	for (int k = 0; k < 3; k++)
 	{
 		KiPrintLine(Stringy);
 	}
@@ -173,4 +172,6 @@ VOID kern_init(void)
 	KiPrintLine("AAA");
 	KiPrintLine("BBB");
 	VgaMoveCursor(4, 6);	//This doesn't seem to quite work as expected. Is my assembler code wrong?
+
+	InternalPrintRegister((misc | 0x60606060), 5, 10);
 }

@@ -47,11 +47,32 @@ FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINTN Amount)
 	return STATUS_SUCCESS;
 }
 
+//First, Second, Size, Equal
+#if 0
+FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINTN Amount, OUT BOOL* Val)
+{
+	Val = 0;
+	if ((Source == NULL) || (Dest == NULL))
+	{
+		return STATUS_INVALID_MEMORY_LOCATION;
+	}
+	for (UINTN i = 0; i < Amount; i++)
+	{
+		UINTN Src = (UINTN) &(Source + i);
+		UINTN Dst = (UINTN) &(Dest + i);
+		if (!(Src == Dst))
+		{
+			Val = 0;
+			break;
+		}
+		Val = 1;
+	}
+	return STATUS_SUCCESS;
+}
+#endif
+
 //TODO: Implement the rest of this stuff.
 #if 0
-//First, Second, Size, Equal
-FERALSTATUS KiCompareMemory(IN VOID*, IN VOID*, IN UINTN, OUT BOOL);
-
 //Start, New location, size
 FERALSTATUS KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINTN);
 
@@ -63,7 +84,7 @@ FERALSTATUS KiSetMemoryBytes(INOUT VOID*, IN UINT8, IN UINTN);
 #endif
 
 
-FERALSTATUS KiGetStringLength(IN STRING String, OUT UINTN Length)
+FERALSTATUS KiGetStringLength(IN STRING String, OUT UINTN* Length)
 {
 	if (String == NULL)
 	{
@@ -74,11 +95,11 @@ FERALSTATUS KiGetStringLength(IN STRING String, OUT UINTN Length)
 	{
 		Len++;
 	}
-	Length = Len;
+	*Length = Len;
 	return STATUS_SUCCESS;
 }
 /*
 //Same as above but with a wide string.
-FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT UINTN);
+FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT* UINTN);
 */
 

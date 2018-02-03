@@ -1,0 +1,25 @@
+Problems aiming to solve:
+	- There's lots of different environments out there in which people develop for...
+		- (And we can't reasonably expect to support them _all_, maybe imitate 1 at best imperfectly, but that's stretching it.)
+
+	Solution: Borrow ideas from exokernels.
+		- Kernel-land driver defines the 'execution environment', handles translating the binary (PE/COFF, Linux-ELF, illumos-ELF, MachO, etc.) to native (FERAL-ELF) in memory.
+			- Also injects a wrapper into the process in order to translate foreign system calls to native calls (ie, 'NtCreateProcess --> KeCreateProcess, fork--> KeForkProcess, etc.)
+			- While not quite the same as something like a true exokernel, (libos doesn't directly control hardware), 
+                          it's the same general idea but grafted onto a big monolithic kernel instead.
+
+		- Kernel may itself not be able to do something (handle a foreign type of network socket, for example).
+			- This is handled by the library os (our wrapper for imitating Linux, ReactOS kernel, etc.)
+	- Ourselves only intend to support a standard "Waypoint personality" (see README.md with the scribbles in there).
+		- Someone else may port WINE or portions of the Linux kernel as a driver/library to handle those environments, and maintain their own fork of FERAL.
+			- (We'd rather keep copyleft out of kernel because it imposes a restriction on it's use (other than "be nice (reproduce license), but whatever you do, don't sue me"))
+
+	- Handle some sort of subsystem (maybe just LLVM???) to JIT/AOT compile foreign architectures to native architectures
+		- Theoretically allow for running POWER9 GNU\Linux binaries on x86-64 FERAL, if someone else writes the drivers for it.
+			- Allow for game emulators to take advantage of this for improved performance (inject the emulator as a library OS and proceed to treat the game as an ordinary Feral game.)
+				- (yes, less performance because it's still emulation, but better integration with the rest of the OS... no way to avoid emulating other than outright porting the game.)
+					- (We could try doing AOT recompilation of the target game in question, but the difference is insignifigant and probably causes more problems w/ endianness.)
+
+				- New problem: button prompts (game may ask for 'triangle', but we only have 'A' and 'B's and all)
+					- Solution: Not our problem (let the emulator deal with it, maybe some configuration file for button mapping, or some way to replace graphics.)
+

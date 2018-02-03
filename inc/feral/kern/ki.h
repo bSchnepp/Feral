@@ -36,7 +36,7 @@ IN THE SOFTWARE.
 FERALSTATUS KiCopyMemory(IN VOID*, IN VOID*, IN UINTN);
 
 //First, Second, Size, Equal
-FERALSTATUS KiCompareMemory(IN VOID*, IN VOID*, IN UINTN, OUT BOOL);
+FERALSTATUS KiCompareMemory(IN VOID*, IN VOID*, IN UINTN, OUT BOOL*);
 
 //Start, New location, size
 FERALSTATUS KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINTN);
@@ -49,10 +49,10 @@ FERALSTATUS KiSetMemoryBytes(INOUT VOID*, IN UINT8, IN UINTN);
 
 //TODO: Replace bad temp strlen with this
 // String, length of it.
-FERALSTATUS KiGetStringLength(IN STRING, OUT UINTN);
+FERALSTATUS KiGetStringLength(IN STRING, OUT UINTN*);
 
 //Same as above but with a wide string.
-FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT UINTN);
+FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT UINTN*);
 
 
 

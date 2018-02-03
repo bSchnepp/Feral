@@ -27,11 +27,16 @@ IN THE SOFTWARE.
 
 // This directory implements a subset of UEFI 2.7.
 // This is required for building the UEFI PE version of the kernel, for compatibility with
-// systems in which installing a Multiboot 2 bootloader is not desirable.
+// systems in which installing a Multiboot 2 bootloader is not desirable. (ie, a RISC-V system which supports UEFI or Aarch64)
 
+#ifndef _FERAL_LIBRE_EFI_H_
+#define _FERAL_LIBRE_EFI_H_
 
 #include <feral/stdtypes.h>
 #include <bogus/fluff.h>
+
+#define FALSE 0
+#define TRUE 1
 
 // Technically, we're lying, in that we really only support the bare minimum needed to
 // load the kernel then leave the UEFI environment as fast as we can, but whatever.
@@ -40,18 +45,191 @@ IN THE SOFTWARE.
 #define EFI_SPECIFICATION_MAJOR_REVISION 2
 #define EFI_SPECIFICATION_MINOR_REVISION 07
 
+// For reading files and understanding what they're for.
+#define EFI_IMAGE_SUBSYSTEM_EFI_APPLICATION 10
+#define EFI_IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER 11
+#define EFI_IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER 12
+
+/* And the Arch 16-bit val in the PE header */
+#define EFI_IMAGE_MACHINE_IA32 0x014c
+#define EFI_IMAGE_MACHINE_IA64 0x0200
+#define EFI_IMAGE_MACHINE_EBC 0x0EBC
+#define EFI_IMAGE_MACHINE_x64 0x8664
+#define EFI_IMAGE_MACHINE_ARMTHUMB_MIXED 0x01C2
+#define EFI_IMAGE_MACHINE_AARCH64 0xAA64
+#define EFI_IMAGE_MACHINE_RISCV32 0x5032
+#define EFI_IMAGE_MACHINE_RISCV64 0x5064
+#define EFI_IMAGE_MACHINE_RISCV128 0x5128
+
+
+#include <efi/efiapi.h>
+#define EFI_SYSTEM_TABLE_REVISION      (EFI_SPECIFICATION_MAJOR_REVISION<<16) | (EFI_SPECIFICATION_MINOR_REVISION)
+
+
+#define MDE_CPU_X64	// In case any code relies upon that...
+
+#ifndef __WCHAR_TYPE__
+# define __WCHAR_TYPE__ short
+#endif
+
+#define HAVE_USE_MS_ABI 1
+
+#define EFI_ERROR_MASK (0x8000000000000000)
+#define EFI_OEM_MASK   (0xC000000000000000)
+#define EFIERR(x) (EFI_ERROR_MASK | x)
+#define EFIERR_OEM(x) (EFI_OEM_MASK | x)
+
+#define BAD_POINTER (0xFBFBFBFBFBFBFBFBULL)
+#define MAX_ADDRESS (0xFFFFFFFFFFFFFFFFULL)
+#define MAX_2_BITS  (0xC000000000000000ULL)
+#define MAX_BIT     (0x8000000000000000ULL)
+
+#define MAX_INTN    ((INTN) 0x7FFFFFFFFFFFFFFFULL)
+#define MAX_UINTN   ((UINTN)0xFFFFFFFFFFFFFFFFULL)
+
+
+
+
+// On x86-64, the stack needs to be aligned with 16.
+#if defined(__x86_64__)
+#define CPU_STACK_ALIGNMENT (0x10)
+#endif
+
+// 4K pages...
+#define DEFAULT_PAGE_ALLOCATION_GRANULARITY (0x1000)
+#define RUNTIME_PAGE_ALLOCATION_GRANULARITY (0x1000)
+
+
+typedef WCHAR CHAR16;
+
+typedef VOID* EFI_HANDLE;
+typedef VOID* EFI_EVENT;
+typedef UINTN EFI_TPL;
+typedef UINT64 EFI_LBA;
+
+typedef UINT64 EFI_PHYSICAL_ADDRESS;
+typedef UINT64 EFI_VIRTUAL_ADDRESS;
+
 typedef struct
 {
+	UINT16 Year;
+	UINT8 Month;
+	UINT8 Day;
+	UINT8 Hour;
+	UINT8 Minute;
+	UINT8 Second;
+	UINT8 Pad1;
+	UINT32 Nanosecond;
+	INT16 TimeZone;
+	UINT8 Daylight;
+	UINT8 Pad2;
+}EFI_TIME;
 
-}EFI_HANDLE;
+typedef struct 
+{
+	UINT32 Data1;
+	UINT16 Data2;
+	UINT16 Data3;
+	UINT8 Data4;
+	UINT8 Data5;
+	UINT8 Data6;
+	UINT8 Data7;
+	UINT8 Data8;
+	UINT8 Data9;
+	UINT8 Data11;
+	UINT8 Data12;
+}EFI_GUID;
+
+
+typedef enum
+{
+	EfiReservedMemoryType,
+	EfiLoaderCode,
+	EfiLoaderData,
+	EfiBootServicesCode,
+	EfiBootServicesData,
+	EfiRuntimeServicesCode,
+	EfiRuntimeServicesData,
+	EfiConventionalMemory,
+	EfiUnusableMemory,
+	EfiACPIReclaimMemory,
+	EfiACPIMemoryNVS,
+	EfiMemoryMappedIO,
+	EfiMemoryMappedIOPortSpace,
+	EfiPalCode,
+	EfiMaxMemoryType
+}EFI_MEMORY_TYPE;
 
 typedef struct
 {
+	UINT16 ScanCode;
+	CHAR16 UnicodeChar;
+}EFI_INPUT_KEY;
 
-}EFI_SYSTEM_TABLE;
+/* Important GUIDs... */
+#define EFI_EVENT_GROUP_EXIT_BOOT_SERVICES	\
+{						\
+	0x27ABF055,				\
+	0xB1B8,					\
+	0x4C26,					\
+	0x80,					\
+	0x48,					\
+	0x74,					\
+	0x8F,					\
+	0x37,					\
+	0xBA,					\
+	0xA2,					\
+	0xDF,					\
+}
+
+#define EFI_EVENT_GROUP_VIRTUAL_ADDRESS_CHANGE	\
+{						\
+	0x13FA7698,				\
+	0xC831,					\
+	0x49C7,					\
+	0x87,					\
+	0xEA,					\
+	0x8F,					\
+	0x43,					\
+	0xFC,					\
+	0xC2,					\
+	0x51,					\
+	0x96,					\
+}
+
+#define EFI_EVENT_GROUP_MEMORY_MAP_CHANGE	\
+{						\
+	0x78BEE926,				\
+	0x692F,					\
+	0x48FD,					\
+	0x9E,					\
+	0xDB,					\
+	0x01,					\
+	0x42,					\
+	0x2E,					\
+	0xF0,					\
+	0xD7,					\
+	0xAB,					\
+}
+
+#define EFI_EVENT_GROUP_READY_TO_BOOT		\
+{						\
+	0x7CE88FB3,				\
+	0x4BD7,					\
+	0x4679,					\
+	0x87,					\
+	0xA8,					\
+	0xA8,					\
+	0xD8,					\
+	0xDE,					\
+	0xE5,					\
+	0x0D,					\
+	0x2B,					\
+}
 
 EFIAPI EfiMain(EFI_HANDLE Handle, EFI_SYSTEM_TABLE SystemTable);
 
-/* TODO: All the functions that need to be done... */
-
 // stdtypes happens to define datatypes pretty much identical to the (U)EFI spec. Perfect!
+
+
+#endif

@@ -32,6 +32,11 @@ IN THE SOFTWARE.
 #include <feral/kern/frlos.h>
 
 
+#include <feral/string.h>
+
+#include <bogus/fluff.h>
+
+
 #if defined(__x86_64__)
 #include <arch/x86_64/vga/vga.h>
 
@@ -50,3 +55,24 @@ FERALSTATUS KiPrintLine(STRING string)
 #endif
 // TODO: implement for other platforms.
 
+
+
+
+
+
+FERALSTATUS FrlCreateString(IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content)
+{
+	StringLocation->Length = Length;
+	StringLocation->Content = Content;
+	return STATUS_SUCCESS;
+}
+
+FERALSTATUS FrlDeleteString(IN FERALSTRING* String)
+{
+	//TODO
+}
+
+FERALSTATUS FrlCloneString(IN FERALSTRING* Source, IN FERALSTRING* OutLocation)
+{
+	//TODO
+}

@@ -8,9 +8,18 @@
 pub extern fn KiInitializeProcMgr(){}
 
 /* We should also fill out the rest of these as no_mangle so that we can call them from C. */
+#[no_mangle]
 pub extern "C" fn KeCreateProcess(){}	//TODO
+#[no_mangle]
 pub extern "C" fn KeDestroyProcess(){}	//TODO
+#[no_mangle]
 pub extern "C" fn KeModifyProcess(){}	//TODO
+
+
+/*
+	We'll have to provide some way to support *both* user threads and kernel threads.
+	Some programs may achieve better performance with either.
+ */
 
 
 ///	Definition for a FeralProcess.
@@ -77,6 +86,15 @@ struct FeralMessageINT8
 	Number:		i8,
 }
 
+
+pub enum ProcError
+{
+	NotFound,
+	NotExecutable,
+	InvalidFormat,
+	InvalidArguments,
+	CorruptedExecutable,
+}
 
 #[lang = "eh_personality"] 
 extern fn eh_personality(){}

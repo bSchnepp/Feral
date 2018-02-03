@@ -31,21 +31,21 @@ IN THE SOFTWARE.
 
 /* These happen to be easier in inline assembly anyway, so why not? */
 
-static inline BYTE x86inb(WORD port)
+static BYTE x86inb(WORD port)
 {
 	UINT8 RetVal;
 	__asm__ volatile ("inb %1, %0" : "=a"(RetVal) : "Nd"(port));
 	return RetVal;
 }
 
-static inline WORD x86inw(WORD port)
+static WORD x86inw(WORD port)
 {
 	UINT16 RetVal;
 	__asm__ volatile ("inw %1, %0" : "=a"(RetVal) : "Nd"(port));
 	return RetVal;
 }
 
-static inline DWORD x86inl(WORD port)
+static DWORD x86inl(WORD port)
 {
 	UINT32 RetVal;
 	__asm__ volatile ("inl %1, %0" : "=a"(RetVal) : "Nd"(port));
@@ -61,24 +61,24 @@ static inline QUAD  x86inq(WORD port)
 }
 #endif
 
-static inline VOID x86outb(WORD port, BYTE val)
+static VOID x86outb(WORD port, BYTE val)
 {
-	__asm__ volatile ("outb %1, %0" :: "dN"(port), "a"(val));
+	__asm__ volatile ("out %0, %1" :: "a"(val), "d"(port));
 }
 
-static inline VOID x86outw(WORD port, WORD val)
+static VOID x86outw(WORD port, WORD val)
 {
-	__asm__ volatile ("outw %%ax, %%dx" :: "a"(val), "d"(port));
+	__asm__ volatile ("out %0, %1" :: "a"(val), "d"(port));
 }
 
-static inline VOID x86outl(WORD port, DWORD val)
+static VOID x86outl(WORD port, DWORD val)
 {
-	__asm__ volatile ("outl %%eax, %%dx" :: "a"(val), "d"(port));
+	__asm__ volatile ("out %0, %1" :: "a"(val), "d"(port));
 }
 
-static inline VOID x86outq(WORD port, QUAD val)
+static VOID x86outq(WORD port, QUAD val)
 {
-	__asm__ volatile ("outq %%rax, %%dx" :: "a"(val), "d"(port));
+	__asm__ volatile ("out %0, %1" :: "a"(val), "d"(port));
 }
 
 #endif

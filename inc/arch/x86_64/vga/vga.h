@@ -31,15 +31,6 @@ IN THE SOFTWARE.
 extern "C" {
 #endif
 
-/* VGA video resolutions... */
-#define VGA_VIDEO_MODE_80_25	0x0F00
-
-/* I'm missing something here...  */
-#define VGA_VIDEO_MODE_80_43	0x0F02
-#define VGA_VIDEO_MODE_80_23	0x0F03
-
-//blah blah blah vga is lots of fun
-
 
 typedef enum VgaColorValue
 {
@@ -75,6 +66,8 @@ VOID VgaMoveCursor(DWORD PosX, DWORD PosY);
 VOID VgaTraceCharacters(BOOL value);
 
 VOID VgaSetCursorEnabled(BOOL value);
+
+UINT8 VgaPrepareEnvironment(VOID);
 
 #if defined(__cplusplus)
 }
