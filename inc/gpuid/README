@@ -1,9 +1,5 @@
-# Abstracted Thing Interface
+# gpuid
 
-## What is ATI?
-ATI is an abstraction layer for peripheral connected to the system.
-It is conceptually similar to Linux's DRM, but more general 
-(more than just graphics devices).
-
-It's primary purpose is for managing graphics devices, but also be useful
-for displays, management of RGB lighting on peripherals, etc.
+## What is gpuid?
+GPUID is a module for the Feral kernel to identify graphics chips.
+(Though this can later be expanded to all PCI-connected devices)
