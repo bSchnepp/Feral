@@ -24,29 +24,58 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_BOGUS_FLUFF_H_
-#define _FERAL_BOGUS_FLUFF_H_
+#ifndef _WAYPOINT_H_
+#define _WAYPOINT_H_
 
-/* This file just defines some fluff to make function headers look a little nicer and explain what exactly is going on. */
+#include <feral/stdtypes.h>
+#include <bogus/fluff.h>
 
-/* This is an input to a function. */
-#define IN
+#define FERAL_MAKE_VERSION(a, b) ((a << 16) | (b))
 
-/* This is an output of a function. */
-#define OUT
+typedef enum
+{
+	// 'generic' is there just to describe the program running.
+	FERAL_GENERIC_TERMINAL_APPLICATION,
+	FERAL_GENERIC_GUI_APPLICATION,
+	FERAL_GENERIC_GAME_APPLICATION,
+	FERAL_GENERIC_MEDIA_APPLICATION,
+	FERAL_GENERIC_WEB_BROWSER_APPLICATION,
 
-/* This is expected as input, but will also be modified by the function. */
-#define INOUT
+	// These have special meanings.
+	FERAL_EMULATED_GAME_APPLICATION,	// This game is running on a libos emulated processor.
+	FERAL_NONCRITICAL_GAME_APPLICATION,	// This game is not heavy on resources, and thus is OK to de-prioritize.
+}ApplicationType;
 
-/* This is optional input. Not required. */
-#define INOPT
+// TODO: do this better (this should be part of libc / c runtime)
+// (in order: argc, argv, Parent task, owning user, and current directory)
+UINT32 WayMain(IN UINT32 ArgumentCount, IN WSTRING* Arguments, IN HTASK Parent, IN HUSER User, IN HANDLE Directory);
+
+typedef UINT64 WPSTATUS;
+
+typedef struct SystemProperties
+{
+	// TODO...
+}SystemProperties;
+
+typedef struct ApplicationProperties
+{
+	SystemProperties SystemProps;
+	ApplicationType AppPurpose;
+	UINT32 AppVersion;
+	UINT64 RESERVED;
+}ApplicationProperties;
+
+BOOL CreateApplicationFrame(WSTRING Title, HUSER User);
 
 
-/* Yes, 'API' is not a typo, even though we're dealing with ABIs. This is because this is how the API would be called. Slightly confusing, yes, but I'm just following an established thing. */
 
-#define FERALAPI __attribute__((cdecl))	//Team Red's ABI. (the one basically everyone else uses).
 
-#define  MSAPI __attribute__(__declspec)
-#define EFIAPI __attribute__(__declspec)
 
+
+
+
+#endif
+
+
+#if 0
 #endif

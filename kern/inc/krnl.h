@@ -24,29 +24,32 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_BOGUS_FLUFF_H_
-#define _FERAL_BOGUS_FLUFF_H_
 
-/* This file just defines some fluff to make function headers look a little nicer and explain what exactly is going on. */
+#ifndef _FERAL_PRIVATE_HEADER_KRNL_H_
+#define _FERAL_PRIVATE_HEADER_KRNL_H_
 
-/* This is an input to a function. */
-#define IN
+// What the processor we're controlling is doing. (ie, no tasks attached to them)
+typedef enum PROCESSOR_STATE
+{
+	ProcessorStateActive,
+	ProcessorStateIdle,
+}PROCESSOR_STATE;
 
-/* This is an output of a function. */
-#define OUT
+// What each running program is doing.
+typedef enum TASK_STATE
+{
+	TaskStateActive,
+	TaskStateInactive,
+	TaskStateActiveInSwap,
+	TaskStateInactiveInSwap,
+	TaskStateTransitionToSwap,
+	TaskStateTransitionActivity,
+}TASK_STATE;
 
-/* This is expected as input, but will also be modified by the function. */
-#define INOUT
-
-/* This is optional input. Not required. */
-#define INOPT
 
 
-/* Yes, 'API' is not a typo, even though we're dealing with ABIs. This is because this is how the API would be called. Slightly confusing, yes, but I'm just following an established thing. */
 
-#define FERALAPI __attribute__((cdecl))	//Team Red's ABI. (the one basically everyone else uses).
 
-#define  MSAPI __attribute__(__declspec)
-#define EFIAPI __attribute__(__declspec)
 
 #endif
+

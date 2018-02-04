@@ -140,6 +140,8 @@ typedef UINT64 TIMEUNIT;
 #define NULL ((void*)0)
 #endif
 
+typedef void* POINTER;
+
 #if defined(__cplusplus)
 }
 #endif

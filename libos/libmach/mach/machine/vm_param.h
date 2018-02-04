@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining a copy of the software and accompanying documentation covered by 
+obtaining  a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,29 +24,35 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_BOGUS_FLUFF_H_
-#define _FERAL_BOGUS_FLUFF_H_
+#ifndef _FERAL_MACH_VM_TYPES_EMU_H_
+#define _FERAL_MACH_VM_TYPES_EMU_H_
 
-/* This file just defines some fluff to make function headers look a little nicer and explain what exactly is going on. */
+#include <feral/stdtypes.h>
+#include <stdint.h>
 
-/* This is an input to a function. */
-#define IN
+#include "mach/machine/vm_types.h"
 
-/* This is an output of a function. */
-#define OUT
+// Basically everything today is this, so we don't need to abstract this away.
+#define BYTE_SIZE 8
 
-/* This is expected as input, but will also be modified by the function. */
-#define INOUT
+// any i386 port should use PAE.
+#define I386_PGBYTES (4 * 1024)		/* Number of bytes per page (4KiB)*/
+#define I386_PGSHIFT 12			/* Bitshift needed for pages */
 
-/* This is optional input. Not required. */
-#define INOPT
+// For large pages
+#define I386_LPGBYTES (1024 * 1024 * 2)		/* Number of bytes per page (2MiB) */
+#define I386_LPGSHIFT 21			/* Bitshift needed for pages */
 
+/* These are the same */
+#if defined(__i386__) || defined(__x86_64__)
+#define	PAGE_SIZE	I386_PGBYTES
+#define	PAGE_SHIFT	I386_PGSHIFT
+#else
+#error libmach not supported -- either remove libmach from libos folder (no Mach support), or port it properly (Requires effort).
+#endif
 
-/* Yes, 'API' is not a typo, even though we're dealing with ABIs. This is because this is how the API would be called. Slightly confusing, yes, but I'm just following an established thing. */
-
-#define FERALAPI __attribute__((cdecl))	//Team Red's ABI. (the one basically everyone else uses).
-
-#define  MSAPI __attribute__(__declspec)
-#define EFIAPI __attribute__(__declspec)
+ 
 
 #endif
+
+

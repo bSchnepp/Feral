@@ -24,29 +24,26 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_BOGUS_FLUFF_H_
-#define _FERAL_BOGUS_FLUFF_H_
 
-/* This file just defines some fluff to make function headers look a little nicer and explain what exactly is going on. */
+// Ok, so maybe I lied in saying "No way I'll end up with POSIX compatibility!"
+// We might need this to make it much easier to port something like clang/gcc.
+#ifndef _UNISTD_H_
+#define _UNISTD_H_
 
-/* This is an input to a function. */
-#define IN
+#define R_OK 0x04
+#define W_OK 0x02
+#define X_OK 0x01
+#define F_OK 0x00
 
-/* This is an output of a function. */
-#define OUT
+#define STDIN_FILENO 0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
 
-/* This is expected as input, but will also be modified by the function. */
-#define INOUT
-
-/* This is optional input. Not required. */
-#define INOPT
+typedef int ssize_t;
 
 
-/* Yes, 'API' is not a typo, even though we're dealing with ABIs. This is because this is how the API would be called. Slightly confusing, yes, but I'm just following an established thing. */
 
-#define FERALAPI __attribute__((cdecl))	//Team Red's ABI. (the one basically everyone else uses).
-
-#define  MSAPI __attribute__(__declspec)
-#define EFIAPI __attribute__(__declspec)
 
 #endif
+
+

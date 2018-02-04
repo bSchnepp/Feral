@@ -24,29 +24,48 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_BOGUS_FLUFF_H_
-#define _FERAL_BOGUS_FLUFF_H_
+#ifndef _FERAL_PROCESSOR_H_
+#define _FERAL_PROCESSOR_H_
 
-/* This file just defines some fluff to make function headers look a little nicer and explain what exactly is going on. */
+#include <feral/stdtypes.h>
+#include <feral/feralstatus.h>
+#include <bogus/fluff.h>
 
-/* This is an input to a function. */
-#define IN
+typedef struct PROCESSOR_INFO
+{
+	UINTN ProcessorNumber;
+	
+}PROCESSOR_INFO;
 
-/* This is an output of a function. */
-#define OUT
+typedef struct SYSTEM_INFO
+{
+	UINT16 Arch;
+	UINT64 ModelId;
+	UINT8 Family;
+	UINT8 ExtendedFamily;
 
-/* This is expected as input, but will also be modified by the function. */
-#define INOUT
+	UINT8 Model;
+	UINT8 ExtendedModel;
 
-/* This is optional input. Not required. */
-#define INOPT
+	UINT64 PageSize;	/* How big is each virtual memory page  (in bytes) */
+	UINTN ProcessorCount;
+	PROCESSOR_INFO* Processors;
+}SYSTEM_INFO;
+
+#define PROCESSOR_ARCH_IA32		0x014C
+#define PROCESSOR_ARCH_X86_64		0x8664
+#define PROCESSOR_ARCH_IA64		0x0200
+#define PROCESSOR_ARCH_AARCH64		0xAA64
+#define PROCESSOR_ARCH_AARCH32		0xAA32
+#define PROCESSOR_ARCH_RISCV32		0x5032
+#define PROCESSOR_ARCH_RISCV64		0x5064
+#define PROCESSOR_ARCH_RISCV128		0x5128
 
 
-/* Yes, 'API' is not a typo, even though we're dealing with ABIs. This is because this is how the API would be called. Slightly confusing, yes, but I'm just following an established thing. */
 
-#define FERALAPI __attribute__((cdecl))	//Team Red's ABI. (the one basically everyone else uses).
 
-#define  MSAPI __attribute__(__declspec)
-#define EFIAPI __attribute__(__declspec)
+#endif
 
+
+#if 0
 #endif

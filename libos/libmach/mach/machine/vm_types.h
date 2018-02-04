@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining a copy of the software and accompanying documentation covered by 
+obtaining  a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,29 +24,43 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_BOGUS_FLUFF_H_
-#define _FERAL_BOGUS_FLUFF_H_
+#ifndef _FERAL_MACH_VM_TYPES_EMU_H_
+#define _FERAL_MACH_VM_TYPES_EMU_H_
 
-/* This file just defines some fluff to make function headers look a little nicer and explain what exactly is going on. */
+#include <feral/stdtypes.h>
+#include <stdint.h>
 
-/* This is an input to a function. */
-#define IN
+typedef UINTN natural_t;
+typedef INTN integer_t;
 
-/* This is an output of a function. */
-#define OUT
+// A certain Mach derivative uses uintptr_t over natural_t (for a lot of reasons).
+// Someone may graft a emulation layer for this successful commerical desktop OS on top of our libmach, and thus we need to support that too.
+// (We need to be able to support _everything_, provided someone else feels like writing a process handler and a corresponding driver.)
+#if defined(__LP64__)
+typedef uintptr_t	vm_offset_t;
+typedef uintptr_t	vm_size_t;
+#else
+typedef	natural_t	vm_offset_t;
+typedef natural_t	vm_size_t;
+#endif
 
-/* This is expected as input, but will also be modified by the function. */
-#define INOUT
+typedef INT32 int32;
+typedef UINT32 uint32;
 
-/* This is optional input. Not required. */
-#define INOPT
+typedef INT8 signed8_t;
+typedef INT16 signed16_t;
+typedef INT32 signed32_t;
+typedef INT64 signed64_t;
 
+typedef UINT8  unsigned8_t;
+typedef UINT16 unsigned16_t;
+typedef UINT32 unsigned32_t;
+typedef UINT64 unsigned64_t;
 
-/* Yes, 'API' is not a typo, even though we're dealing with ABIs. This is because this is how the API would be called. Slightly confusing, yes, but I'm just following an established thing. */
-
-#define FERALAPI __attribute__((cdecl))	//Team Red's ABI. (the one basically everyone else uses).
-
-#define  MSAPI __attribute__(__declspec)
-#define EFIAPI __attribute__(__declspec)
+typedef FLOAT float32_t;
+typedef DOUBLE float64_t;
+ 
 
 #endif
+
+

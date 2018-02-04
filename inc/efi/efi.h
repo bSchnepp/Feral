@@ -72,7 +72,8 @@ IN THE SOFTWARE.
 # define __WCHAR_TYPE__ short
 #endif
 
-#define HAVE_USE_MS_ABI 1
+// #define HAVE_USE_MS_ABI 1	// Let's just not support old versions of GCC 
+// since having some weird objcopy hack is bad
 
 #define EFI_ERROR_MASK (0x8000000000000000)
 #define EFI_OEM_MASK   (0xC000000000000000)
