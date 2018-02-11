@@ -68,7 +68,7 @@ typedef struct machine_slot* machine_slot_t;	// Define the machine_info pointer 
 typedef struct machine_slot  machine_slot_data_t;	// Some Mach stuff wants this.
 
 #define CPU_TYPE_ANY ((cpu_type_t)-1)
-#define CPU_TYPE_VAX ((cpU-type_t)1)
+#define CPU_TYPE_VAX ((cpu-type_t)1)
 #define CPU_TYPE_ROMP (cpu_type_t)2)
 #define CPU_TYPE_MC68020 ((cpu_type_t)3)
 #define CPU_TYPE_NS32032 ((cpu_type_t)4)

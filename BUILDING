@@ -5,6 +5,7 @@ sudo pacman -S rustup
 sudo pacman -S lld
 sudo pacman -S xorriso
 sudo pacman -S mtools
+sudo pacman -S bmake
 
 # (optional)
 sudo pacman -S qemu-arch-extra
