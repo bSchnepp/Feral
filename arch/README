@@ -1,0 +1,35 @@
+Support priorities:
+	- x86-64
+	- RISC-V (specifically BOOM-based machines, though since I can't get my hands on real hardware, QEMU for now.)
+
+	- Aarch64
+
+	- x86 legacy (i686)
+
+	- Aarch32
+	- POWER9
+
+
+x86-64 is the main platform I'm intending to support, though as RISC-V is going to grow in importance very soon, it would be *very* nice to also
+be able to support mobile console-hybrid-things based upon RISC-V.
+
+Lots of mobile devices are based upon Aarch[32/64], and lots more are based upon the 32-bit variant, but I don't know how to play with those architectures at all yet,
+(even less than RISC-V!!!), and seeing how 32-bit just doesn't cut it for games (need *****waaaaayyyy****** more memory than 4GB allows), Aarch32 gets relegated to the "for fun, port to this!" area.
+(32-bit is fine for like web browsing and watching videos and whatever, but we're focused *exclusively on creating features oriented towards games.*)
+
+
+I also don't have a POWER9 PowerPC (or whatever the branding is now) to play with (and the easiest one to get is __$4000__), so that.
+(I suppose I could just get an old 7th generation video game console and rip it apart and port it to that _somehow_.)
+
+
+
+Problems with foreign architectures:
+	- Firmware is weird. There's no BIOS to communicate with to just get a list of peripherals and stuff.
+		- (Don't have a nice standard way of booting across basically everything based on the same CPU.)
+		- UEFI solves this, but UEFI is not *everywhere* on these devices yet.
+
+	- RISC-V systems are *very* expensive ($1000 for a 4-core machine!!!!!!!... I can get a 4-core x86-64 for $50...)
+		- Cheap risc-v systems are *too* cheap (1 core at like 500Mhz, and no PCIe support, aka garbage for what I need it for)
+
+	- Aarch64 systems are even *more* expensive (Need to buy an aarch64 *server* system just to get something to test on, everything else is closed off.)
+		- RPis are best solution here, but this is "weird aarch64" (CPU is technically subordinate to proprietary GPU that I've got no clue how to program, & with no documentation)

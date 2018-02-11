@@ -24,93 +24,65 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+
+#ifndef _FERAL_DDK_H_
+#define _FERAL_DDK_H_
+
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
 
 #include <ddk/frldev.h>
-
-#include <bogus/fluff.h>	//Maybe give this a more 'appropriate' name later or something. Thos definitions don't have a real purpose other than readability.
+#include <bogus/fluff.h>
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-
-// TODO: these are STUBS.
-// We need to replace this with a WORKING interface.
-// Essentially, this is just pseudocode that compiles with clang.
-
-/* Definitions for _layers_. ... what was I doing with this again??? */
-#define FERAL_DRIVER_SPECIFIC_DEVICE	0x0F	/* Driver is SPECIFICALLY for this device. */
-#define FERAL_DRIVER_SPECIFIC_FAMILY	0x0E	/* Driver is for this family of devices. */
-#define FERAL_DRIVER_SPECIFIC_VENDOR	0x0D	/* Driver is likely to work for the device. */
-#define FERAL_DRIVER_GENERIC_INTERFACE	0x0C	/* This implements generic functions(in software?) */
-#define FERAL_DRIVER_GENERIC_COMMS	0x0B	/* Driver is an abstraction layer. (ie, vulkan) */
-#define FERAL_DRIVER_EMULATED_DEVICE	0x0A	/* Imitate a device in software. */
-#define FERAL_DRIVER_EMULATED_INTERFACE	0x09	/* Generic interface for software emulated devices. */
-
-#define FERAL_DRIVER_FALLBACK		0x08	/* Fall back to this driver if we need to access something (ie video), but have no driver (ie, force VGA graphics) */
-/* 0x00 - 0x07 are reserved for now. */
-
-/* Flags. We get a whole UINT32 for this purpose. */
-#define FERAL_DRIVER_FLAGS_FILESYSTEM	0x80000000
-#define FERAL_DRIVER_FLAGS_GRAPHICS	0x40000000
-#define FERAL_DRIVER_FLAGS_DISPLAY	0x20000000
-#define FERAL_DRIVER_FLAGS_NETWORK	0x10000000
-
-
-
-#define FERAL_DEVICE_CHARACTERISTICS_READ_ONLY	0x00
-#define FERAL_DEVICE_CHARACTERISTICS_WRITE_ONLY	0x01
-#define FERAL_DEVICE_CHARACTERISTICS_READ_WRITE	0x02
-#define FERAL_DEVICE_CHARACTERISTICS_REMOVABLE	0x04
-#define FERAL_DEVICE_CHARACTERISTICS_URSP_OPEN	0x08	/* Allow userspace to see this device located under A:/Devices/DEVICE_NAME, and access like a *NIX special file. */
-
-// These structs will eventually moved out and extern'ed so that we can change the driver structure while being backwards compatible.
-
-typedef struct LICENSE_IDENTIFIER
+typedef struct DriverObject
 {
-	STRING LicenseName;	// Please use 'Boost', 'GPLv2', 'GPLv3', 'MPLv2', 'MIT', 'BSD 4-clause', 'BSD 3-clause', "Proprietary", etc., and use 'DUAL:[<LICENSE1>,<LICENSE2>]' for dual-licenses.
-				// This way, it'd be very easy for free software purists to cleanly identify exactly what is proprietary/closed-source and what isn't.
-}LICENSE_IDENTIFIER;
-
-typedef struct
-{
-	HANDLE	DeviceObject;
-	STRING 	DeviceName;		/* Name of the device, for example "SUPERC00L 2900K" */
-	UINT8	DeviceParameters;	/* How should we open this? (expose with the *NIXism of a file, but inside a kernel-only namespace. TODO on how to do this.) */
-	UINT64	DeviceUserspaceDriver;	/* Figure out how to handle drivers in userspace here... (LONGWORD of process ID?) */
-}DRIVER_OBJECT;
-
-typedef struct
-{
-	/* The first argument is for the handle to the driver object in kernel-land, the second is for the handle to the device. */
-	FERALSTATUS (*DriverInit)(HANDLE, HANDLE);
-	FERALSTATUS (*DriverExit)(UINT64);
-	
-	FERALSTATUS (*DriverInvoke)(VOID*);	/* Communication to the driver is to be done here. TODO. */
-
-	UINT32 	DriverFlags;
-	UINT8	DriverPriority;	//Two nibbles, one for waiting priority, one for running proprity (allow a higher priveledge driver to directly control a device, instead of being fallback?)
-
-}FERAL_DRIVER_FUNCTIONS;
+	HANDLE Object;
+	STRING DeviceName;
+}DriverObject;
 
 typedef struct FERAL_DRIVER
 {
-	LICENSE_IDENTIFIER License;
-	DRIVER_OBJECT Object;
-	FERAL_DRIVER_FUNCTIONS Functions;
+	// Please use 'Boost', 'GPLv2', 'GPLv3', 'MPLv2', 'MIT', 'BSD 4-clause', 'BSD 3-clause', 
+	// "Proprietary", etc., and use 'DUAL:[<LICENSE1>,<LICENSE2>]' for dual-licenses.
+	STRING LicenceName;
+
+	// Reference to the object we're controlling in question.
+	DriverObject Object;
+
+
+	/* These functions _must_ be present in all drivers. They can never be null (or we unload/ignore the driver) */
+
+	// The main function as the kernel calls.
+	// The kernel passes a DriverObject to it, sees if the driver likes it, along with the associated configuration
+	// in the record mangement system if applicable.
+	FERALSTATUS (*DriverInit)(IN DriverObject* Object, IN WSTRING RmsPath);
+
+	// Destructor for the driver.
+	// This is called whenever the kernel intends to either restart or outright shut down the driver.
+	// (For example, a driver fault, and the kernel tries to save the system by shutting down the driver.)
+	// Keep in mind this is in kernel-space, and you should free whatever you allocated.
+	// You should also check for failure and all, ensure you do _not_ corrupt memory.
+	FERALSTATUS (*DriverExit)(VOID);
+
+	// Arbitrary input (can be anything!!!)
+	FERALSTATUS (*DriverDispatch)(UINT64 NumArgs, VOID** Stuff);
+
+	
+	UINT64 DriverFlags;	// TODO: Define.
+
+	UINT8 DriverPriority;	// Value between 0 and 255 in which the device gets priority.
+				// (This is so we can have a VGA driver as '1' to support all graphics devices, 
+				// a VESA driver as '2', and a specific driver for a specific GPU of a specific make as '255'.
+	
 }FERAL_DRIVER;
-
-/* The kernel will put all devices, even ones it doesn't recognize, into %FERAL_INTERNAL_NAMESPACE_ROOT%/System/Devices. These can be accessed through a HANDLE. */
-FERALSTATUS KeCreateDriver(IN STRING License, IN HANDLE DeviceHandle, IN STRING DeviceName, OUT FERAL_DRIVER Driver);
-FERALSTATUS KeModifyDriverParameters(INOUT FERAL_DRIVER Driver, IN UINT8 Parameters);
-FERALSTATUS KeGetDriverParameters(IN FERAL_DRIVER Driver, OUT UINT8 Parameters);
-
-/* TODO */
-FERALSTATUS KeSetDriverFunctions(INOUT FERAL_DRIVER Driver);
 
 
 #if defined(__cplusplus)
 }
+#endif
+
 #endif

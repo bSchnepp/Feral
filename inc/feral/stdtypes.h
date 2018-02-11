@@ -132,6 +132,16 @@ typedef int16_t	CSHORT;
 
 typedef UINT64 TIMEUNIT;
 
+typedef struct
+{
+	UINT16 Year;
+	UINT8 Month;
+	UINT8 Day;
+	UINT8 Hour;
+	UINT8 Minute;
+	UINT8 Second;
+}FERALTIME;
+
 //Please avoid using this. (some archs don't like packed structs)
 #define PACKED __attribute__((packed))
 

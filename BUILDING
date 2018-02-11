@@ -1,0 +1,18 @@
+# (ADAPT TO YOUR DISTRO)
+
+sudo pacman -S yasm
+sudo pacman -S rustup
+sudo pacman -S lld
+sudo pacman -S xorriso
+sudo pacman -S mtools
+
+# (optional)
+sudo pacman -S qemu-arch-extra
+
+# (You should do this)
+rustup default nightly
+
+./setup.sh
+make qemu
+make clean
+

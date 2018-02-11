@@ -24,33 +24,71 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_DRIVERS_GPU_GLOBAL_VIDMODE_H_
-#define _FERAL_DRIVERS_GPU_GLOBAL_VIDMODE_H_
-
-#include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
+#include <feral/stdtypes.h>
 
-// ALL OF THESE ARE TODO!!!
+#include <bogus/fluff.h>
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+typedef enum 
+{
+	FORMAT_TYPE_ELF,
+	FORMAT_TYPE_COFF,
+	FORMAT_TYPE_PE,
+	FORMAT_TYPE_MACHO,
+	FORMAT_TYPE_LE,	// osFree executable format
+	FORMAT_TYPE_NE,
+	FORMAT_TYPE_MZ,	// Legacy *-DOS executable
+	FORMAT_TYPE_AOUT,
+	FORMAT_TYPE_COM,
+	FORMAT_TYPE_OTHER,
+}ExecutableFormat;
+
+typedef enum
+{
+	ELF_ARCH_NONE = 0x00,
+	ELF_ARCH_SPARC = 0x02,
+	ELF_ARCH_I386 = 0x03,
+	ELF_ARCH_MIPS = 0x08,
+	ELF_ARCH_POWER = 0x14,
+	ELF_ARCH_AARCH32 = 0x28,
+	ELF_ARCH_JCORE = 0x2A,
+	ELF_ARCH_IA64 = 0x32,
+	ELF_ARCH_X86_64 = 0x3E,
+	ELF_ARCH_AARCH64 = 0xB7,
+}ElfFormatArchitecture;
+
+typedef enum
+{
+	ELF_SYSTEM_V = 0x00,
+
+	ELF_NETBSD = 0x02,
+	ELF_LINUX = 0x03,
+	ELF_GNU = 0x04,
+	ELF_INDIANA = 0x06,
+
+
+	ELF_FREEBSD = 0x09,
+
+
+	ELF_FERAL_WAYPOINT = 0xFE,
+}ElfFormatIdentifier;
+
 
 typedef struct
 {
-	FERALSTATUS (*VidAddDevice)(VOID);		// Device detected.
-	FERALSTATUS (*VidStartDevice)(VOID);		// Initialize the device (ie, load microcode or something?)
-	FERALSTATUS (*VidStopDevice)(VOID);		// Stop the device (usually done for shutdown)
-	FERALSTATUS (*VidRestartDevice)(VOID);		// Restart the driver. (Typically called when driver crashes, or updating drivers.)
-	FERALSTATUS (*VidRemoveDevice)(VOID);		// Invoked when the graphics device is removed somehow. (ie, video over USB or something, or someone did a stupid and removed their PCIe GPU.)
-
-	// TODO (will probably have some *massive* redesign too).
+	FERALSTATUS (*LoaderMain)(IN ExecutableFormat Format);
+	FERALSTATUS (*LoaderExit)(VOID);
 	
-}GpuCoreFunctions;	// Function pointers are FUN!
+}FormatHandler;
 
-typedef struct
-{
-	/* Return width, height, and (optionally) depth. */
-	FERALSTATUS (*VidGetResolution)(OUT UINT32, OUT UINT32, OUTOPT UINT32);
+FERALSTATUS KeAttachHandler(IN FERALSTATUS (*LoaderMain), IN ExecutableFormat Format);	// Expect this to change...
 
-	/* Get the location the video output is buffered to (if at all, we could be using the GPU as a compute device). */
-	FERALSTATUS (*VidGetMemoryBuffer)(OUTOPT UINTN);
-}VidBasicFunctions;
 
+
+#if defined(__cplusplus)
+}
 #endif

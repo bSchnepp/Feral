@@ -24,33 +24,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_DRIVERS_GPU_GLOBAL_VIDMODE_H_
-#define _FERAL_DRIVERS_GPU_GLOBAL_VIDMODE_H_
+#ifndef _MACH_MACHINE_BOOLEAN_H_
+#define _MACH_MACHINE_BOOLEAN_H_
 
-#include <feral/stdtypes.h>
-#include <feral/feralstatus.h>
-
-// ALL OF THESE ARE TODO!!!
-
-typedef struct
-{
-	FERALSTATUS (*VidAddDevice)(VOID);		// Device detected.
-	FERALSTATUS (*VidStartDevice)(VOID);		// Initialize the device (ie, load microcode or something?)
-	FERALSTATUS (*VidStopDevice)(VOID);		// Stop the device (usually done for shutdown)
-	FERALSTATUS (*VidRestartDevice)(VOID);		// Restart the driver. (Typically called when driver crashes, or updating drivers.)
-	FERALSTATUS (*VidRemoveDevice)(VOID);		// Invoked when the graphics device is removed somehow. (ie, video over USB or something, or someone did a stupid and removed their PCIe GPU.)
-
-	// TODO (will probably have some *massive* redesign too).
-	
-}GpuCoreFunctions;	// Function pointers are FUN!
-
-typedef struct
-{
-	/* Return width, height, and (optionally) depth. */
-	FERALSTATUS (*VidGetResolution)(OUT UINT32, OUT UINT32, OUTOPT UINT32);
-
-	/* Get the location the video output is buffered to (if at all, we could be using the GPU as a compute device). */
-	FERALSTATUS (*VidGetMemoryBuffer)(OUTOPT UINTN);
-}VidBasicFunctions;
+typedef int boolean_t;
 
 #endif

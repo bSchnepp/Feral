@@ -29,6 +29,7 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 #include <feral/string.h>
+#include <feral/feraluser.h>
 
 typedef enum FERAL_OBJECT_TYPE
 {
@@ -38,6 +39,7 @@ typedef enum FERAL_OBJECT_TYPE
 	FERAL_TASK_OBJECT,	/* We use MACH terminology for what exactly is a program. */
 	FERAL_PROCESS_OBJECT,
 	FERAL_THREAD_OBJECT,
+	FERAL_MUTEX_OBJECT,
 	FERAL_SEMAPHORE_OBJECT,
 	FERAL_WAVEFRONT_OBJECT,	// for graphics stuff...
 	FERAL_TIMER_OBJECT,
@@ -48,7 +50,7 @@ typedef enum FERAL_OBJECT_TYPE
 	FERAL_SERVICE_OBJECT,	/* A service is a userspace daemon which implements a specific set of functions requested by the kernel. (ie, a FUSE driver, or a printing service) */
 	FERAL_PACKET_OBJECT,	/* A network packet (9P, IP, etc.) */
 	FERAL_NETWORK_OBJECT,	/* Connection to some kind of network */
-	
+	FERAL_RMS_HANDLE_OBJECT,	/* Key in Record Mangement Service */
 }FERAL_OBJECT_TYPE;
 
 typedef struct FERAL_PERMISSION_DESCRIPTOR
@@ -70,6 +72,37 @@ typedef enum FERAL_OBJECT_OPEN_REASON
 	OBJECT_INHERIT_HANDLE,	/* The parent task opened this, and allowed it's children to use it. */
 }FERAL_OBJECT_OPEN_REASON;
 
+// Attributes for the descriptor below
+#define OBJ_INHERIT (1 << 0)
+#define OBJ_PERMANANT (1 << 1)
+#define OBJ_EXCLUSIVE (1 << 2)
+#define OBJ_CASE_INSENSITIVE (1 << 3)
+#define OBJ_OPENIF (1 << 4)
+#define OBJ_OPENLINK (1 << 5)
+#define OBJ_KERNEL_HANDLE (1 << 6)
+
+typedef struct OBJECT_ATTRIBUTES
+{
+	UINT64 Length;
+	HANDLE RootDirectory;	// TODO: Consider replacing (special type for object in RMS)
+	WSTRING ObjectName;
+	FERALUSER Owner;	// Kernel's name is "SYSTEM", UserID is 0, and it's home is A:/System/.
+	UINT8 Attributes;
+	
+	UINT64 NumOfAuthorizedUsers;	// Number of users who can access it
+	FERALUSER* AuthorizedUsers;	// And the array with the users allowed to use it.
+	FERAL_PERMISSION_DESCRIPTOR* UserPermissions;	// With their corresponding permissions. Execute may or may not be applicable.
+}OBJECT_ATTRIBUTES;
+
+
+typedef struct ObjectFunction
+{
+	STRING FunctionName;
+	FERALSTATUS (*FunctionReference)(IN UINT64 NumArgs, IN VOID** Stuff);
+}ObjectFunction;
+
+struct FERALOBJECT;
+
 typedef struct FERALOBJECT
 {
 	/* Number of references to this object. If KeFreeObject() is called and makes this 0, 
@@ -81,10 +114,9 @@ typedef struct FERALOBJECT
 
 	UINT64 NumReferences;
 	UINT64 MaxReferences;
-	UINTN  ReferenceTable;	// pointer
-	
-	UINT64 NumPermissionDescriptions;		/* For every object, we should create permission descriptors for everyone who should be able to get to them. */
-	FERAL_PERMISSION_DESCRIPTOR* Permissions;	/* And then we have an array of them. (the structs are allocated on heap) */
+	UINTN  ReferenceTable;	// pointer <huh?>
+
+	OBJECT_ATTRIBUTES* Attributes;
 
 	UINT64 MaxMemorySize;		/* Memory maximum */
 	UINT64 DiskAllocMaximum;	/* Max number of blocks on the filesystem this object can utilize. */
@@ -92,7 +124,7 @@ typedef struct FERALOBJECT
 	BOOL Pageable;			/* Can this object get thrown into swapfile if we need to? */
 	
 	UINT64 NumMethods;
-	STRING* MethodNames;	/* Consider replacing with something else... */
+	ObjectFunction* Methods;
 
 	UINT64 RESERVED1;
 	UINT64 RESERVED2;

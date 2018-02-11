@@ -24,33 +24,32 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_DRIVERS_GPU_GLOBAL_VIDMODE_H_
-#define _FERAL_DRIVERS_GPU_GLOBAL_VIDMODE_H_
+#ifndef _FERAL_FERAL_USER_H_
+#define _FERAL_FERAL_USER_H_
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 #include <feral/stdtypes.h>
-#include <feral/feralstatus.h>
 
-// ALL OF THESE ARE TODO!!!
+struct FERALUSER;
 
-typedef struct
+typedef struct FERALUSER
 {
-	FERALSTATUS (*VidAddDevice)(VOID);		// Device detected.
-	FERALSTATUS (*VidStartDevice)(VOID);		// Initialize the device (ie, load microcode or something?)
-	FERALSTATUS (*VidStopDevice)(VOID);		// Stop the device (usually done for shutdown)
-	FERALSTATUS (*VidRestartDevice)(VOID);		// Restart the driver. (Typically called when driver crashes, or updating drivers.)
-	FERALSTATUS (*VidRemoveDevice)(VOID);		// Invoked when the graphics device is removed somehow. (ie, video over USB or something, or someone did a stupid and removed their PCIe GPU.)
-
-	// TODO (will probably have some *massive* redesign too).
+	WSTRING Name;
+	UINT64 UserID;		// Up to 2^64 user accounts. Should be plenty for the overwhelming majority of all use cases.
+	HANDLE Home;		// typically A:/Users/<NAME>, but could also be under a parent's home.
+	FERALTIME* CreationDate;
+	FERALTIME* ExpirationDate;	// If null, does not ever expire.
 	
-}GpuCoreFunctions;	// Function pointers are FUN!
+	BOOLEAN UsesPassword;
+	BOOLEAN SystemAccount;	// Is this account for a service? (ie, some daemon like a port of PulseAudio or something)
 
-typedef struct
-{
-	/* Return width, height, and (optionally) depth. */
-	FERALSTATUS (*VidGetResolution)(OUT UINT32, OUT UINT32, OUTOPT UINT32);
+	struct FERALUSER* Parent;
+}FERALUSER;
 
-	/* Get the location the video output is buffered to (if at all, we could be using the GPU as a compute device). */
-	FERALSTATUS (*VidGetMemoryBuffer)(OUTOPT UINTN);
-}VidBasicFunctions;
-
+#if defined(__cplusplus)
+}
+#endif
 #endif

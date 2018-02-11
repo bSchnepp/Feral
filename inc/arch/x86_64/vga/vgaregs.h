@@ -31,6 +31,8 @@ IN THE SOFTWARE.
 extern "C" {
 #endif
 
+
+// deprecated -- remove this and fix the vga stuff.
 #define VGA_MISC_OUTPUT_REG 0x03C2
 
 #define VGA_FB_COMMAND_PORT 0x03D4
@@ -45,6 +47,42 @@ extern "C" {
 /* I'm missing something here...  */
 #define VGA_VIDEO_MODE_80_43	0x0F02
 #define VGA_VIDEO_MODE_80_23	0x0F03
+
+
+//////////////////////////////////////////////////////////////////
+
+
+#define VGA_AC_INDEX 0x03C0
+#define VGA_AC_WRITE VGA_AC_INDEX
+#define VGA_AC_READ 0x03C1
+
+#define VGA_MISC_WRITE 0x03C2
+#define VGA_MISC_READ  0x03CC
+
+#define VGA_SEQ_INDEX 0x03C4
+#define VGA_SEQ_DATA 0x03C5
+
+#define VGA_DAC_READ 0x03C7
+#define VGA_DAC_WRITE 0x03C8
+#define VGA_DAC_DATA 0x03C9
+
+
+#define VGA_GRAPHICS_INDEX 0x03CE
+#define VGA_GRAPHICS_DATA 0x03CF
+
+#define VGA_CRTC_INDEX 0x03D4
+#define VGA_CRTC_DATA 0x03D5
+#define VGA_INSTAT_READ 0x3DA
+
+// Number of graphics registers
+#define VGA_NUM_AC 21
+#define VGA_NUM_SEQ 5
+#define VGA_NUM_CRTC 25
+#define VGA_NUM_GRAPHICS 9
+#define VGA_NUM_TOTAL (1 + VGA_NUM_AC + VGA_NUM_SEQ + VGA_NUM_GRAPHICS + VGA_NUM_CRTC)
+
+
+
 
 #if defined(__cplusplus)
 }

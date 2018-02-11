@@ -41,7 +41,7 @@ _start:
 	; Check for multiboot 2 compliance.
 	cmp eax, 0x36D76289
 	jne boot_panic
-	
+
 	; Check CPUID...
 	pushfd 
 	pop eax

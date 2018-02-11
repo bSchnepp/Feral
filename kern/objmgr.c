@@ -25,3 +25,7 @@ IN THE SOFTWARE.
  */
 
 #include <feral/object.h>
+#include <feral/stdtypes.h>
+#include <feral/feralstatus.h>
+
+

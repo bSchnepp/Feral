@@ -24,33 +24,42 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_DRIVERS_GPU_GLOBAL_VIDMODE_H_
-#define _FERAL_DRIVERS_GPU_GLOBAL_VIDMODE_H_
+#ifndef _FERAL_PROC_ELF_H_
+#define _FERAL_PROC_ELF_H_
 
 #include <feral/stdtypes.h>
-#include <feral/feralstatus.h>
 
-// ALL OF THESE ARE TODO!!!
+#pragma pack(1)
 
-typedef struct
+typedef enum
 {
-	FERALSTATUS (*VidAddDevice)(VOID);		// Device detected.
-	FERALSTATUS (*VidStartDevice)(VOID);		// Initialize the device (ie, load microcode or something?)
-	FERALSTATUS (*VidStopDevice)(VOID);		// Stop the device (usually done for shutdown)
-	FERALSTATUS (*VidRestartDevice)(VOID);		// Restart the driver. (Typically called when driver crashes, or updating drivers.)
-	FERALSTATUS (*VidRemoveDevice)(VOID);		// Invoked when the graphics device is removed somehow. (ie, video over USB or something, or someone did a stupid and removed their PCIe GPU.)
+	ELF_RELOCATABLE = 0,
+	ELF_EXECUTABLE = 1,
+	ELF_SHARED = 2,
+	ELF_CORE = 3
+}ElfExecTypes;
 
-	// TODO (will probably have some *massive* redesign too).
+typedef struct _ElfHeader
+{
+	UINT32 magic;	//ELF magic number...
+	UINT8  cpu_bitsz;
+	UINT8  cpu_endian;
+	UINT8  e_version;
+	UINT8  e_identifier;
+	UINT64 e_padding;
+	UINT16 e_type;
+	UINT16 e_machine;
+	UINT32 e_version;
+	UINTN  e_entry;
+	UINTN  e_phoff;
+	UINTN  e_shoff;
+	UINT32 e_flags;
+	UINT16 e_ehsize;
+	UINT16 e_phentsize;
+	UINT16 e_phnum;
+	UINT16 e_shentsize;
 	
-}GpuCoreFunctions;	// Function pointers are FUN!
-
-typedef struct
-{
-	/* Return width, height, and (optionally) depth. */
-	FERALSTATUS (*VidGetResolution)(OUT UINT32, OUT UINT32, OUTOPT UINT32);
-
-	/* Get the location the video output is buffered to (if at all, we could be using the GPU as a compute device). */
-	FERALSTATUS (*VidGetMemoryBuffer)(OUTOPT UINTN);
-}VidBasicFunctions;
+}ElfHeader;
+#pragma pack(0)
 
 #endif
