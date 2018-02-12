@@ -21,5 +21,8 @@ Problems aiming to solve:
 					- (We could try doing AOT recompilation of the target game in question, but the difference is insignifigant and probably causes more problems w/ endianness.)
 
 				- New problem: button prompts (game may ask for 'triangle', but we only have 'A' and 'B's and all)
-					- Solution: Not our problem (let the emulator deal with it, maybe some configuration file for button mapping, or some way to replace graphics.)
+					- Solution: Not our problem (let the emulator deal with it, maybe some configuration file for button mapping, or some way to replace graphics w/ machine learning.)
 
+New, unrelted problems:
+	- CLANG and LLVM require changes to port (not just 'recompile and done')
+		- Solution(?): Ignore this and emulate Darwin or Linux or something with a libos.

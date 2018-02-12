@@ -1,19 +1,20 @@
 [write some more sensible documentation and implement later]
 
 
-LIGHTNINGSHELL:
+FERAL CONTROL LANGUAGE (FCL):
 
 Shell (commands are case-insensitive):
 Samples:
 ```
-	Brian | A:/Users/Brian/Documents and Settings/!> DEFINE/<flags="conceal" status="shell-only"> $HOME .  
+	Brian | A:/Users/Brian/Documents and Settings/!> DEFINE /<FLAGS="conceal" STATUS="shell-only"> $HOME .  
 ```
 Define this as a hidden definition (only visible to the same user), and only available to that current shell. 
 
 ```
 	Brian | A:/Users/Brian/Games/!> run SUPERAWESOMEGAME.pro  
 ```
-Run a program, in this example, a video game. '.pro' is for 'program'.
+Run a program, in this example, a video game. '.pro' is for 'program', we _do_ care about file extensions, but not quite the same way as ReactOS-likes and DOS.
+(We associate extensions with a default pool to associate programs with, from there we try to identify the file to find which one to use, and if that doesn't work, give up and just use a default program.)
 
 It's convention (but NOT required) to have commands in full uppercase, ie:
 
@@ -26,7 +27,17 @@ etc.
 
 Next to the command, you can have a / and then some modifiers within two angle brackets, such as
 
-DEFINE/<flags="conceal" status="shell-only">
+DEFINE /<FLAGS="conceal" STATUS="shell-only">
 
 
 Shell variables are expressed with $. It is convention to have them uppercase, but NOT necessary.
+
+
+Creating a new system-wide command (this is whitespace-insensitive, the tabs are for readbility):
+	DEFINE VERB FOOBAR
+	RUN A:/System/Resources/Binaries/Foo.pro
+		QUALIFIER BAR
+			ECHO $HOME
+	END
+
+(Then move the script defining this to A:/System/Resources/InitScripts/)

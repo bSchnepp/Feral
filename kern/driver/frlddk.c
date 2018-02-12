@@ -24,46 +24,40 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-
-#ifndef _FERAL_DDK_H_
-#define _FERAL_DDK_H_
-
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
 #include <feral/object.h>
 
+#include <ddk/frlddk.h>
 #include <ddk/frldev.h>
 #include <bogus/fluff.h>
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
+FERALSTATUS KeCreateDriver(INOUT FERAL_DRIVER* Target, 
+	FERALSTATUS (*DriverInit)(IN DriverObject* Object, IN WSTRING RmsPath),
+	FERALSTATUS (*DriverExit)(VOID),
+	FERALSTATUS (*DriverDispatch)(UINT64 NumArgs, VOID** Stuff))
+{
+	if (DriverInit == ((void*)(0)) || DriverDispatch = ((void*)(0)))
+	{
+		return STATUS_ERROR;
+	}
+	
+	Target->DriverInit = DriverInit;
+	Target->DriverExit = DriverExit;
+	Target->DriverDispatch = DriverDispatch;
+	return STATUS_SUCCESS;
+}
 
+FERALSTATUS KeModifyDriverPriority(INOUT FERAL_DRIVER* Target, UINT8 NewPriority)
+{
+	
+}
+
+#if 0
 typedef struct DriverObject
 {
-	STRING ObjectName;
-	FERAL_OBJECT_TYPE ObjectType;
-
-	UINT64 NumReferences;
-	UINT64 MaxReferences;
-	UINTN  ReferenceTable;
-
-	OBJECT_ATTRIBUTES* Attributes;
-
-	UINT64 MaxMemorySize;		/* Memory maximum */
-	UINT64 DiskAllocMaximum;	/* Max number of blocks on the filesystem this object can utilize. */
-
-	BOOL Pageable;			/* Can this object get thrown into swapfile if we need to? */
-	
-	UINT64 NumMethods;
-	ObjectFunction* Methods;
-
+	HANDLE Object;
 	STRING DeviceName;
-	UINT64 RESERVED2;
-	UINT64 RESERVED3;
-	UINT64 RESERVED4;
-
-	VOID* ObjectPointer;	/* Pointer to the object in question. */
 }DriverObject;
 
 typedef struct FERAL_DRIVER
@@ -83,7 +77,7 @@ typedef struct FERAL_DRIVER
 	// The main function as the kernel calls.
 	// The kernel passes a DriverObject to it, sees if the driver likes it, along with the associated configuration
 	// in the record mangement system if applicable.
-	FERALSTATUS (*DriverInit)(IN FERALOBJECT* Object, IN WSTRING RmsPath);
+	FERALSTATUS (*DriverInit)(IN DriverObject* Object, IN WSTRING RmsPath);
 
 	// Destructor for the driver.
 	// This is called whenever the kernel intends to either restart or outright shut down the driver.
@@ -106,17 +100,10 @@ typedef struct FERAL_DRIVER
 }FERAL_DRIVER;
 
 FERALSTATUS KeCreateDriver(INOUT FERAL_DRIVER* Target, 
-	FERALSTATUS (*DriverInit)(IN FERALOBJECT* Object, IN WSTRING RmsPath),
+	FERALSTATUS (*DriverInit)(IN DriverObject* Object, IN WSTRING RmsPath),
 	FERALSTATUS (*DriverExit)(VOID),
 	FERALSTATUS (*DriverDispatch)(UINT64 NumArgs, VOID** Stuff));
 
 FERALSTATUS KeModifyDriverPriority(INOUT FERAL_DRIVER* Target, UINT8 NewPriority);
-
-
-
-
-#if defined(__cplusplus)
-}
 #endif
 
-#endif

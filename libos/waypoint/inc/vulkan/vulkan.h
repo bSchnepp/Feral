@@ -24,55 +24,42 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _WAYPOINT_H_
-#define _WAYPOINT_H_
+// Reimplementation of the Vulkan header, so we can guarantee at least a baseline version.
+// We're supporting at the very least version 1.0.68. Hardware incapable of Vulkan support should not run Feral Waypoint.
+
+#ifndef _VULKAN_H_
+#define _VULKAN_H_
+
+#define FRL_EXTENSIONS
+#define VK_VERSION_1_0
+
+// We utilize the default way of doing this. (Nothing special needed).
+#define VKAPI_ATTR
+#define VKAPI_CALL
+#define VKAPI_PTR
 
 #include <feral/stdtypes.h>
-#include <bogus/fluff.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#define FERAL_MAKE_VERSION(a, b) ((a << 16) | (b))	//TODO, consider changing this to (<< 22), ( << 12), | patch, like VK_MAKE_VERSION
-
-typedef enum
-{
-	// 'generic' is there just to describe the program running.
-	FERAL_GENERIC_TERMINAL_APPLICATION,
-	FERAL_GENERIC_GUI_APPLICATION,
-	FERAL_GENERIC_GAME_APPLICATION,
-	FERAL_GENERIC_MEDIA_APPLICATION,
-	FERAL_GENERIC_WEB_BROWSER_APPLICATION,
-	FERAL_GENERIC_APPLICATION,
-
-	// These have special meanings.
-	FERAL_EMULATED_GAME_APPLICATION,	// This game is running on a libos emulated processor.
-	FERAL_NONCRITICAL_GAME_APPLICATION,	// This game is not heavy on resources, and thus is OK to de-prioritize.
-}ApplicationType;
-
-// TODO: do this better (this should be part of libc / c runtime)
-// (in order: argc, argv, Parent task, owning user, and current directory)
-UINT32 WayMain(IN UINT32 ArgumentCount, IN WSTRING* Arguments, IN HTASK Parent, IN HUSER User, IN HANDLE Directory);
-
-typedef UINT64 WPSTATUS;
-
-typedef struct SystemProperties
-{
-	// TODO...
-}SystemProperties;
-
-typedef struct ApplicationProperties
-{
-	SystemProperties SystemProps;
-	ApplicationType AppPurpose;
-	UINT32 AppVersion;
-	UINT64 RESERVED;
-}ApplicationProperties;
-
-BOOL CreateApplicationFrame(WSTRING Title, HUSER User);
-
-
-
-
-
-
-
-
+// For the relevant info...
+#ifdef VK_USE_PLATFORM_WAYPOINT_FRL
+#include <waypoint.h>
 #endif
+
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define VK_MAKE_VERSION(maj, min, pch) (( (maj) << 22) | ( (min) << 12) | (pch))
+
+#define VK_API_VERSION_1_0 VK_MAKE_VERSION(1, 0, 0)	// For the base version
+
+//TODO
+
+#ifdef __cplusplus
+}
+#endif
+

@@ -45,7 +45,10 @@ extern "C" {
 typedef uint32_t FERALSTATUS;
 
 /* Standard internal stuff: */
-#define STATUS_SUCCESS (0x00000000 | STATUS_SEVERITY_SUCCESS)			/* Nothing went wrong. Everything's OK. */
+#define STATUS_SUCCESS (STATUS_SEVERITY_SUCCESS)			/* Nothing went wrong. Everything's OK. */
+#define STATUS_INFORMATIONAL (STATUS_SEVERITY_INFORMATIONAL)
+#define STATUS_WARNING (STATUS_SEVERITY_WARNING)
+#define STATUS_ERROR (STATUS_SEVERITY_ERROR)
 
 /* Informational:  */
 

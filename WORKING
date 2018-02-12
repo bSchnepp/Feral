@@ -1,0 +1,12 @@
+Currently working:
+	- Boot (multiboot2 on x86_64 using GRUB2)
+	- Printing out text w/ VGA
+		- TODO:
+			- _force_ into 80x25 mode
+			- Figure out why that one chunk is blank on line 3 (probably a VGA plane or some code elsewhere I forgot to delete)
+
+
+Important TODOs:
+	- Serial driver for debugging
+	- Incorporate remaining code from old Feral kernel & cleanup
+	- Attempt to build on (Pure)Darwin 10.13
