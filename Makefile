@@ -1,5 +1,7 @@
 include Makerules
 
+export INCLUDES
+
 VGA_FILES != ls arch/$(ARCH)/vga/*.c
 KERN_MAIN != ls kern/*.c
 
@@ -15,8 +17,9 @@ kernel:
 	cd proc && make
 	cd mm && make
 	cd io && make
+	cd drivers && make
 	
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES) -o vga.o libmm.a libprocmgr.a io.o
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES) -o vga.o libmm.a libprocmgr.a io.o driver.o
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(KERN_MAIN)
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o
 

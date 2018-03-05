@@ -24,42 +24,16 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-// Reimplementation of the Vulkan header, so we can guarantee at least a baseline version.
-// We're supporting at the very least version 1.0.68. Hardware incapable of Vulkan support should not run Feral Waypoint.
+#ifndef _MACH_MACH_ERROR_H_
+#define _MACH_MACH_ERROR_H_
 
-#ifndef _VULKAN_H_
-#define _VULKAN_H_
+#include <mach/kern_return.h>
 
-#define FRL_EXTENSIONS
-#define VK_VERSION_1_0
+// TODO
+// ERROR (HIGH to LOW): 6 bits for system, 12 for subsystem, and the remaining 14 for the error code.
+typedef kern_return_t mach_error_t;
 
-// We utilize the default way of doing this. (Nothing special needed).
-#define VKAPI_ATTR
-#define VKAPI_CALL
-#define VKAPI_PTR
 
-#include <feral/stdtypes.h>
-#include <stddef.h>
-#include <stdint.h>
 
-// For the relevant info...
-#ifdef VK_USE_PLATFORM_WAYPOINT_FRL
-#include <waypoint.h>
+
 #endif
-
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define VK_MAKE_VERSION(maj, min, pch) (( (maj) << 22) | ( (min) << 12) | (pch))
-
-#define VK_API_VERSION_1_0 VK_MAKE_VERSION(1, 0, 0)	// For the base version
-
-//TODO
-
-#ifdef __cplusplus
-}
-#endif
-

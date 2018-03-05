@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining a copy of the software and accompanying documentation covered by 
+obtaining  a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,42 +24,24 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-// Reimplementation of the Vulkan header, so we can guarantee at least a baseline version.
-// We're supporting at the very least version 1.0.68. Hardware incapable of Vulkan support should not run Feral Waypoint.
 
-#ifndef _VULKAN_H_
-#define _VULKAN_H_
+// Stubs for now, these will be used to handle the dynamic kernel drivers later...
 
-#define FRL_EXTENSIONS
-#define VK_VERSION_1_0
+#ifndef _FERAL_INTERFACE_H_
+#define _FERAL_INTERFACE_H_
 
-// We utilize the default way of doing this. (Nothing special needed).
-#define VKAPI_ATTR
-#define VKAPI_CALL
-#define VKAPI_PTR
-
-#include <feral/stdtypes.h>
-#include <stddef.h>
-#include <stdint.h>
-
-// For the relevant info...
-#ifdef VK_USE_PLATFORM_WAYPOINT_FRL
-#include <waypoint.h>
-#endif
-
-
-
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-#define VK_MAKE_VERSION(maj, min, pch) (( (maj) << 22) | ( (min) << 12) | (pch))
+#include <kern_ver.h>	// For kernel version (linked into the module, so we can find if it's an old driver or not)
 
-#define VK_API_VERSION_1_0 VK_MAKE_VERSION(1, 0, 0)	// For the base version
+#define DRIVER_ENTRY(FunctionName)
+#define DRIVER_EXIT(FunctionName)
 
-//TODO
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
 #endif
 
+#endif /* _FERAL_INTERFACE_H_ */

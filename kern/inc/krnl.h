@@ -28,6 +28,9 @@ IN THE SOFTWARE.
 #ifndef _FERAL_PRIVATE_HEADER_KRNL_H_
 #define _FERAL_PRIVATE_HEADER_KRNL_H_
 
+#include <feral/feralstatus.h>
+#include <feral/stdtypes.h>
+
 // What the processor we're controlling is doing. (ie, no tasks attached to them)
 typedef enum PROCESSOR_STATE
 {
@@ -46,8 +49,22 @@ typedef enum TASK_STATE
 	TaskStateTransitionActivity,
 }TASK_STATE;
 
+typedef enum THREAD_STATE
+{
+	ThreadStaeBlocking,
+	ThreadStateRunning,
+	ThreadStateInactive
+}THREAD_STATE;
+
+// Currently just a stub.
+FERALSTATUS KiLoadAllDrivers(VOID);
 
 
+typedef struct KTIMER
+{
+	FERALTIME InterruptTime;
+	
+}KTIMER;
 
 
 

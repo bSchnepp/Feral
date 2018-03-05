@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining a copy of the software and accompanying documentation covered by 
+obtaining  a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,42 +24,37 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-// Reimplementation of the Vulkan header, so we can guarantee at least a baseline version.
-// We're supporting at the very least version 1.0.68. Hardware incapable of Vulkan support should not run Feral Waypoint.
-
-#ifndef _VULKAN_H_
-#define _VULKAN_H_
-
-#define FRL_EXTENSIONS
-#define VK_VERSION_1_0
-
-// We utilize the default way of doing this. (Nothing special needed).
-#define VKAPI_ATTR
-#define VKAPI_CALL
-#define VKAPI_PTR
 
 #include <feral/stdtypes.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <ddk/frlddk.h>
+#include <ddk/interface.h>
 
-// For the relevant info...
-#ifdef VK_USE_PLATFORM_WAYPOINT_FRL
-#include <waypoint.h>
+#if defined(__x86_64__) || defined(__i386__)
+#include <arch/x86_64/cpuio.h>
 #endif
 
+#define COM1_PORT 0x3FB
 
+#define COM1_DATA (COM1_PORT)
 
-#ifdef __cplusplus
-extern "C" {
+#define SERIAL_FIFO_COMMAND(port)  (port + 2)
+#define SERIAL_LINE_COMMAND(port)  (port + 3)
+#define SERIAL_MODEM_COMMAND(port) (port + 4)
+#define SERIAL_LINE_STATUS(port)   (port + 5)
+
+#define SERIAL_LINE_ENABLE_DLAB (0x80)
+
+VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
+{
+#if defined(__x86_64__) || defined(__i386__)
+	x86outb(SERIAL_LINE_COMMAND(Port), SERIAL_LINE_ENABLE_DLAB);
+	x86outb(Port, (Divisor >> 8) & 0x00FF);
+	x86outb(Port, (Divisor >> 0) & 0x00FF);
 #endif
-
-#define VK_MAKE_VERSION(maj, min, pch) (( (maj) << 22) | ( (min) << 12) | (pch))
-
-#define VK_API_VERSION_1_0 VK_MAKE_VERSION(1, 0, 0)	// For the base version
-
-//TODO
-
-#ifdef __cplusplus
 }
-#endif
 
+FERALSTATUS FrlDriverMain(VOID)
+{
+	FERAL_DRIVER SerialDriver = {0};
+	return STATUS_SUCCESS;
+}

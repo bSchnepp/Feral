@@ -27,7 +27,7 @@ LD        := ld.lld
 TARGET     = -target $(ARCH)-pc-none-gnu
 
 INCLUDES  := inc
-CFLAGS    := -std=c11 -ffreestanding -nostdlib -O2 -Wall -Wextra -mno-red-zone -c -v -mno-mmx -mno-sse -msoft-float -fno-vectorize
+CFLAGS    := -std=c11 -ffreestanding -nostdlib -O2 -Wall -Wextra -mno-red-zone -c -v -mno-mmx -mno-sse -msoft-float -fno-vectorize $(TARGET)
 # -c prevents linking (important!!!) and -v for verbosity.
 
 # We don't really care about 'Entering directory...'.

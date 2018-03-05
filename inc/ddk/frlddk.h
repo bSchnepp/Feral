@@ -105,6 +105,16 @@ typedef struct FERAL_DRIVER
 				// a VESA driver as '2', and a specific driver for a specific GPU of a specific make as '255'.	
 }FERAL_DRIVER;
 
+typedef struct DriverQueue
+{
+	STRING DeviceTypeName;
+	FERAL_DRIVER* Driver;
+	struct DriverQueue* Next;
+}DriverQueue;
+
+// temporary, we'll clean this out later.
+static DriverQueue DriverQueueRoot;
+
 FERALSTATUS KeCreateDriver(INOUT FERAL_DRIVER* Target, 
 	FERALSTATUS (*DriverInit)(IN FERALOBJECT* Object, IN WSTRING RmsPath),
 	FERALSTATUS (*DriverExit)(VOID),
@@ -112,8 +122,7 @@ FERALSTATUS KeCreateDriver(INOUT FERAL_DRIVER* Target,
 
 FERALSTATUS KeModifyDriverPriority(INOUT FERAL_DRIVER* Target, UINT8 NewPriority);
 
-
-
+FERALSTATUS KeAddDriverToQueue(IN STRING DeviceType, IN FERAL_DRIVER* Driver);
 
 #if defined(__cplusplus)
 }

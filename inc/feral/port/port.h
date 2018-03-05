@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining a copy of the software and accompanying documentation covered by 
+obtaining  a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,42 +24,40 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-// Reimplementation of the Vulkan header, so we can guarantee at least a baseline version.
-// We're supporting at the very least version 1.0.68. Hardware incapable of Vulkan support should not run Feral Waypoint.
-
-#ifndef _VULKAN_H_
-#define _VULKAN_H_
-
-#define FRL_EXTENSIONS
-#define VK_VERSION_1_0
-
-// We utilize the default way of doing this. (Nothing special needed).
-#define VKAPI_ATTR
-#define VKAPI_CALL
-#define VKAPI_PTR
+#ifndef _FERAL_IPC_PORT_H_
+#define _FERAL_IPC_PORT_H_
 
 #include <feral/stdtypes.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <feral/feraluser.h>
 
-// For the relevant info...
-#ifdef VK_USE_PLATFORM_WAYPOINT_FRL
-#include <waypoint.h>
+typedef enum
+{
+	PORT_TYPE_RECIEVE,
+	PORT_TYPE_SEND,
+	PORT_TYPE_SEND_ONCE,
+	PORT_TYPE_BIDIRECTIONAL,
+}PORT_PURPOSE;
+
+typedef enum
+{
+	PORT_RIGHT_CREATE,
+	PORT_RIGHT_DELETE.
+	PORT_RIGHT_LINK,
+	PORT_RIGHT_CREATE_LINK,
+	PORT_RIGHT_DELETE_LINK,
+	PORT_RIGHT_ALL,
+}PORT_CREATION_RIGHT;
+
+typedef struct FERALPORT 
+{
+	UINT64 NumUsers;
+	FERALUSER* Users;
+
+	FERALUSER Origin;
+	VOID* Data;
+}FERALPORT, *PFERALPORT;
+
+
+
+
 #endif
-
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define VK_MAKE_VERSION(maj, min, pch) (( (maj) << 22) | ( (min) << 12) | (pch))
-
-#define VK_API_VERSION_1_0 VK_MAKE_VERSION(1, 0, 0)	// For the base version
-
-//TODO
-
-#ifdef __cplusplus
-}
-#endif
-

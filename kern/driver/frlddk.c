@@ -32,6 +32,14 @@ IN THE SOFTWARE.
 #include <ddk/frldev.h>
 #include <bogus/fluff.h>
 
+// Temporary (though we may keep it, just hide it somehow from misbehaving drivers.)
+DriverQueueRoot =
+{
+	"ROOT",
+	(void*)0,
+	(void*)0,
+};
+
 FERALSTATUS KeCreateDriver(INOUT FERAL_DRIVER* Target, 
 	FERALSTATUS (*DriverInit)(IN DriverObject* Object, IN WSTRING RmsPath),
 	FERALSTATUS (*DriverExit)(VOID),
@@ -51,6 +59,11 @@ FERALSTATUS KeCreateDriver(INOUT FERAL_DRIVER* Target,
 FERALSTATUS KeModifyDriverPriority(INOUT FERAL_DRIVER* Target, UINT8 NewPriority)
 {
 	
+}
+
+FERALSTATUS KeAddDriverToQueue(IN STRING DeviceType, IN FERAL_DRIVER* Driver)
+{
+	// We add to a driver queue so we can load all the devices we want.
 }
 
 #if 0

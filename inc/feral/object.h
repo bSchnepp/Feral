@@ -43,7 +43,8 @@ typedef enum FERAL_OBJECT_TYPE
 	FERAL_SEMAPHORE_OBJECT,
 	FERAL_WAVEFRONT_OBJECT,	// for graphics stuff...
 	FERAL_TIMER_OBJECT,
-	FERAL_RENDER_BUFFER_OBJECT,	// Similar to Wayland buffers. (Internal drawing management does the actual GUI fun stuff... This is Qt or GTK+ or Pathfinder drawing the widgets.)
+	FERAL_FRAME_OBJECT,
+	FERAL_IMAGE_BUFFER_OBJECT,	
 	FERAL_DESKTOP_OBJECT,
 	FERAL_CLIPBOARD_OBJECT,
 	FERAL_PROGRAM_OBJECT,
@@ -55,6 +56,7 @@ typedef enum FERAL_OBJECT_TYPE
 
 typedef struct FERAL_PERMISSION_DESCRIPTOR
 {
+	FERALUSER User;
 	BOOLEAN Read;
 	BOOLEAN Write;
 	BOOLEAN Execute;
@@ -90,8 +92,8 @@ typedef struct OBJECT_ATTRIBUTES
 	UINT8 Attributes;
 	
 	UINT64 NumOfAuthorizedUsers;	// Number of users who can access it
-	FERALUSER* AuthorizedUsers;	// And the array with the users allowed to use it.
-	FERAL_PERMISSION_DESCRIPTOR* UserPermissions;	// With their corresponding permissions. Execute may or may not be applicable.
+	FERALUSER* AuthorizedUsers;	// And the array with the users allowed to use it
+	FERAL_PERMISSION_DESCRIPTOR* Permissions;	// With their corresponding permissions. Execute may or may not be applicable.
 }OBJECT_ATTRIBUTES;
 
 
@@ -114,7 +116,7 @@ typedef struct FERALOBJECT
 
 	UINT64 NumReferences;
 	UINT64 MaxReferences;
-	UINTN  ReferenceTable;	// pointer <huh?>
+	VOID*  ReferenceTable;
 
 	OBJECT_ATTRIBUTES* Attributes;
 
@@ -133,6 +135,12 @@ typedef struct FERALOBJECT
 
 	VOID* ObjectPointer;	/* Pointer to the object in question. */
 }FERALOBJECT;
+
+typedef struct
+{
+	FERALOBJECT* Flink;
+	FERALOBJECT* Blink;
+}LIST_ENTRY;
 
 
 #endif

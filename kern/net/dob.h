@@ -24,42 +24,15 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-// Reimplementation of the Vulkan header, so we can guarantee at least a baseline version.
-// We're supporting at the very least version 1.0.68. Hardware incapable of Vulkan support should not run Feral Waypoint.
+// Support packeting away objects or something.
+// Intent is to share objects to other machines and expose resources (ie, game files).
+// We should support distributed computing for the following reasons:
+	// - We may need more CPU horsepower to handle something like a game's AI subsytems, or to do physics simulations.
+	// - We may need to access a GPU on another system and have it render something (ie, recalculating shadow maps or something)
+	// - We need a GPU on another system so as to actually be able to handle very high resolution, where network latency is OK.
+	// - We actually have a CPU which can handle a foreign ISA, and thus can accelerate an emulator without actual emulation.
 
-#ifndef _VULKAN_H_
-#define _VULKAN_H_
-
-#define FRL_EXTENSIONS
-#define VK_VERSION_1_0
-
-// We utilize the default way of doing this. (Nothing special needed).
-#define VKAPI_ATTR
-#define VKAPI_CALL
-#define VKAPI_PTR
-
-#include <feral/stdtypes.h>
-#include <stddef.h>
-#include <stdint.h>
-
-// For the relevant info...
-#ifdef VK_USE_PLATFORM_WAYPOINT_FRL
-#include <waypoint.h>
-#endif
-
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define VK_MAKE_VERSION(maj, min, pch) (( (maj) << 22) | ( (min) << 12) | (pch))
-
-#define VK_API_VERSION_1_0 VK_MAKE_VERSION(1, 0, 0)	// For the base version
-
-//TODO
-
-#ifdef __cplusplus
-}
-#endif
-
+typedef struct 
+{
+	
+}DOB_PACKET;

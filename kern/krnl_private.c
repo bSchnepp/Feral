@@ -24,42 +24,26 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-// Reimplementation of the Vulkan header, so we can guarantee at least a baseline version.
-// We're supporting at the very least version 1.0.68. Hardware incapable of Vulkan support should not run Feral Waypoint.
 
-#ifndef _VULKAN_H_
-#define _VULKAN_H_
+// This header handles all the kernel private stuff (aka very volatile things)
+// Essentially, you shouldn't mess with private kernel stuff other than through functions which do it for you.
+// (don't ever include anything in inc/krnl.h, because your driver may break binary compatibility in the future.)
+// (even then, I might end up changing the ABI anyway for some reason... if this happens, it'd probably end up with a major version change.)
 
-#define FRL_EXTENSIONS
-#define VK_VERSION_1_0
+#include "inc/krnl.h"
 
-// We utilize the default way of doing this. (Nothing special needed).
-#define VKAPI_ATTR
-#define VKAPI_CALL
-#define VKAPI_PTR
+#define TEMPORARY_SERIAL_DRIVER_STUB
 
-#include <feral/stdtypes.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <feral/feralstatus.h>
 
-// For the relevant info...
-#ifdef VK_USE_PLATFORM_WAYPOINT_FRL
-#include <waypoint.h>
+FERALSTATUS KiLoadAllDrivers(VOID)
+{
+	// bogus stub for now (we don't have .SO loading ready yet to actually be of real use.)
+#ifdef TEMPORARY_SERIAL_DRIVER_STUB
+	// Hold on, we have a serial driver directly injected into the kernel rather than as a shared object.
+	// This is for debugging purposes for now (we just throw output to COM1 for now.)
+	
 #endif
 
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define VK_MAKE_VERSION(maj, min, pch) (( (maj) << 22) | ( (min) << 12) | (pch))
-
-#define VK_API_VERSION_1_0 VK_MAKE_VERSION(1, 0, 0)	// For the base version
-
-//TODO
-
-#ifdef __cplusplus
+	return STATUS_SUCCESS;
 }
-#endif
-

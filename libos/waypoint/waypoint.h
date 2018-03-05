@@ -53,9 +53,37 @@ UINT32 WayMain(IN UINT32 ArgumentCount, IN WSTRING* Arguments, IN HTASK Parent, 
 
 typedef UINT64 WPSTATUS;
 
+// Well, no way to avoid trademarks here...
+typedef enum GPUVENDOR
+{
+	GPU_VENDOR_NVIDIA,
+	GPU_VENDOR_AMD,
+	GPU_VENDOR_INTEL,
+	GPU_VENDOR_ARM,		// Mali
+	GPU_VENDOR_VIA,
+	GPU_VENDOR_MATROX,
+	GPU_VENDOR_QUALCOMM,	// Adreno
+	GPU_VENDOR_POWERVR,
+	GPU_VENDOR_UNKNOWN,	// custom chips
+	GPU_VENDOR_NONE,	// There is no GPU.
+	GPU_VENDOR_VIRTUAL,
+};
+
 typedef struct SystemProperties
 {
-	// TODO...
+	UINT64 NumProcessors;
+	UINT64 NumThreads;
+	
+	UINT64 NumGraphicsProcessors;
+	GPUVENDOR* Vendors;
+	STRING* GraphicsProcessorNames;
+	UINT64* GraphicsProcessorMemorySizes;
+	UINT64* AvailableGraphicsProcessorMemorySizes;
+
+	UINT64 MaxMemory;		/* This includes swap space */
+	UINT64 MaxNoSwapMemory;		/* Max memory on the system */
+	UINT64 MaxAvailableMemory;	/* Application may only be allowed to use a subset of the available memory. (limits) */
+
 }SystemProperties;
 
 typedef struct ApplicationProperties

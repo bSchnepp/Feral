@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining a copy of the software and accompanying documentation covered by 
+obtaining  a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,42 +24,36 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-// Reimplementation of the Vulkan header, so we can guarantee at least a baseline version.
-// We're supporting at the very least version 1.0.68. Hardware incapable of Vulkan support should not run Feral Waypoint.
+#ifndef _FERAL_KERN_VER_H_
+#define _FERAL_KERN_VER_H_
 
-#ifndef _VULKAN_H_
-#define _VULKAN_H_
-
-#define FRL_EXTENSIONS
-#define VK_VERSION_1_0
-
-// We utilize the default way of doing this. (Nothing special needed).
-#define VKAPI_ATTR
-#define VKAPI_CALL
-#define VKAPI_PTR
-
-#include <feral/stdtypes.h>
-#include <stddef.h>
-#include <stdint.h>
-
-// For the relevant info...
-#ifdef VK_USE_PLATFORM_WAYPOINT_FRL
-#include <waypoint.h>
-#endif
-
-
-
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
-#define VK_MAKE_VERSION(maj, min, pch) (( (maj) << 22) | ( (min) << 12) | (pch))
 
-#define VK_API_VERSION_1_0 VK_MAKE_VERSION(1, 0, 0)	// For the base version
+// Increment whenever the kernel API changes signifigantly.
+// For now, since we're unstable, we're *always* changing, so only actually bother once we get to version 1.0.0
 
-//TODO
+#define FERAL_VERSION_MAJOR (0000000)
+#define FERAL_VERSION_MINOR (0000000)
+#define FERAL_VERSION_PATCH (0000001)
 
-#ifdef __cplusplus
+
+#define FERAL_VERSION_STRING "FERAL Kernel 0.01 Release 'Alpha Aligator'"
+#define FERAL_VERSION_SHORT "Alpha Aligator"
+
+// *NIX uname stuff
+#define UNAME_NAME "Linux"	// -s, we pretend to be Linux.
+#define UNAME_VERSION "4.16.0-27-feral" // Something bogus for -r
+
+
+
+
+
+#if defined(__cplusplus)
 }
 #endif
 
+
+#endif

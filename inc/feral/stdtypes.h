@@ -142,6 +142,14 @@ typedef struct
 	UINT8 Second;
 }FERALTIME;
 
+typedef struct GUID
+{
+	UINT32 Data1;
+	UINT16 Data2;
+	UINT16 Data3;
+	UINT8 Data4[8];
+}GUID;
+
 //Please avoid using this. (some archs don't like packed structs)
 #define PACKED __attribute__((packed))
 

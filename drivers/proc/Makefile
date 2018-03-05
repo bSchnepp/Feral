@@ -1,0 +1,6 @@
+include ../../Makerules
+
+all:	
+
+.PHONY:	
+

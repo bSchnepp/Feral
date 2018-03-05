@@ -45,6 +45,14 @@ IN THE SOFTWARE.
 #include <feral/boot/kibootstruct.h>
 #include <feral/kern/ki.h>
 
+// Private headers use this convention... (TODO: remove the 'inc' part with directly pointing to it)
+#include "inc/krnl.h"
+
+
+#include <arch/processor.h>
+
+static SYSTEM_INFO SystemInfo;
+
 static CHAR* cpu_vendor_msg = "CPU Vendor: ";
 
 
@@ -78,14 +86,42 @@ VOID KiSystemStartup(VOID)
 	//I don't have a TR4-compatible CPU (or motherboard) yet, so at this point I'm kind of just hoping $1500 USD just falls out of the sky or something.
 	//I do expect the 1950X (as, to my knowledge, it's just a server Zen CPU with two empty areas, and on a different socket.) to act the same as the mainstream models.
 	//As such, having one (just to verify it works as intended with even more threads) is unnecessary anyway. (But it would be nice for compile times...)
-	//And then call KiInitializeKernel as needed. We'll also have to use SMT when we can, and probably just assume the hardware supports SMT.
+	//And then call KiInitializeKernel as needed. We'll also have to use SMT when we can.
 
-	//SMP support would also be nice, but I can't really imagine any desktop motherboards supporting a dual-CPU configuration. (though this would be AWESOME!)
+	//SMP support would also be nice, but I can't really imagine any desktop motherboards supporting a dual-CPU configuration. (though this would be AWESOME! Someone PLEASE make dual-socket TR4.)
 	//At best, only consoles would do it, and seeing as how console systems tend to be low on power consumption, a dual-CPU configuration seems fairly unlikely.
 	//(Especially since games right now don't really utilize that many cores to their full potential... not because the engines are bad, just that no reason to use them.)
 
 	//Of course, don't be bad, actually check if a feature is available before using it.
+
+
+	// First off, ensure we load all the drivers, so we know what's going on.
+	FERALSTATUS KiLoadAllDrivers(VOID);
+	
+	
 }
+
+//UINT64 because one day someone is going to do something _crazy_ like have an absurd amount of processors (manycore), but be 32-bit and only 4GB addressable.
+//RAM is reasonably cheap (less cheap than before) in 2018, so we don't mind using an unneccessary 7 bytes more than we really need to.
+VOID KiStartupProcessor(UINT64 ProcessorNumber)
+{
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // temporary, turn into clean later.
 VOID InternalPrintRegister(DWORD reg, DWORD posx, DWORD posy)
@@ -102,10 +138,10 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 {
 	UINTN strLen = 0;
 	KiGetStringLength(cpu_vendor_msg, &strLen);
-	InternalPrintRegister(part1, strLen+0, 1);
-	InternalPrintRegister(part2, strLen+4, 1);
-	InternalPrintRegister(part3, strLen+8, 1);
-	VgaStringEntry(VGA_WHITE, VGA_BLACK, cpu_vendor_msg, strLen, 0, 1);
+	InternalPrintRegister(part1, strLen+0, 0);
+	InternalPrintRegister(part2, strLen+4, 0);
+	InternalPrintRegister(part3, strLen+8, 0);
+	VgaStringEntry(VGA_WHITE, VGA_BLACK, cpu_vendor_msg, strLen, 0, 0);
 }
 
 //On my laptop, we start in 40x25 for some reason. We REALLY want 80x25 because 40 looks too wide.
@@ -117,7 +153,7 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 VOID kern_init(void)
 {
 	UINT8 misc = VgaPrepareEnvironment();
-	char* string = "Feral kernel booting...";
+	char* string = "Feral kernel booting...";	// Why do we have to space 8 times to get this to work? Deleting this line has the next ones go OK.
 	KiPrintLine(string);
 
 	// We'd like to have some information about the CPU before we boot further.
@@ -174,4 +210,8 @@ VOID kern_init(void)
 	VgaMoveCursor(4, 6);	//This doesn't seem to quite work as expected. Is my assembler code wrong?
 
 	InternalPrintRegister((misc | 0x60606060), 5, 10);
+
+	// Kernel initialization is done, move on to actual tasks.
+	FERALSTATUS KiLoadAllDrivers(VOID);
+	KiSystemStartup();
 }

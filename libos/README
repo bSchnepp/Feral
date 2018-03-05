@@ -22,7 +22,39 @@ Problems aiming to solve:
 
 				- New problem: button prompts (game may ask for 'triangle', but we only have 'A' and 'B's and all)
 					- Solution: Not our problem (let the emulator deal with it, maybe some configuration file for button mapping, or some way to replace graphics w/ machine learning.)
+						And then machine learning particularly sucessfully *really badly hurts performance* (Not worth doing it, but I'm not responsible for it.)
 
-New, unrelted problems:
+New, unrelated problems:
 	- CLANG and LLVM require changes to port (not just 'recompile and done')
-		- Solution(?): Ignore this and emulate Darwin or Linux or something with a libos.
+		- Solution(?): Ignore this and emulate Darwin or Linux or something with a libos...
+		- (Preference to avoid changing toolchain code, as this needs to ge merged upstream and then this requires waiting and patience and when we mess with the OS architecture, ughhhhhh)
+			- (what we *can* do is take upstream, find a file we need, *completely rewrite it from scratch*, then just instruct the build process to overwrite mainline with our changes.)
+
+To handle different architectures, we're going to need to create some method to emulate a foreign processor... how this is done is something to work out later.
+(I'm essentially thinking just embedding a JIT compiler or something into the kernel as a loadable driver.)
+
+Architectural fun stuff that went right over my head the first time:
+	- Supporting these different personalities allows us to actually do something interesting:
+		We could, in theory, support a foreign OS personality on a different ISA than it's actually available on...
+		(This means, for example, one could run *STEP personalities compiled for FERAL on a RISC-V or something... even when no *STEP variant was never released on RISC-V for obvious reasons.)
+		Which means that porting a program to a different ISA simply just means getting it to run on a FERAL personality...
+			(And all your apps can recompile just fine, even if they're coming from a SPARC or Aarch64 or something!!!!!!)
+
+And then dealing with a more fundamental reason as to why games aren't very common outside a particular branch of the DigiEq-OS family:
+	- We're going to need a Whistler (or ideally, Redstone/Threshold) libos...
+		- WINE isn't perfect, (for example, certain anti-cheat programs whine and complain when it finds "oh no! ntdll.dll has a different SHA256 or MD5 or whatever hash!!!")
+			- (Then we have games/DRM tools/etc that use undocumented functions and use some weird quirks which only work under that OS and it's just bad.)
+			- Should we even bother with compatiblity with those titles? those anti-cheat programs are hard to fix externally, (plus they don't even stop cheaters all that often anyway.)
+		- Getting something that hashes identically is going to be nightmare fuel (we're basically going to inject dead code until the dll has the same hash. Yikes.)
+		- We could alternatively just reimplement the base kernel, then search through the network for a legitimate machine with the target OS, and then force it (somehow) to do kernel-y stuff.
+			- (Where does one even begin with that???) We don't even have a network stack yet.
+			- This requires the least emulation work, but then we're going to have to do security stuff and looking for vulnerabilities to exploit so we can take over the machine.
+				- (Or we can just stream from that PC, but then we're not using our super shiny awesome GPU and relying on whatever is in that one.)
+
+		- Some games do weird things like hidng important game logic code inside an embedded virtual machine and JIT compiling to the native architecture
+			- If we're on a RISC-V and emulating and x86_64, then we're JIT-ing a JIT-compiler which has some complex stuff behind it and this *really* hurts performance.
+			- Said VMs are usually undocumented, have instructions which do nothing, sometimes implement things which have no purpose, already hurt the game's performance, ughhhhhhhh
+		
+	- Ideally, we could just implement that personality "good enough" and then just hope developers feel like recompiling it along the lines of "why not", and thus have a 'native port'.
+		- (This is basically what libWINE is for, and that doesn't have every game developer ever just doing a Linux port through that.)
+
