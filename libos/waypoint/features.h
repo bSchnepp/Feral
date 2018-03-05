@@ -30,14 +30,14 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 
-#define FEATURE_VULKAN_RENDERING	\
-{					\
-	0xA99878C2,			\
-	0x0A0F,				\
-	0x430C,				\
-	0x0A0F,				\
-	0x805F,				\
-	{A9, 44, 15, 9D, 57, 45},	\
+#define FEATURE_VULKAN_RENDERING		\
+{						\
+	0xA99878C2,				\
+	0x0A0F,					\
+	0x430C,					\
+	0x0A0F,					\
+	0x805F,					\
+	{0xA9, 0x44, 0x15, 0x9D, 0x57, 0x45},	\
 }
 
 // Add more as needed.
