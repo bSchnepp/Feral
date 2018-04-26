@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,57 +24,27 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-
-// Define internal kernel functions here. (hence 'krnlfun'.)
-
+// Include stuff belonging to the platform.
 #include <feral/stdtypes.h>
-#include <feral/feralstatus.h>
-#include <feral/kern/frlos.h>
+#include <waypoint.h>
 
+#include <stdlib.h>
 
-#include <feral/string.h>
-
-#include <bogus/fluff.h>
-
-
-#if defined(__x86_64__)
-// Currently, I'm pretty sure something is *very* wrong with the current VGA driver (don't try it on real hardware).
-// As such, this is temporary, and I'll be writing a proper VGA driver very soon.
-#include <arch/x86_64/vga/vga.h>
-
-FERALSTATUS KiPrintLine(STRING string)
+UINT32 WayMain(IN UINT32 ArgumentCount, IN WSTRING* Arguments, INOPT HTASK Parent, INOPT HUSER User, INOPT HANDLE Directory)
 {
-	UINTN length = 0;
-	while (string[length])	//True as long as that isn't the null terminator.
-	{
-		length++;
-	}
+	// Malloc the language profile you want for your application. This may be macrod later so these explicit strings won't be required.
+	ContentLanguage* lang = (ContentLanguage*)malloc(sizeof(ContentLanguage));
+	lang->LangShort = "en_US";
+	lang->LangLong = L"English - US";
+	lang->IsRightToLeft = 0;
+	
+	// Roughly the same as a different platform; we require more stuff in order to be more low level and universal.
+	// The userspace driver shouldn't have to guess your program's intentions. It does *exactly* what the documentation (will) say it does.
+	// !!! performance is priority #1 in ALL cases (where security isn't an issue) !!!
+	MessageBox(NULL, L"Testing!", L"Hello, world!", MB_OK, lang);
 
-	// Ok, we call VgaPrintln and use a black on white color set.
-	VgaPrintln(VGA_WHITE, VGA_BLACK, string, length);
-	return STATUS_SUCCESS;
-}
-#endif
-// TODO: implement for other platforms.
-
-
-
-
-
-
-FERALSTATUS FrlCreateString(IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content)
-{
-	StringLocation->Length = Length;
-	StringLocation->Content = Content;
-	return STATUS_SUCCESS;
+	// Clean up our program's language state on the heap (about to exit).
+	free(lang);
+	return 0;
 }
 
-FERALSTATUS FrlDeleteString(IN FERALSTRING* String)
-{
-	//TODO
-}
-
-FERALSTATUS FrlCloneString(IN FERALSTRING* Source, IN FERALSTRING* OutLocation)
-{
-	//TODO
-}

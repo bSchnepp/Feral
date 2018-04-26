@@ -27,6 +27,9 @@ IN THE SOFTWARE.
 #ifndef _WAYPOINT_FEATURES_H_
 #define _WAYPOINT_FEATURES_H_
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 #include <feral/stdtypes.h>
 
@@ -42,6 +45,9 @@ IN THE SOFTWARE.
 
 // Add more as needed.
 
+#if defined(__cplusplus)
+}
+#endif
 
 BOOL IsFeatureSupported(GUID guid);
 

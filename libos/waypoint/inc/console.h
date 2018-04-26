@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,57 +24,42 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+#ifndef _FERAL_CONSOLE_H_
+#define _FERAL_CONSOLE_H_
 
-// Define internal kernel functions here. (hence 'krnlfun'.)
+// We follow POSIX with file IDs, but our names are different...
+#define SYS$INPUT  (0)
+#define SYS$OUTPUT (1)
+#define SYS$ERROR  (2)
 
-#include <feral/stdtypes.h>
-#include <feral/feralstatus.h>
-#include <feral/kern/frlos.h>
+// Compatibility...
+#define CONIN$ SYS$INPUT
+#define CONOUT$ SYS$OUTPUT
+#define CONERR$ SYS$ERROR
 
-
-#include <feral/string.h>
-
-#include <bogus/fluff.h>
-
-
-#if defined(__x86_64__)
-// Currently, I'm pretty sure something is *very* wrong with the current VGA driver (don't try it on real hardware).
-// As such, this is temporary, and I'll be writing a proper VGA driver very soon.
-#include <arch/x86_64/vga/vga.h>
-
-FERALSTATUS KiPrintLine(STRING string)
-{
-	UINTN length = 0;
-	while (string[length])	//True as long as that isn't the null terminator.
-	{
-		length++;
-	}
-
-	// Ok, we call VgaPrintln and use a black on white color set.
-	VgaPrintln(VGA_WHITE, VGA_BLACK, string, length);
-	return STATUS_SUCCESS;
-}
+#ifndef stdin
+#define stdin SYS$INPUT
+#define stdout SYS$OUTPUT
+#define stderr SYS$ERROR
 #endif
-// TODO: implement for other platforms.
 
-
-
-
-
-
-FERALSTATUS FrlCreateString(IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content)
+typedef struct KBRDHANDLE
 {
-	StringLocation->Length = Length;
-	StringLocation->Content = Content;
-	return STATUS_SUCCESS;
-}
+	//TODO...
+}KBRDHANDLE;
 
-FERALSTATUS FrlDeleteString(IN FERALSTRING* String)
-{
-	//TODO
-}
 
-FERALSTATUS FrlCloneString(IN FERALSTRING* Source, IN FERALSTRING* OutLocation)
-{
-	//TODO
-}
+/**
+	Returns a value based upon if the keyboard was recently hit or not.
+	If true, then you should read the buffer, otherwise it may be overwritten.
+
+	@return A value denoting if the keyboard was recently hit or not.
+ */
+BOOL KeyboardHit(KBRDHANDLE* HKeyboard);
+
+
+
+
+
+
+#endif
