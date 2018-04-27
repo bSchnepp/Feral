@@ -43,6 +43,24 @@ IN THE SOFTWARE.
 #define stderr SYS$ERROR
 #endif
 
+typedef enum MouseType
+{
+	MOUSE_TYPE_LASER,	// Basically everything today!
+	MOUSE_TYPE_TRACKBALL,	// pretty sure the one I had as a kid is long gone now (the acompanying PS/2 keyboard, for the record, was absolutely abysmal. Good riddance.) 
+	MOUSE_TYPE_THUMBBALL,	// Those mice where the trackball was on the side.
+	MOUSE_TYPE_TRACKPAD,	// laptops
+	MOUSE_TYPE_NUB,		// Like on the X60 (a real, true IA-32 that's still 'modern' and can run the latest version of the (GNU) Mach kernel without buying expensive 64-bit CPU)...
+	MOUSE_TYPE_UNREAL,	// If we called this 'virtual', it would be confused with VMs. This is where the mouse is actually a laser projection and doesn't really "exist".
+	MOUSE_TYPE_3D,		// Kinda like the remote for a certain Power-based 7th generation console from Japan famous for motion tracking. (cant really be less specific than that :| ).
+	MOUSE_TYPE_OTHER,	// We don't know!
+}MouseType;
+
+typedef struct MOUSEHANDLE
+{
+	MouseType Type;
+	//TODO...
+}MOUSEHANDLE;
+
 typedef struct KBRDHANDLE
 {
 	//TODO...

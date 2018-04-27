@@ -1,6 +1,6 @@
 include ../Makerules
 
-all:	device gpu proc wayapi
+all:	device gpu proc
 	# $(CC) $(CFLAGS) devices.o -o ../drivers.o
 	mv devices.o ../driver.o
 
@@ -14,9 +14,6 @@ gpu:
 
 proc:
 	cd proc && make
-
-wayapi:
-	cd wayapi && make
 
 clean:
 	rm -rf ./*.o

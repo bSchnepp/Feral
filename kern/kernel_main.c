@@ -36,6 +36,8 @@ IN THE SOFTWARE.
 #include <arch/x86_64/cpufuncs.h>
 #endif
 
+#include <kern_ver.h>
+
 #if 0
 #if defined(__x86_64__) || defined(__i386__)
 #include "feral_multiboot2.h"
@@ -52,6 +54,10 @@ IN THE SOFTWARE.
 #include <arch/processor.h>
 
 static SYSTEM_INFO SystemInfo;
+
+static UINT8 FeralVersionMajor;
+static UINT8 FeralVersionMinor;
+static UINT8 FeralVersionPatch;
 
 static CHAR* cpu_vendor_msg = "CPU Vendor: ";
 
@@ -155,6 +161,19 @@ VOID kern_init(void)
 	UINT8 misc = VgaPrepareEnvironment();
 	char* string = "Feral kernel booting...";	// Why do we have to space 8 times to get this to work? Deleting this line has the next ones go OK.
 	KiPrintLine(string);
+
+	FeralVersionMajor = FERAL_VERSION_MAJOR;
+	FeralVersionMinor = FERAL_VERSION_MINOR;
+	FeralVersionPatch = FERAL_VERSION_PATCH;
+
+	// temporary, hackish, just for now until I implement a proper printk().
+	char* verString = "Starting Feral Kernel Version 0.0.0";
+	KiPrintLine(verString);
+
+	//Row 4, index 30, 32, 34
+	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MAJOR), 30, 4);
+	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MINOR), 32, 4);
+	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_PATCH), 34, 4);
 
 	// We'd like to have some information about the CPU before we boot further.
 	// Some things like saying CPU vendor, family, brand name, etc.
