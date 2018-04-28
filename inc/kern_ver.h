@@ -45,7 +45,7 @@ extern "C" {
 
 // *NIX uname stuff
 #define UNAME_NAME "Linux"	// -s, we pretend to be Linux.
-#define UNAME_VERSION "4.16.0-27-feral" // Something bogus for -r
+#define UNAME_VERSION "4.20.0-27-feral" // Something bogus for -r, Linux 4.20 will not exist. (4.19 --> 5.0??)
 
 
 

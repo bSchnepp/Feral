@@ -24,13 +24,4 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_DRIVERS_GPU_VGA_H_
-#define _FERAL_DRIVERS_GPU_VGA_H_
-
-#include <feral/stdtypes.h>
-#include <feral/feralstatus.h>
-#include <ddk/frlddk.h>
-
-
-
-#endif
+// UDP stuff.

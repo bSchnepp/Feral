@@ -30,19 +30,14 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/string.h>
 #include <feral/feraluser.h>
+#include <feral/handle.h>
 
 typedef enum FERAL_OBJECT_TYPE
 {
 	/* What kind of object are we looking at? */
 	FERAL_FILE_OBJECT,
 	FERAL_DRIVER_OBJECT,
-	FERAL_TASK_OBJECT,	/* We use MACH terminology for what exactly is a program. */
-	FERAL_PROCESS_OBJECT,
-	FERAL_THREAD_OBJECT,
-	FERAL_MUTEX_OBJECT,
-	FERAL_SEMAPHORE_OBJECT,
 	FERAL_WAVEFRONT_OBJECT,	// for graphics stuff...
-	FERAL_TIMER_OBJECT,
 	FERAL_FRAME_OBJECT,
 	FERAL_IMAGE_BUFFER_OBJECT,	
 	FERAL_DESKTOP_OBJECT,
@@ -51,7 +46,6 @@ typedef enum FERAL_OBJECT_TYPE
 	FERAL_SERVICE_OBJECT,	/* A service is a userspace daemon which implements a specific set of functions requested by the kernel. (ie, a FUSE driver, or a printing service) */
 	FERAL_PACKET_OBJECT,	/* A network packet (9P, IP, etc.) */
 	FERAL_NETWORK_OBJECT,	/* Connection to some kind of network */
-	FERAL_RMS_HANDLE_OBJECT,	/* Key in Record Mangement Service */
 }FERAL_OBJECT_TYPE;
 
 typedef struct FERAL_PERMISSION_DESCRIPTOR
@@ -88,6 +82,9 @@ typedef struct OBJECT_ATTRIBUTES
 	UINT64 Length;
 	HANDLE RootDirectory;	// TODO: Consider replacing (special type for object in RMS)
 	WSTRING ObjectName;
+
+	UINT64 NumReferences;	// Increment on every open. Decrement on every close. If 0, free this object.	
+	
 	FERALUSER Owner;	// Kernel's name is "SYSTEM", UserID is 0, and it's home is A:/System/.
 	UINT8 Attributes;
 	

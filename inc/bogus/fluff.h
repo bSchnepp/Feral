@@ -49,4 +49,5 @@ IN THE SOFTWARE.
 #define  MSAPI __attribute__(__declspec)
 #define EFIAPI __attribute__(__declspec)
 
+
 #endif

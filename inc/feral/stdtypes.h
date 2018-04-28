@@ -36,27 +36,10 @@ extern "C" {
 #include <stdint.h>
 #include <bogus/fluff.h>
 
-//TODO: do this properly for other archs.
-#if 0
-typedef uint64_t natural_t;
-typedef int64_t  integer_t;
-
-typedef uint32_t uint32;
-typedef  int32_t  int32;
-#endif	//Can we just drop the legacy stuff instead of redefining datatypes over and over and over...?
-
-/* ok, these aren't necessary, just to keep the ALL CAPS style that we're using for legacy reasons. */
 #define CONST const
 #define INLINE inline
 #define VOID void
 #define PVOID void*
-// Reimplement ReactOS data types as needed so it's easier to port programs to FERAL WAYPOINT.
-// The majority of desktop games run on a ReactOS-like environment... for backwards compatibility,
-// we need these, even if the design choices are or aren't good/ugly/awful/whatever: that's 
-// irrelevent, we just care about actually having ports. (kind of hard to test performance gains
-// if we can't recompile the same program with minor modifications to test, no?)
-
-// probably improperly using an ellipsis, whatever, don't care.
 
 typedef unsigned char BYTE;
 typedef BYTE BOOLEAN;
@@ -76,12 +59,6 @@ typedef int32_t INT;
 typedef INT BOOL;
 typedef uint16_t WORD;
 
-typedef PVOID HANDLE;
-typedef HANDLE* PHANDLE;
-typedef int HFILE;
-typedef HANDLE HINSTANCE;
-typedef HANDLE HKEY;
-
 typedef int8_t INT8;
 typedef int16_t INT16;
 typedef int32_t INT32;
@@ -95,8 +72,7 @@ typedef uint64_t UINT64;
 typedef int32_t LONG;
 typedef int64_t LONGLONG;
 
-
-/* I'll never understand the purpose of this over just 'UINTN', but OK. */
+// We're LP64.
 #if defined(__x86_64__)
 typedef int64_t INT_PTR;
 #elif defined(__i386__)

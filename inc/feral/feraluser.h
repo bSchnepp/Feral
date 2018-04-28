@@ -32,6 +32,7 @@ extern "C" {
 #endif
 
 #include <feral/stdtypes.h>
+#include <feral/handle.h>
 
 struct FERALUSER;
 

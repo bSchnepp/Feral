@@ -32,6 +32,14 @@ IN THE SOFTWARE.
 	// - We need a GPU on another system so as to actually be able to handle very high resolution, where network latency is OK.
 	// - We actually have a CPU which can handle a foreign ISA, and thus can accelerate an emulator without actual emulation.
 
+// The primary motivation for this is clustering gaming systems together to utilize all the hardware we can throw at a game (more CPU cores for AI, audio processing, whatever, more GPUs for rendering).
+// Horizontal expansion (and reuse of older hardware) is signifigantly cheaper than vertical expansion: you can only get so high clock speeds without resorting to liquid nitrogen,
+// and you can only fit so many compute cores on a single graphics card instead of just getting more GPUs. It's less efficient (~187% performace with 2 GPUs, not 200%), but good enough.
+
+// The obvious solution to this is to ask games nicely to use the local GPU for as much as it can while meeting the refresh rate of the local screen,
+// then dump all the rest of the work to render off to something else on the network and demand that machine do some of the rendering work (ie, get model info, render to tiles, send tiles back)
+// Conceptually not all too different from the first consumer GPU (more of a "general purpose ASIC" or just "coprocessor" than a true dedicated GPU) on a game system for a game released in 1993.
+
 typedef struct 
 {
 	
