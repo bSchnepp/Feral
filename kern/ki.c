@@ -48,28 +48,26 @@ FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINTN Amount)
 }
 
 //First, Second, Size, Equal
-#if 0
 FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINTN Amount, OUT BOOL* Val)
 {
-	Val = 0;
 	if ((Source == NULL) || (Dest == NULL))
 	{
 		return STATUS_INVALID_MEMORY_LOCATION;
 	}
 	for (UINTN i = 0; i < Amount; i++)
 	{
-		UINTN Src = (UINTN) &(Source + i);
-		UINTN Dst = (UINTN) &(Dest + i);
-		if (!(Src == Dst))
+		// Assume they are UINTN. This will probably need to be changed.
+		UINTN* Src = (Source + i);
+		UINTN* Dst = (Dest + i);
+		if (!(*Src == *Dst))
 		{
-			Val = 0;
+			*(Val) = 0;
 			break;
 		}
-		Val = 1;
+		*(Val) = 1;
 	}
 	return STATUS_SUCCESS;
 }
-#endif
 
 //TODO: Implement the rest of this stuff.
 #if 0
@@ -91,13 +89,14 @@ FERALSTATUS KiGetStringLength(IN STRING String, OUT UINTN* Length)
 		return STATUS_INVALID_MEMORY_LOCATION;
 	}
 	UINTN Len = 0;
-	while (String[Len])
+	while (String[Len])	// false is just 0, so when we dereference and find equal to 0, we terminate.
 	{
 		Len++;
 	}
 	*Length = Len;
 	return STATUS_SUCCESS;
 }
+
 /*
 //Same as above but with a wide string.
 FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT* UINTN);

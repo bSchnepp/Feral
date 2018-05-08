@@ -53,7 +53,7 @@ void cpuid_vendor_func(DWORD* part1, DWORD* part2, DWORD* part3);
 void cpuid_brand_name(DWORD* part1, DWORD* part2, DWORD* part3, DWORD* part4);	// See comment in kernel_main.c for usage. Cleanup later.
 
 /* Useful ("stable") functions. Refactor elsewhere later. */
-VOID KiRestoreInterrupts(BOOLEAN value);
+VOID KiRestoreInterrupts(IN BOOLEAN value);
 
 
 

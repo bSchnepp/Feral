@@ -60,7 +60,10 @@ static UINT8 FeralVersionMajor;
 static UINT8 FeralVersionMinor;
 static UINT8 FeralVersionPatch;
 
-static BOOL ILOVEBEAR18 = 1;	// Maybe you should try bouncing a teddy bear on their monitor? (this is a flag for experimental kernel features)
+static BOOL ILOVEBEAR18 = 1;	// flag for experimental kernel features, intentionally something strange such that someone 
+				    // doesn't see this in an automated flag thing and just turns it on without knowing why.
+
+static WSTRING RootFsLocation;	// Where is the root? This should normally be A:/, but it can be anywhere.
 
 
 // FERAL initialization follows a few basic steps:

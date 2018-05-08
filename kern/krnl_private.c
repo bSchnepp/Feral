@@ -35,6 +35,8 @@ IN THE SOFTWARE.
 #define TEMPORARY_SERIAL_DRIVER_STUB
 
 #include <feral/feralstatus.h>
+#include <feral/stdtypes.h>
+
 
 FERALSTATUS KiLoadAllDrivers(VOID)
 {
@@ -47,3 +49,19 @@ FERALSTATUS KiLoadAllDrivers(VOID)
 
 	return STATUS_SUCCESS;
 }
+
+
+#if defined(__x86_64__)
+#include <arch/x86_64/cpufuncs.h>
+VOID KiRestoreInterrupts(BOOLEAN value)
+{
+	if (value)
+	{
+		__asm__ __volatile__ ("sti");
+	}
+	else
+	{
+		__asm__ __volatile__ ("cli");
+	}
+}
+#endif

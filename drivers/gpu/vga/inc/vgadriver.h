@@ -31,6 +31,8 @@ IN THE SOFTWARE.
 #include <feral/feralstatus.h>
 #include <ddk/frlddk.h>
 
+static UINTN* TextMemLoc = *(0xB8000);	// Location of the VGA framebuffer
+
 
 
 #endif
