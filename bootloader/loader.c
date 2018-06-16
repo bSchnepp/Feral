@@ -24,49 +24,22 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-// Include stuff belonging to the platform.
-#include <feral/stdtypes.h>
-#include <waypoint.h>
+#include <libreefi/efi.h>
 
-#include <stdlib.h>
-#include <string.h>
+EFI_HANDLE ImageHandle;
+EFI_SYSTEM_TABLE* SystemTable;
 
-#ifndef NDEBUG
-VOID WpFunctionCallback(WpDebugReportCallbackFlags flags, WpDebugReportComType objType, uint64_t hObj, int32_t code, const char* ssName, const char* message, void* userData)
+EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE* mSystemTable)
 {
-	// WP_DEBUG_INFORMATION_BIT
-	// WP_DEBUG_WARNING_BIT
-	// WP_DEBUG_PERFORMANCE_BIT
-	// WP_DEBUG_ERROR_BIT
-	// WP_DEBUG_GENERAL_BIT
+	ImageHandle = mImageHandle;
+	SystemTable = mSystemTable;
+	
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, L"Hello, world!\r\n");
 
-	if (flags & WP_ERROR_BIT)
+	// For now, hang the system...
+	for (;;)
 	{
-		WpConOutColor(SYSERR, message, "0xFF0000");
-	}
-	else
-	{
-		WpConOut(SYSERR, message);
 	}
 
+	return EFI_SUCCESS;
 }
-#endif
-
-UINT32 WayMain(IN UINT32 ArgumentCount, IN WSTRING* Arguments, INOPT HTASK Parent, INOPT HUSER User, INOPT HANDLE Directory)
-{
-	ContentLaguage lang;
-	WpGetSystemLanguage(&lang);
-
-	if (strcmp("en_US", lang.LangShort == 0)
-	{
-		MessageBox(NULL, L"Testing!", L"Hello, world!", MB_OK, &lang);
-	}
-	return 0;
-}
-
-
-#if 0
-	lang->LangShort = "en_US";
-	lang->LangLong = L"English - US";
-	lang->IsRightToLeft = 0;
-#endif

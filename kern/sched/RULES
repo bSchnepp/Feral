@@ -1,0 +1,22 @@
+Overall outline for what to do:
+
+	- NEVER EVER EVER prefer an SMT thread over a physical core (unless we have a hard limit saying to ignore this rule)
+		(on the x86, if we run on processor n, we can be lazy and schedule a new thread on n + 2, and cycle back to 1 when we
+		 run out of execution units. This should be temporary (and later possible to re-enable), and avoids us having to
+		 actually check for SMT or not. So far, SMT on the x86 is only 2-way, not 4-way (like on some RISCs))
+			(obviously that doesn't apply to Larrabee, but that's not (really) a CPU.)
+
+	- We should query what information we have on the CPU to do the following:
+		- Never put the same task on two different CPUs if we can help ie (ie, dual-socket systems)
+		- From here, check how many dies there actually are. In the case of ZEN, there is between 1 and 4.
+			- In the case of ZEN, each die has two "mini-CPUs" in it. Again, keep execution threads together.
+
+	These are all for performance mainly, as ZEN gets a signifigant performance improvement just by using it well.
+
+
+We would like to schedule threads in terms of seconds: we want to (nearly) guarantee that every process gets to run for
+a share of CPU time at least once every second. This can be overriden by games, (but the actual usefulness of this feature is
+debatable, we should fully expect non-games to turn the flag on to go faster (especially apps that don't really need it) and 
+this goes to everyone so that "now everything is priority #1" and we then need to create a "priority #0" and this process never ends.
+We should (carefully) design everything assuming it will be abused, and try to mitigate that while not restricting useful
+features.

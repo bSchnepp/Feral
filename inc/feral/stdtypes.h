@@ -86,8 +86,10 @@ typedef QUAD QWORD;
 
 #if defined(__x86_64__)
 typedef uint64_t UINTN;
+typedef  int64_t  INTN;
 #elif defined(__i386__)
-typedef uint32_t UINTN;	
+typedef uint32_t UINTN;
+typedef  int32_t  INTN;	
 #endif
 // 286 and earlier not supported.
 

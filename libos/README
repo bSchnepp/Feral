@@ -57,4 +57,3 @@ And then dealing with a more fundamental reason as to why games aren't very comm
 		
 	- Ideally, we could just implement that personality "good enough" and then just hope developers feel like recompiling it along the lines of "why not", and thus have a 'native port'.
 		- (This is basically what libWINE is for, and that doesn't have every game developer ever just doing a Linux port through that.)
-

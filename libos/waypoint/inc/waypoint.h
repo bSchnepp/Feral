@@ -43,7 +43,10 @@ typedef enum
 	FERAL_GENERIC_GAME_APPLICATION,
 	FERAL_GENERIC_MEDIA_APPLICATION,
 	FERAL_GENERIC_WEB_BROWSER_APPLICATION,
+	FERAL_GENERIC_HIGH_PERFORMANCE_CREATIVE_APPLICATION,	// Stuff like the GNU GIMP and whatnot.
 	FERAL_GENERIC_APPLICATION,
+
+	FERAL_FOREIGN_APPLICATION,	// this is a program that's lazilly ported to Waypoint and pretends to be a native waypoint app, but is really running through basically libWINE.
 
 	// These have special meanings.
 	FERAL_EMULATED_GAME_APPLICATION,	// This game is running on a emulated processor (ie, a JIT-ed POWER or Aarch32 or something).
@@ -305,9 +308,6 @@ WPSTATUS CreateApplicationFrame(IN WpApplicationState* AppState, OUT WPFRAME* Fr
 
 // We like to use Unicode because not everyone uses the same 26 (52 with uppercase) characters.
 MB_RESULT_TYPE MessageBox(INOPT WPFRAME* ParentHandle, INOPT WSTRING MessageString, INOPT WSTRING MessageBoxTitle, IN MessageBoxType Type, ContentLanguage Lang);
-
-
-
 
 
 

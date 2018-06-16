@@ -27,11 +27,15 @@ IN THE SOFTWARE.
 #ifndef _FERAL_LIBRE_EFI_STATUS_H_
 #define _FERAL_LIBRE_EFI_STATUS_H_
 
-typedef UINTN EFI_STATUS;
+typedef INTN EFI_STATUS;
+
+#define EFI_FALSE	0
+#define EFI_TRUE	1
 
 // EFI_STATUS definitions...
 #define EFI_SUCCESS 0
 #define EFI_LOAD_ERROR 1
+
 #define EFI_INVALID_PARAMETER 2
 #define EFI_UNSUPPORTED 3
 #define EFI_BAD_BUFFER_SIZE 4

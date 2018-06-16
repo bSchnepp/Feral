@@ -63,7 +63,7 @@ typedef struct SYSTEM_INFO
 #define PROCESSOR_ARCH_AARCH64		0xAA64
 #define PROCESSOR_ARCH_AARCH32		0xAA32	// Only support those weird versions which can do more than 4GB of RAM.
 #define PROCESSOR_ARCH_RISCV32		0x5032	// Only support if we _really have to_.
-#define PROCESSOR_ARCH_RISCV64		0x5064
+#define PROCESSOR_ARCH_RISCV64		0x5064	// We expect RVGC64.
 #define PROCESSOR_ARCH_RISCV128		0x5128
 
 

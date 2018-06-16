@@ -41,9 +41,8 @@ IN THE SOFTWARE.
 // Technically, we're lying, in that we really only support the bare minimum needed to
 // load the kernel then leave the UEFI environment as fast as we can, but whatever.
 
-// As Linux is with POSIX, "yes, this is a joke".
-#define EFI_SPECIFICATION_MAJOR_REVISION 2
-#define EFI_SPECIFICATION_MINOR_REVISION 07
+#define EFI_SPECIFICATION_MAJOR_REVISION  (2)
+#define EFI_SPECIFICATION_MINOR_REVISION (07)
 
 // For reading files and understanding what they're for.
 #define EFI_IMAGE_SUBSYSTEM_EFI_APPLICATION 10
@@ -60,87 +59,6 @@ IN THE SOFTWARE.
 #define EFI_IMAGE_MACHINE_RISCV32 0x5032
 #define EFI_IMAGE_MACHINE_RISCV64 0x5064
 #define EFI_IMAGE_MACHINE_RISCV128 0x5128
-
-
-#include <efi/efiapi.h>
-#define EFI_SYSTEM_TABLE_REVISION      (EFI_SPECIFICATION_MAJOR_REVISION<<16) | (EFI_SPECIFICATION_MINOR_REVISION)
-
-
-#define MDE_CPU_X64	// In case any code relies upon that...
-
-#ifndef __WCHAR_TYPE__
-# define __WCHAR_TYPE__ short
-#endif
-
-// #define HAVE_USE_MS_ABI 1	// Let's just not support old versions of GCC 
-// since having some weird objcopy hack is bad
-
-#define EFI_ERROR_MASK (0x8000000000000000)
-#define EFI_OEM_MASK   (0xC000000000000000)
-#define EFIERR(x) (EFI_ERROR_MASK | x)
-#define EFIERR_OEM(x) (EFI_OEM_MASK | x)
-
-#define BAD_POINTER (0xFBFBFBFBFBFBFBFBULL)
-#define MAX_ADDRESS (0xFFFFFFFFFFFFFFFFULL)
-#define MAX_2_BITS  (0xC000000000000000ULL)
-#define MAX_BIT     (0x8000000000000000ULL)
-
-#define MAX_INTN    ((INTN) 0x7FFFFFFFFFFFFFFFULL)
-#define MAX_UINTN   ((UINTN)0xFFFFFFFFFFFFFFFFULL)
-
-
-
-
-// On x86-64, the stack needs to be aligned with 16.
-#if defined(__x86_64__)
-#define CPU_STACK_ALIGNMENT (0x10)
-#endif
-
-// 4K pages...
-#define DEFAULT_PAGE_ALLOCATION_GRANULARITY (0x1000)
-#define RUNTIME_PAGE_ALLOCATION_GRANULARITY (0x1000)
-
-
-typedef WCHAR CHAR16;
-
-typedef VOID* EFI_HANDLE;
-typedef VOID* EFI_EVENT;
-typedef UINTN EFI_TPL;
-typedef UINT64 EFI_LBA;
-
-typedef UINT64 EFI_PHYSICAL_ADDRESS;
-typedef UINT64 EFI_VIRTUAL_ADDRESS;
-
-typedef struct
-{
-	UINT16 Year;
-	UINT8 Month;
-	UINT8 Day;
-	UINT8 Hour;
-	UINT8 Minute;
-	UINT8 Second;
-	UINT8 Pad1;
-	UINT32 Nanosecond;
-	INT16 TimeZone;
-	UINT8 Daylight;
-	UINT8 Pad2;
-}EFI_TIME;
-
-typedef struct 
-{
-	UINT32 Data1;
-	UINT16 Data2;
-	UINT16 Data3;
-	UINT8 Data4;
-	UINT8 Data5;
-	UINT8 Data6;
-	UINT8 Data7;
-	UINT8 Data8;
-	UINT8 Data9;
-	UINT8 Data11;
-	UINT8 Data12;
-}EFI_GUID;
-
 
 typedef enum
 {
@@ -160,12 +78,6 @@ typedef enum
 	EfiPalCode,
 	EfiMaxMemoryType
 }EFI_MEMORY_TYPE;
-
-typedef struct
-{
-	UINT16 ScanCode;
-	CHAR16 UnicodeChar;
-}EFI_INPUT_KEY;
 
 /* Important GUIDs... */
 #define EFI_EVENT_GROUP_EXIT_BOOT_SERVICES	\
@@ -228,7 +140,10 @@ typedef struct
 	0x2B,					\
 }
 
-EFIAPI EfiMain(EFI_HANDLE Handle, EFI_SYSTEM_TABLE SystemTable);
+
+#include <libreefi/efirt.h>
+#include <libreefi/efiapi.h>
+#include <libreefi/efibserv.h>
 
 // stdtypes happens to define datatypes pretty much identical to the (U)EFI spec. Perfect!
 

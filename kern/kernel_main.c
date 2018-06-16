@@ -96,7 +96,7 @@ static WSTRING RootFsLocation;	// Where is the root? This should normally be A:/
 	 */
 
 static CHAR* cpu_vendor_msg = "CPU Vendor: ";
-
+static SYSTEM_INFO KernelSystemInfo = {};
 
 /* 
 	Things to do in order:
@@ -110,10 +110,12 @@ static CHAR* cpu_vendor_msg = "CPU Vendor: ";
 	Work on being self-hosting
 	Create a vega10 GPU driver
 	Create a desktop environment
-	Create an alternative to the LiveCD tools we need currently, create a bootloader that understands (U)EFI. We implement UEFI ourselves, because tangling with BSD license is too much effort.
+	Create an alternative to the LiveCD tools we need currently, create a bootloader that understands (U)EFI. We implement UEFI ourselves, because tangling with inconsistently applied BSD license 
+	is too much effort.
 	Implement Multiboot 2 support
 	New filesystem focused on getting as fast read times as possible on files (eliminate file fragmentation by not allowing fragmentation?, yes, more writes, but avoids non-sequential reads.)
-	Add some random hypervisor capability just for fun or something.
+			(for hard drives, specifically being sequential might actually be a bad thing because of the spinning. I wouldn't know though.)
+	Add some random hypervisor capability just for fun or something (basically kvm).
 	Get a working Vulkan driver for the vega10 GPU (Do some magic to port AMDVLK (is this possible?) and/or RADV or something, then just modify them as needed?).
 	Port some open source games over, see if we can get it to outperform some other OSes just by running on Feral Waypoint. (specifically, everything we can from the 90s)
 	???
@@ -122,6 +124,8 @@ static CHAR* cpu_vendor_msg = "CPU Vendor: ";
 	(Those are too old, and by the time this becomes usable as a serious OS, those would be *long* obsolete anyway.)
  */
 
+
+// This is the kernel's *real* entry point. TODO: some mechanism for a Feral-specific bootloader to skip the multiboot stuff and just load this.
 VOID KiSystemStartup(VOID)
 {
 	//TODO...
@@ -154,7 +158,10 @@ VOID KiStartupProcessor(UINT64 ProcessorNumber)
 
 
 
-
+FERALSTATUS KeBootstrapSystem(VOID)
+{
+	
+}
 
 
 
@@ -197,7 +204,10 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 
 // I actually feel like doing the last one to be honest. Maybe one day I can learn how that stuff works and try to cram low end (520) Fermi-level performance into a 100Mhz FPGA with some crazy RISC SIMD 
 // architecture and HBM2 RAM... While Fermi (today) isn't all that great anyway, cramming that *per compute core*, with the FPGA implementing *a single graphics core* (and glue more ala ZEN to it), 
-// would be GREAT. (Call it "FX-GSU Graphics Support Unit" or something)
+// would be GREAT. (Call it "FX-SUPER Graphics Support Unit" or something)
+
+// For now, kern_init() is multiboot only while I migrate to UEFI. Everything should be EFI because UEFI is ok and not completely horrible. (80s style bios is headache-inducing when the A20 is sometimes on but sometimes not 
+// and then sometimes it does odd things with memory or just flat out DOES NOT DO what you expected. ughhh)
 VOID kern_init(void)
 {
 	UINT8 misc = VgaPrepareEnvironment();
@@ -273,6 +283,5 @@ VOID kern_init(void)
 	InternalPrintRegister((misc | 0x65656565), 0, 10);
 
 	// Kernel initialization is done, move on to actual tasks.
-	FERALSTATUS KiLoadAllDrivers(VOID);
 	KiSystemStartup();
 }

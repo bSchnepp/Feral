@@ -46,8 +46,9 @@ IN THE SOFTWARE.
 
 #define FERALAPI __attribute__((cdecl))	//Team Red's ABI. (the one basically everyone else uses).
 
-#define  MSAPI __attribute__(__declspec)
-#define EFIAPI __attribute__(__declspec)
+#define  MSAPI __attribute__((ms_abi))
+#define WINAPI __attribute__((ms_abi))
+#define EFIAPI __attribute__((ms_abi))
 
 
 #endif
