@@ -1,9 +1,9 @@
 RUSTC = rustc
-XARGO = xargo
+XARGO = cargo
 RUSTFLAGS = --target=x86_64-pc-feral-gnu -v
 
 procmgr:
-	$(XARGO) build $(RUSTFLAGS) 
+	$(XARGO) xbuild $(RUSTFLAGS) 
 	cp target/x86_64-pc-feral-gnu/debug/libprocmgr.a ../
 
 clean:

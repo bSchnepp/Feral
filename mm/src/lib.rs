@@ -1,4 +1,5 @@
 #![feature(lang_items)]
+#![feature(panic_implementation)]
 #![no_std]
 
 #![allow(non_snake_case)]	/* We use camelcase for interacting with the C code. Leave snakecase for rust-specific stuff. */
@@ -15,5 +16,6 @@ pub extern fn KeModifyProcess(){}	//TODO
 #[lang = "eh_personality"] 
 extern fn eh_personality(){}
 
-#[lang = "panic_fmt"] #[no_mangle] 
-pub extern fn panic_fmt() -> !{loop{}}
+#[panic_implementation]
+#[lang = "panic_impl"] #[no_mangle] 
+pub extern fn panic_impl(_info: &core::panic::PanicInfo) -> !{loop{}}

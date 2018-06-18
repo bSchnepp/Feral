@@ -29,7 +29,7 @@ IN THE SOFTWARE.
 EFI_HANDLE ImageHandle;
 EFI_SYSTEM_TABLE* SystemTable;
 
-EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE* mSystemTable)
+EFI_STATUS uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE* mSystemTable)
 {
 	ImageHandle = mImageHandle;
 	SystemTable = mSystemTable;

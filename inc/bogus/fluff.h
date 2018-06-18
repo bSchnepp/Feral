@@ -41,6 +41,14 @@ IN THE SOFTWARE.
 /* This is optional input. Not required. */
 #define INOPT
 
+/* Optional (other) */
+#define OPT
+
+/* May be null on return. */
+#define OUTOPT
+
+/* Optional, does something to this object. */
+#define INOUTOPT
 
 /* Yes, 'API' is not a typo, even though we're dealing with ABIs. This is because this is how the API would be called. Slightly confusing, yes, but I'm just following an established thing. */
 
