@@ -27,7 +27,7 @@ iso:	kernel
 	mkdir -p build/isofiles/boot/grub
 	cp $(KERNEL) build/isofiles/boot
 	cp arch/$(ARCH)/grub.cfg build/isofiles/boot/grub
-	grub-mkrescue -o $(ISO) --verbose build/isofiles 2> /dev/null
+	grub-mkrescue --verbose --output=$(ISO) build/isofiles 2> /dev/null
 	rm -rf build/$(ARCH)
 
 clean:

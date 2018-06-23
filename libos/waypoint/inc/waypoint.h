@@ -131,10 +131,10 @@ typedef UINT32 MessageBoxType;
 #define MB_OK			((MessageBoxType)0x00)
 #define MB_CANCEL		((MessageBoxType)0x01)
 #define MB_YES			((MessageBoxType)0x02)
-#define MB_RETRY		((MessageBoxType)0x04)
+#define MB_RETRY			((MessageBoxType)0x04)
 #define MB_NO			((MessageBoxType)0x08)
 #define MB_IGNORE		((MessageBoxType)0x10)
-#define MB_ABORT		((MessageBoxType)0x20)
+#define MB_ABORT			((MessageBoxType)0x20)
 #define MB_CONTINUE		((MessageBoxType)0x30)
 
 // The window manager (part of the kernel) does special things in this case.
@@ -146,7 +146,7 @@ typedef UINT32 MessageBoxType;
 // And a couple defaults.
 #define MB_OKCANCEL		((MessageBoxType)(MB_OK     | MB_CANCEL))
 #define MB_RETRYCANCEL		((MessageBoxType)(MB_RETRY  | MB_CANCEL))
-#define MB_YESNO		((MessageBoxType)(MB_YES)   | MB_NO))
+#define MB_YESNO			((MessageBoxType)(MB_YES)   | MB_NO))
 #define MB_ABORTRETRYIGNORE	((MessageBoxType)(MB_IGNORE | MB_RETRY    | MB_ABORT))
 #define MB_CANCELRETRYCONTINUE	((MessageBoxType)(MB_IGNORE | MB_CONTINUE | MB_CANCEL))
 #define MB_YESNOCANCEL		((MessageBoxType)(MB_YES)   | MB_NO       | MB_CANCEL))
