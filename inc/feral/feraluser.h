@@ -50,8 +50,6 @@ typedef struct FERALUSER
 	struct FERALUSER* Parent;
 }FERALUSER;
 
-WSTRING Ur
-
 #if defined(__cplusplus)
 }
 #endif
