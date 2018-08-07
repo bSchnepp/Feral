@@ -46,7 +46,7 @@ typedef struct FERALSTRING
 }FERALSTRING;
 
 /* Inline functions to do string comparison. We do NOT want the overhead of a function call for something trivial. */
-/* Returns 0 if equal, 1 if they differ in length, and 2 if their content differs at some point. */
+/* Returns 0 if equal, 1 if they differ in length, and 2 if their content differs at some point, -1 for erronous length on a string causing an error.*/
 static inline BOOL FrlStringCmp(FERALSTRING* String1, FERALSTRING* String2)
 {
 	if (String1->Length != String2->Length)
@@ -58,6 +58,11 @@ static inline BOOL FrlStringCmp(FERALSTRING* String1, FERALSTRING* String2)
 	/* Check for every single letter. If it's not the same, well, they're not equal. */
 	for (UINT64 i = 0; i < String1->Length; i++)
 	{
+		if (String1->Content[i] == '\0' || String2->Content[i] == '\0')
+		{
+			return -1;
+		}
+		
 		if (String1->Content[i] != String2->Content[i])
 		{
 			return 2;

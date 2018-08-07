@@ -24,23 +24,29 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_FRLOS_H_
-#define _FERAL_FRLOS_H_
 
-#include <feral/feralstatus.h>
+#define FERAL_MASTER_CONTROL_PROCESS_PROC_ID	1
+
 #include <feral/stdtypes.h>
-
-/* All kernel functions should return a FERALSTATUS. */
-FERALSTATUS KiPrintLine(STRING string);
+#include <feral/port/port.h>
 
 
-typedef enum KiSubsystemIdentifier
+// We get up to 48 characters to define ourselves in a Feral port.
+#define PORT_IDENTIFIER	"Master Control Process"
+#define PORT_REQUESTED_NUMBER 0		/* Master Control Process gets port 0, in portspace 0. */
+
+/*
+	This function should never return (for obvious reasons). 
+ */
+int main(int argc, char *const *argv)
 {
-	FERAL_SUBSYSTEM_MEMORY_MANAGEMENT,
-	FERAL_SUBSYSTEM_FILESYSTEM_MANAGEMENT,
-}KiSubsystemIdentifier;
 
-/* Bring up a system needed for the kernel. */
-FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem);
+	/* Attach as PID 1, under user ID 1, with port number 0. */
+	
 
-#endif
+	for (;;)
+	{
+		/* Do nothing for now. */
+	}
+	return -1;
+}

@@ -25,8 +25,16 @@ IN THE SOFTWARE.
  */
 
 // This stuff is *far* beyond where we currently are at (1 Jan 2018), but hey, why not leave this in for later?
+// Now that there's an architecture to work towards, it can be filled in appropriately...
 
 #include <feral/stdtypes.h>
+#include <feral/feralstatus.h>
+#include <feral/port/ports.h>
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 
 #if defined(__x86_64__) || defined(__i386__)
 typedef struct REGISTERS
@@ -57,15 +65,16 @@ typedef struct REGISTERS
 	UINTN R15;
 #endif
 }ProcRegisters;
-#endif
 
-
-#if defined(__aarch64__) || defined(__arm__)
+#elif defined(__aarch64__) || defined(__arm__)
 // TODO: Aarch64 registers table.
 typedef struct REGISTERS
 {
 	UINTN R1;
 	UINTN R2;	//As far as I'm aware, they follow this naming convention, but do weird things with some of them (one of them is always zero or something?)
+#if defined(__aarch64__)
+
+#endif
 }ProcRegisters;
 #endif
 
@@ -73,6 +82,8 @@ typedef struct REGISTERS
 
 // This is an OS-level structure, you shouldn't include this and use <feral.h>
 // and FrlCreateProcess(), FrlCloneProcess(), etc. instead.
+// TODO: Because time is evil, change this to being an opaque struct. (we use FERALTIMEHARD, and this has the year 65536 problem.)
+// (we also can't eat all the RAM in the world just to solve a problem that probably won't matter, is anyone going to still be using Feral over 60000 years from now?)
 typedef struct _FeralProcess
 {
 	// We use an 8-bit value to represent two fields for process priority.
@@ -80,21 +91,30 @@ typedef struct _FeralProcess
 	// In essence, we have two schedulers, one for processes scheduled to run,
 	// and one for processes waiting to run.
 
-	// For now, we're doing this with two UINT8s. This will be changed later.
-	UINT8 RunningPriority;
-	UINT8 HaltedPriority;
+	UINT16 RunningPriority;
+	UINT16 HaltedPriority;
 
-	// What time from the *NIX Epoch do we want this process to run again?
-	UINT64 NextRunTime;
-	// When we have RunPriority=15 and WaitPriority=15, we are intending to run
-	// with a real-time design, but not guaranteeing anything.
-	// (We just promise it's "somewhere very close to those times")
+	// What time to run next?
+	FERALTIMEHARD NextRunTime;
+	
+	// When we have RunPriority=255 and WaitPriority=255, we are intending to run
+	// with a real-time design, but not guaranteeing anything (no big long math proof)
+	// (something like RTLinux, we're hard real time in practice, but it's not formally verified)
 
-	// The higher of the number, the higher the priority.
+	// The higher of the number, the higher the priority. Importantly, we only boost priorities, never lower.
 
 	ProcRegisters Registers;
 
 	VOID* Stack;
 	UINT64 ProcID;
+	
+	PFERALPORT Port;
 }FeralProcess;
 
+
+FERALSTATUS KeCreateProcess(INOUT FERALPORT* HPort, IN UINT16 RunPriority, IN UINT16 HaltPriority, IN FERALTIMEHARD RunTime, OUT struct _FeralProcess* Process);
+FERALSTATUS KeTerminateProcess(INOUT struct _FeralProcess* Process, IN FERALTIMEHARD EndTime);
+
+#if defined(__cplusplus)
+}
+#endif

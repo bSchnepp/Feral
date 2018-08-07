@@ -57,3 +57,21 @@ And then dealing with a more fundamental reason as to why games aren't very comm
 		
 	- Ideally, we could just implement that personality "good enough" and then just hope developers feel like recompiling it along the lines of "why not", and thus have a 'native port'.
 		- (This is basically what libWINE is for, and that doesn't have every game developer ever just doing a Linux port through that.)
+		
+		
+		
+		
+		
+		
+		
+## Why no libwin_sa.klib ?
+Essentially, the implementation of such a compatibility layer is *far* beyond what I could reasonably do alone, and I doubt anyone
+would be willing to essentially duplicate the efforts from the WINE project just because, though if someone would be willing to, that would be great.
+There are far too many applications out there using the API in strange ways or some implementation-specific way that trying to get them to run
+on a platform they don't expect to be running on is incredibly difficult, and involves trying to re-engineer a system far more complex than something
+like *NIX, all the way down to cosmetic things like line placement and odd printer things and whatnot. Printer bugs will cause all sorts of nightmares.
+
+
+The last time someone did that, it was hard.
+[Really hard](https://en.wikipedia.org/wiki/Special:BookSources/0-7592-8578-0)
+And for a version of the Win API that was much much much less complex and intricate and with far fewer applications to test for.

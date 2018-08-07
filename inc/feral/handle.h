@@ -32,6 +32,7 @@ IN THE SOFTWARE.
 #define _FERAL_HANDLE_H_
 
 #include <feral/stdtypes.h>
+#include <feral/port/port.h>
 
 typedef enum HANDLETYPE
 {
@@ -59,6 +60,7 @@ typedef enum HANDLETYPE
 typedef struct HANDLE
 {
 	HANDLETYPE Type;
+	FERALPORT Port;
 	UINT64 Size;
 }HANDLE;
 
@@ -69,6 +71,8 @@ struct HKEY;
 struct HFILE;
 
 struct HMUTEX;
+
+/* Compatibility with badly ported programs. */
 typedef struct HMUTEX HMUTANT;
 
 

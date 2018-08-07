@@ -104,24 +104,33 @@ static SYSTEM_INFO KernelSystemInfo = {};
 	Simple filesystem (ext2 is enough, 8.3 FAT would be OK to also support (possibly even needed).)
 	Create libc, get C++/Rust stuff working on Waypoint. (We would like to make it very easy to create GUI apps for Waypoint, after all.)
 	Get a stable userspace up and running. Essentially the syscall table should be similar-ish to Linux, so most assembly programs can be ported over fine.	
-	Port LLVM/Clang
+		Consider modifying architecture to figure out a way to have syscall tables be built by the libos...? (ie, NIX subsystem pretends to be Linux with a few Mach-isms, WINE-on-Feral pretends to be NTOS 10.0)
+	Port LLVM/Clang, consider GCC/GAS port
 	Port LLD, YASM, and the rest of the toolchain. Possibly port a command-line text editor, or just write one from scratch. No GUI, so FreedomEdit isn't possible.
+	Dogfooding! Dogfooding! Dogfooding! Eliminate most NTOS systems on network (no longer needed), switch everything over to Feral Waypoint systems.
+		(Initially we're text-only, move to a GUI, and then get networking.)
 
 	Work on being self-hosting
-	Create a vega10 GPU driver
-	Create a desktop environment
+	Create a generic, VESA-compatible desktop environment.
+	Network driver for whatever NIC I happen to have lying around. Look for supporting whatever wifi driver is in my laptop too.
+	Create a vega10 GPU driver, get Vulkan-based desktop ready.
 	Create an alternative to the LiveCD tools we need currently, create a bootloader that understands (U)EFI. We implement UEFI ourselves, because tangling with inconsistently applied BSD license 
-	is too much effort.
-	Implement Multiboot 2 support
+	is too much effort (not some easy shell script, and at that, I probably won't use bash on Waypoint, but maybe something more Virtual Memory System-y.).
+	Implement Multiboot 2 support, purge old bootloader.
 	New filesystem focused on getting as fast read times as possible on files (eliminate file fragmentation by not allowing fragmentation?, yes, more writes, but avoids non-sequential reads.)
 			(for hard drives, specifically being sequential might actually be a bad thing because of the spinning. I wouldn't know though.)
 	Add some random hypervisor capability just for fun or something (basically kvm).
 	Get a working Vulkan driver for the vega10 GPU (Do some magic to port AMDVLK (is this possible?) and/or RADV or something, then just modify them as needed?).
 	Port some open source games over, see if we can get it to outperform some other OSes just by running on Feral Waypoint. (specifically, everything we can from the 90s)
+	We probably can't outperform Linux, but we'd better outperform DOS since game developers (at least in the 90s) LOVE DOS and would never leave DOS unless there was a *very* good graphics API elsewhere available.)
+		(we're *always* 20-30 years late so we'd better catch up........)
 	???
 
 	Since we don't want to support anything older than the vega10 GPU, we should just cut out the unnecessary parts of whatever drivers we do adapt.
 	(Those are too old, and by the time this becomes usable as a serious OS, those would be *long* obsolete anyway.)
+	Migrate VCS server from ext4/btrfs/zfs to FeralFS. (again, dogfooding!!!!) Port FeralFS to BSD and Linux.
+	
+	Port mesa or get some graphics stack running atop Feral's existing driver structure, then fork Firefox and use it as system's web browser (and/or replace Gecko, move JS engine to ChakraCore, ...?).
  */
 
 
@@ -164,8 +173,29 @@ FERALSTATUS KeBootstrapSystem(VOID)
 }
 
 
+/* Separate in case needed to implement soft "reboot", ie, just reset OS and RAM contents in memory. */
+VOID KiStartupMachineDependent(VOID)
+{
+#if defined(__x86_64__) || defined(__i386__)
 
+/* Be careful: '__riscv__' is deprecated. */
+#elif defined(__riscv)
 
+#elif defined(__Aarch64__)
+
+#else
+#error Unsupported platform
+#endif
+}
+
+/* Bring up a system needed for the kernel. */
+FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
+{
+	if (subsystem == FERAL_SUBSYSTEM_MEMORY_MANAGEMENT)
+	{
+	} else {
+	}
+}
 
 
 

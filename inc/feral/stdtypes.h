@@ -46,6 +46,7 @@ typedef BYTE BOOLEAN;
 typedef char CCHAR;
 typedef char CHAR;
 
+/* One should avoid DWORD as a word size may differ on various platforms (8-bit word, 32-bit words, etc.) */
 typedef uint32_t DWORD;
 typedef uint64_t DWORDLONG;
 
@@ -101,10 +102,8 @@ typedef wchar_t WCHAR;
 
 typedef CHAR* STRING;
 
-typedef DWORD COLORREF;	/* For when we eventually get to a desktop environment. */
-			/* We may need to bump this up to a higher bit count for better color stuff. */
-
-
+typedef UINT32 COLORREF;	/* For when we eventually get to a desktop environment. */
+				/* We may need to bump this up to a higher bit count for better color stuff. */
 
 typedef int16_t	CSHORT;
 
@@ -119,6 +118,19 @@ typedef struct
 	UINT8 Minute;
 	UINT8 Second;
 }FERALTIME;
+
+typedef struct
+{
+	UINT16 Year;
+	UINT8 Month;
+	UINT8 Day;
+	UINT8 Hour;
+	UINT8 Minute;
+	UINT8 Second;
+	UINT8 Millisecond;
+	UINT8 Microsecond;
+	UINT8 Nanosecond;
+}FERALTIMEHARD;
 
 typedef struct GUID
 {
