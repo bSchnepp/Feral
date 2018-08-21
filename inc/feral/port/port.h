@@ -24,39 +24,15 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_IPC_PORT_H_
-#define _FERAL_IPC_PORT_H_
-
 #include <feral/stdtypes.h>
 #include <feral/feraluser.h>
+
+#ifndef _FERAL_IPC_PORT_H_
+#define _FERAL_IPC_PORT_H_
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
-
-typedef enum
-{
-	PORT_TYPE_RECIEVE,
-	PORT_TYPE_SEND,
-	PORT_TYPE_SEND_ONCE,
-	PORT_TYPE_BIDIRECTIONAL,
-}PORT_PURPOSE;
-
-typedef enum
-{
-	PORT_RIGHT_CREATE,
-	PORT_RIGHT_DELETE.
-	PORT_RIGHT_LINK,
-	PORT_RIGHT_CREATE_LINK,
-	PORT_RIGHT_DELETE_LINK,
-	PORT_RIGHT_ALL,
-}PORT_CREATION_RIGHT;
-
-typedef struct
-{
-	FERALUSER User;
-	PORT_PURPOSE Purpose;
-}FERALPORT_USER_IDENTITIES;
 
 typedef struct FERALPORT 
 {

@@ -27,8 +27,6 @@ IN THE SOFTWARE.
 #ifndef _FERAL_FERAL_STDTYPES_H_
 #define _FERAL_FERAL_STDTYPES_H_
 
-// I don't use C++ in the kernel because, well, it's the kernel. I don't want to set up exceptions and all that,
-// and would much rather not be limited to a very small subset of the language.
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -153,5 +151,7 @@ typedef void* POINTER;
 #if defined(__cplusplus)
 }
 #endif
+
+#include <feral/feraluser.h>
 
 #endif

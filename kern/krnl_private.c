@@ -37,7 +37,6 @@ IN THE SOFTWARE.
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
 
-
 FERALSTATUS KiLoadAllDrivers(VOID)
 {
 	// bogus stub for now (we don't have .SO loading ready yet to actually be of real use.)

@@ -9,3 +9,11 @@ For testing
 _______________
 QEMU (KVM optional, use qemu-nokvm instead if not on Linux)
 
+
+___
+Getting Started:
+
+pacman -S rustup
+pacman -S clang
+pacman -S lld
+pacman -S xorriso
