@@ -2,7 +2,7 @@ GNU xorriso
 BSD Make (installed as 'bmake'.) This is NOT compatible with GNU Make.
 LLVM/Clang
 YASM
-Rust Xargo manager
+Rust Cargo-xbuild
 Nightly Rust compiler
 
 For testing
@@ -17,3 +17,5 @@ pacman -S rustup
 pacman -S clang
 pacman -S lld
 pacman -S xorriso
+
+cargo install cargo-xbuild

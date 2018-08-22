@@ -112,8 +112,9 @@ static SYSTEM_INFO KernelSystemInfo = {};
 
 	Work on being self-hosting
 	Create a generic, VESA-compatible desktop environment.
-	Network driver for whatever NIC I happen to have lying around. Look for supporting whatever wifi driver is in my laptop too.
-	Create a vega10 GPU driver, get Vulkan-based desktop ready.
+	Network driver for whatever NIC I happen to have lying around. Look for supporting whatever wifi chip is in my laptop too.
+	Create a vega10 GPU driver, get Vulkan-based desktop ready. (we do not care about vega11 or vega20 just yet, primarilly because I dont have the hardware)
+	We don't care about green GPUs at all. It's much too hard to support, overly complex, and no official reference drivers to peek at when lost at what to do.
 	Create an alternative to the LiveCD tools we need currently, create a bootloader that understands (U)EFI. We implement UEFI ourselves, because tangling with inconsistently applied BSD license 
 	is too much effort (not some easy shell script, and at that, I probably won't use bash on Waypoint, but maybe something more Virtual Memory System-y.).
 	Implement Multiboot 2 support, purge old bootloader.
@@ -123,14 +124,15 @@ static SYSTEM_INFO KernelSystemInfo = {};
 	Get a working Vulkan driver for the vega10 GPU (Do some magic to port AMDVLK (is this possible?) and/or RADV or something, then just modify them as needed?).
 	Port some open source games over, see if we can get it to outperform some other OSes just by running on Feral Waypoint. (specifically, everything we can from the 90s)
 	We probably can't outperform Linux, but we'd better outperform DOS since game developers (at least in the 90s) LOVE DOS and would never leave DOS unless there was a *very* good graphics API elsewhere available.)
-		(we're *always* 20-30 years late so we'd better catch up........)
+		(we're *always* 20-30 years late so we'd better catch up........). Linux tends to outperform RedmondOS (esp. CPU efficiency: TR4's 2990WX nearly double performance in many workloads) anyway.
 	???
 
 	Since we don't want to support anything older than the vega10 GPU, we should just cut out the unnecessary parts of whatever drivers we do adapt.
 	(Those are too old, and by the time this becomes usable as a serious OS, those would be *long* obsolete anyway.)
-	Migrate VCS server from ext4/btrfs/zfs to FeralFS. (again, dogfooding!!!!) Port FeralFS to BSD and Linux.
+	Migrate VCS server from ext4/btrfs/zfs to FeralFS. (again, dogfooding!!!!) Port FeralFS to BSD and Linux. The idea is that if it's bad, we'll fix it before bad things happen.
 	
 	Port mesa or get some graphics stack running atop Feral's existing driver structure, then fork Firefox and use it as system's web browser (and/or replace Gecko, move JS engine to ChakraCore, ...?).
+	Hope a ReactOS compatibility layer falls out of the sky, so we can run some stuff.
  */
 
 
@@ -140,12 +142,10 @@ VOID KiSystemStartup(VOID)
 	//TODO...
 	//We need to look for every core on the system (We should expect 8, as we're expecting to run on a ZEN 1700X CPU. I will probably upgrade to something on socket TR4 though.)
 	//As such, we need to run a function called HalInitializeProcessor (for the remaining 7 cores... for playing with a 1950X eventually, 15 remaining cores...)
-	//I don't have a TR4-compatible CPU (or motherboard) yet, so at this point I'm kind of just hoping $1500 USD just falls out of the sky or something.
-	//I do expect the 1950X (as, to my knowledge, it's just a server Zen CPU with two empty areas, and on a different socket.) to act the same as the mainstream models.
-	//As such, having one (just to verify it works as intended with even more threads) is unnecessary anyway. (But it would be nice for compile times...)
+	// I do now have a 1950X (turns out you don't need $1500 to fall out of the sky if you wait long enough after all), so we can build the kernel VERY VERY FAST and have plenty of Zen cores to run in VMs with.
 	//And then call KiInitializeKernel as needed. We'll also have to use SMT when we can.
 
-	//SMP support would also be nice, but I can't really imagine any desktop motherboards supporting a dual-CPU configuration. (though this would be AWESOME! Someone PLEASE make dual-socket TR4.)
+	//SMP support would also be nice, but I can't really imagine any desktop motherboards supporting a dual-CPU configuration. (though this would be AWESOME! And it doubles as a heater!)
 	//At best, only consoles would do it, and seeing as how console systems tend to be low on power consumption, a dual-CPU configuration seems fairly unlikely today.
 	//(Especially since games right now don't really utilize that many cores to their full potential... not because the engines are bad, just that no reason to use them.)
 
@@ -237,7 +237,8 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 // would be GREAT. (Call it "FX-SUPER Graphics Support Unit" or something)
 
 // For now, kern_init() is multiboot only while I migrate to UEFI. Everything should be EFI because UEFI is ok and not completely horrible. (80s style bios is headache-inducing when the A20 is sometimes on but sometimes not 
-// and then sometimes it does odd things with memory or just flat out DOES NOT DO what you expected. ughhh)
+// and then sometimes it does odd things with memory or just flat out DOES NOT DO what you expected. ughhh. Compound with speculative execution and out of order execution and it's more effort than it's worth to support a
+// dying "standard". That said, UEFI's security is about as solid as swiss cheese, whereas this just doesn't happen with BIOS because the firmware is so small there's not a lot to exploit.)
 VOID kern_init(void)
 {
 	UINT8 misc = VgaPrepareEnvironment();
@@ -310,7 +311,7 @@ VOID kern_init(void)
 	KiPrintLine("BBB");
 	VgaMoveCursor(4, 6);	//This doesn't seem to quite work as expected. Is my assembler code wrong?
 
-	InternalPrintRegister((misc | 0x65656565), 0, 10);
+	InternalPrintRegister((misc | 0x65656565), 0, 10);	// Cause it to be printable (debugging, and haven't fully migrated just yet)
 
 	// Kernel initialization is done, move on to actual tasks.
 	KiSystemStartup();
