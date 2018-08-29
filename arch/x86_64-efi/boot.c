@@ -23,11 +23,5 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
-
-#include <efi/efi.h>	// Header to implement the EFI stuff.
-
-EFI_STATUS EFIAPI EfiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable)
-{
-	InitializeLib(ImageHandle, SystemTable);
-	return EFI_SUCCESS;	//TODO
-}
+ 
+ #include <libreefi/efi.h>

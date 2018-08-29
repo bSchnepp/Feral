@@ -1,11 +1,33 @@
 	- Cluster support
-		(This is to allow the OS to control GPUs on systems over LAN, to accelerate game performance. We do not care about data accuracy (do not do redundant stuff), only raw data throughput. In essence, we want to throw as many GPUs at games as humanly possible, and hope developers find *some* purpose for whatever they can access.)
+		(This is to allow the OS to control GPUs on systems over LAN, to accelerate game performance. We do not care about data accuracy (do not do redundant stuff), only raw data throughput. In essence, we want to throw as many GPUs at games as humanly possible, and hope developers find *some* purpose for whatever they can access.) Again, everything should be designed with the intent of being useful for games to use. CPU cycles are very precious
+things, and we should avoid doing any rendering while a game is running so it can get as much of the GPU's power as possible.
 
 	- Load games in kernel mode through some sort of kernel-mode loader.
-		(Avoid context switching, improve performance, maybe even allow games to directly program the hardware. For security purposes, ensure SYSTEM must be the one elevating the program, and the program doesn't know if it's actually in kernel-mode or not.)
-
+		(Avoid context switching, improve performance, maybe even allow games to directly program the hardware. For security purposes, ensure SYSTEM must be the one elevating the program, and the program doesn't know if it's actually in kernel-mode or not. Obviously warn the user doing this is potentially dangerous but might be helpful in cases where a game is not performing ideally, and an additional ~2-5 FPS makes it playable.)
+		
+	- Get a kernel-level hypervisor going.
 
 	- Retain the 4-ring model. (Kernel, Executive, Supervisor, and User).
 		- On systems where there is only 2 rings, merge Executive into Kernel and Supervisor into User. Use system calls for Supervisor to keep portable.)
 
+	-  Assume users typing in a terminal may make mistakes (and thus be very verbose: it should not take 8 characters as SYSTEM to destroy the OS), but still be very easy 
+	to automate and simple. Add in things like floating point values (since they may be useful in some applications, ie, doing arithmetic very quickly on a command line), and simple to use the OS' registry.
+	
+	(for example, to wipe the filesystem on B:/, it should be something like "FILESYSTEM DESTROY \ID="FeralFS" \TARGET="\\Devices\Disk1Part1" \FORMAT \CHECK-ID="B:/" \NO-CONFIRM;", and certainly not something like "rm -rf /"
+	(and adding a user, something like "USERADD \NAME="brian" \IDENTIFIED-BY="password" \PARENT="Administrator" GROUPS="wheel","audio","power";"
 
+	- Avoid being yet another *NIX clone: there's nothing wrong with *NIX really, it's just that everybody's done it before, and for some things, representation as a file might not be ideal. (it's great to always be experimental.)
+	
+	
+	
+User facing stuff:
+	- Animated wallpapers are an absolute must. We don't use potatos for CPUs anymore.
+
+	- We *really* like the colors black and gold (they're great together), and the occasional red highlight isn't bad, but shouldn't be used too much.
+	
+	- As many user-facing features as possible should be customizable, but we should *insist* on the hexagon thing.
+	
+	- Strive to be user-friendly: a user shouldn't need to open a terminal for most simple tasks (like updating, installing a program, etc.), unless they want to.
+		- GUI tools for pretty much everything.
+		
+	- Virtual desktops, intuitive home folder structure, a "Recently played" list for games, etc.
