@@ -35,14 +35,14 @@ IN THE SOFTWARE.
 
 
 
-volatile DWORD* VGA_LOC = (DWORD*)0xB8000;
+volatile UINT16* VGA_LOC = (DWORD*)0xB8000;
 static int VGA_CURRENT_LINE = 3;	// so we can leave 3 lines to cpu info
 BOOL TraceVga;
 
 VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy)
 {
 	uint16_t color = ((background << 4) | foreground);
-	VGA_LOC[posx + (posy * 40)] = ((UINT16)letter | (UINT16) color << 8);
+	VGA_LOC[posx + (posy * 80)] = ((UINT16)letter | (UINT16) color << 8);
 }
 
 VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
@@ -51,7 +51,7 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 	{
 		for (DWORD w = 0; w < width; w++)
 		{
-			VGA_LOC[w + (h * 40)] = (UINT32)color;
+			VgaEntry(color, color, (CHAR)(0), w, h);
 		}
 	}
 }

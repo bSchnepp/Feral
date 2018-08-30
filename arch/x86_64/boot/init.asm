@@ -31,9 +31,23 @@ BITS 32
 ; The real panic() (KeInternalWarn() for warning, KeStopError() for actual 'panic()') later.
 boot_panic:
 	mov dword [0xB8000], 0x1F001F00		; Address b8000 is VGA memory. As such, by dumping some data there (1F001F00), we create the "blue box of death".
+	mov dword [0xB8004], 0x1F001F00
+	mov dword [0xB80A0], 0x1F001F00
+	mov dword [0xB80A4], 0x1F001F00
 	cli
-	hlt	
+	hlt
 	jmp $
+	
+boot_panic_invalid_arch:
+	mov dword [0xB8000], 0x4F004F00		; Address b8000 is VGA memory. As such, by dumping some data there (1F001F00), we create the "blue box of death".
+	mov dword [0xB8004], 0x4F004F00
+	mov dword [0xB80A0], 0x4F004F00
+	mov dword [0xB80A4], 0x4F004F00
+	cli
+	hlt
+	jmp $
+	
+
 global _start
 _start:
 	mov esp, stack_top	; Set the stack up.
@@ -82,6 +96,7 @@ _start:
 
 	test edx, 1 << 29      ; Check if we do support long mode (bit 30)
 	; If zero, we panic.
+	je boot_panic_invalid_arch
 
 
 
@@ -126,12 +141,12 @@ create_page_tables:
 ; Let's start...
 
 enable_paging:
-	mov eax, p4_table	; Put the address for the p4 table in EAX.
+	lea eax, [p4_table]	; Put the address for the p4 table in EAX.
 	mov cr3, eax		; Then clobber whatever is in CR3 and move it there.
 	
 	; We need to enable PAE. (Long mode is a superset of PAE which requires PAE to be enabled.)
 	mov eax, cr4
-	or eax, 100000b		; Enable the PAE flag in control register 4.
+	or eax, (1 << 5)		; Enable the PAE flag in control register 4.
 	mov cr4, eax		; And put it back in CR4.
 
 	; We assume EFER is here, because x86_64 just doesn't work without it.
@@ -144,6 +159,7 @@ enable_paging:
 	; Now we finish enable paging.
 	mov eax, cr0
 	or eax, (1 << 31)	; Just flip bit 31, the bit in binary is LOOONNNGGG.
+	or eax, 1
 	mov cr0, eax		; And write to CR0.
 	
 
@@ -157,9 +173,13 @@ create_gdt:
 	; kern_start is multiboot-only.
 	; Get around to that later.
 
-	jmp gdt_64.code:kern_start
+	; invoke far return to go to 64-bit mode.
+	push 0x08
+	lea eax, [kern_start]
+	push eax
+	retf
 
-
+	jmp $
 
 BITS 64
 kern_start:

@@ -153,8 +153,13 @@ VOID KiSystemStartup(VOID)
 
 
 	// First off, ensure we load all the drivers, so we know what's going on.
+	KiBlankVgaScreen(25, 80, VGA_BLACK);
+	KiPrintLine("Copyright (c) 2018, Brian Schnepp");
+	KiPrintLine("Licensed under the Boost license, available with this distribution");
+	KiPrintLine("If the Boost license was not distributed with the OS, contact your OS vendor");
+	KiPrintLine("Loading all drivers...");
 	FERALSTATUS KiLoadAllDrivers(VOID);
-	
+	KiPrintLine("Preparing execution environment...");
 	
 }
 
@@ -234,7 +239,7 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 
 // I actually feel like doing the last one to be honest. Maybe one day I can learn how that stuff works and try to cram low end (520) Fermi-level performance into a 100Mhz FPGA with some crazy RISC SIMD 
 // architecture and HBM2 RAM... While Fermi (today) isn't all that great anyway, cramming that *per compute core*, with the FPGA implementing *a single graphics core* (and glue more ala ZEN to it), 
-// would be GREAT. (Call it "FX-SUPER Graphics Support Unit" or something)
+// would be GREAT. (Call it "FX-SUPER Graphics Support Unit" or something), or "SUPEREFFECTS"
 
 // For now, kern_init() is multiboot only while I migrate to UEFI. Everything should be EFI because UEFI is ok and not completely horrible. (80s style bios is headache-inducing when the A20 is sometimes on but sometimes not 
 // and then sometimes it does odd things with memory or just flat out DOES NOT DO what you expected. ughhh. Compound with speculative execution and out of order execution and it's more effort than it's worth to support a
