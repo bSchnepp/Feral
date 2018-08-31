@@ -30,6 +30,7 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 #include <feral/kern/frlos.h>
+#include <feral/kern/ki.h>
 
 
 #include <feral/string.h>
@@ -44,11 +45,8 @@ IN THE SOFTWARE.
 
 FERALSTATUS KiPrintLine(STRING string)
 {
-	UINTN length = 0;
-	while (string[length])	//True as long as that isn't the null terminator.
-	{
-		length++;
-	}
+	UINTN length;
+	FERALSTATUS feralstatuserror = KiGetStringLength(string, &length);
 
 	// Ok, we call VgaPrintln and use a black on white color set.
 	VgaPrintln(VGA_WHITE, VGA_BLACK, string, length);

@@ -153,10 +153,11 @@ VOID KiSystemStartup(VOID)
 
 
 	// First off, ensure we load all the drivers, so we know what's going on.
-	KiBlankVgaScreen(25, 80, VGA_BLACK);
+	//KiBlankVgaScreen(25, 80, VGA_BLACK);
 	KiPrintLine("Copyright (c) 2018, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost license, available with this distribution");
-	KiPrintLine("If the Boost license was not distributed with the OS, contact your OS vendor");
+	KiPrintLine("If the Boost license was not distributed with the OS as it should have, contact your OS vendor.");
+	KiPrintLine("");
 	KiPrintLine("Loading all drivers...");
 	FERALSTATUS KiLoadAllDrivers(VOID);
 	KiPrintLine("Preparing execution environment...");
@@ -230,24 +231,32 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 	VgaStringEntry(VGA_WHITE, VGA_BLACK, cpu_vendor_msg, strLen, 0, 0);
 }
 
-//On my laptop, we start in 40x25 for some reason. We REALLY want 80x25 because 40 looks too wide.
-//EDIT: grub's doing it. We'll need to use outb and inb and all as needed to manipulate VGA. (ie, a real VGA driver.)
-//EDIT: My desktop does it too. So yeah, GRUB puts us in 40x25 for some reason.
-// Options are pretty much (in order of difficulty): write a VGA driver, write a vega10 gpu driver, or beg someone with a fab to teach me electronics and design a GPU.
-// So, basically for now, we have the first option, and if through some miracle I happen to learn how to mess with FPGAs and get them implemented in real hardware, that too.
-// Either way, getting to a vega10 driver is more or less inevitable, it just needs to happen if we want serious support for video games (the primary purpose of Waypoint!!!)
-
-// I actually feel like doing the last one to be honest. Maybe one day I can learn how that stuff works and try to cram low end (520) Fermi-level performance into a 100Mhz FPGA with some crazy RISC SIMD 
-// architecture and HBM2 RAM... While Fermi (today) isn't all that great anyway, cramming that *per compute core*, with the FPGA implementing *a single graphics core* (and glue more ala ZEN to it), 
-// would be GREAT. (Call it "FX-SUPER Graphics Support Unit" or something), or "SUPEREFFECTS"
+/*
+	 We'll need to implement a proper driver for VGA later. For now, we have something to throw text at and not quickly run out of space.
+	  This is great.
+	  
+	  Ideally, I'd like to build my own GPU (something on an FPGA at like 100MHz, but is about as good as say a 520 Fermi GPU. The FPGA implements a single graphics core,
+	  and in an ideal world, we'd fab a whole bunch of these dies and they'd communicate together, so making "god tier" GPUs is adding bigger fans and slapping more on
+	  the same die, then the dies would intercommunicate with PCIe or something.
+	  
+	  Call it FX-SUPER Graphics Support Unit, or just "SUPEREFFECTS" or something fun like that.
+	  
+	  I'm not an EE person, so I have no idea if anything I just said was somewhere close to realistic or some random 19 year old kid fantasizing about making everything from scratch, but
+	  that would be nice. (then you don't have to poke someone for manuals so you can get drivers for things. Because you made them.)
+	  
+	  (that "everything from scratch" includes wanting to melt metal, and mill/carve/solder/etc and build computers **from scratch**, and ideally all the way down to the motherboards and CPUs if that was possible.)
+	  I know, the "Not Invented Here" syndrome is really bad.
+ */
 
 // For now, kern_init() is multiboot only while I migrate to UEFI. Everything should be EFI because UEFI is ok and not completely horrible. (80s style bios is headache-inducing when the A20 is sometimes on but sometimes not 
 // and then sometimes it does odd things with memory or just flat out DOES NOT DO what you expected. ughhh. Compound with speculative execution and out of order execution and it's more effort than it's worth to support a
 // dying "standard". That said, UEFI's security is about as solid as swiss cheese, whereas this just doesn't happen with BIOS because the firmware is so small there's not a lot to exploit.)
+
+/* AT LEAST THERE'S NO SECURE BOOT. */
 VOID kern_init(void)
 {
 	UINT8 misc = VgaPrepareEnvironment();
-	char* string = "        Feral kernel booting...";	// Why do we have to space 8 times to get this to work? Deleting this line has the next ones go OK. Bug in vga print???
+	char* string = "Feral kernel booting...";	// Why do we have to space 8 times to get this to work? Deleting this line has the next ones go OK. Bug in vga print???
 	KiPrintLine(string);
 
 	FeralVersionMajor = FERAL_VERSION_MAJOR;
@@ -289,35 +298,17 @@ VOID kern_init(void)
 	{
 		part1 = 0x80000002 + i;
 		cpuid_brand_name(&part1, &part2, &part3, &part4);
-		InternalPrintRegister(part1, 0  + (16 * i), 2);
-		InternalPrintRegister(part2, 4  + (16 * i), 2);
-		InternalPrintRegister(part3, 8  + (16 * i), 2);
-		InternalPrintRegister(part4, 12 + (16 * i), 2);
+		InternalPrintRegister(part1, 0  + (16 * i), 1);
+		InternalPrintRegister(part2, 4  + (16 * i), 1);
+		InternalPrintRegister(part3, 8  + (16 * i), 1);
+		InternalPrintRegister(part4, 12 + (16 * i), 1);
 	}
 
 	VgaSetCursorEnabled(1);
-	/* Below are just tests to make sure the extremely primitive VGA driver works as intended. */
-	char* Stringy = "Hello, world!!!111";
-	for (int k = 0; k < 3; k++)
-	{
-		KiPrintLine(Stringy);
-	}
-	for (int k = 0; k < 3; k++)
-	{
-		KiPrintLine("");
-	}
 	VgaTraceCharacters(1);
-	KiPrintLine("HELLO!");
-	KiPrintLine("AAA");
-	KiPrintLine("BBB");
-	KiPrintLine("AL");
-	KiPrintLine("HELLO!");
-	KiPrintLine("AAA");
-	KiPrintLine("BBB");
-	VgaMoveCursor(4, 6);	//This doesn't seem to quite work as expected. Is my assembler code wrong?
-
-	InternalPrintRegister((misc | 0x65656565), 0, 10);	// Cause it to be printable (debugging, and haven't fully migrated just yet)
+	VgaMoveCursor(0, 24);
 
 	// Kernel initialization is done, move on to actual tasks.
+	KiPrintLine("");
 	KiSystemStartup();
 }

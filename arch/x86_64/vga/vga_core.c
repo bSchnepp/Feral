@@ -58,10 +58,13 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 
 VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy)
 {
-	for (DWORD index = 0; index < length; index++)
+	for (DWORD index = 0; index < length; ++index)
 	{
-		VgaEntry(foreground, background, string[index], posx+index, posy);
+		int true_y = posy + (index / 80);
+		int true_x = index % 80;
+		VgaEntry(foreground, background, string[index], true_x, true_y);
 	}
+	VGA_CURRENT_LINE += (length / 80);
 }
 
 
@@ -69,14 +72,14 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string
 {
 	if (VGA_CURRENT_LINE == 25)	// This is hardcoded for now, we'll change this later.
 	{
-		for (UINT32 i = 0; i < 50; i++)
+		for (UINT32 i = 0; i < 25; i++)
 		{
-			for (UINT32 k = 0; k < 50; k++)
+			for (UINT32 k = 0; k < 25; k++)
 			{
-				VGA_LOC[k + (i * 40)] = VGA_LOC[k + ((i + 1) * 40)];	//Copy everything over.
+				VGA_LOC[k + (i * 80)] = VGA_LOC[k + ((i + 1) * 80)];	//Copy everything over.
 			}
 		}
-		VgaStringEntry(foreground, background, string, length, 0, VGA_CURRENT_LINE - 1);	//Truth be told, I don't completely understand exactly why this works, but OK!
+		VgaStringEntry(foreground, background, string, length, 0, VGA_CURRENT_LINE - 1);
 	}
 	else
 	{
@@ -87,7 +90,7 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string
 
 VOID VgaMoveCursor(DWORD PosX, DWORD PosY)
 {
-	UINT16 FinalPos = (UINT16)((PosY * 40) + PosX);
+	UINT16 FinalPos = (UINT16)((PosY * 80) + PosX);
 	x86outb(VGA_FB_COMMAND_PORT, VGA_LOW_BYTE_COMMAND);
 	x86outb(VGA_FB_DATA_PORT, (UINT8)((FinalPos) & (0x00FF)));
 
@@ -105,10 +108,10 @@ VOID VgaSetCursorEnabled(BOOL value)
 	if (value)
 	{
 		x86outb(VGA_FB_COMMAND_PORT, 0x0A);
-		x86outb(VGA_FB_DATA_PORT, (x86inb(VGA_FB_DATA_PORT) & 0xC0) | 0x00);	//Don't question it, this is just how VGA works.
+		x86outb(VGA_FB_DATA_PORT, (x86inb(VGA_FB_DATA_PORT) & 0xC0) | 0x00);	//OK, this is complex to explain. Just trust what I'm doing doesn't blow up GPUs.
 
 		x86outb(VGA_FB_COMMAND_PORT, 0x0B);
-		x86outb(VGA_FB_DATA_PORT, (x86inb(0x3E0) & 0xE0) | 0x0F);	//Don't question it, this is just how VGA works.
+		x86outb(VGA_FB_DATA_PORT, (x86inb(0x3E0) & 0xE0) | 0x0F);
 	}
 	else
 	{
