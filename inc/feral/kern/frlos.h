@@ -32,6 +32,8 @@ IN THE SOFTWARE.
 
 /* All kernel functions should return a FERALSTATUS. */
 FERALSTATUS KiPrintLine(STRING string);
+FERALSTATUS KiPrintGreyLine(STRING string);
+FERALSTATUS KiPrintWarnLine(STRING string);
 
 
 typedef enum KiSubsystemIdentifier
@@ -42,5 +44,14 @@ typedef enum KiSubsystemIdentifier
 
 /* Bring up a system needed for the kernel. */
 FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem);
+
+#ifdef KERN_DEBUG
+static FERALSTATUS KiDebugPrint(STRING string)
+{
+	return KiPrintWarnLine(string);
+}
+#else
+#define KiDebugPrint(x)
+#endif
 
 #endif

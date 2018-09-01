@@ -23,25 +23,10 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
+ 
+#ifndef _LIMITS_H_
+#define _LIMITS_H_
 
-
-#ifndef _UNISTD_H_
-#define _UNISTD_H_
-
-#define R_OK 0x04
-#define W_OK 0x02
-#define X_OK 0x01
-#define F_OK 0x00
-
-#define STDIN_FILENO 0
-#define STDOUT_FILENO 1
-#define STDERR_FILENO 2
-
-typedef int ssize_t;
-
-
-
+// TODO
 
 #endif
-
-

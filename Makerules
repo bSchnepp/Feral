@@ -12,12 +12,16 @@ GRUB_CFG  := arch/$(ARCH)/grub.cfg
 AS        := yasm       # We use yasm to assemble.
 CC        := clang      # We use clang to compile.
 CXX       := clang++    # We may use C++ for something later. (Would only ever really be a "C with classes" anyway.)
-LD        := ld.lld
+LD        := ld.lld --verbose
 
 TARGET     = -target $(ARCH)-pc-none-gnu
 
 INCLUDES  := inc
-CFLAGS    := -std=c11 -ffreestanding -nostdlib -O2 -Wall -Wextra -mno-red-zone -c -v -mno-mmx -mno-sse -msoft-float -fno-vectorize $(TARGET)
+
+## Uncomment for Release builds
+# CFLAGS    := -std=c11 -ffreestanding -nostdlib -O2 -Wall -Wextra -mno-red-zone -c -v -mno-mmx -mno-sse -msoft-float -fno-vectorize $(TARGET)
+## Debug builds
+CFLAGS    := -std=c11 -g3 -ffreestanding -nostdlib -O0 -Wall -Wextra -mno-red-zone -c -v -mno-mmx -mno-sse -msoft-float -fno-vectorize -DKERN_DEBUG $(TARGET)
 # -c prevents linking (important!!!) and -v for verbosity.
 
 # We don't really care about 'Entering directory...'.

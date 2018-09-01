@@ -24,33 +24,16 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+#include <feral/stdtypes.h>
+
 #ifndef _FERAL_X86_64_CPUIO_H_
 #define _FERAL_X86_64_CPUIO_H_
 
-#include <feral/stdtypes.h>
-
 /* These happen to be easier in inline assembly anyway, so why not? */
 
-static BYTE x86inb(WORD port)
-{
-	UINT8 RetVal;
-	__asm__ volatile ("inb %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
-
-static WORD x86inw(WORD port)
-{
-	UINT16 RetVal;
-	__asm__ volatile ("inw %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
-
-static DWORD x86inl(WORD port)
-{
-	UINT32 RetVal;
-	__asm__ volatile ("inl %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
+BYTE x86inb(WORD port);
+WORD x86inw(WORD port);
+DWORD x86inl(WORD port);
 
 #if 0
 static inline QUAD  x86inq(WORD port)
@@ -61,25 +44,16 @@ static inline QUAD  x86inq(WORD port)
 }
 #endif
 
-static VOID x86outb(WORD port, BYTE val)
-{
-	__asm__ volatile ("out %0, %1" :: "a"(val), "d"(port));
-}
+VOID x86outb(WORD port, BYTE val);
+VOID x86outw(WORD port, WORD val);
+VOID x86outl(WORD port, DWORD val);
 
-static VOID x86outw(WORD port, WORD val)
+#if 0
+VOID x86outq(WORD port, QUAD val)
 {
 	__asm__ volatile ("out %0, %1" :: "a"(val), "d"(port));
 }
-
-static VOID x86outl(WORD port, DWORD val)
-{
-	__asm__ volatile ("out %0, %1" :: "a"(val), "d"(port));
-}
-
-static VOID x86outq(WORD port, QUAD val)
-{
-	__asm__ volatile ("out %0, %1" :: "a"(val), "d"(port));
-}
+#endif
 
 #endif
 

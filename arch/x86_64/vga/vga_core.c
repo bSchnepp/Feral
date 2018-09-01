@@ -35,8 +35,8 @@ IN THE SOFTWARE.
 
 
 
-volatile UINT16* VGA_LOC = (DWORD*)0xB8000;
-static int VGA_CURRENT_LINE = 3;	// so we can leave 3 lines to cpu info
+volatile UINT16* VGA_LOC = (UINT16*)0xB8000;
+static int VGA_CURRENT_LINE = 3;	// We directly write to the first 2 (and want an extra space), so leave space.
 BOOL TraceVga;
 
 VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy)

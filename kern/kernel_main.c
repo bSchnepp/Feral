@@ -155,12 +155,14 @@ VOID KiSystemStartup(VOID)
 	// First off, ensure we load all the drivers, so we know what's going on.
 	//KiBlankVgaScreen(25, 80, VGA_BLACK);
 	KiPrintLine("Copyright (c) 2018, Brian Schnepp");
-	KiPrintLine("Licensed under the Boost license, available with this distribution");
-	KiPrintLine("If the Boost license was not distributed with the OS as it should have, contact your OS vendor.");
+	KiPrintLine("Licensed under the Boost Software License.");
+	KiPrintLine("If the Boost Software License was not distributed with the OS if it should have, contact your OS vendor with a request for a copy.");
 	KiPrintLine("");
 	KiPrintLine("Loading all drivers...");
 	FERALSTATUS KiLoadAllDrivers(VOID);
 	KiPrintLine("Preparing execution environment...");
+	
+	KiDebugPrint("INIT Reached here.");
 	
 }
 
@@ -256,7 +258,7 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 VOID kern_init(void)
 {
 	UINT8 misc = VgaPrepareEnvironment();
-	char* string = "Feral kernel booting...";	// Why do we have to space 8 times to get this to work? Deleting this line has the next ones go OK. Bug in vga print???
+	char* string = "Feral kernel booting...";
 	KiPrintLine(string);
 
 	FeralVersionMajor = FERAL_VERSION_MAJOR;

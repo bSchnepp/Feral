@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -23,20 +23,60 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
+ 
 
-// Also demonstrate we can write drivers in C++ (just for fun)
-
-#include <ddk/frlddk.h>
-
-// Things to figure out:
-	// Need atchitecture to support ahead-of-time compilation into the kernel.
-	// But also to be unmodified and can handle being placed in a shared object which is loaded and executed at runtime.
-
-// Solutions:
-	// pre-compiled into the kernel causes us to ignore DriverExit (just never use it.)
-	// Reserve 0xA000000000000000 - ???? for drivers or something. (Must be a dynamic library if not already in the kernel)
-FERALSTATUS FrlDriverMain(VOID)
+ #include <feral/stdtypes.h>
+ #include <arch/x86_64/cpuio.h>
+ 
+ 
+BYTE x86inb(WORD port)
 {
-	FERAL_DRIVER SerialDriver = {0};
-	return STATUS_SUCCESS;	//TODO: remember to do this
+	UINT8 RetVal;
+	__asm__ volatile ("inb %1, %0" : "=a"(RetVal) : "Nd"(port));
+	return RetVal;
 }
+
+WORD x86inw(WORD port)
+{
+	UINT16 RetVal;
+	__asm__ volatile ("inw %1, %0" : "=a"(RetVal) : "Nd"(port));
+	return RetVal;
+}
+
+DWORD x86inl(WORD port)
+{
+	UINT32 RetVal;
+	__asm__ volatile ("inl %1, %0" : "=a"(RetVal) : "Nd"(port));
+	return RetVal;
+}
+
+#if 0
+static inline QUAD  x86inq(WORD port)
+{
+	UINT64 RetVal;
+	__asm__ volatile ("inq %1, %0" : "=a"(RetVal) : "Nd"(port));
+	return RetVal;
+}
+#endif
+
+VOID x86outb(WORD port, BYTE val)
+{
+	__asm__ volatile ("outb %0, %1" :: "a"(val), "d"(port));
+}
+
+VOID x86outw(WORD port, WORD val)
+{
+	__asm__ volatile ("outw %0, %1" :: "a"(val), "d"(port));
+}
+
+VOID x86outl(WORD port, DWORD val)
+{
+	__asm__ volatile ("outl %0, %1" :: "a"(val), "d"(port));
+}
+
+#if 0
+VOID x86outq(WORD port, QUAD val)
+{
+	__asm__ volatile ("out %0, %1" :: "a"(val), "d"(port));
+}
+#endif

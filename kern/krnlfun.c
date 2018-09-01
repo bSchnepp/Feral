@@ -27,15 +27,11 @@ IN THE SOFTWARE.
 
 // Define internal kernel functions here. (hence 'krnlfun'.)
 
+#include <feral/string.h>
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 #include <feral/kern/frlos.h>
 #include <feral/kern/ki.h>
-
-
-#include <feral/string.h>
-
-#include <bogus/fluff.h>
 
 
 #if defined(__x86_64__)
@@ -43,17 +39,38 @@ IN THE SOFTWARE.
 // As such, this is temporary, and I'll be writing a proper VGA driver very soon.
 #include <arch/x86_64/vga/vga.h>
 
+#define PRINT_LINE_GENERIC()												\
+	UINTN length;															\
+	FERALSTATUS feralStatusError = KiGetStringLength(string, &length);		\
+	if (!(feralStatusError == STATUS_SUCCESS))								\
+	{																		\
+		return feralStatusError;												\
+	}
+
 FERALSTATUS KiPrintLine(STRING string)
 {
-	UINTN length;
-	FERALSTATUS feralstatuserror = KiGetStringLength(string, &length);
-
+	PRINT_LINE_GENERIC();
 	// Ok, we call VgaPrintln and use a black on white color set.
 	VgaPrintln(VGA_WHITE, VGA_BLACK, string, length);
 	return STATUS_SUCCESS;
 }
+
+FERALSTATUS KiPrintGreyLine(STRING string)
+{
+	PRINT_LINE_GENERIC();
+	VgaPrintln(VGA_LIGHT_GREY, VGA_BLACK, string, length);
+	return STATUS_SUCCESS;
+}
+FERALSTATUS KiPrintWarnLine(STRING string)
+{
+	PRINT_LINE_GENERIC();
+	VgaPrintln(VGA_LIGHT_BROWN, VGA_BLACK, string, length);
+	return STATUS_SUCCESS;
+}
+
 #endif
 // TODO: implement for other platforms.
+
 
 
 

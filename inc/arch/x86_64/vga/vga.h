@@ -48,7 +48,7 @@ typedef enum VgaColorValue
 	VGA_LIGHT_CYAN = 11,
 	VGA_LIGHT_RED = 12,
 	VGA_LIGHT_MAGENTA = 13,
-	VGA_LIGHT_BROWN = 14,
+	VGA_LIGHT_BROWN = 14,	/* actually yellow */
 	VGA_WHITE = 15,
 }VgaColorValue;
 

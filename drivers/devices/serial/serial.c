@@ -55,6 +55,6 @@ VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
 
 FERALSTATUS FrlDriverMain(VOID)
 {
-	FERAL_DRIVER SerialDriver = {0};
+	//FERAL_DRIVER SerialDriver = {0};
 	return STATUS_SUCCESS;
 }
