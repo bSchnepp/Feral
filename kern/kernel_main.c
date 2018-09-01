@@ -136,6 +136,17 @@ static SYSTEM_INFO KernelSystemInfo = {};
  */
 
 
+// TODO
+#if defined(__aarch64__)
+FERALSTATUS KiPrintLine()
+{
+}
+
+FERALSTATUS KiPrintWarnLine()
+{
+}
+#endif
+
 // This is the kernel's *real* entry point. TODO: some mechanism for a Feral-specific bootloader to skip the multiboot stuff and just load this.
 VOID KiSystemStartup(VOID)
 {
@@ -156,12 +167,13 @@ VOID KiSystemStartup(VOID)
 	//KiBlankVgaScreen(25, 80, VGA_BLACK);
 	KiPrintLine("Copyright (c) 2018, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
-	KiPrintLine("If the Boost Software License was not distributed with the OS if it should have, contact your OS vendor with a request for a copy.");
+	KiPrintLine("If the Boost Software License was not distributed with the OS if it should have, contact your OS \n\nvendor \nwith \na request for a copy.");
 	KiPrintLine("");
 	KiPrintLine("Loading all drivers...");
 	FERALSTATUS KiLoadAllDrivers(VOID);
 	KiPrintLine("Preparing execution environment...");
 	
+	/* These are macroed away at release builds. */
 	KiDebugPrint("INIT Reached here.");
 	
 }
@@ -189,7 +201,7 @@ VOID KiStartupMachineDependent(VOID)
 /* Be careful: '__riscv__' is deprecated. */
 #elif defined(__riscv)
 
-#elif defined(__Aarch64__)
+#elif defined(__aarch64__)
 
 #else
 #error Unsupported platform
@@ -211,7 +223,7 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 
 
 
-
+#if defined(__i386__) || defined(__x86_64__)
 // temporary, turn into clean later.
 VOID InternalPrintRegister(DWORD reg, DWORD posx, DWORD posy)
 {
@@ -314,3 +326,4 @@ VOID kern_init(void)
 	KiPrintLine("");
 	KiSystemStartup();
 }
+#endif

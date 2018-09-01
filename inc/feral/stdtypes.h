@@ -72,7 +72,7 @@ typedef int32_t LONG;
 typedef int64_t LONGLONG;
 
 // We're LP64.
-#if defined(__x86_64__)
+#if defined(__x86_64__) || defined(__aarch64__)
 typedef int64_t INT_PTR;
 #elif defined(__i386__)
 typedef int32_t INT_PTR;
@@ -83,7 +83,7 @@ typedef INT_PTR LONG_PTR;
 typedef uint64_t QUAD;
 typedef QUAD QWORD;
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) || defined(__aarch64__)
 typedef uint64_t UINTN;
 typedef  int64_t  INTN;
 #elif defined(__i386__)
@@ -91,6 +91,7 @@ typedef uint32_t UINTN;
 typedef  int32_t  INTN;	
 #endif
 // 286 and earlier not supported.
+
 
 // Ensure we define wchar_t. This is important, as we *really* love Unicode.
 typedef unsigned short wchar_t;

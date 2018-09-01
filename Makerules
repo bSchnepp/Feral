@@ -2,6 +2,7 @@ MAKE       = bmake
 
 GDB        = lldb # Use LLVM debugger when we can, if we make a makerule for this in the future. (I just happen to be a little more familiar with lldb, that's all)
 
+# Change to aarch64 to target those devices.
 ARCH       = x86_64
 KERNEL    := build/$(ARCH)/FERALKER.NEL
 ISO       := build/WAYPOINT.ISO
@@ -9,12 +10,12 @@ ISO       := build/WAYPOINT.ISO
 LINKIN    := arch/$(ARCH)/linkin.lld
 GRUB_CFG  := arch/$(ARCH)/grub.cfg
 
+TARGET     = -target $(ARCH)-pc-none-gnu
+
 AS        := yasm       # We use yasm to assemble.
 CC        := clang      # We use clang to compile.
 CXX       := clang++    # We may use C++ for something later. (Would only ever really be a "C with classes" anyway.)
-LD        := ld.lld --verbose
-
-TARGET     = -target $(ARCH)-pc-none-gnu
+LD        := ld.lld -flavor gnu --verbose
 
 INCLUDES  := inc
 

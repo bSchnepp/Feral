@@ -58,13 +58,50 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 
 VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy)
 {
+	DWORD true_x = posx;
+	DWORD addedLines = 0;
+	
 	for (DWORD index = 0; index < length; ++index)
 	{
-		int true_y = posy + (index / 80);
-		int true_x = index % 80;
-		VgaEntry(foreground, background, string[index], true_x, true_y);
+		CHAR ref = string[index];
+		if (ref == '\n')
+		{
+			true_x = 0;
+			addedLines++;
+			continue;
+		}
+		VgaEntry(foreground, background, ref, true_x, posy+addedLines);
+		true_x++;
+	}
+	VGA_CURRENT_LINE += (((length) / 80) + addedLines);
+#if 0
+	DWORD true_y = posy;
+	DWORD true_x = posx;
+	DWORD leftshift = 0;
+	BOOL isNewline = 0;
+	DWORD additionalLines = 0;
+	// TODO FIXME
+	for (DWORD index = 0; index < length; ++index)
+	{
+		true_x = ((posx + index) % 80);
+		isNewline = (string[index] == '\n');
+		
+		additionalLines = (index / 80);
+		if (isNewline)
+		{
+			additionalLines++;
+			true_x = 0;
+			leftshift = (index % 80) + 1;
+			continue;
+		}
+		if (isNewline|| additionalLines)
+		{
+			 true_y = posy + (additionalLines + isNewline);
+		}
+		VgaEntry(foreground, background, string[index], (true_x - leftshift), true_y);
 	}
 	VGA_CURRENT_LINE += (length / 80);
+#endif
 }
 
 
