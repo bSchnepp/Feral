@@ -59,6 +59,8 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy)
 {
 	DWORD true_x = posx;
+	DWORD true_y = posy;
+	DWORD broke_line = 0;
 	DWORD addedLines = 0;
 	
 	for (DWORD index = 0; index < length; ++index)
@@ -70,56 +72,31 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 			addedLines++;
 			continue;
 		}
-		VgaEntry(foreground, background, ref, true_x, posy+addedLines);
+		VgaEntry(foreground, background, ref, true_x, true_y+addedLines);
 		true_x++;
 	}
-	VGA_CURRENT_LINE += (((length) / 80) + addedLines);
-#if 0
-	DWORD true_y = posy;
-	DWORD true_x = posx;
-	DWORD leftshift = 0;
-	BOOL isNewline = 0;
-	DWORD additionalLines = 0;
-	// TODO FIXME
-	for (DWORD index = 0; index < length; ++index)
-	{
-		true_x = ((posx + index) % 80);
-		isNewline = (string[index] == '\n');
-		
-		additionalLines = (index / 80);
-		if (isNewline)
-		{
-			additionalLines++;
-			true_x = 0;
-			leftshift = (index % 80) + 1;
-			continue;
-		}
-		if (isNewline|| additionalLines)
-		{
-			 true_y = posy + (additionalLines + isNewline);
-		}
-		VgaEntry(foreground, background, string[index], (true_x - leftshift), true_y);
-	}
-	VGA_CURRENT_LINE += (length / 80);
-#endif
+	VGA_CURRENT_LINE += addedLines + (length / 80);
 }
 
 
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length)
 {
-	if (VGA_CURRENT_LINE == 25)	// This is hardcoded for now, we'll change this later.
+	DWORD newSpace = (length / 80) + 1;
+	if (VGA_CURRENT_LINE >= (25 - newSpace))
 	{
-		for (UINT32 i = 0; i < 25; i++)
+		/* Go through every row and get the appropriate stuff up what it needs to. */
+		for (DWORD index = 0; index < (25 - newSpace); ++index)
 		{
-			for (UINT32 k = 0; k < 25; k++)
+			/* And act upon each col. */
+			for (DWORD col = 0; col < 80; ++col)
 			{
-				VGA_LOC[k + (i * 80)] = VGA_LOC[k + ((i + 1) * 80)];	//Copy everything over.
+					// TODO: (fixme), sometimes text bleeds over (invokes text spacing and buffers, just run with a few huge strings and you'll see it)
+					VGA_LOC[(index * 80) + col] = VGA_LOC[(((index + newSpace) * 80) + col)];
 			}
 		}
-		VgaStringEntry(foreground, background, string, length, 0, VGA_CURRENT_LINE - 1);
-	}
-	else
-	{
+		VgaStringEntry(foreground, background, string, length, 0, VGA_CURRENT_LINE - newSpace);
+		VGA_CURRENT_LINE -= (newSpace);
+	} else {
 		VgaStringEntry(foreground, background, string, length, 0, VGA_CURRENT_LINE);
 		VGA_CURRENT_LINE++;
 	}

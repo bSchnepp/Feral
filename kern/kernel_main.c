@@ -167,15 +167,14 @@ VOID KiSystemStartup(VOID)
 	//KiBlankVgaScreen(25, 80, VGA_BLACK);
 	KiPrintLine("Copyright (c) 2018, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
-	KiPrintLine("If the Boost Software License was not distributed with the OS if it should have, contact your OS \n\nvendor \nwith \na request for a copy.");
+	KiPrintLine("If the Boost Software License was not distributed with the OS if it should have, contact your OS vendor with a request for a copy.");
 	KiPrintLine("");
 	KiPrintLine("Loading all drivers...");
 	FERALSTATUS KiLoadAllDrivers(VOID);
 	KiPrintLine("Preparing execution environment...");
 	
-	/* These are macroed away at release builds. */
+	/* These are macroed away at release builds.  They're eliminated at build time.*/
 	KiDebugPrint("INIT Reached here.");
-	
 }
 
 //UINT64 because one day someone is going to do something _crazy_ like have an absurd amount of processors (manycore), but be 32-bit and only 4GB addressable.
