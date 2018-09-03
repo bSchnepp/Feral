@@ -32,7 +32,37 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <bogus/fluff.h>
+
+/*  Some function decorators.*/
+/* This is an input to a function. */
+#define IN
+
+/* This is an output of a function. */
+#define OUT
+
+/* This is expected as input, but will also be modified by the function. */
+#define INOUT
+
+/* This is optional input. Not required. */
+#define INOPT
+
+/* Optional (other) */
+#define OPT
+
+/* May be null on return. */
+#define OUTOPT
+
+/* Optional, does something to this object. */
+#define INOUTOPT
+
+/* Yes, 'API' is not a typo, even though we're dealing with ABIs. This is because this is how the API would be called. Slightly confusing, yes, but I'm just following an established thing. */
+
+#define FERALAPI __attribute__((cdecl))	//Team Red's ABI. (the one basically everyone else uses).
+
+#define  MSAPI __attribute__((ms_abi))
+#define WINAPI __attribute__((ms_abi))
+#define EFIAPI __attribute__((ms_abi))
+
 
 #define CONST const
 #define INLINE inline

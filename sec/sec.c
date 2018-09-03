@@ -50,5 +50,6 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 __attribute__((noreturn))
 VOID __stack_chk_fail(void)
 {
+	/* This is _horribly_ primitive, but for now, good enough. */
 	KiStopError(1);
 }

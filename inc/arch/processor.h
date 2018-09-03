@@ -29,7 +29,6 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
-#include <bogus/fluff.h>
 
 typedef struct PROCESSOR_INFO
 {

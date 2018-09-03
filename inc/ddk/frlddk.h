@@ -33,7 +33,6 @@ IN THE SOFTWARE.
 #include <feral/object.h>
 
 #include <ddk/frldev.h>
-#include <bogus/fluff.h>
 
 #if defined(__cplusplus)
 extern "C" {

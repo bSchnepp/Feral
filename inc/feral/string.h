@@ -35,7 +35,6 @@ extern "C" {
 
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
-#include <bogus/fluff.h>
 
 
 /* Struct to define a verbose string (O(1) to get the length of the string) */
