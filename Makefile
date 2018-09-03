@@ -2,6 +2,8 @@ MAKE = bmake
 
 include Makerules
 
+
+INCLUDES += -Ikern/inc
 VGA_FILES != ls arch/$(ARCH)/vga/*.c
 
 EFI_CODE = /usr/share/ovmf/ovmf_code_x64.bin
@@ -23,7 +25,7 @@ kernel:
 	
 	# libmm.a libprocmgr.a 
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) arch/$(ARCH)/extras.c -o ./iofuncs.o
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) sec/*.c -o ./sec.o
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS)  sec/*.c -o ./sec.o
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES) -o vga.o io.o driver.o iofuncs.o kern/kernel_main.o kern/ki.o kern/krnlfun.o kern/krnl_private.o kern/objmgr.o sec.o
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
 
@@ -44,19 +46,19 @@ clean:
 	## TODO: clean up object files too.
 
 qemu:	iso
-	qemu-system-x86_64 -cpu host -cdrom $(ISO) -smp 2 -m 1G --enable-kvm  # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
+	qemu-system-$(ARCH) -cpu host -cdrom $(ISO) -smp 2 -m 1G --enable-kvm  # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
 
 qemu-nokvm:	iso
-	qemu-system-x86_64 -cpu host -cdrom $(ISO) -smp 2 -m 1G
+	qemu-system-$(ARCH) -cpu host -cdrom $(ISO) -smp 2 -m 1G
 	
 	
 qemu-efi:	iso
 	cp $(EFI_CODE) ./efi.bin
-	qemu-system-x86_64 -cpu host -cdrom $(ISO) -smp 2 -m 1G --enable-kvm  -pflash ./efi.bin
+	qemu-system-$(ARCH) -cpu host -cdrom $(ISO) -smp 2 -m 1G --enable-kvm  -pflash ./efi.bin
 	rm -rf ./efi.bin
 	
 
 qemu-nokvm-efi:	iso
 	cp $(EFI_CODE) ./efi.bin
-	qemu-system-x86_64 -cpu host -cdrom $(ISO) -smp 2 -m 1G -pflash  ./efi.bin
+	qemu-system-$(ARCH) -cpu host -cdrom $(ISO) -smp 2 -m 1G -pflash  ./efi.bin
 	rm -rf ./efi.bin
