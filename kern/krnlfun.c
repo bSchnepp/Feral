@@ -35,8 +35,6 @@ IN THE SOFTWARE.
 
 
 #if defined(__x86_64__)
-// Currently, I'm pretty sure something is *very* wrong with the current VGA driver (don't try it on real hardware).
-// As such, this is temporary, and I'll be writing a proper VGA driver very soon.
 #include <arch/x86_64/vga/vga.h>
 
 #define PRINT_LINE_GENERIC()												\
@@ -67,6 +65,13 @@ FERALSTATUS KiPrintWarnLine(STRING string)
 	VgaPrintln(VGA_LIGHT_BROWN, VGA_BLACK, string, length);
 	return STATUS_SUCCESS;
 }
+
+#else
+
+// TODO
+#define KiPrintWarnLine(a)
+#define KiPrintGreyLine(a)
+#define KiPrintLine(a)
 
 #endif
 // TODO: implement for other platforms.

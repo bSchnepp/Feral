@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining a copy of the software and accompanying documentation covered by 
+obtaining  a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -23,27 +23,25 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
+ 
+ 
+#ifndef _MACH_EMU_MACH_STD_TYPES_H_
+#define _MACH_EMU_MACH_STD_TYPES_H_
+
+#include <feral/stdtypes.h>
+
+/* INCOMPLETE: TODO (missing kern_return and ports.h, and ipc ports) */
+
+/* butcher mapping to Mach... */
+#include "mach/machine/vm_types.h"
+#include "mach/machine/boolean.h"
+
+typedef vm_offset_t pointer_t;
+typedef pointer_t vm_address_t;
 
 
-// Ok, so maybe I lied in saying "No way I'll end up with POSIX compatibility!"
-// We might need this to make it much easier to port something like clang/gcc.
-#ifndef _UNISTD_H_
-#define _UNISTD_H_
-
-#define R_OK 0x04
-#define W_OK 0x02
-#define X_OK 0x01
-#define F_OK 0x00
-
-#define STDIN_FILENO 0
-#define STDOUT_FILENO 1
-#define STDERR_FILENO 2
-
-typedef int ssize_t;
 
 
 
 
 #endif
-
-

@@ -24,26 +24,32 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+#include <feral/stdtypes.h>
+#include <feral/kern/frlos.h>
+#include <feral/kern/ki.h>
 
-// Ok, so maybe I lied in saying "No way I'll end up with POSIX compatibility!"
-// We might need this to make it much easier to port something like clang/gcc.
-#ifndef _UNISTD_H_
-#define _UNISTD_H_
-
-#define R_OK 0x04
-#define W_OK 0x02
-#define X_OK 0x01
-#define F_OK 0x00
-
-#define STDIN_FILENO 0
-#define STDOUT_FILENO 1
-#define STDERR_FILENO 2
-
-typedef int ssize_t;
-
-
-
-
+#if defined(__x86_64__)
+#include <arch/x86_64/vga/vga.h>
 #endif
 
+FERALSTATUS KiStopError(IN FERALSTATUS Status)
+{
+#if defined(__x86_64__)
+	KiBlankVgaScreen(80, 25, VGA_BLUE);
+	char* errorMsg = "A problem has been detected and Feral has shutdown to prevent further damage.";
+	UINTN length = 0;
+	KiGetStringLength(errorMsg, &length);
+	VgaPrintln(VGA_WHITE, VGA_BLUE, errorMsg, length);
+	
+	KiPrintLine("");
+	
+	/* Todo: be more useful for error checking */
+	VgaPrintln(VGA_WHITE, VGA_BLUE, errorMsg, length);
+#endif
+}
 
+__attribute__((noreturn))
+VOID __stack_chk_fail(void)
+{
+	KiStopError(1);
+}

@@ -74,8 +74,10 @@ typedef int64_t LONGLONG;
 // We're LP64.
 #if defined(__x86_64__) || defined(__aarch64__)
 typedef int64_t INT_PTR;
+typedef uint64_t UINT_PTR;
 #elif defined(__i386__)
 typedef int32_t INT_PTR;
+typedef uint32_t UINT_PTR;
 #endif
 
 typedef INT_PTR LONG_PTR;
@@ -155,4 +157,7 @@ typedef void* POINTER;
 
 #include <feral/feraluser.h>
 
+
+/* TEMPORARY */
+UINT_PTR __stack_chk_guard;
 #endif

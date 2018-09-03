@@ -3,7 +3,6 @@ MAKE = bmake
 include Makerules
 
 VGA_FILES != ls arch/$(ARCH)/vga/*.c
-KERN_MAIN != ls kern/*.c
 
 EFI_CODE = /usr/share/ovmf/ovmf_code_x64.bin
 
@@ -20,11 +19,12 @@ kernel:
 #	cd mm && make 
 	cd io && make 
 	cd drivers && make
+	cd kern && make
 	
 	# libmm.a libprocmgr.a 
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) arch/$(ARCH)/extras.c -o ./iofuncs.o
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES) -o vga.o io.o driver.o iofuncs.o
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(KERN_MAIN)
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) sec/*.c -o ./sec.o
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES) -o vga.o io.o driver.o iofuncs.o kern/*.o sec.o
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o
 
 iso:	kernel
@@ -38,6 +38,8 @@ clean:
 	rm -rf build/
 	rm -rf ./*.o
 	rm -rf ./*.a
+	
+	cd kern && make clean
 #	cd proc && make  clean && cd ../mm && make clean
 	## TODO: clean up object files too.
 

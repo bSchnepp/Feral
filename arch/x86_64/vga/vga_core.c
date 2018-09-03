@@ -51,7 +51,7 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 	{
 		for (DWORD w = 0; w < width; w++)
 		{
-			VgaEntry(color, color, (CHAR)(0), w, h);
+			VgaEntry(color, color, (CHAR)('\0'), w, h);
 		}
 	}
 }

@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining a copy of the software and accompanying documentation covered by 
+obtaining  a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -23,27 +23,27 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
+ 
+ 
+#ifndef _MACH_EMU_FERAL_VERSION_H_
+#define _MACH_EMU_FERAL_VERSION_H_
 
 
-// Ok, so maybe I lied in saying "No way I'll end up with POSIX compatibility!"
-// We might need this to make it much easier to port something like clang/gcc.
-#ifndef _UNISTD_H_
-#define _UNISTD_H_
+#if 0
+// A little egotistical, but this is to clearly mark we're not a real version of
+// Mach. ("Mach 5" does not exist)
 
-#define R_OK 0x04
-#define W_OK 0x02
-#define X_OK 0x01
-#define F_OK 0x00
-
-#define STDIN_FILENO 0
-#define STDOUT_FILENO 1
-#define STDERR_FILENO 2
-
-typedef int ssize_t;
+// Essentially, the idea is to emulate Mach since getting a whole working
+// system on a Mach personality is much easier than porting everything
+// to use "Waypoint-isms".
 
 
-
-
+// oops, forgot that C 89 doesn't support single-line comments
+(fix later)
 #endif
 
 
+#define KERNEL_MAJOR_VERSION (5)
+#define KERNEL_MINOR_VERSION (0)
+
+#endif

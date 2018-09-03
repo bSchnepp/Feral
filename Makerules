@@ -19,10 +19,12 @@ LD        := ld.lld -flavor gnu --verbose
 
 INCLUDES  := inc
 
-## Uncomment for Release builds
-# CFLAGS    := -std=c11 -ffreestanding -nostdlib -O2 -Wall -Wextra -mno-red-zone -c -v -mno-mmx -mno-sse -msoft-float -fno-vectorize $(TARGET)
-## Debug builds
-CFLAGS    := -std=c11 -g3 -ffreestanding -nostdlib -O0 -Wall -Wextra -mno-red-zone -c -v -mno-mmx -mno-sse -msoft-float -fno-vectorize -DKERN_DEBUG $(TARGET)
+CFLAGS := -std=c11 -ffreestanding -nostdlib -Wall -Wextra -mno-red-zone -c -v -mno-mmx -mno-sse -msoft-float -fno-vectorize -O2 -fstack-protector-all
+
+# Comment for release. This will be changed to be based upon an environment variable later.
+CFLAGS += -g3 -DKERN_DEBUG -DDEBUG
+
+CFLAGS += $(TARGET)
 # -c prevents linking (important!!!) and -v for verbosity.
 
 # We don't really care about 'Entering directory...'.
