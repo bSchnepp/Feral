@@ -35,7 +35,7 @@ IN THE SOFTWARE.
 FERALSTATUS KiStopError(IN FERALSTATUS Status)
 {
 #if defined(__x86_64__)
-	KiBlankVgaScreen(80, 25, VGA_BLUE);
+	KiBlankVgaScreen(25, 80, VGA_BLUE);
 	char* errorMsg = "A problem has been detected and Feral has shutdown to prevent further damage.";
 	UINTN length = 0;
 	KiGetStringLength(errorMsg, &length);
@@ -44,7 +44,6 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 	KiPrintLine("");
 	
 	/* Todo: be more useful for error checking */
-	VgaPrintln(VGA_WHITE, VGA_BLUE, errorMsg, length);
 #endif
 }
 
