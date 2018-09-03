@@ -194,7 +194,7 @@ kern_start:
 	mov gs, ax
 
 	mov rsp, stack_top
-	mov rsi, rbx	; Give us the multiboot info we want.
+	mov rdi, rbx	; Give us the multiboot info we want.
 
 	extern kern_init
 	call kern_init

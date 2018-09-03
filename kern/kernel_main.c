@@ -250,7 +250,7 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 	  
 	  Ideally, I'd like to build my own GPU (something on an FPGA at like 100MHz, but is about as good as say a 520 Fermi GPU. The FPGA implements a single graphics core,
 	  and in an ideal world, we'd fab a whole bunch of these dies and they'd communicate together, so making "god tier" GPUs is adding bigger fans and slapping more on
-	  the same die, then the dies would intercommunicate with PCIe or something.
+	  the same board, then the dies would intercommunicate with PCIe or some crazy bus or something.
 	  
 	  Call it FX-SUPER Graphics Support Unit, or just "SUPEREFFECTS" or something fun like that.
 	  
@@ -266,7 +266,7 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 // dying "standard". That said, UEFI's security is about as solid as swiss cheese, whereas this just doesn't happen with BIOS because the firmware is so small there's not a lot to exploit.)
 
 /* AT LEAST THERE'S NO SECURE BOOT. */
-VOID kern_init(void)
+VOID kern_init(UINT64 MultibootInfo)
 {
 	UINT8 misc = VgaPrepareEnvironment();
 	char* string = "Feral kernel booting...";
@@ -323,6 +323,8 @@ VOID kern_init(void)
 
 	// Kernel initialization is done, move on to actual tasks.
 	KiPrintLine("");
+	
+	
 	KiSystemStartup();
 }
 #endif

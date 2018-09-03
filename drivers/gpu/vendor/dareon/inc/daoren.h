@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining a copy of the software and accompanying documentation covered by 
+obtaining  a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -23,35 +23,21 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
-
-#include <feral/stdtypes.h>
-#include <feral/kern/frlos.h>
-#include <feral/kern/ki.h>
-
-#include "sec.h"
-
-#if defined(__x86_64__)
-#include <arch/x86_64/vga/vga.h>
-#endif
-
-FERALSTATUS KiStopError(IN FERALSTATUS Status)
-{
-#if defined(__x86_64__)
-	KiBlankVgaScreen(25, 80, VGA_BLUE);
-	char* errorMsg = "A problem has been detected and Feral has shutdown to prevent further damage.";
-	UINTN length = 0;
-	KiGetStringLength(errorMsg, &length);
-	VgaPrintln(VGA_WHITE, VGA_BLUE, errorMsg, length);
-	
-	KiPrintLine("");
-	
-	/* Todo: be more useful for error checking */
-#endif
-}
-
-__attribute__((noreturn))
-VOID __stack_chk_fail(void)
-{
-	/* This is _horribly_ primitive, but for now, good enough. */
-	KiStopError(1);
-}
+ 
+ /* General definitions for the Red team's graphics cards. */
+ 
+ #ifndef _FERAL_DAREON_GRAPHICS_H_
+ #define _FERAL_DAREON_GRAPHICS_H_
+ 
+ /* Fun fact: Dareon is an anagram. */
+ #define GPU_DRIVER_VENDOR_NAME "DAREON GRAPHICS DRIVER"
+ 
+ #define DAREON_RESET_GRAPHICS			(1 << 0)
+ #define DAREON_RESET_COMPUTE			(1 << 1)
+ #define DAREON_RESET_DMA				(1 << 2)
+ #define DAREON_RESET_CP					(1 << 3)
+ /* TODO */
+ 
+ 
+ 
+ #endif

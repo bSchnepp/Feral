@@ -30,7 +30,7 @@ IN THE SOFTWARE.
 // (don't ever include anything in inc/krnl.h, because your driver may break binary compatibility in the future.)
 // (even then, I might end up changing the ABI anyway for some reason... if this happens, it'd probably end up with a major version change.)
 
-#include "inc/krnl.h"
+#include "krnl.h"
 
 #define TEMPORARY_SERIAL_DRIVER_STUB
 

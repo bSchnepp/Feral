@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining a copy of the software and accompanying documentation covered by 
+obtaining  a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -23,35 +23,24 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
-
+ 
+ 
+#ifndef _DAREON_GPU_DRIVER_VEGA_10_H_
+#define _DAREON_GPU_DRIVER_VEGA_10_H_
+ 
 #include <feral/stdtypes.h>
-#include <feral/kern/frlos.h>
-#include <feral/kern/ki.h>
-
-#include "sec.h"
-
-#if defined(__x86_64__)
-#include <arch/x86_64/vga/vga.h>
-#endif
-
-FERALSTATUS KiStopError(IN FERALSTATUS Status)
+ 
+#define DAREON_VIDEO_CARD_VEGA10_NAME L"DAREON VEGA"
+ 
+typedef struct Vega10GPUInfo
 {
-#if defined(__x86_64__)
-	KiBlankVgaScreen(25, 80, VGA_BLUE);
-	char* errorMsg = "A problem has been detected and Feral has shutdown to prevent further damage.";
-	UINTN length = 0;
-	KiGetStringLength(errorMsg, &length);
-	VgaPrintln(VGA_WHITE, VGA_BLUE, errorMsg, length);
-	
-	KiPrintLine("");
-	
-	/* Todo: be more useful for error checking */
-#endif
-}
+	UINT64 CUCount;
+	UINT64 ThreadsPerCU;	/* generally 64? */
+}Vega10GPUInfo;
 
-__attribute__((noreturn))
-VOID __stack_chk_fail(void)
-{
-	/* This is _horribly_ primitive, but for now, good enough. */
-	KiStopError(1);
-}
+/* (for here, "vega" + suffix means CU COUNT, not Vega revision */
+/* ZEN SBCs can have Vega3, Vega6, Vega7, Vega8, Vega11, Vega20,  and Vega22, and some ASICs can be vega56, and Vega64, vega88 and vega128.*/
+/* The 128 variant is two dies.*/
+/*  Prioritize vega support above all other gpu archs (and buy more of the things) */
+ 
+ #endif

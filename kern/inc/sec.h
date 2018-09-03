@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -23,21 +23,11 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
+ 
+ 
+ #ifndef _FERAL_SECURITY_H_
+ #define _FERAL_SECURITY_H_
 
-// Nothing really here, just so I don't forget to do the most important part of creating Feral.
-
-// (if I had lots of money, we'd probably fork this code for the upcoming Navi architecture too, and get whatever the top-of-the-line model is.)
-
-#ifndef _FERAL_TEAM_RED_ALPHA_LYRAE_GPU_DRIVER_LYRAE_H_
-#define _FERAL_TEAM_RED_ALPHA_LYRAE_GPU_DRIVER_LYRAE_H_
-
-#include <feral/stdtypes.h>
-#include <feral/feralstatus.h>
-#include <ddk/frlddk.h>
-
-FERALSTATUS DriverEntry(HANDLE DeviceHandle, HANDLE RegistryHandle);
-FERALSTATUS DriverExit(FERAL_DRIVER Driver);
-
-// TODO: Read documentation and write a driver.
+// todo
 
 #endif

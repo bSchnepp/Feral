@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining a copy of the software and accompanying documentation covered by 
+obtaining  a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -23,35 +23,21 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
-
-#include <feral/stdtypes.h>
-#include <feral/kern/frlos.h>
-#include <feral/kern/ki.h>
-
-#include "sec.h"
-
-#if defined(__x86_64__)
-#include <arch/x86_64/vga/vga.h>
-#endif
-
-FERALSTATUS KiStopError(IN FERALSTATUS Status)
+ 
+ #ifndef _FERAL_GPU_CLUSTER_H_
+ #define _FERAL_GPU_CLUSTER_H_
+ 
+ #include <feral/string.h>
+ 
+ /* organize a couple GPUs as a cluster, exposing themselves as a single graphics card to various graphics APIs. */
+ /* For example, we could have 2 Polaris 550s in one machine, a 1050 Ti in another, and some iGPU in the local machine, and Feral schedules them
+  	accordingly, such that we can so multi-GPU rendering at the cost of network latency. (for example, the iGPU could do just 2D text, the 1050 Ti does shading, and the dual 550s do geometry and whatnot.
+  */
+ typedef struct GPUCluster
 {
-#if defined(__x86_64__)
-	KiBlankVgaScreen(25, 80, VGA_BLUE);
-	char* errorMsg = "A problem has been detected and Feral has shutdown to prevent further damage.";
-	UINTN length = 0;
-	KiGetStringLength(errorMsg, &length);
-	VgaPrintln(VGA_WHITE, VGA_BLUE, errorMsg, length);
-	
-	KiPrintLine("");
-	
-	/* Todo: be more useful for error checking */
-#endif
-}
-
-__attribute__((noreturn))
-VOID __stack_chk_fail(void)
-{
-	/* This is _horribly_ primitive, but for now, good enough. */
-	KiStopError(1);
-}
+	FERALSTRING ClusterName;
+	/* TODO */
+}GPUCluster;
+ 
+ 
+ #endif

@@ -2,22 +2,32 @@
 
 ## What is Feral?
 Feral is an experimental monolithic kernel aimed at being used for x86-64-based computers that are intended to be used as a gaming system.
-It's primary purpose is having a strong graphics stack built specifically for maximizing performance out of GCN5+ GPUs, minimizing OS overhead of video games, allowing for careful control of the underlying hardware, and incorporate other features which might be useful for video games.
+Specifically, it's intended to be used as a gaming platform, and find use in game consoles, home computers, and portable gaming devices.
+Feral achieves this by careful construction and design of the kernel to specifically accelerate these tasks: userspace is able to do things that would be bad performance-wise on
+other platforms much easier, as well as careful optimizations and design of the graphics stack to help performance of specific GPUs, and intentionally drop support for older hardware to focus on raw performance.
 
-Architecturally, Feral is inspired by a variety of prior systems, most of which are not *nixoid in nature (and almost all of them originating from between 1969 and 1993). 
-This is mostly "to be different" and to try out ideas than to have any real functional purpose behind it. 
+Architecturally, Feral is similar to a variety of prior systems originating between 1969 and 1993, with the most obvious being CMU's Mach project. Feral discards the "everything is a file"
+design in favor of "everything is a 'network resource'", which is intended to align with more modern hardware and software designs. Everything can be sent packets and recieve packets:
+writing to the filesystem is much the same as opening a web page and sending/recieving data to/from that. Feral also takes a lot of design inspiration from a variety of products which competed with
+BSD and other then-current *NIX distributions, specifically intending to avoid "just creating another *NIX clone".
 
-It's really just a hobby project intended to play around with systems design and porting programs to it (in particular, open source games), but is designed in such a way that it wouldn't require (in theory) a complete rewrite to be useful for some actual serious product or solution or something. I just want to build something that can outperform big, much more serious platforms. Even if the difference is insignifigant. (Performance and security is
-always priority #1.)
+Feral is, at it's heart, a hobby project. Mostly just to see and say "I built a kernel X times faster than (your favorite OS here)!". However, Feral is also built
+such that it should be relatively straightforward to fork the project and use it for commercial purposes.
 
-One of the things in particular that I thought it would be fun to try is to completely divorce the kernel from any particular executable format: the kernel simply allows subsystems to be attached into it
-in order to handle a particular format (ELF, MACHO, PE, COFF, etc.), and these can further be hooked into kernel-based virtual machines to emulate other CPU architectures (POWER, Aarch64, legacy x86, etc.). The new problem
-becomes how these drivers can be dynamically created and placed into the OS, and this will probably be with some special object file just for Feral.
-This flips the problem of porting programs to Feral on it's head: rather than "what can we do to get people to port their games", it's "how do we build a system that convinces the anti-cheat stack that we're the real thing?"
-and thus solves the chicken-and-egg problem of a new platform having no programs for it by avoiding the problem altogether. (no one wants to make games for a platform for no users, and no users want to go on a platform with no games. It's an annoying catch-22 and this is probably the only "easy" way to solve that without throwing tons of money at the problem. If you say "you literally don't have to do anything", everyone's happy.) 
-It's, after all, vastly preferable to have broken games and no online functionality than no games at all.
-These "service providers" would register themselves with the kernel by using a function like ```SrvcRegisterProvider()``` or some other name like that. None of this exists yet.
-This way, there is no urgent need to recompile and directly port the toolchain used to build Feral. We just get some Linux compatibility layer and proceed as normal.
+Despite having no formal "native executable architecture", Feral is *not* a microkernel. Instead, Feral opts to divert program loading into a kernel-mode driver to support
+specific formats and CPU architectures. This allows Feral to be very versatile without the performance penalties of a microkernel architecture. For example, if one intends for
+this to be used as a gaming system and prefers playing games in the PE format for the NTOS, then one could port WINE as a kernel-mode driver to Feral and enjoy those games
+just the same as if they were "native executables". Unlike another operating system, Feral does not arbitrarilly allow or reject what could act as a subsystem provider: anyone
+can write a driver, and given SYSTEM permissions, use their driver to run "foreign executables" natively on Waypoint, including for a different CPU architecture given a sufficiently
+written driver. The particular motivation for this is to avoid the inherent problems of building a new platform in that there is no software available for it. Feral avoids this by properly
+allowing emulation of another system such that the entire software library of a foreign platform is available with no recompilation or porting efforts. In other words, game developers
+can have their games run on Feral if they like it or not: Feral emulates the stack below their software such that any porting effort is entirely unnecessary. This runs into problems with
+anti-cheat software embedded into these games, but a more compicated driver to emulate expected system calls should handle those
+issues as well. Additionally, this architecture allows Feral to be self-hosting much faster than a traditionally designed operating system: porting efforts are much simpler because
+we just port the Linux kernel to run as a Feral driver or write a sufficient emulation layer instead of porting the toolchain directly.
+
+Feral intends to focus specifically on game performance. One should use a libos to run their games against rather than relying upon system calls.
+Feral may drop, add, remove, replace system calls in order to boost performance of games running on top of a libos.
 
 In an ideal world, we'd figure out a way to assimilate a real, foreign OS and manage it ourselves or something to *guarantee* compatibility without virtualization.
 This is likely impossible (it would need to be designed to be completely agnostic to all file formats, capable of understanding the kernel and integrating binary blobs extracted from the file...), so
