@@ -171,7 +171,7 @@ typedef struct GUID
 	UINT8 Data4[8];
 }GUID;
 
-//Please avoid using this. (some archs don't like packed structs)
+/* Please avoid using this. (some archs don't like packed structs) */
 #define PACKED __attribute__((packed))
 
 

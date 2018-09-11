@@ -24,41 +24,15 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
  
-#include <feral/stdtypes.h>
+ #ifndef _FERAL_DAREON_GRAPHICS_WAVEFRONT_H_
+ #define _FERAL_DAREON_GRAPHICS_WAVEFRONT_H_
  
-#ifndef _FERAL_LIBCPU_X86_64_H_
-#define _FERAL_LIBCPU_X86_64_H_
+ #include <feral/stdtypes.h>
  
-struct x8664Registers;
  
-typedef struct x8664Core
+typedef struct DareonWavefront
 {
-	char CpuVendorName[12];	// "FERAL FERAL!"
-	char CpuProductName[48];	// "FERAL FERAL!  x86-64 Compatible Processor (Zen1?)"	(something absurd here)
-	UINT64 NumCores;
-	DOUBLE* Clockspeed;		// 4100000000.0000000 Hz (4.1Ghz)
-	struct x8664Registers* cores;
-	/* TODO */
-}
-
-typedef struct x87Registers
-{
-	/* Include MMX and whatnot here too. */
-}
- 
-typedef struct x8664Registers
-{
-	UINT64 rax;
-	UINT64 rbx;
-	UINT64 rcx;
-	UINT64 rdx;
-	
-	UINT64 rip;
-	UINT64 rsp;
-	UINT64 rbp;
-	
-	UINT64 rflags;
-	/* TODO */
-}x8664Registers;
+	/* Define CU context??? */
+}DareonWavefront;
  
  #endif

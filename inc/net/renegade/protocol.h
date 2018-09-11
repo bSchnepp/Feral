@@ -24,41 +24,34 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
  
-#include <feral/stdtypes.h>
- 
-#ifndef _FERAL_LIBCPU_X86_64_H_
-#define _FERAL_LIBCPU_X86_64_H_
- 
-struct x8664Registers;
- 
-typedef struct x8664Core
-{
-	char CpuVendorName[12];	// "FERAL FERAL!"
-	char CpuProductName[48];	// "FERAL FERAL!  x86-64 Compatible Processor (Zen1?)"	(something absurd here)
-	UINT64 NumCores;
-	DOUBLE* Clockspeed;		// 4100000000.0000000 Hz (4.1Ghz)
-	struct x8664Registers* cores;
-	/* TODO */
-}
+#ifndef _FERAL_RENEGADE_PROTOCOL_H_
+#define _FERAL_RENEGADE_PROTOCL_H_
 
-typedef struct x87Registers
+/* Address space is 512 bits, or the same as IPv6 squared twice. */
+/* IPv6 will eventually run out of addresses, and if we learned anything from IPv4, it's that 2^32^2^2 isn't going to be enough.	*/
+/* The intent is that this number is so large that for every single planet in the observable universe can have a number of users 
+     on said planet equal to the number of planets in the observable universe, and still have more than plenty left over.
+     In other words, it would take a lot in order to completely exhaust all the addresses possible in RENEGADE.
+*/
+
+#include <feral/stdtypes.h>
+
+typedef struct renegade_version_one_blockchain
 {
-	/* Include MMX and whatnot here too. */
-}
- 
-typedef struct x8664Registers
-{
-	UINT64 rax;
-	UINT64 rbx;
-	UINT64 rcx;
-	UINT64 rdx;
-	
-	UINT64 rip;
-	UINT64 rsp;
-	UINT64 rbp;
-	
-	UINT64 rflags;
+	CHAR	CryptoNightAddress[95];
 	/* TODO */
-}x8664Registers;
- 
- #endif
+}renegade_version_one_blockchain;
+
+typedef UINT64	BlockchainID;
+typedef UINT64	BlockchainVersion;
+
+typedef struct renegade_protocol_header
+{
+	UINT64				ProtocolVersion;	/* What version of the protocol are we using? */
+	BlockchainID		BChain;				/* What blockchain protocol/hashing algo is in use (CryptoNight, SHA256, etc.) */
+	BlockchainVersion	BChainVersion;		/* What revision of this blockchain do we trust? */
+	UINT8				Address[64];		/* The address we're targetting, being 64 8-bit values. */
+	UINT32				Crc32;				/* Validate the address being used above. */
+}renegade_protocol_header;
+
+#endif

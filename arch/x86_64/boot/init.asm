@@ -244,6 +244,19 @@ mov [eax], edx
 pop rbp
 ret
 
+global cpuid_family_number
+
+cpuid_family_number:
+push rbx
+push rcx
+push rdx
+mov rax, 1
+cpuid
+pop rdx
+pop rcx
+pop rbx
+ret
+
 
 section .rodata
 gdt_64:

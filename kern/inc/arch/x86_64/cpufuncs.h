@@ -29,6 +29,8 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 
+#define	CPU_x86_64_FAMILY_ZEN	0x17
+
 typedef enum
 {
 	CPUID_FEATURES_ECX_SSE3       = (1 << 0),
@@ -51,6 +53,7 @@ typedef enum
 
 void cpuid_vendor_func(DWORD* part1, DWORD* part2, DWORD* part3);
 void cpuid_brand_name(DWORD* part1, DWORD* part2, DWORD* part3, DWORD* part4);	// See comment in kernel_main.c for usage. Cleanup later.
+UINT32	cpuid_family_number(void);
 
 /* Useful ("stable") functions. Refactor elsewhere later. */
 VOID KiRestoreInterrupts(IN BOOLEAN value);

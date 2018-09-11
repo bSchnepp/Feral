@@ -130,9 +130,10 @@ static SYSTEM_INFO KernelSystemInfo = {};
 	Since we don't want to support anything older than the vega10 GPU, we should just cut out the unnecessary parts of whatever drivers we do adapt.
 	(Those are too old, and by the time this becomes usable as a serious OS, those would be *long* obsolete anyway.)
 	Migrate VCS server from ext4/btrfs/zfs to FeralFS. (again, dogfooding!!!!) Port FeralFS to BSD and Linux. The idea is that if it's bad, we'll fix it before bad things happen.
+		Better put,  "We don't like garbage, so when we use garbage, we make garbage not garbage because otherwise we'd be using garbage."
 	
 	Port mesa or get some graphics stack running atop Feral's existing driver structure, then fork Firefox and use it as system's web browser (and/or replace Gecko, move JS engine to ChakraCore, ...?).
-	Hope a ReactOS compatibility layer falls out of the sky, so we can run some stuff.
+	Hope a ReactOS compatibility layer falls out of the sky, so we can run some stuff, benchmark it, etc. The main thing is that we want at least 5% performance improvement over RedmondOS wherever we can get it.
  */
 
 
@@ -157,6 +158,9 @@ VOID KiSystemStartup(VOID)
 	//And then call KiInitializeKernel as needed. We'll also have to use SMT when we can.
 
 	//SMP support would also be nice, but I can't really imagine any desktop motherboards supporting a dual-CPU configuration. (though this would be AWESOME! And it doubles as a heater!)
+	// We may need to support SMP anyway, ie, on X399, since the CPU on that platform is *technically* 2 - 4 "CPUs" put together on a single package (with each of those CPUs *technically* being "2 CPUs").
+	// Better put, we have 4 cores per CCX. We have 2 CCXes per die, and we have 2 dies, so 4 * 2 * 2 = 8 * 2 = 16 cores. Each core has 2 threads, and thus we get 32 threads, but each core isn't really the same.
+	// We have to be careful about this with the scheduler and not just see "hey there's 32 threads" and just throw code on whichever CPU we just feel like.
 	//At best, only consoles would do it, and seeing as how console systems tend to be low on power consumption, a dual-CPU configuration seems fairly unlikely today.
 	//(Especially since games right now don't really utilize that many cores to their full potential... not because the engines are bad, just that no reason to use them.)
 
@@ -223,6 +227,9 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 
 
 #if defined(__i386__) || defined(__x86_64__)
+
+#include <multiboot/multiboot2.h>
+
 // temporary, turn into clean later.
 VOID InternalPrintRegister(DWORD reg, DWORD posx, DWORD posy)
 {
@@ -266,7 +273,7 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 // dying "standard". That said, UEFI's security is about as solid as swiss cheese, whereas this just doesn't happen with BIOS because the firmware is so small there's not a lot to exploit.)
 
 /* AT LEAST THERE'S NO SECURE BOOT. */
-VOID kern_init(UINT64 MultibootInfo)
+VOID kern_init(UINT64 MBINFO)
 {
 	UINT8 misc = VgaPrepareEnvironment();
 	char* string = "Feral kernel booting...";
@@ -300,6 +307,7 @@ VOID kern_init(UINT64 MultibootInfo)
 	cpuid_vendor_func(&part1, &part2, &part3);
 	InternalPrintCpuVendor(part1, part2, part3);	//TODO: cleanup.
 
+	
 
 	// 'part1' needs to be a reference to the chunk we want (0x8000000[2, 3, 4])
 	// This number is then overridden with the appropriate value for the CPUID brand string.
@@ -321,10 +329,25 @@ VOID kern_init(UINT64 MultibootInfo)
 	VgaTraceCharacters(1);
 	VgaMoveCursor(0, 24);
 
-	// Kernel initialization is done, move on to actual tasks.
+	UINT32 familyStuff = cpuid_family_number();
+	UINT32 actualFamily = (familyStuff >> 8) & 15;
+	if (actualFamily == 0x6 || actualFamily == 0xF)
+	{
+		if (actualFamily == 15)
+		{
+			actualFamily += (familyStuff >> 20) & 0x0FFFFFFF;
+		}
+		actualFamily += ((familyStuff >> 16) & 0x4);
+	}
+	
+	if (actualFamily != CPU_x86_64_FAMILY_ZEN)
+	{
+		/* Now we can not feel bad about using SYSCALL and whatnot in particular ways. */
+		KiPrintLine("[WARNING] Unsupported CPU: There may be issues running Feral");
+	}
 	KiPrintLine("");
 	
-	
+	// Kernel initialization is done, move on to actual tasks.
 	KiSystemStartup();
 }
 #endif

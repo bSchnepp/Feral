@@ -60,17 +60,30 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 {
 	DWORD true_x = posx;
 	DWORD true_y = posy;
-	DWORD broke_line = 0;
 	DWORD addedLines = 0;
 	
 	for (DWORD index = 0; index < length; ++index)
 	{
 		CHAR ref = string[index];
-		if (ref == '\n')
+		if (ref == '\t')
+		{
+			true_x += 8;
+			if (true_x > 80)
+			{
+				true_x %= 80;
+				addedLines++;
+			}
+			continue;
+		}
+		else if (ref == '\n')
 		{
 			true_x = 0;
 			addedLines++;
 			continue;
+		}
+		else if (ref == '\0')
+		{
+			return;
 		}
 		VgaEntry(foreground, background, ref, true_x, true_y+addedLines);
 		true_x++;
