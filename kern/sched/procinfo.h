@@ -34,7 +34,8 @@ typedef struct
 	const char ProcessorName[48];
 #endif
 
-	UINT64 ProcNumber;
+	UINT64	ProcNumber;
+	UINT32	SMTThreads;
 	
 	//TODO
 

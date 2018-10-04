@@ -34,8 +34,28 @@ IN THE SOFTWARE.
      In other words, it would take a lot in order to completely exhaust all the addresses possible in RENEGADE.
 */
 
+/*
+	Essentially, the intent is to build a brand new internet with none of the space limitations (far greater address space than IPv6),
+	version control, persistence (ala BitTorrent), peer-to-peer architecture, reliable built-in domain name system (no DNS hijacking), etc. etc.
+	
+	It eliminates the notion of an "internet service provider" by forcing all nodes to peer with a certain number of others:
+	thus, the collection of a small handful of big service providers is entirely impossible: you could just start your own
+	service provider and there would be nothing they could do about it (other than try to throttle connection to you, but that'd be
+	a beyond-horrible business practice).
+	
+	More or less similar to the interplanetary file system, but *specifically* focused on being a network protocol you could
+	in theory run TCP or HTTP  or whatever over. RENEGADE is not a file system, nor delivery network, but *specifically* a network protocol.
+	
+	Maybe consider aborbing IPv4 into this: the underlying stuff is actually ordinary IPv4 protocols sent around to specific
+	parts of the network, meaning it's backwards compatible??? (ie, RENEGADE is actually a gigantic superset of IPv4???)
+	
+	RENEGADE replaces IP in the OSI model.
+	Essentially right now it's a mess of ideas without any formal structure yet.
+ */
+
 #include <feral/stdtypes.h>
 
+/* For now, we trust CryptoNight v7 since it's memory-bound and hard to create useful ASICs for.*/
 typedef struct renegade_version_one_blockchain
 {
 	CHAR	CryptoNightAddress[95];
@@ -48,7 +68,7 @@ typedef UINT64	BlockchainVersion;
 typedef struct renegade_protocol_header
 {
 	UINT64				ProtocolVersion;	/* What version of the protocol are we using? */
-	BlockchainID		BChain;				/* What blockchain protocol/hashing algo is in use (CryptoNight, SHA256, etc.) */
+	BlockchainID		BChainAlgo;			/* What blockchain protocol/hashing algo is in use (CryptoNight, SHA256, etc.) */
 	BlockchainVersion	BChainVersion;		/* What revision of this blockchain do we trust? */
 	UINT8				Address[64];		/* The address we're targetting, being 64 8-bit values. */
 	UINT32				Crc32;				/* Validate the address being used above. */

@@ -60,14 +60,17 @@ static UINT8 FeralVersionMajor;
 static UINT8 FeralVersionMinor;
 static UINT8 FeralVersionPatch;
 
+#if defined(KERN_DEBUG)
 static BOOL ILOVEBEAR18 = 1;	// flag for experimental kernel features, intentionally something strange such that someone 
-				    // doesn't see this in an automated flag thing and just turns it on without knowing why.
+				    				// doesn't see this in an automated flag thing and just turns it on without knowing why.
+#endif
 
 static WSTRING RootFsLocation;	// Where is the root? This should normally be A:/, but it can be anywhere.
 
 
 // FERAL initialization follows a few basic steps:
 	/*
+		[we'll need to rewrite this, since a lot of this is reworked into the 'master control process'.]
 		The first process is always "Subsystem manager". (SSMGR.PRO), this handles dynamic linking and is essential for all non-native programs.
 			(all userspace programs, unless they ship with the rest of the OS, should be a "non-native" (link with a libos) program.
 			(all non-native programs inherit from this one, ala *NIX. This does the primary job of "init".)
@@ -90,6 +93,10 @@ static WSTRING RootFsLocation;	// Where is the root? This should normally be A:/
 			    \\.\Devices/KEYB1
 			    \\.\Devices/MOUSE1
 				(etc)
+				
+			Network resources would be accessed via:
+			\\.\0x93252290D23F0B5E84B58AC3F8C4CD62D630C525B91FB962B14C7B63E5DFD2CDBD273C09886A51AE4EA6F806C8A3AE55FB5C60553D7121A6CBC304C3B22916BDD63F5AF36688728A1458F7763320B2FB96972A33644A401431E0A6024370FC/index.html
+			for example, where without specifying 'ipv4::', 'ipv6::', '9p::', etc. before the address, we assume RENEGADE.
 
 			It also assigns drive letters (the system default 'A', secondary drives get some way of assigning a letter to them, 
 			(usually in alphabetical order (A:/,, B:/, ...,  AB:/, ...,  AZ:/, AAA:/, AAB:/, and so on)
@@ -168,14 +175,22 @@ VOID KiSystemStartup(VOID)
 
 
 	// First off, ensure we load all the drivers, so we know what's going on.
-	//KiBlankVgaScreen(25, 80, VGA_BLACK);
+	KiBlankVgaScreen(25, 80, VGA_BLACK);
 	KiPrintLine("Copyright (c) 2018, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
+	
+	SystemInfo.Arch = PROCESSOR_ARCH_X86_64;
+	
+	/* Do we really need this..? */
 	KiPrintLine("If the Boost Software License was not distributed with the OS if it should have, contact your OS vendor with a request for a copy.");
 	KiPrintLine("");
 	KiPrintLine("Loading all drivers...");
 	FERALSTATUS KiLoadAllDrivers(VOID);
 	KiPrintLine("Preparing execution environment...");
+	
+	VgaSetCursorEnabled(1);
+	VgaTraceCharacters(1);
+	VgaMoveCursor(0, 24);
 	
 	/* These are macroed away at release builds.  They're eliminated at build time.*/
 	KiDebugPrint("INIT Reached here.");
@@ -257,7 +272,8 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 	  
 	  Ideally, I'd like to build my own GPU (something on an FPGA at like 100MHz, but is about as good as say a 520 Fermi GPU. The FPGA implements a single graphics core,
 	  and in an ideal world, we'd fab a whole bunch of these dies and they'd communicate together, so making "god tier" GPUs is adding bigger fans and slapping more on
-	  the same board, then the dies would intercommunicate with PCIe or some crazy bus or something.
+	  the same board, then the dies would intercommunicate with PCIe or some crazy bus or something. High power efficiency, aim for low power consumption, find use in
+	  mobile devices???
 	  
 	  Call it FX-SUPER Graphics Support Unit, or just "SUPEREFFECTS" or something fun like that.
 	  
@@ -307,8 +323,6 @@ VOID kern_init(UINT64 MBINFO)
 	cpuid_vendor_func(&part1, &part2, &part3);
 	InternalPrintCpuVendor(part1, part2, part3);	//TODO: cleanup.
 
-	
-
 	// 'part1' needs to be a reference to the chunk we want (0x8000000[2, 3, 4])
 	// This number is then overridden with the appropriate value for the CPUID brand string.
 	// As such, we print IMMEDIATELY, then go and replace part1 with the next bit.
@@ -325,12 +339,12 @@ VOID kern_init(UINT64 MBINFO)
 		InternalPrintRegister(part4, 12 + (16 * i), 1);
 	}
 
-	VgaSetCursorEnabled(1);
-	VgaTraceCharacters(1);
-	VgaMoveCursor(0, 24);
-
 	UINT32 familyStuff = cpuid_family_number();
 	UINT32 actualFamily = (familyStuff >> 8) & 15;
+	UINT32 extendedModel = (familyStuff >> 16) & (0xF);
+	UINT32 baseModel = (familyStuff >> 4) & (0xF);
+	UINT32 actualModel = baseModel + (extendedModel << 4);
+	
 	if (actualFamily == 0x6 || actualFamily == 0xF)
 	{
 		if (actualFamily == 15)
@@ -340,11 +354,13 @@ VOID kern_init(UINT64 MBINFO)
 		actualFamily += ((familyStuff >> 16) & 0x4);
 	}
 	
-	if (actualFamily != CPU_x86_64_FAMILY_ZEN)
+	
+	if ((actualFamily != CPU_x86_64_FAMILY_ZEN))
 	{
 		/* Now we can not feel bad about using SYSCALL and whatnot in particular ways. */
 		KiPrintLine("[WARNING] Unsupported CPU: There may be issues running Feral");
 	}
+	
 	KiPrintLine("");
 	
 	// Kernel initialization is done, move on to actual tasks.

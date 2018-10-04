@@ -33,16 +33,20 @@ IN THE SOFTWARE.
 #include <arch/x86_64/vga/vgaregs.h>
 #include <arch/x86_64/cpuio.h>
 
+/* TODO: Refactor into a struct... */
 
+volatile UINT16* 	VGA_LOC = (UINT16*)0xB8000;
+static UINT16 		VGA_CURRENT_LINE = 3;	// We directly write to the first 2 (and want an extra space), so leave space.
+static UINT16 		VGA_CURRENT_COL = 0;
 
-volatile UINT16* VGA_LOC = (UINT16*)0xB8000;
-static int VGA_CURRENT_LINE = 3;	// We directly write to the first 2 (and want an extra space), so leave space.
+static VgaColorValue preferredBackground = VGA_BLACK;
 BOOL TraceVga;
 
 VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy)
 {
 	uint16_t color = ((background << 4) | foreground);
 	VGA_LOC[posx + (posy * 80)] = ((UINT16)letter | (UINT16) color << 8);
+	VGA_CURRENT_COL = posx + 1;
 }
 
 VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
@@ -54,6 +58,9 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 			VgaEntry(color, color, (CHAR)('\0'), w, h);
 		}
 	}
+	VGA_CURRENT_COL = 0;
+	VGA_CURRENT_LINE = 0;
+	preferredBackground = color;
 }
 
 VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy)
@@ -91,6 +98,12 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 	VGA_CURRENT_LINE += addedLines + (length / 80);
 }
 
+VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter)
+{
+	uint16_t color = ((background << 4) | foreground);
+	VGA_LOC[VGA_CURRENT_COL + (VGA_CURRENT_LINE * 80)] = ((UINT16)letter | (UINT16) color << 8);
+	VGA_CURRENT_COL++;
+}
 
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length)
 {
@@ -123,6 +136,7 @@ VOID VgaMoveCursor(DWORD PosX, DWORD PosY)
 
 	x86outb(VGA_FB_COMMAND_PORT, VGA_HIGH_BYTE_COMMAND);
 	x86outb(VGA_FB_DATA_PORT, (UINT8)((FinalPos >> 8) & (0x00FF)));
+	VgaEntry(VGA_LIGHT_BROWN, preferredBackground, '\0', PosX, PosY);
 }
 
 VOID VgaTraceCharacters(BOOL value)

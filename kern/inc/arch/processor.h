@@ -40,12 +40,7 @@ typedef struct PROCESSOR_INFO
 typedef struct SYSTEM_INFO
 {
 	UINT16 Arch;
-	UINT64 ModelId;
-	UINT8 Family;
-	UINT8 ExtendedFamily;
-
-	UINT8 Model;
-	UINT8 ExtendedModel;
+	CHAR* ProductName;
 
 	UINT64 PageSize;	/* How big is each virtual memory page  (in bytes) */
 	UINTN ProcessorCount;

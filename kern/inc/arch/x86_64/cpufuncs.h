@@ -29,7 +29,37 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 
+/* does literally anyone care about bulldozer anymore */
+#define	CPU_x86_64_FAMILY_BULLDOZER	0x15
+
+
 #define	CPU_x86_64_FAMILY_ZEN	0x17
+
+/* These are all the same die-thingy (*technically*) */
+#define	CPU_x86_64_MODEL_ZEN_NAPLES		(0x01)	/* server */
+#define	CPU_x86_64_MODEL_ZEN_WHITEHAVEN	(0x01) 	/* high-end desktop */
+#define	CPU_x86_64_MODEL_ZEN_SUMMIT_RIDGE	(0x01)	/* mainstream */
+
+/* The ones with the GPU in them too */
+#define	CPU_x86_64_MODEL_ZEN_RAVEN_RIDGE	(0x11)
+/* TODO: Identify Picasso (mobile APUs) */
+/* TODO: Identify Renoir (mobile APUs succeeding Picasso) */
+
+/* Zen 1 + */
+#define	CPU_x86_64_MODEL_ZEN_PINNACLE_RIDGE	(0x08)
+/* TODO: Identify Colfax (the new (2018) TR4 stuff)*/
+
+#define	CPU_x86_64_FAMILY_INTEL_GENERAL	0x6
+/* Broadwell and earlier not supported. */
+#define	CPU_x86_64_MODEL_SKYLAKE_CLIENT_MAINSTREAM	(94)
+#define	CPU_x86_64_MODEL_SKYLAKE_CLIENT_LOW_POWER	(78)
+#define	CPU_x86_64_MODEL_SKYLAKE_SERVER				(85)
+
+#define	CPU_x86_64_MODEL_KABY_LAKE_CLIENT_MAINSTREAM	(142)
+#define	CPU_x86_64_MODEL_KABY_LAKE_CLIENT_LOW_POWER	(158)
+
+#define	CPU_x86_64_MODEL_COFFEE_LAKE_CLIENT_MAINSTREAM	(158)
+
 
 typedef enum
 {

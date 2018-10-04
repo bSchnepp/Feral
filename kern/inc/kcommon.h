@@ -23,35 +23,15 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
+ 
+ #ifndef _FERAL_KCOMMON_H_
+ #define _FERAL_KCOMMON_H_
+ 
+/* This function can be used by other parts of the kernel, and shouldn't change that often. */
+#define PUBLIC
 
-#include <feral/stdtypes.h>
-#include <feral/kern/frlos.h>
-#include <feral/kern/ki.h>
+/* This function shouldn't be used outside it's subsystem. */ 
+#define PRIVATE
 
-#include "sec.h"
-
-#if defined(__x86_64__)
-#include <arch/x86_64/vga/vga.h>
-#endif
-
-FERALSTATUS KiStopError(IN FERALSTATUS Status)
-{
-#if defined(__x86_64__)
-	KiBlankVgaScreen(25, 80, VGA_BLUE);
-	char* errorMsg = "A problem has been detected and Feral has shutdown to prevent further damage.";
-	UINTN length = 0;
-	KiGetStringLength(errorMsg, &length);
-	VgaPrintln(VGA_WHITE, VGA_BLUE, errorMsg, length);
-	
-	KiPrintLine("");
-	return STATUS_ERROR;
-	/* Todo: be more useful for error checking */
-#endif
-}
-
-__attribute__((noreturn))
-VOID __stack_chk_fail(void)
-{
-	/* This is _horribly_ primitive, but for now, good enough. */
-	KiStopError(1);
-}
+ 
+ #endif

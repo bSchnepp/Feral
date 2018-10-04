@@ -58,6 +58,8 @@ VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, D
 
 VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy);
 
+VOID VgaPrint(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length); 
+
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length); 
 
 VOID VgaMoveCursor(DWORD PosX, DWORD PosY);

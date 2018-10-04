@@ -25,7 +25,9 @@ IN THE SOFTWARE.
  */
 
 
-// Define internal kernel functions here. (hence 'krnlfun'.)
+/* 
+	Define internal kernel functions here. (hence 'krnlfun'.) 
+ */
 
 #include <feral/string.h>
 #include <feral/stdtypes.h>
@@ -33,6 +35,8 @@ IN THE SOFTWARE.
 #include <feral/kern/frlos.h>
 #include <feral/kern/ki.h>
 
+
+#include <stdarg.h>
 
 #if defined(__x86_64__)
 #include <arch/x86_64/vga/vga.h>
@@ -66,6 +70,58 @@ FERALSTATUS KiPrintWarnLine(STRING string)
 	return STATUS_SUCCESS;
 }
 
+FERALSTATUS KiPrintFmt(const STRING fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	
+	/* We'll print in 1024-character buffers at a time.*/
+	CHAR buf[1024];
+	
+	UINT64 index = 0;
+	
+	BOOL lastWasFormat = FALSE;
+	/* Go through everything in fmt. If we come across a %, we need to do something.*/
+	for (const char* ch = fmt; *ch; ch++)
+	{
+		/* We need to check if this is a '%' */
+		if (*ch == '%' && !lastWasFormat)
+		{
+			lastWasFormat = TRUE;
+			continue;
+		}
+		
+		#if 0
+		VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy)
+		#endif
+		/* VGA core is in deparate need of being refactored... */
+		if (lastWasFormat)
+		{
+		switch (*ch)
+		{
+			case '%':
+				VgaAutoEntry(VGA_WHITE, VGA_BLACK, '%');
+				break;
+			
+			case 'i':
+				VgaAutoEntry(VGA_WHITE, VGA_BLACK, *ch);
+				break;
+				
+			default:
+				VgaAutoEntry(VGA_WHITE, VGA_BLACK, *ch);
+				break;
+		}
+		}
+		else
+		{
+			VgaAutoEntry(VGA_WHITE, VGA_BLACK, *ch);
+		}
+	}
+	
+	va_end(args);
+	return STATUS_SUCCESS;
+}
+
 #else
 
 // TODO
@@ -92,9 +148,11 @@ FERALSTATUS FrlCreateString(IN FERALSTRING* StringLocation, UINT64 Length, WSTRI
 FERALSTATUS FrlDeleteString(IN FERALSTRING* String)
 {
 	//TODO
+	return STATUS_SUCCESS;
 }
 
 FERALSTATUS FrlCloneString(IN FERALSTRING* Source, IN FERALSTRING* OutLocation)
 {
 	//TODO
+	return STATUS_SUCCESS;
 }

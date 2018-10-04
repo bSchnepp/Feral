@@ -18,8 +18,15 @@ things, and we should avoid doing any rendering while a game is running so it ca
 
 	- Avoid being yet another *NIX clone: there's nothing wrong with *NIX really, it's just that everybody's done it before, and for some things, representation as a file might not be ideal. (it's great to always be experimental.)
 	
+	- Add some new mechanism like VBOs but for system calls: we want to avoid system calls as much as possible because they will slow down userland (and performance is priority #1), The intent is that if usermode schedules
+		a whole bunch in advance, and then has a page or two where these are all dedicated to run, and just remaps that page when done, then we'd never have to go back and forth and back and forth (this is useful for example,
+		getting a file, and immediately loading the entire thing into memory: games want this for better loading times by just putting frequently used assets into a special file and loading the whole thing.)
 	
-	
+TODO to port:
+	- We want clang, llvm, yasm, etc. as soon as possible. We should aim to be self-hosting as soon as we can.
+	- We should also port python, and maybe get some version of Firefox up. At least links for a web browser.	
+	- Mesa would be nice to have.
+
 User facing stuff:
 	- Animated wallpapers are an absolute must. We don't use potatos for CPUs anymore.
 

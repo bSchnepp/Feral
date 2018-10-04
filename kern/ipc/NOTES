@@ -19,5 +19,5 @@ Pipes are created as follows:
 		- This pipe is located in the \\. namespace, under the 'ports' directory.
 		- (KeCreatePipe("RenderServer", PORT_READ_WRITE, 2746) creates a new port in \\./ports/RenderServer/)
 
-We don't insist on *everything is strictly a file*. Instead, we expose various types and whatnot, as such, a "CreateFile" to something like SY$CONOUT is invalid.
+We don't insist on *everything is strictly a file*. Instead, we expose various types and whatnot, as such, a "CreateFile" to something like SYS$CONOUT is invalid.
 Rather, some layer which wants to make everything a file needs logic to handle that sort of thing. Not everything is a file.

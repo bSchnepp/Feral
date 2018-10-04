@@ -55,9 +55,17 @@ extern "C" {
 /* Optional, does something to this object. */
 #define INOUTOPT
 
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+
 /* Yes, 'API' is not a typo, even though we're dealing with ABIs. This is because this is how the API would be called. Slightly confusing, yes, but I'm just following an established thing. */
 
-#define FERALAPI __attribute__((cdecl))	//Team Red's ABI. (the one basically everyone else uses).
+#define FERALAPI __attribute__((cdecl))	/* Team Red's ABI. (the one basically everyone else uses). */
 
 #define  MSAPI __attribute__((ms_abi))
 #define WINAPI __attribute__((ms_abi))
