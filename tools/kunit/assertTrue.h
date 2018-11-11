@@ -24,34 +24,39 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _WAYPOINT_FEATURES_H_
-#define _WAYPOINT_FEATURES_H_
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
 #include <feral/stdtypes.h>
+#include <feral/kern/frlos.h>
 
-#define FEATURE_VULKAN_RENDERING		\
-{											\
-	0xA99878C2,							\
-	0x0A0F,									\
-	0x430C,									\
-	0x0A0F,									\
-	0x805F,									\
-	{0xA9, 0x44, 0x15, 0x9D, 0x57, 0x45},		\
+#ifndef _FERAL_K_UNIT_TEST_ASSERT_TRUE_
+#define _FERAL_K_UNIT_TEST_ASSERT_TRUE_
+
+/* 
+	Personally I don't like finding out 4 months later there's a big bug in the kernel, so let's try to
+	modularize ala NetBSD and cram kernel stuff into little user mode programs that simulate a specific
+	subsystem of the Feral kernel (ie, useful for testing network stuff, ensuring this time I didn't screw up kprintf, etc. etc.) 
+	
+	Okay, maybe it's not quite like NetBSD, (we don't have a userspace yet in Feral, so we obviously can't jettison some kernel features to usermode and bring it back.)
+	Feral has yet to run on actual hardware anyway, just qemu (kvm) and going to test with HVM on Xen soon.
+*/
+
+/* TODO: Clever way of tracking things? (open a  'debug context' or something???)*/
+inline BOOL assertTrue(BOOL Condition)
+{
+	if (!Condition)
+	{
+		KiPrintWarnLine("Assertion was false");
+	}
+	return Condition;
 }
 
-// Add more as needed.
-
-#if defined(__cplusplus)
+inline BOOL assertFalse(BOOL Condition)
+{
+	if (Condition)
+	{
+		KiPrintWarnLine("Assertion was true");
+	}
+	return Condition;
 }
-#endif
-
-BOOL IsFeatureSupported(GUID guid);
-
-
 
 
 

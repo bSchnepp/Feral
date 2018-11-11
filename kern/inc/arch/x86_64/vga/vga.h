@@ -52,6 +52,26 @@ typedef enum VgaColorValue
 	VGA_WHITE = 15,
 }VgaColorValue;
 
+typedef struct
+{
+	UINT16* Framebuffer;
+	
+	UINT16 ScreenWidth;
+	UINT16 ScreenHeight;
+	
+	VgaColorValue Background;
+	VgaColorValue Foreground;
+	VgaColorValue Highlight;
+	
+	BOOL TextMode;
+	BOOL FollowingInput;
+	BOOL CursorEnabled;
+	
+	UINT16 CurrentRow;
+	UINT16 CurrentCol;
+}VgaContext;
+
+
 VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color);
 
 VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy);
@@ -69,7 +89,8 @@ VOID VgaTraceCharacters(BOOL value);
 
 VOID VgaSetCursorEnabled(BOOL value);
 
-UINT8 VgaPrepareEnvironment(VOID);
+UINT8 VgaPrepareEnvironment(VgaContext *context);
+
 
 #if defined(__cplusplus)
 }

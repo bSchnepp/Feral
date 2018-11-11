@@ -33,20 +33,13 @@ IN THE SOFTWARE.
 #include <arch/x86_64/vga/vgaregs.h>
 #include <arch/x86_64/cpuio.h>
 
-/* TODO: Refactor into a struct... */
-
-volatile UINT16* 	VGA_LOC = (UINT16*)0xB8000;
-static UINT16 		VGA_CURRENT_LINE = 3;	// We directly write to the first 2 (and want an extra space), so leave space.
-static UINT16 		VGA_CURRENT_COL = 0;
-
-static VgaColorValue preferredBackground = VGA_BLACK;
-BOOL TraceVga;
+static VgaContext *currentContext;
 
 VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy)
 {
 	uint16_t color = ((background << 4) | foreground);
-	VGA_LOC[posx + (posy * 80)] = ((UINT16)letter | (UINT16) color << 8);
-	VGA_CURRENT_COL = posx + 1;
+	currentContext->Framebuffer[posx + (posy * 80)] = ((UINT16)letter | (UINT16) color << 8);
+	currentContext->CurrentCol = posx + 1;
 }
 
 VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
@@ -58,9 +51,9 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 			VgaEntry(color, color, (CHAR)('\0'), w, h);
 		}
 	}
-	VGA_CURRENT_COL = 0;
-	VGA_CURRENT_LINE = 0;
-	preferredBackground = color;
+	currentContext->CurrentRow = 0;
+	currentContext->CurrentCol = 0;
+	currentContext->Background = color;
 }
 
 VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy)
@@ -95,20 +88,20 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 		VgaEntry(foreground, background, ref, true_x, true_y+addedLines);
 		true_x++;
 	}
-	VGA_CURRENT_LINE += addedLines + (length / 80);
+	currentContext->CurrentRow += addedLines + (length / 80);
 }
 
 VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter)
 {
 	uint16_t color = ((background << 4) | foreground);
-	VGA_LOC[VGA_CURRENT_COL + (VGA_CURRENT_LINE * 80)] = ((UINT16)letter | (UINT16) color << 8);
-	VGA_CURRENT_COL++;
+	currentContext->Framebuffer[currentContext->CurrentCol + (currentContext->CurrentRow * 80)] = ((UINT16)letter | (UINT16) color << 8);
+	currentContext->CurrentCol++;
 }
 
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length)
 {
 	DWORD newSpace = (length / 80) + 1;
-	if (VGA_CURRENT_LINE >= (25 - newSpace))
+	if (currentContext->CurrentRow >= (25 - newSpace))
 	{
 		/* Go through every row and get the appropriate stuff up what it needs to. */
 		for (DWORD index = 0; index < (25 - newSpace); ++index)
@@ -117,14 +110,14 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string
 			for (DWORD col = 0; col < 80; ++col)
 			{
 					// TODO: (fixme), sometimes text bleeds over (invokes text spacing and buffers, just run with a few huge strings and you'll see it)
-					VGA_LOC[(index * 80) + col] = VGA_LOC[(((index + newSpace) * 80) + col)];
+					currentContext->Framebuffer[(index * 80) + col] = currentContext->Framebuffer[(((index + newSpace) * 80) + col)];
 			}
 		}
-		VgaStringEntry(foreground, background, string, length, 0, VGA_CURRENT_LINE - newSpace);
-		VGA_CURRENT_LINE -= (newSpace);
+		VgaStringEntry(foreground, background, string, length, 0, currentContext->CurrentRow - newSpace);
+		currentContext->CurrentRow -= (newSpace);
 	} else {
-		VgaStringEntry(foreground, background, string, length, 0, VGA_CURRENT_LINE);
-		VGA_CURRENT_LINE++;
+		VgaStringEntry(foreground, background, string, length, 0, currentContext->CurrentRow);
+		currentContext->CurrentRow++;
 	}
 }
 
@@ -136,12 +129,12 @@ VOID VgaMoveCursor(DWORD PosX, DWORD PosY)
 
 	x86outb(VGA_FB_COMMAND_PORT, VGA_HIGH_BYTE_COMMAND);
 	x86outb(VGA_FB_DATA_PORT, (UINT8)((FinalPos >> 8) & (0x00FF)));
-	VgaEntry(VGA_LIGHT_BROWN, preferredBackground, '\0', PosX, PosY);
+	VgaEntry(currentContext->Highlight, currentContext->Background, '\0', PosX, PosY);
 }
 
 VOID VgaTraceCharacters(BOOL value)
 {
-	TraceVga = value;
+	currentContext->FollowingInput = value;
 }
 
 VOID VgaSetCursorEnabled(BOOL value)
@@ -159,12 +152,29 @@ VOID VgaSetCursorEnabled(BOOL value)
 		x86outb(VGA_FB_COMMAND_PORT, 0x0A);
 		x86outb(VGA_FB_DATA_PORT, 0x20);
 	}
+	currentContext->CursorEnabled = value;
 }
 
-UINT8 VgaPrepareEnvironment(VOID)
+UINT8 VgaPrepareEnvironment(VgaContext *context)
 {
 	// Ensure a bit in port 0x03C2 is set.
 	UINT8 miscreg = x86inb(0x3CC);
 	x86outb(VGA_MISC_OUTPUT_REG, (miscreg | 0xE7));
+	
+	context->Framebuffer = (UINT16*)(0xB8000);
+	context->ScreenWidth = 80;
+	context->ScreenHeight = 25;
+	
+	context->Background = VGA_BLACK;
+	context->Foreground = VGA_WHITE;
+	context->Highlight = VGA_LIGHT_BROWN;
+	
+	context->TextMode = 1;
+	context->FollowingInput = 0;
+	
+	context->CurrentRow = 3;
+	context->CurrentCol = 0;
+	
+	currentContext = context;
 	return miscreg;
 }

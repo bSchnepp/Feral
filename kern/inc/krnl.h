@@ -51,7 +51,7 @@ typedef enum TASK_STATE
 
 typedef enum THREAD_STATE
 {
-	ThreadStaeBlocking,
+	ThreadStateBlocking,
 	ThreadStateRunning,
 	ThreadStateInactive
 }THREAD_STATE;

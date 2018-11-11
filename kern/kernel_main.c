@@ -182,7 +182,7 @@ VOID KiSystemStartup(VOID)
 	SystemInfo.Arch = PROCESSOR_ARCH_X86_64;
 	
 	/* Do we really need this..? */
-	KiPrintLine("If the Boost Software License was not distributed with the OS if it should have, contact your OS vendor with a request for a copy.");
+	KiPrintLine("If the Boost Software License was not distributed with the OS if it should have, contact your OS vendor with a request for a copy. (this is a test message to demonstrate long strings, and should be removed from release.)");
 	KiPrintLine("");
 	KiPrintLine("Loading all drivers...");
 	FERALSTATUS KiLoadAllDrivers(VOID);
@@ -293,7 +293,8 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 /* AT LEAST THERE'S NO SECURE BOOT. */
 VOID kern_init(UINT64 MBINFO)
 {
-	UINT8 misc = VgaPrepareEnvironment();
+	VgaContext graphicsContext = {0};
+	UINT8 misc = VgaPrepareEnvironment(&graphicsContext);
 	char* string = "Feral kernel booting...";
 	KiPrintLine(string);
 

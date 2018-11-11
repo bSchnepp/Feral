@@ -35,7 +35,6 @@ IN THE SOFTWARE.
 #include <feral/kern/frlos.h>
 #include <feral/kern/ki.h>
 
-
 #include <stdarg.h>
 
 #if defined(__x86_64__)

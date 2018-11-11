@@ -35,11 +35,24 @@ FERALSTATUS KiPrintLine(STRING string);
 FERALSTATUS KiPrintGreyLine(STRING string);
 FERALSTATUS KiPrintWarnLine(STRING string);
 
+/*
+	 Security is always turned on when kernel initializes. Why would you want to disable it? 
+	 (okay, if you want a vulnerable kernel for playing with that sort of thing, we'll leave a compile-time macro...)
+*/
 
 typedef enum KiSubsystemIdentifier
 {
 	FERAL_SUBSYSTEM_MEMORY_MANAGEMENT,
 	FERAL_SUBSYSTEM_FILESYSTEM_MANAGEMENT,
+	FERAL_SUBSYSTEM_OBJECT_MANAGEMENT,
+	FERAL_SUBSYSTEM_VIDEO_MANAGEMENT,
+	FERAL_SUBSYSTEM_POWER_MANAGEMENT,
+	FERAL_SUBSYSTEM_PROCESS_MANAGEMENT,	/* We can disable this if we want something like a thin client, and only one program (and one thread) per core.*/
+	
+	FERAL_SUBSYSTEM_NETWORK_STACK,
+	FERAL_SUBSYSTEM_EMULATION_STACK,	/* CPU and 'foreign OS' emulation, including dynarec compiler(s). */
+	FERAL_SUBSYSTEM_AUDIO_STACK,
+	FERAL_SUBSYSTEM_INPUT_STACK,
 }KiSubsystemIdentifier;
 
 /* Bring up a system needed for the kernel. */
