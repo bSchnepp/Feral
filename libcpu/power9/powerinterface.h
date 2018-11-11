@@ -24,14 +24,14 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
  
- 
-#ifndef _INET_ARPANET_H_
-#define _INET_ARPANET_H_
-
 #include <feral/stdtypes.h>
+ 
+#ifndef _FERAL_LIBCPU_POWER9_H_
+#define _FERAL_LIBCPU_POWER9_H_
 
-#define INET_ADDRSTRLEN			(16)
-#define INET_ADDRSTRLEN6		(46)
-
-/* TODO */ 
-#endif
+struct Power9Registers
+{
+	
+};
+ 
+ #endif

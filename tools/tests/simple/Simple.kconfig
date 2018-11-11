@@ -1,0 +1,17 @@
+menuconfig SAMPLE
+	bool "Sample kernel configuration"
+	help
+		Enable this to see the configuration done to the kernel.
+		
+
+
+if SAMPLE
+	config SAMPLE_DEFAULT_COLOR
+	color "Bright yellow"
+	depends on ARCH_X86 || ARCH_X86_64
+	help
+		The configuration option changes the default color of the kernel
+		VGA print buffer: This should match Feral primitives, such that
+		colors should be "Black", "Bright yellow", etc.
+	
+endif	#SAMPLE

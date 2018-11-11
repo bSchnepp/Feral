@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -25,13 +25,61 @@ IN THE SOFTWARE.
  */
  
  
-#ifndef _INET_ARPANET_H_
-#define _INET_ARPANET_H_
-
+#include <stdlib.h>
+#include <stdio.h>
 #include <feral/stdtypes.h>
 
-#define INET_ADDRSTRLEN			(16)
-#define INET_ADDRSTRLEN6		(46)
+typedef struct Definition;
 
-/* TODO */ 
-#endif
+#define TRISTATE_NO	(-1)
+#define TRISTATE_MOD	(0)
+#define TRISTATE_YES	(1)
+
+#define CONTENTS_STATUS_ARE_TRISTATE	(0)
+#define CONTENTS_STATUS_ARE_STRING		(1)
+#define CONTENTS_STATUS_ARE_INTEGER		(2)
+#define CONTENTS_STATUS_ARE_OTHER		(3)
+
+typedef struct Definition
+{
+	STRING Item;
+	UINT32 contentsStatus;
+	union
+	{
+		INT32 tristate;
+		STRING string;
+	}Contents;
+	
+	UINT64 numChildren;
+	struct Definition* children;
+}Definition;
+
+
+Definition* ParseFile(STRING path)
+{
+	FILE* file = fopen(path, "r");
+	if (!file)
+	{
+		return (Definition*)(0);
+	}
+	
+	fclose(file);
+}
+
+
+void printUsage(void)
+{
+	fprintf(stdout, "Usage: kconfig.elf <FILE>\n");
+}
+
+int main(int argc, STRING *argv)
+{
+	if (argc < 2)
+	{
+		printUsage();
+		return 0;
+	}
+	
+	Definition* res = ParseFile(argv[1]);
+	return 0;
+}

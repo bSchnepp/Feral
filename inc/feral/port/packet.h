@@ -23,15 +23,19 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
- 
-#ifndef _INET_ARPANET_H_
-#define _INET_ARPANET_H_
+
+#ifndef _FERAL_PACKET_H_
+#define _FERAL_PACKET_H_
 
 #include <feral/stdtypes.h>
+#include <feral/port/port.h>
 
-#define INET_ADDRSTRLEN			(16)
-#define INET_ADDRSTRLEN6		(46)
+typedef struct DataPacket
+{
+	FERALPORT *Source,
+	FERALPORT *Target,
+	UINT64 PayloadSize;
+	VOID *Payload;
+}DataPacket;
 
-/* TODO */ 
 #endif

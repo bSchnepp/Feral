@@ -75,6 +75,7 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 	va_list args;
 	va_start(args, fmt);
 	
+#if 0
 	/* We'll print in 1024-character buffers at a time.*/
 	CHAR buf[1024];
 	
@@ -117,6 +118,48 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 			VgaAutoEntry(VGA_WHITE, VGA_BLACK, *ch);
 		}
 	}
+#endif
+
+	CHAR buffer[1024];
+	/* 
+		For now, we have a bug where over 1024 characters causes problems.
+		I'll get around to fixing it when we *really* need it.
+	 */
+	BOOL lastWasFormat = FALSE;
+	UINT64 index = 0;
+	for (UINT32 fmtindex = 0; fmtindex < 1024; fmtindex++)
+	{
+		CHAR c = fmt[fmtindex];
+		if (c != '%' && !lastWasFormat)
+		{
+			buffer[index++] = c;
+		}
+		else if (c == '%' && !lastWasFormat)
+		{
+			lastWasFormat = TRUE;
+		}
+		else if (lastWasFormat)
+		{
+			if (c == '%')
+			{
+				buffer[index++] = '%';
+				lastWasFormat = FALSE;
+			}
+			else if (c == 's')
+			{
+				STRING valistnext;
+				valistnext = va_arg(args, STRING);
+				UINT64 sublen = 0;
+				while (valistnext[sublen] != '\0')
+				{
+					buffer[index++] = valistnext[sublen++];
+				}
+			}
+		}
+	}
+	/*  We're gonna have double newlines for a bit (kludgy TODO hack) */
+	buffer[1023] = '\0';
+	KiPrintLine(buffer);
 	
 	va_end(args);
 	return STATUS_SUCCESS;

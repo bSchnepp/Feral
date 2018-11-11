@@ -35,6 +35,14 @@ this is the next best thing. (avoid virtualization because performance loss (eve
 
 I'm mostly doing this to get *much* better at C and assembly code, and especially interoperation between C and assembly, while also doing a little bit of Rust for memory-sensitive functionality.
 
+## Building?
+Run ./build.sh $ARCH $COMMAND,
+where $ARCH is the arch (x86_64), and $COMMAND
+is the command to run (qemu, qemu-nokvm, clean, etc.)
+
+This is temporary, and will be replaced with a proper
+build system (Kconfig) later.
+
 ## Is there any naming convention?
 Folders should be named in a way to avoid unnecessary characters (ie, 'inc' vs 'include'.) This is just because I tend to have too many tabs of ~~Nautilus~~ 
 flavor-of-the-month-file-explorer open and each one very small. Not important. 3 monitors isn't enough to make that OK.

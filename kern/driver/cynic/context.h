@@ -24,14 +24,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
  
- 
-#ifndef _INET_ARPANET_H_
-#define _INET_ARPANET_H_
+#ifndef  _FERAL_3D_CYNIC_API_H_
+#define _FERAL_3D_CYNIC_API_H_
 
-#include <feral/stdtypes.h>
+#define CYNIC_VENDOR_NAME "Feral Generic Cynic Driver"
 
-#define INET_ADDRSTRLEN			(16)
-#define INET_ADDRSTRLEN6		(46)
+/*  TODO: Support graphic and compute APIs. */
 
-/* TODO */ 
+
 #endif

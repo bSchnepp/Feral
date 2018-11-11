@@ -1,0 +1,15 @@
+Mach was originally designed as a microkernel (everybody already knows this...), but the most
+issue arises from how Mach is split up:
+
+In version 4 of Mach, the kernel was split up into a dependent and independent part, in which
+the machine-specific parts (mach4-i386, mach4-parisc, etc.) called into a "library-ified" kernel,
+where some parts of the kernel may be omitted if they do not apply to that specific architecture.
+
+In version 3 and earlier, the roles were reversed, in where the kernel calls a library-ified
+set of machine-specific interfaces, and allows it to pick and choose what it should support.
+
+
+The problem here is that we don't care about the underlying hardware in Feral: if it's not there,
+we do software emulation to do it. Do we export these to usermode Mach applications, and
+claim we're Mach 4, or do we claim we're Mach 2.5/3 and export everything?
+At the end of the day, this libos exists to get gcc on Feral...

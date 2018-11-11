@@ -24,14 +24,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
  
+ #ifndef _FERAL_RENEGADE_PROTOCOL_REN_H_
+ #define _FERAL_RENEGADE_PROTOCOL_REN_H_
  
-#ifndef _INET_ARPANET_H_
-#define _INET_ARPANET_H_
-
-#include <feral/stdtypes.h>
-
-#define INET_ADDRSTRLEN			(16)
-#define INET_ADDRSTRLEN6		(46)
-
-/* TODO */ 
-#endif
+ #include <net/renegade/protocol.h>
+ 
+ BOOL NetPingAddress(UINT8 Address[64]);
+ 
+ 
+ #endif

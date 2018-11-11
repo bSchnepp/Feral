@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,14 +24,35 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
  
- 
-#ifndef _INET_ARPANET_H_
-#define _INET_ARPANET_H_
+#ifndef _FERAL_WAYPOINT_ACCOUNT_H_ 
+#define _FERAL_WAYPOINT_ACCOUNT_H_
 
 #include <feral/stdtypes.h>
+#include <feral/feraluser.h>
 
-#define INET_ADDRSTRLEN			(16)
-#define INET_ADDRSTRLEN6		(46)
+/**
+	Gets the current number of registered users on
+	this machine.
+	
+	If there is an error, the returned WPSTATUS is set accordingly.
+ */
+WPSTATUS WpGetUserCount(OUT UINT64* AccountCounter); 
 
-/* TODO */ 
-#endif
+ /**
+	Gets the current number of active (logged-in) users on
+	this machine.
+	
+	If there is an error, the returned WPSTATUS is set accordingly.
+ */
+WPSTATUS WpGetActiveUserCount(OUT UINT64* AccountCounter); 
+
+  /**
+  	Checks if a given user exists.
+  	A given user exists if it's ID is taken, and it's name matches.
+	
+	If there is an error, the returned WPSTATUS is set accordingly.
+ */
+WPSTATUS WpGetUserValidity(IN FERALUSER* User, OUT BOOL* Status); 
+ 
+ 
+ #endif

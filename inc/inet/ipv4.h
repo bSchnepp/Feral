@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,14 +24,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
  
+ #ifndef _INET_FERAL_IPv4_H_
+ #define _INET_FERAL_IPv4_H_
  
-#ifndef _INET_ARPANET_H_
-#define _INET_ARPANET_H_
-
-#include <feral/stdtypes.h>
-
-#define INET_ADDRSTRLEN			(16)
-#define INET_ADDRSTRLEN6		(46)
-
-/* TODO */ 
-#endif
+ #include <feral/stdtypes.h>
+ 
+ #define INET_4_VERSION 4
+ #define INET_4_ADDRESS_SIZE UINT32
+ 
+ #endif
