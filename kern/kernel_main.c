@@ -60,6 +60,11 @@ static UINT8 FeralVersionMajor;
 static UINT8 FeralVersionMinor;
 static UINT8 FeralVersionPatch;
 
+/* 
+	TODO: comments are bad, and all of this is C99 mess, and needs to be redone in C89 comment style.
+	 We can bother with that later, so if you want this running on your "Actual Potato computer", just compile with GNU extensions or something. 
+ */
+
 #if defined(KERN_DEBUG)
 static BOOL ILOVEBEAR18 = 1;	// flag for experimental kernel features, intentionally something strange such that someone 
 				    				// doesn't see this in an automated flag thing and just turns it on without knowing why.
@@ -97,6 +102,7 @@ static WSTRING RootFsLocation;	// Where is the root? This should normally be A:/
 			Network resources would be accessed via:
 			\\.\0x93252290D23F0B5E84B58AC3F8C4CD62D630C525B91FB962B14C7B63E5DFD2CDBD273C09886A51AE4EA6F806C8A3AE55FB5C60553D7121A6CBC304C3B22916BDD63F5AF36688728A1458F7763320B2FB96972A33644A401431E0A6024370FC/index.html
 			for example, where without specifying 'ipv4::', 'ipv6::', '9p::', etc. before the address, we assume RENEGADE.
+			Obviously we'll implement a domain service so that mass of numbers isn't required.
 
 			It also assigns drive letters (the system default 'A', secondary drives get some way of assigning a letter to them, 
 			(usually in alphabetical order (A:/,, B:/, ...,  AB:/, ...,  AZ:/, AAA:/, AAB:/, and so on)
@@ -105,6 +111,13 @@ static WSTRING RootFsLocation;	// Where is the root? This should normally be A:/
 static CHAR* cpu_vendor_msg = "CPU Vendor: ";
 static SYSTEM_INFO KernelSystemInfo = {};
 
+
+/* TODO: Remove the "enormous ego" out of this.
+
+	(after all, one of the reasons why I want to make Feral after all is all the little things that just add up with everything else out there,
+	always missing one thing, or just could be done better, or could exist. Also because I really like building everything from the ground up.
+	Really bad not-invented-here I guess.)
+*/
 /* 
 	Things to do in order:
 	Memory management subsystems, RAMFS filesystem
@@ -112,32 +125,31 @@ static SYSTEM_INFO KernelSystemInfo = {};
 	Create libc, get C++/Rust stuff working on Waypoint. (We would like to make it very easy to create GUI apps for Waypoint, after all.)
 	Get a stable userspace up and running. Essentially the syscall table should be similar-ish to Linux, so most assembly programs can be ported over fine.	
 		Consider modifying architecture to figure out a way to have syscall tables be built by the libos...? (ie, NIX subsystem pretends to be Linux with a few Mach-isms, WINE-on-Feral pretends to be NTOS 10.0)
-	Port LLVM/Clang, consider GCC/GAS port
+			(TODO: If we do this, figure out ways to deal with particularly annoying software that intentionally uses bugs or implementation details in order to work correctly...?)
+	Port LLVM/Clang, consider GCC/GAS port, we'd like native ports to the toolchain we really need, but it's fine if we don't (we're going to write a Linux emulation subsystem anyway.)
 	Port LLD, YASM, and the rest of the toolchain. Possibly port a command-line text editor, or just write one from scratch. No GUI, so FreedomEdit isn't possible.
-	Dogfooding! Dogfooding! Dogfooding! Eliminate most NTOS systems on network (no longer needed), switch everything over to Feral Waypoint systems.
-		(Initially we're text-only, move to a GUI, and then get networking.)
 
 	Work on being self-hosting
 	Create a generic, VESA-compatible desktop environment.
-	Network driver for whatever NIC I happen to have lying around. Look for supporting whatever wifi chip is in my laptop too.
-	Create a vega10 GPU driver, get Vulkan-based desktop ready. (we do not care about vega11 or vega20 just yet, primarilly because I dont have the hardware)
+	Network driver for whatever NIC I happen to have lying around. Look for supporting whatever wifi chip is in my laptop too. (Hopefully an easy one.)
+	Create a vega10 GPU driver, get Vulkan-based desktop ready. (we do not care about vega11 or vega20 just yet, primarilly because I dont have the hardware, we *do* care about vega12 though.)
 	We don't care about green GPUs at all. It's much too hard to support, overly complex, and no official reference drivers to peek at when lost at what to do.
 	Create an alternative to the LiveCD tools we need currently, create a bootloader that understands (U)EFI. We implement UEFI ourselves, because tangling with inconsistently applied BSD license 
-	is too much effort (not some easy shell script, and at that, I probably won't use bash on Waypoint, but maybe something more Virtual Memory System-y.).
+	is too much effort (not some easy shell script, and at that, I probably won't use bash on Waypoint, but maybe something more Virtual Memory System-y. We're aiming to not be *NIX anyway, so.).
 	Implement Multiboot 2 support, purge old bootloader.
 	New filesystem focused on getting as fast read times as possible on files (eliminate file fragmentation by not allowing fragmentation?, yes, more writes, but avoids non-sequential reads.)
 			(for hard drives, specifically being sequential might actually be a bad thing because of the spinning. I wouldn't know though.)
 	Add some random hypervisor capability just for fun or something (basically kvm).
 	Get a working Vulkan driver for the vega10 GPU (Do some magic to port AMDVLK (is this possible?) and/or RADV or something, then just modify them as needed?).
 	Port some open source games over, see if we can get it to outperform some other OSes just by running on Feral Waypoint. (specifically, everything we can from the 90s)
-	We probably can't outperform Linux, but we'd better outperform DOS since game developers (at least in the 90s) LOVE DOS and would never leave DOS unless there was a *very* good graphics API elsewhere available.)
-		(we're *always* 20-30 years late so we'd better catch up........). Linux tends to outperform RedmondOS (esp. CPU efficiency: TR4's 2990WX nearly double performance in many workloads) anyway.
+	We probably can't outperform Linux, but we'd better outperform some other desktop operating systems...
+		(we're *always* 20-30 years late so we'd better catch up........). Linux tends to outperform RedmondOS (esp. CPU efficiency: TR4's 2990WX nearly double performance in many workloads) anyway. (Otherwise we'll *never* be taken seriously, instead of just "probably won't be")
 	???
 
 	Since we don't want to support anything older than the vega10 GPU, we should just cut out the unnecessary parts of whatever drivers we do adapt.
 	(Those are too old, and by the time this becomes usable as a serious OS, those would be *long* obsolete anyway.)
 	Migrate VCS server from ext4/btrfs/zfs to FeralFS. (again, dogfooding!!!!) Port FeralFS to BSD and Linux. The idea is that if it's bad, we'll fix it before bad things happen.
-		Better put,  "We don't like garbage, so when we use garbage, we make garbage not garbage because otherwise we'd be using garbage."
+		Better put,  "We don't like garbage, so when we use garbage, we make garbage not garbage because otherwise we'd be using garbage, and we don't like garbage."
 	
 	Port mesa or get some graphics stack running atop Feral's existing driver structure, then fork Firefox and use it as system's web browser (and/or replace Gecko, move JS engine to ChakraCore, ...?).
 	Hope a ReactOS compatibility layer falls out of the sky, so we can run some stuff, benchmark it, etc. The main thing is that we want at least 5% performance improvement over RedmondOS wherever we can get it.

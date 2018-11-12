@@ -148,6 +148,21 @@ return 0;
 
 ```
 
+The usual process of doing things in Waypoint (and Feral in general) is:
+	
+		- Open port
+		- Create context
+		- Do things
+		- Close context
+		- Release port
+
+For example, opening a file would be as simple as opening a resource on the filesystem server (sometimes a kernel subsystem, often the local libos, possibly FUSE),
+constructing a context (setting up case sensitivity, naming restrictions, error handling, etc.), and writing to the port.
+This is more flexible than the "everything is a file" approach, as it allows for a subsystem provider to clearly define what "write" and "read" mean:
+'reading' data from an arbitrary location could mean many different things, and without corrections, could result in various oddities (reading int
+as little endian in big endian format, for example). Subsystems and servers take care of that.
+It also allows us to deal with badly written programs that assume spaces don't appear in a given path: B:/Main Storage/Files/Stuff/Something Cool/ is a valid
+file path, and should *not* be interpretted as B:/Main, Storage/Files/Stuff/Something, and Cool/.
 
 
 ## Overall goals:
