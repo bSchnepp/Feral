@@ -27,6 +27,9 @@ IN THE SOFTWARE.
 #ifndef _FERAL_KERNEL_VGA_H_
 #define _FERAL_KERNEL_VGA_H_
 
+
+#include <krnl.h>
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -51,6 +54,45 @@ typedef enum VgaColorValue
 	VGA_LIGHT_BROWN = 14,	/* actually yellow */
 	VGA_WHITE = 15,
 }VgaColorValue;
+
+
+#ifdef ILOVEBEAR18
+typedef struct VgaGraphicsContextCreateInfo
+{
+	KernelSType sType;
+	const void* pNext;
+
+	UINT16* Framebuffer;
+	
+	UINT64 VgaDriverProviderLength;
+	const char *VgaDriverProvider;	/* "Feral Generic VGA Driver" */
+
+	VgaColorValue Background;
+	VgaColorValue Foreground;
+	VgaColorValue Highlight;
+}VgaGraphicsContextCreateInfo;
+
+typedef struct VgaGraphicsContextInfo
+{
+	KernelSType sType;
+	const void* pNext;
+
+	const VgaGraphicsContextCreateInfo *pCreateInfo;
+
+	UINT16 ScreenWidth;
+	UINT16 ScreenHeight;
+
+	UINT16 CurrentRow;
+	UINT16 CurrentCol;
+
+	BOOL TextMode;
+	BOOL FollowingInput;
+	BOOL CursorEnabled;
+	
+}VgaGraphicsContextInfo;
+#endif
+
+/* Rework to look more like direction we're brining Feral API to. (redoing struct above) */
 
 typedef struct
 {
