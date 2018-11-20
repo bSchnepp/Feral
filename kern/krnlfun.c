@@ -62,10 +62,21 @@ FERALSTATUS KiPrintGreyLine(STRING string)
 	VgaPrintln(VGA_LIGHT_GREY, VGA_BLACK, string, length);
 	return STATUS_SUCCESS;
 }
+
 FERALSTATUS KiPrintWarnLine(STRING string)
 {
 	PRINT_LINE_GENERIC();
 	VgaPrintln(VGA_LIGHT_BROWN, VGA_BLACK, string, length);
+	return STATUS_SUCCESS;
+}
+
+FERALSTATUS KiPrint(STRING string)
+{
+	PRINT_LINE_GENERIC();
+	for (int i = 0; i < length; i++)
+	{
+		VgaPutChar(string[i]);
+	}
 	return STATUS_SUCCESS;
 }
 

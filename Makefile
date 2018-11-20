@@ -1,12 +1,11 @@
 MAKE = bmake
 
 include Makerules
+include arch/$(ARCH)/Archrules.mk
 
 
 INCLUDES += -Ikern/inc
 VGA_FILES != ls arch/$(ARCH)/vga/*.c
-
-EFI_CODE = /usr/share/ovmf/ovmf_code_x64.bin
 
 # We still require GNU GRUB and xorriso for testing though...
 .PHONY:	all clean run iso kernel qemu qemu-nokvm
@@ -46,19 +45,19 @@ clean:
 	## TODO: clean up object files too.
 
 qemu:	iso
-	qemu-system-$(ARCH) -cpu host -cdrom $(ISO) -smp 2 -m 1G --enable-kvm  # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 1G --enable-kvm  # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
 
 qemu-nokvm:	iso
-	qemu-system-$(ARCH) -cpu host -cdrom $(ISO) -smp 2 -m 1G
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 1G
 	
 	
 qemu-efi:	iso
 	cp $(EFI_CODE) ./efi.bin
-	qemu-system-$(ARCH) -cpu host -cdrom $(ISO) -smp 2 -m 1G --enable-kvm  -pflash ./efi.bin
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 1G --enable-kvm  -pflash ./efi.bin
 	rm -rf ./efi.bin
 	
 
 qemu-nokvm-efi:	iso
 	cp $(EFI_CODE) ./efi.bin
-	qemu-system-$(ARCH) -cpu host -cdrom $(ISO) -smp 2 -m 1G -pflash  ./efi.bin
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 1G -pflash  ./efi.bin
 	rm -rf ./efi.bin

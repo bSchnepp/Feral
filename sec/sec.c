@@ -53,5 +53,5 @@ __attribute__((noreturn))
 VOID __stack_chk_fail(void)
 {
 	/* This is _horribly_ primitive, but for now, good enough. */
-	KiStopError(1);
+	KiStopError(STATUS_INVALID_MEMORY_LOCATION);
 }

@@ -59,36 +59,35 @@ typedef enum VgaColorValue
 #ifdef ILOVEBEAR18
 typedef struct VgaGraphicsContextCreateInfo
 {
-	KernelSType sType;
+	FeralStructureType sType;
 	const void* pNext;
 
 	UINT16* Framebuffer;
 	
 	UINT64 VgaDriverProviderLength;
-	const char *VgaDriverProvider;	/* "Feral Generic VGA Driver" */
-
-	VgaColorValue Background;
-	VgaColorValue Foreground;
-	VgaColorValue Highlight;
-}VgaGraphicsContextCreateInfo;
-
-typedef struct VgaGraphicsContextInfo
-{
-	KernelSType sType;
-	const void* pNext;
-
-	const VgaGraphicsContextCreateInfo *pCreateInfo;
+	const char *VgaDriverProvider;	/* "Feral Generic Video Driver" */
 
 	UINT16 ScreenWidth;
 	UINT16 ScreenHeight;
 
-	UINT16 CurrentRow;
-	UINT16 CurrentCol;
-
 	BOOL TextMode;
 	BOOL FollowingInput;
 	BOOL CursorEnabled;
-	
+}VgaGraphicsContextCreateInfo;
+
+typedef struct VgaGraphicsContextInfo
+{
+	FeralStructureType sType;
+	const void* pNext;
+
+	const VgaGraphicsContextCreateInfo *pCreateInfo;
+
+	UINT16 CurrentRow;
+	UINT16 CurrentCol;
+
+	VgaColorValue Background;
+	VgaColorValue Foreground;
+	VgaColorValue Highlight;
 }VgaGraphicsContextInfo;
 #endif
 
@@ -96,7 +95,7 @@ typedef struct VgaGraphicsContextInfo
 
 typedef struct
 {
-	UINT16* Framebuffer;
+	UINT16 *Framebuffer;
 	
 	UINT16 ScreenWidth;
 	UINT16 ScreenHeight;
@@ -105,16 +104,18 @@ typedef struct
 	VgaColorValue Foreground;
 	VgaColorValue Highlight;
 	
+	UINT16 CurrentRow;
+	UINT16 CurrentCol;
+
 	BOOL TextMode;
 	BOOL FollowingInput;
 	BOOL CursorEnabled;
-	
-	UINT16 CurrentRow;
-	UINT16 CurrentCol;
 }VgaContext;
 
 
 VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color);
+
+VOID VgaPutChar(CHAR letter);
 
 VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy);
 
