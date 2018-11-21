@@ -32,8 +32,11 @@ IN THE SOFTWARE.
 /* does literally anyone care about bulldozer anymore */
 #define	CPU_x86_64_FAMILY_BULLDOZER	0x15
 
+/* We *do* however care about jaguar and puma */
+#define CPU_x86_64_FAMILY_JAGUAR	(0x16)
+#define CPU_x86)64_FAMILY_PUMA		(0x16)
 
-#define	CPU_x86_64_FAMILY_ZEN	0x17
+#define	CPU_x86_64_FAMILY_ZEN		(0x17)
 
 /* These are all the same die-thingy (*technically*) */
 #define	CPU_x86_64_MODEL_ZEN_NAPLES		(0x01)	/* server */
@@ -42,12 +45,26 @@ IN THE SOFTWARE.
 
 /* The ones with the GPU in them too */
 #define	CPU_x86_64_MODEL_ZEN_RAVEN_RIDGE	(0x11)
-/* TODO: Identify Picasso (mobile APUs) */
-/* TODO: Identify Renoir (mobile APUs succeeding Picasso) */
 
 /* Zen 1 + */
 #define	CPU_x86_64_MODEL_ZEN_PINNACLE_RIDGE	(0x08)
 /* TODO: Identify Colfax (the new (2018) TR4 stuff)*/
+
+
+/* Zen 2 */
+#define CPU_x86_64_MODEL_ZEN_ROME		(0x10)	/* Currently a guess, we have placeholders for now. */
+#define CPU_x86_64_MODEL_MATISSE		(0x10)
+#define CPU_x86_64_MODEL_CASTLE_PEAK		(0x10)
+/* TODO: Identify Picasso (mobile APUs) */
+
+
+/* Zen 3 */
+/* TODO: Identify Milan (server CPUs succeeding Rome) */
+/* TODO: Identify Vermeer (desktop CPUs succeeding Matisse) */
+/* TODO: Identify Renoir (mobile APUs succeeding Picasso) */
+
+/* Zen 4 */
+/* TODO: Identify Genoa (server CPUs succeding Milan) */
 
 #define	CPU_x86_64_FAMILY_INTEL_GENERAL	0x6
 /* Broadwell and earlier not supported. */

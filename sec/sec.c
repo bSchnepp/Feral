@@ -26,7 +26,7 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 #include <feral/kern/frlos.h>
-#include <feral/kern/ki.h>
+#include <feral/kern/krnlfuncs.h>
 
 #include "sec.h"
 

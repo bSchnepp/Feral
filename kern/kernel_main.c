@@ -46,7 +46,7 @@ IN THE SOFTWARE.
 #endif	//TODO
 
 #include <feral/boot/kibootstruct.h>
-#include <feral/kern/ki.h>
+#include <feral/kern/krnlfuncs.h>
 
 // Private headers use this convention... (TODO: remove the 'inc' part with directly pointing to it)
 #include "inc/krnl.h"
