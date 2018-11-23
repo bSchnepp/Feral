@@ -76,6 +76,8 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color);
 
 VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy);
 
+VOID VgaPutChar(CHAR letter);
+
 VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy);
 
 VOID VgaPrint(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length); 

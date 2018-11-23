@@ -204,7 +204,7 @@ VOID KiSystemStartup(VOID)
 	VgaTraceCharacters(1);
 	VgaMoveCursor(0, 24);
 
-	//KiPrintFmt("%s\n %%", "Hello, world!");
+	KiPrintFmt("%s\n", "Hello, world!");
 	
 	/* These are macroed away at release builds.  They're eliminated at build time.*/
 	KiDebugPrint("INIT Reached here.");
