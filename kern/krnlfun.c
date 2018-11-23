@@ -62,6 +62,7 @@ FERALSTATUS KiPrintGreyLine(STRING string)
 	VgaPrintln(VGA_LIGHT_GREY, VGA_BLACK, string, length);
 	return STATUS_SUCCESS;
 }
+
 FERALSTATUS KiPrintWarnLine(STRING string)
 {
 	PRINT_LINE_GENERIC();
@@ -119,11 +120,51 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 	}
 #endif
 
+	UINT64 index = 0;
 	CHAR buffer[1024];
 	/* 
 		For now, we have a bug where over 1024 characters causes problems.
 		I'll get around to fixing it when we *really* need it.
 	 */
+	 
+	BOOL lastWasFormat = FALSE;
+	for (CHAR *format = (CHAR*)(fmt); format != NULL && format != '\0'; format++)
+	{
+		CHAR item = *format;
+		if (item == '%')
+		{
+			CHAR nextitem = *(format + 1);
+			switch (nextitem)
+			{
+				case '%':
+					buffer[++index] = nextitem;
+					break;
+					
+				case 's':
+				{	STRING next;
+					next = va_arg(args, STRING);
+					UINT64 sublen = 0;
+					while (next[sublen] != '\0')
+					{
+						buffer[++index] = next[sublen++];
+					}
+					break;
+				}	
+				default:
+					VgaPutChar(item);
+					/* todo: fixme */
+					KiPrintLine(buffer);
+					for (int i = 0; i <= index; i++)
+					{
+						buffer[i] = '\0';
+					}
+					index = 0;
+					break;
+			}
+		} 
+	}
+
+#if 0
 	BOOL lastWasFormat = FALSE;
 	UINT64 index = 0;
 	for (UINT32 fmtindex = 0; fmtindex < 1024; fmtindex++)
@@ -157,6 +198,7 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 		}
 	}
 	/*  We're gonna have double newlines for a bit (kludgy TODO hack) */
+#endif
 	buffer[1023] = '\0';
 	KiPrintLine(buffer);
 	
