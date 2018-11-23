@@ -6,13 +6,14 @@ Specifically, it's intended to be used as a gaming platform, and find use in gam
 Feral achieves this by careful construction and design of the kernel to specifically accelerate these tasks: userspace is able to do things that would be bad performance-wise on
 other platforms much easier, as well as careful optimizations and design of the graphics stack to help performance of specific GPUs, and intentionally drop support for older hardware to focus on raw performance.
 
-Architecturally, Feral is similar to a variety of prior systems originating between 1969 and 1993, with the most obvious being CMU's Mach project. Feral discards the "everything is a file"
+Architecturally, Feral is similar to a variety of prior systems originating between 1969 and 1993, with the most obvious being CMU's Mach project, and the Plan 9 project. Feral discards the "everything is a file"
 design in favor of "everything is a 'network resource'", which is intended to align with more modern hardware and software designs. Everything can be sent packets and recieve packets:
 writing to the filesystem is much the same as opening a web page and sending/recieving data to/from that. Feral also takes a lot of design inspiration from a variety of products which competed with
 BSD and other then-current *NIX distributions, specifically intending to avoid "just creating another *NIX clone".
 
 Feral is, at it's heart, a hobby project. Mostly just to see and say "I built a kernel X times faster than (your favorite OS here)!". However, Feral is also built
-such that it should be relatively straightforward to fork the project and use it for commercial purposes.
+such that it should be relatively straightforward to fork the project, audit for some particular need, and rework it so it could be suitable for commercial purposes.
+If you so choose to do so, I wouldn't be providing any support or anything like that.
 
 Despite having no formal "native executable architecture", Feral is *not* a microkernel. Instead, Feral opts to divert program loading into a kernel-mode driver to support
 specific formats and CPU architectures. This allows Feral to be very versatile without the performance penalties of a microkernel architecture. For example, if one intends for
@@ -28,6 +29,8 @@ we just port the Linux kernel to run as a Feral driver or write a sufficient emu
 
 Feral intends to focus specifically on game performance. One should use a libos to run their games against rather than relying upon system calls.
 Feral may drop, add, remove, replace system calls in order to boost performance of games running on top of a libos.
+
+![Feral Architecture](Documentation/images/feralarch.png)
 
 In an ideal world, we'd figure out a way to assimilate a real, foreign OS and manage it ourselves or something to *guarantee* compatibility without virtualization.
 This is likely impossible (it would need to be designed to be completely agnostic to all file formats, capable of understanding the kernel and integrating binary blobs extracted from the file...), so
@@ -163,6 +166,7 @@ This is more flexible than the "everything is a file" approach, as it allows for
 as little endian in big endian format, for example). Subsystems and servers take care of that.
 It also allows us to deal with badly written programs that assume spaces don't appear in a given path: B:/Main Storage/Files/Stuff/Something Cool/ is a valid
 file path, and should *not* be interpretted as B:/Main, Storage/Files/Stuff/Something, and Cool/.
+(This will introduce new problems, like when we actually *do* want to interpret as 3 new paths, but we can figure that out along the way.)
 
 
 ## Overall goals:
