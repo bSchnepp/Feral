@@ -40,5 +40,9 @@ typedef struct Aarch64Registers
 	/* FPUs are a little complicated... TODO */
 	/* fpscr */
 }Aarch64Registers;
+
+UINT32 AccessWRegister(UINT8 regN);
+UINT64 AccessXRegister(UINT8 regN);
+
  
  #endif

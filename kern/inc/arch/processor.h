@@ -49,17 +49,18 @@ typedef struct SYSTEM_INFO
 	UINT64 MemoryInstalled;	/* We expect gaming machines to have 16GB or more of RAM, though this value can be anything. */
 								/* (We should panic (not literally) if we have less than 8, and use actual system RAM as more of a big cache and use the swapfile as much as possible.) */
 								/* (That is, of course, unless all the running programs hapilly fit in less than 8GB, but this is unlikely in 2018.) */
-								/* Oh, and this value is bytes, not bits.*/
+								/* Oh, and this value is bytes, not bits. (we may change to pages instead, to support enormous things. We're below any 0.0.1 release, so we can be unstable.
+								   for at least a little while to get design right the first time before moving on.*/
 }SYSTEM_INFO;
 
 #define PROCESSOR_ARCH_IA32			0x014C	// We don't _really_ support 32-bit X86, but we might want to later.
-#define PROCESSOR_ARCH_X86_64		0x8664
+#define PROCESSOR_ARCH_X86_64			0x8664
 #define PROCESSOR_ARCH_IA64			0x0200
-#define PROCESSOR_ARCH_AARCH64		0xAA64
-#define PROCESSOR_ARCH_AARCH32		0xAA32	// Only support those weird versions which can do more than 4GB of RAM.
-#define PROCESSOR_ARCH_RISCV32		0x5032	// Only support if we _really have to_.
-#define PROCESSOR_ARCH_RISCV64		0x5064	// We expect RVGC64.
-#define PROCESSOR_ARCH_RISCV128		0x5128
+#define PROCESSOR_ARCH_AARCH64			0xAA64
+#define PROCESSOR_ARCH_AARCH32			0xAA32	// Only support those weird versions which can do more than 4GB of RAM.
+#define PROCESSOR_ARCH_RISCV32			0x5032	// Only support if we _really have to_.
+#define PROCESSOR_ARCH_RISCV64			0x5064	// We expect RVGC64.
+#define PROCESSOR_ARCH_RISCV128			0x5128
 
 
 

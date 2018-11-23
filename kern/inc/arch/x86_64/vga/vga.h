@@ -27,6 +27,9 @@ IN THE SOFTWARE.
 #ifndef _FERAL_KERNEL_VGA_H_
 #define _FERAL_KERNEL_VGA_H_
 
+
+#include <krnl.h>
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -52,9 +55,47 @@ typedef enum VgaColorValue
 	VGA_WHITE = 15,
 }VgaColorValue;
 
+
+#ifdef ILOVEBEAR18
+typedef struct VgaGraphicsContextCreateInfo
+{
+	FeralStructureType sType;
+	const void* pNext;
+
+	UINT16* Framebuffer;
+	
+	UINT64 VgaDriverProviderLength;
+	const char *VgaDriverProvider;	/* "Feral Generic Video Driver" */
+
+	UINT16 ScreenWidth;
+	UINT16 ScreenHeight;
+
+	BOOL TextMode;
+	BOOL FollowingInput;
+	BOOL CursorEnabled;
+}VgaGraphicsContextCreateInfo;
+
+typedef struct VgaGraphicsContextInfo
+{
+	FeralStructureType sType;
+	const void* pNext;
+
+	const VgaGraphicsContextCreateInfo *pCreateInfo;
+
+	UINT16 CurrentRow;
+	UINT16 CurrentCol;
+
+	VgaColorValue Background;
+	VgaColorValue Foreground;
+	VgaColorValue Highlight;
+}VgaGraphicsContextInfo;
+#endif
+
+/* Rework to look more like direction we're brining Feral API to. (redoing struct above) */
+
 typedef struct
 {
-	UINT16* Framebuffer;
+	UINT16 *Framebuffer;
 	
 	UINT16 ScreenWidth;
 	UINT16 ScreenHeight;
@@ -63,16 +104,18 @@ typedef struct
 	VgaColorValue Foreground;
 	VgaColorValue Highlight;
 	
+	UINT16 CurrentRow;
+	UINT16 CurrentCol;
+
 	BOOL TextMode;
 	BOOL FollowingInput;
 	BOOL CursorEnabled;
-	
-	UINT16 CurrentRow;
-	UINT16 CurrentCol;
 }VgaContext;
 
 
 VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color);
+
+VOID VgaPutChar(CHAR letter);
 
 VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy);
 

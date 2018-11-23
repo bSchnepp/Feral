@@ -46,7 +46,7 @@ IN THE SOFTWARE.
 #endif	//TODO
 
 #include <feral/boot/kibootstruct.h>
-#include <feral/kern/ki.h>
+#include <feral/kern/krnlfuncs.h>
 
 // Private headers use this convention... (TODO: remove the 'inc' part with directly pointing to it)
 #include "inc/krnl.h"
@@ -187,7 +187,6 @@ VOID KiSystemStartup(VOID)
 
 
 	// First off, ensure we load all the drivers, so we know what's going on.
-	KiBlankVgaScreen(25, 80, VGA_BLACK);
 	KiPrintLine("Copyright (c) 2018, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
 	
@@ -200,9 +199,11 @@ VOID KiSystemStartup(VOID)
 	FERALSTATUS KiLoadAllDrivers(VOID);
 	KiPrintLine("Preparing execution environment...");
 	
+#if defined(__x86_64__) || defined(__i386__)
 	VgaSetCursorEnabled(1);
 	VgaTraceCharacters(1);
 	VgaMoveCursor(0, 24);
+#endif
 
 	KiPrintFmt("%s\n", "Hello, world!");
 	
@@ -260,24 +261,24 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 #include <multiboot/multiboot2.h>
 
 // temporary, turn into clean later.
-VOID InternalPrintRegister(DWORD reg, DWORD posx, DWORD posy)
+VOID InternalPrintRegister(DWORD reg)
 {
 	for (int i = 0; i < 4; i++)
 	{
 		CHAR charToAdd = ((CHAR)(reg >> (i * 8)) & 0xFF);
-		VgaEntry(VGA_WHITE, VGA_BLACK, charToAdd, posx+i, posy);
+		VgaPutChar(charToAdd);
+		//VgaEntry(VGA_WHITE, VGA_BLACK, charToAdd, posx+i, posy);
 	}
 }
 
 // ugly hack, refactor sometime later.
 VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 {
-	UINTN strLen = 0;
-	KiGetStringLength(cpu_vendor_msg, &strLen);
-	InternalPrintRegister(part1, strLen+0, 0);
-	InternalPrintRegister(part2, strLen+4, 0);
-	InternalPrintRegister(part3, strLen+8, 0);
-	VgaStringEntry(VGA_WHITE, VGA_BLACK, cpu_vendor_msg, strLen, 0, 0);
+	KiPrint(cpu_vendor_msg);
+	InternalPrintRegister(part1);
+	InternalPrintRegister(part2);
+	InternalPrintRegister(part3);
+	KiPrintLine("");
 }
 
 /*
@@ -307,6 +308,7 @@ VOID kern_init(UINT64 MBINFO)
 {
 	VgaContext graphicsContext = {0};
 	UINT8 misc = VgaPrepareEnvironment(&graphicsContext);
+	KiBlankVgaScreen(25, 80, VGA_BLACK);
 	char* string = "Feral kernel booting...";
 	KiPrintLine(string);
 
@@ -319,9 +321,10 @@ VOID kern_init(UINT64 MBINFO)
 	KiPrintLine(verString);
 
 	//Row 4, index 30, 32, 34, while we're at it, make it green
-	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MAJOR), 30, 4);
-	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MINOR), 32, 4);
-	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_PATCH), 34, 4);
+	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MAJOR), 30, 1);
+	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MINOR), 32, 1);
+	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_PATCH), 34, 1);
+	KiPrintLine("");
 
 	// We'd like to have some information about the CPU before we boot further.
 	// Some things like saying CPU vendor, family, brand name, etc.
@@ -348,10 +351,10 @@ VOID kern_init(UINT64 MBINFO)
 	{
 		part1 = 0x80000002 + i;
 		cpuid_brand_name(&part1, &part2, &part3, &part4);
-		InternalPrintRegister(part1, 0  + (16 * i), 1);
-		InternalPrintRegister(part2, 4  + (16 * i), 1);
-		InternalPrintRegister(part3, 8  + (16 * i), 1);
-		InternalPrintRegister(part4, 12 + (16 * i), 1);
+		InternalPrintRegister(part1);
+		InternalPrintRegister(part2);
+		InternalPrintRegister(part3);
+		InternalPrintRegister(part4);
 	}
 
 	UINT32 familyStuff = cpuid_family_number();
@@ -375,7 +378,7 @@ VOID kern_init(UINT64 MBINFO)
 		/* Now we can not feel bad about using SYSCALL and whatnot in particular ways. */
 		KiPrintLine("[WARNING] Unsupported CPU: There may be issues running Feral");
 	}
-	
+
 	KiPrintLine("");
 	
 	// Kernel initialization is done, move on to actual tasks.

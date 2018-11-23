@@ -24,8 +24,8 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
  
- #ifndef _FERAL_KCOMMON_H_
- #define _FERAL_KCOMMON_H_
+#ifndef _FERAL_KCOMMON_H_
+#define _FERAL_KCOMMON_H_
  
 /* This function can be used by other parts of the kernel, and shouldn't change that often. */
 #define PUBLIC
@@ -34,4 +34,4 @@ IN THE SOFTWARE.
 #define PRIVATE
 
  
- #endif
+#endif

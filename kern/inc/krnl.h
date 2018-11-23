@@ -31,6 +31,17 @@ IN THE SOFTWARE.
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
 
+typedef enum FeralStructureType
+{
+	FERAL_STRUCTURE_TYPE_APPLICATION_INFO = 0,
+	FERAL_STRUCTURE_TYPE_APPLICATION_CREATE_INFO = 1,
+	FERAL_STRUCTURE_TYPE_PORT_CREATE_INFO = 2,
+	FERAL_STRUCTURE_TYPE_PORT_INFO = 3,
+	FERAL_STRUCTURE_TYPE_GRAPHICS_CONTEXT_CREATE_INFO = 4,
+	FERAL_STRUCTURE_TYPE_GRAPHICS_CONTEXT_INFO = 5,
+	
+}FeralStructureType;
+
 // What the processor we're controlling is doing. (ie, no tasks attached to them)
 typedef enum PROCESSOR_STATE
 {
