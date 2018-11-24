@@ -1,4 +1,4 @@
-MAKE = bmake
+$(MAKE) = b$(MAKE)
 
 include Makerules
 include arch/$(ARCH)/Archrules.mk
@@ -15,12 +15,12 @@ all:	kernel
 kernel:
 	mkdir -p build/$(ARCH)/	
 	
-	cd arch && make
-#	cd proc && make 
-#	cd mm && make 
-	cd io && make 
-	cd drivers && make
-	cd kern && make
+	cd arch && $(MAKE)
+#	cd proc && $(MAKE) 
+#	cd mm && $(MAKE) 
+	cd io && $(MAKE) 
+	cd drivers && $(MAKE)
+	cd kern && $(MAKE)
 	
 	# libmm.a libprocmgr.a 
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) arch/$(ARCH)/extras.c -o ./iofuncs.o
@@ -40,8 +40,8 @@ clean:
 	rm -rf ./*.o
 	rm -rf ./*.a
 	
-	cd kern && make clean
-#	cd proc && make  clean && cd ../mm && make clean
+	cd kern && $(MAKE) clean
+#	cd proc && $(MAKE)  clean && cd ../mm && $(MAKE) clean
 	## TODO: clean up object files too.
 
 qemu:	iso

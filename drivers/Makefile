@@ -7,18 +7,18 @@ all:	device gpu proc
 .PHONY:	all
 
 device:
-	cd devices && make
+	cd devices && $(MAKE)
 
 gpu:
-	cd gpu && make
+	cd gpu && $(MAKE)
 
 proc:
-	cd proc && make
+	cd proc && $(MAKE)
 
 clean:
 	rm -rf ./*.o
-	cd devices && make clean
-	# cd gpu && make clean
-	# cd proc && make clean
-	# cd wayapi && make clean
+	cd devices && $(MAKE) clean
+	# cd gpu && $(MAKE) clean
+	# cd proc && $(MAKE) clean
+	# cd wayapi && $(MAKE) clean
 

@@ -8,8 +8,8 @@ all:	serial
 .PHONY:	serial clean
 
 serial:
-	cd serial && make
+	cd serial && $(MAKE)
 
 clean:
 	rm -rf ./*.o
-	cd serial && make clean
+	cd serial && $(MAKE) clean
