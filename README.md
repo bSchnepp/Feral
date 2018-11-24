@@ -1,42 +1,60 @@
 # FERAL KERNEL
 
 ## What is Feral?
-Feral is an experimental monolithic kernel aimed at being used for x86-64-based computers that are intended to be used as a gaming system.
-Specifically, it's intended to be used as a gaming platform, and find use in game consoles, home computers, and portable gaming devices.
-Feral achieves this by careful construction and design of the kernel to specifically accelerate these tasks: userspace is able to do things that would be bad performance-wise on
-other platforms much easier, as well as careful optimizations and design of the graphics stack to help performance of specific GPUs, and intentionally drop support for older hardware to focus on raw performance.
+Feral is an experimental monolithic kernel intended to be used for my Waypoint operating system. It's primary goals are flexibility,
+reliablility, and good security, and above all else, performance. Feral is intended to run for many architectures, but is currently being
+developed primarilly for the x86_64 platform, and more specifically for Advanced Micro Devices' Family 17h devices ("Zen" architecture)
 
+In the future, Feral is intended to run on MIPS, Aarch64, POWER9, and RV64GC hardware.
+
+Feral, when complete, may find use in gaming consoles, handheld devices, or as intended, personal computers.
+Our goals are intended to be achieved by careful construction and design of the kernel, such that the kernel
+naturally allows for various things to help usermode applications improve performance.
+
+In particular, Feral is built with a client-server model for most tasks, and is built in layers and components.
+This is to facilitate packaging and organization of the kernel such that it would be simple to create a unikernel
+based upon Feral, and only link in the absolute necessary parts as well as one static user mode (or several) applications
+to achieve a meaningful task.
+
+Feral introduces the idea of a command queue, in which certain system calls are queue-based, allowing for a page of memory to
+be written with a number of commands, and the kernel executes them sequentially without being interrupted to return to usermode
+without a reason to: this is intended to provide some form of 'inertia' between usermode and kernel-mode, such that a context
+switch is avoided and thus improving performance. Those familiar with graphics programming are likely familiar with a similar concept.
+
+Feral also does not support "legacy" hardware, such as IA-32. This is intended to keep development focused on current hardware and to
+avoid focusing on legacy structures and ideas which would hold back design of the kernel. What "legacy" actually means depends on
+how such a processor is currently being used.
+
+At it's heart, Feral is a hobby project, intended to be useful and fun for learning how to write good C code, building a large, complex project,
+overall design, systems, and hardware-level programming. In addition to this, it's also for fun for me to see how much faster I can get certain applications
+to run simply by changing platforms and doing minimal effort to port programs over. In particular, I would like to see a 5% performance improvement
+or better for certain open sourced games from the 90s as compared to a particularly prolific desktop operating system in active development from a 
+well-known company in Washington state. This is a good and interesting challenge, and aiming at a moving target is more fun. 
+
+## Design influences?
 Architecturally, Feral is similar to a variety of prior systems originating between 1969 and 1993, with the most obvious being CMU's Mach project, and the Plan 9 project. Feral discards the "everything is a file"
 design in favor of "everything is a 'network resource'", which is intended to align with more modern hardware and software designs. Everything can be sent packets and recieve packets:
 writing to the filesystem is much the same as opening a web page and sending/recieving data to/from that. Feral also takes a lot of design inspiration from a variety of products which competed with
 BSD and other then-current *NIX distributions, specifically intending to avoid "just creating another *NIX clone".
 
-Feral is, at it's heart, a hobby project. Mostly just to see and say "I built a kernel X times faster than (your favorite OS here)!". However, Feral is also built
-such that it should be relatively straightforward to fork the project, audit for some particular need, and rework it so it could be suitable for commercial purposes.
-If you so choose to do so, I wouldn't be providing any support or anything like that.
+Feral is also intended to be very easy to develop for by game developers: in general, the APIs for Feral "feel like a graphics API". Once a port is opened, some data structures
+and context info needs to be obtained from it, some settings set, and the system should do much of the work needed to get something going. However, Feral is very
+explicit and verbose in how operations are done: care should be taken that undefined behavior is avoided, since the behavior may change in between minor and especially major releases.
 
-Despite having no formal "native executable architecture", Feral is *not* a microkernel. Instead, Feral opts to divert program loading into a kernel-mode driver to support
-specific formats and CPU architectures. This allows Feral to be very versatile without the performance penalties of a microkernel architecture. For example, if one intends for
-this to be used as a gaming system and prefers playing games in the PE format for the NTOS, then one could port WINE as a kernel-mode driver to Feral and enjoy those games
-just the same as if they were "native executables". Unlike another operating system, Feral does not arbitrarilly allow or reject what could act as a subsystem provider: anyone
-can write a driver, and given SYSTEM permissions, use their driver to run "foreign executables" natively on Waypoint, including for a different CPU architecture given a sufficiently
-written driver. The particular motivation for this is to avoid the inherent problems of building a new platform in that there is no software available for it. Feral avoids this by properly
-allowing emulation of another system such that the entire software library of a foreign platform is available with no recompilation or porting efforts. In other words, game developers
-can have their games run on Feral if they like it or not: Feral emulates the stack below their software such that any porting effort is entirely unnecessary. This runs into problems with
-anti-cheat software embedded into these games, but a more compicated driver to emulate expected system calls should handle those
-issues as well. Additionally, this architecture allows Feral to be self-hosting much faster than a traditionally designed operating system: porting efforts are much simpler because
-we just port the Linux kernel to run as a Feral driver or write a sufficient emulation layer instead of porting the toolchain directly.
+Feral's layout and design is also intended to be simple for new developers to read the code and understand it, or perhaps even use it for their own projects.
+Care is being taken to avoid creating a mess in the source code, and that all important details are explained and documented well.
 
-Feral intends to focus specifically on game performance. One should use a libos to run their games against rather than relying upon system calls.
-Feral may drop, add, remove, replace system calls in order to boost performance of games running on top of a libos.
+## Why Feral?
+
+Feral, while aiming to be a monolithic kernel, has much in common with the nanokernel and microkernel ideas. Feral itself only supports a specific format to load drivers in,
+and these drivers define executable formats, file formats, network structures, and more, and simply hook into the existing Feral kernel. While most services are made available in
+the kernel, the kernel is very modular and by itself does not provide more than the absolute minimum for a given service. This allows Feral to even, in theory, support
+CPU dynamic recompilation and run code intended for an entirely different platform, or run executables not directly intended for Feral, eliminating the need to port
+applications to Feral entirely. However, I only intend to distribute Feral with enough to build Feral on itself, as well as provide a Waypoint reference libos.
+
+Feral is best described as a "modular macrokernel", or just a "monolithic kernel with loadable drivers at runtime".
 
 ![Feral Architecture](Documentation/images/feralarch.png)
-
-In an ideal world, we'd figure out a way to assimilate a real, foreign OS and manage it ourselves or something to *guarantee* compatibility without virtualization.
-This is likely impossible (it would need to be designed to be completely agnostic to all file formats, capable of understanding the kernel and integrating binary blobs extracted from the file...), so
-this is the next best thing. (avoid virtualization because performance loss (even if it's only like 4%), you can't share the gpu, etc. etc.)
-
-I'm mostly doing this to get *much* better at C and assembly code, and especially interoperation between C and assembly, while also doing a little bit of Rust for memory-sensitive functionality.
 
 ## Building?
 Run ./build.sh $ARCH $COMMAND,
@@ -173,21 +191,19 @@ file path, and should *not* be interpretted as B:/Main, Storage/Files/Stuff/Some
  - Lightweight kernel, insist that processes do most of the work. (service provider does most of the kernel-mode work: programs shouldn't talk to kernel directly that much.)
 
  - Enforce a lot of verbosity out of user-mode programs (if what they could want could be ambiguous, there should be a function for every possible meaning.)
-   (We also (when we get to the shell), don't do something silly like require two bit flags for vertical scroll bars. This has no functional purpose.)
    (We have no idea what shell replacements might want to do with native Waypoint programs: just feed them as much information as possible.)
 
  - Monolithic kernel design, supporting modules, but prefering to avoid them.
    (This is to avoid driver conflicts... simply refer to a kernel version and maybe provide a loadable module just in case. All important drivers should be in upstream.)
 
- - Support a new, high performance filesystem intended for modern storage hardware. (ie, SSDs, shingled hard drives, etc.) (everyone copies one with a 'Z' in the BSD source code, so why don't we too?)
-   (we'd probably use a different hashing algorithm (Keccak/SHA3 probably) and try very hard to support a wider range of features, more stable pooling, etc. etc.)
+ - Support a new, high performance filesystem intended for modern storage hardware. (ie, SSDs, shingled hard drives, etc.)  (btrfs???)
 
  - Support Vulkan out of the box. Use Vulkan as "the native graphics language" of the OS.
    (ie, everything graphics-wise, one way or another, goes through Vulkan rendering. OpenGL is implemented on top of Vulkan, if at all.)
    Under Waypoint, you should be able to assume any graphics card plugged in using built-in drivers can support Vulkan 1.1.
-   (we wouldn't expose it if it was a bad GPU that can't do Vulkan)
+   (we wouldn't expose it if it was a GPU that can't do Vulkan)
 
- - (Eventually) create fully Vulkan compliant drivers for the "Alpha Lyrae" family of GPUs. (or just port radv)
+ - (Eventually) create fully Vulkan compliant drivers for the "Vega" and "Polaris" family of GPUs. (or just port radv)
 
  - Integrate a high-performance virtual machine into the kernel, intended for use for "write once, run anywere" kinds of games that can take the performance hit. (Will never be close to native, but we can try...)
  
