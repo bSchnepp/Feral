@@ -125,13 +125,15 @@ static SYSTEM_INFO KernelSystemInfo = {};
 	Create libc, get C++/Rust stuff working on Waypoint. (We would like to make it very easy to create GUI apps for Waypoint, after all.)
 	Get a stable userspace up and running. Essentially the syscall table should be similar-ish to Linux, so most assembly programs can be ported over fine.	
 		Consider modifying architecture to figure out a way to have syscall tables be built by the libos...? (ie, NIX subsystem pretends to be Linux with a few Mach-isms, WINE-on-Feral pretends to be NTOS 10.0)
-			(TODO: If we do this, figure out ways to deal with particularly annoying software that intentionally uses bugs or implementation details in order to work correctly...?)
+			(TODO: If we do this, figure out ways to deal with particularly annoying software that intentionally uses bugs or implementation details in order to work correctly...? This is easier to deal with for a Linux subsystem, but RedmondOS isn't just in 
+			some git repo anyone can just clone.)
 	Port LLVM/Clang, consider GCC/GAS port, we'd like native ports to the toolchain we really need, but it's fine if we don't (we're going to write a Linux emulation subsystem anyway.)
 	Port LLD, YASM, and the rest of the toolchain. Possibly port a command-line text editor, or just write one from scratch. No GUI, so FreedomEdit isn't possible.
+	Consider porting Python, golang, and for fun, get COBOL running on Feral.
 
-	Work on being self-hosting
-	Create a generic, VESA-compatible desktop environment.
-	Network driver for whatever NIC I happen to have lying around. Look for supporting whatever wifi chip is in my laptop too. (Hopefully an easy one.)
+	Work on being self-hosting: Feral needs to compile on Feral.
+	Create a generic, VESA-compatible desktop environment. Assume legacy GPUs don't exist, and we're eventually going to need to support EFI stuff.
+	Network driver for whatever NIC I happen to have lying around. Look for supporting whatever wifi chip is in my laptop too. (Hopefully an easy one.) Most of mine are Chipzilla (or clones), but not all of them.
 	Create a vega10 GPU driver, get Vulkan-based desktop ready. (we do not care about vega11 or vega20 just yet, primarilly because I dont have the hardware, we *do* care about vega12 though.)
 	We don't care about green GPUs at all. It's much too hard to support, overly complex, and no official reference drivers to peek at when lost at what to do.
 	Create an alternative to the LiveCD tools we need currently, create a bootloader that understands (U)EFI. We implement UEFI ourselves, because tangling with inconsistently applied BSD license 
@@ -153,6 +155,11 @@ static SYSTEM_INFO KernelSystemInfo = {};
 	
 	Port mesa or get some graphics stack running atop Feral's existing driver structure, then fork Firefox and use it as system's web browser (and/or replace Gecko, move JS engine to ChakraCore, ...?).
 	Hope a ReactOS compatibility layer falls out of the sky, so we can run some stuff, benchmark it, etc. The main thing is that we want at least 5% performance improvement over RedmondOS wherever we can get it.
+	
+	Consider C# on Feral, port WinForms and all that whole stuff. (Mainly, porting Mono)
+	
+	
+	__before any full 0.0.1 release, ensure and triple-check that we've removed __all__ trademarked phrases in the kernel. We don't want to put up with the legal nonsense.
  */
 
 
@@ -205,7 +212,7 @@ VOID KiSystemStartup(VOID)
 	VgaMoveCursor(0, 24);
 #endif
 
-	KiPrintFmt("%s\n", "Hello, world!");
+	KiPrintFmt("%% It reboots over and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again %s\n", "Hello, world!");
 	
 	/* These are macroed away at release builds.  They're eliminated at build time.*/
 	KiDebugPrint("INIT Reached here.");
@@ -302,6 +309,8 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 // For now, kern_init() is multiboot only while I migrate to UEFI. Everything should be EFI because UEFI is ok and not completely horrible. (80s style bios is headache-inducing when the A20 is sometimes on but sometimes not 
 // and then sometimes it does odd things with memory or just flat out DOES NOT DO what you expected. ughhh. Compound with speculative execution and out of order execution and it's more effort than it's worth to support a
 // dying "standard". That said, UEFI's security is about as solid as swiss cheese, whereas this just doesn't happen with BIOS because the firmware is so small there's not a lot to exploit.)
+// AND THE MOST IRRITATING THING OF ALL TIME IS WHEN SOMEONE HAS A BROKEN FIRMWARE IMPLEMENTATION WHERE THE ACPI TABLE IS LYING!!!!!!
+// (it's also bad when network cards do this, but we'll just rip the freebsd network stack out so it becomes freebsd's problem)
 
 /* AT LEAST THERE'S NO SECURE BOOT. */
 VOID kern_init(UINT64 MBINFO)
@@ -317,13 +326,16 @@ VOID kern_init(UINT64 MBINFO)
 	FeralVersionPatch = FERAL_VERSION_PATCH;
 
 	// temporary, hackish, just for now until I implement a proper printk().
-	char* verString = "Starting Feral Kernel Version 0.0.0";
+	char* verString = "Starting Feral Kernel Version 00.00.00";
 	KiPrintLine(verString);
 
 	//Row 4, index 30, 32, 34, while we're at it, make it green
-	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MAJOR), 30, 1);
-	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MINOR), 32, 1);
-	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_PATCH), 34, 1);
+	VgaEntry(VGA_GREEN, VGA_BLACK, ('0'), 30, 1);
+	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MAJOR), 31, 1);
+	VgaEntry(VGA_GREEN, VGA_BLACK, ('0'), 33, 1);
+	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MINOR), 34, 1);
+	VgaEntry(VGA_GREEN, VGA_BLACK, ('0'), 36, 1);
+	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_PATCH), 37, 1);
 	KiPrintLine("");
 
 	// We'd like to have some information about the CPU before we boot further.

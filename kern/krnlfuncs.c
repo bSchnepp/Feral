@@ -158,6 +158,34 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
+
+	BOOL upState = FALSE;
+	CHAR cur = fmt[0];
+	
+	for (UINT64 index = 0; cur != '\0'; cur = fmt[index++])
+	{
+		if (cur == '%' && !upState)
+		{
+			/* Push up */
+			upState = TRUE;
+		} else if (upState)
+		{
+			if (cur == 's')
+			{
+				STRING valistnext;
+				valistnext = va_arg(args, STRING);
+				UINT64 sublen = 0;
+				KiPrint(valistnext);
+			} else if (cur == '%')
+			{
+				KiPrint("%");
+			}
+			/* What do you mean %llu is a thing? */
+			upState = FALSE;
+		} else if (cur >= ' ') {	/* bandage away bug for now. */
+			VgaPutChar(cur);
+		}
+	}
 	
 #if 0
 	/* We'll print in 1024-character buffers at a time.*/
@@ -202,7 +230,7 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 			VgaAutoEntry(VGA_WHITE, VGA_BLACK, *ch);
 		}
 	}
-#endif
+
 
 	CHAR buffer[1024];
 	/* 
@@ -244,8 +272,9 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 	/*  We're gonna have double newlines for a bit (kludgy TODO hack) */
 	buffer[1023] = '\0';
 	KiPrintLine(buffer);
-	
+#endif
 	va_end(args);
+	KiPrintLine("");
 	return STATUS_SUCCESS;
 }
 

@@ -1,4 +1,4 @@
-$(MAKE) = b$(MAKE)
+MAKE = bmake
 
 include Makerules
 include arch/$(ARCH)/Archrules.mk

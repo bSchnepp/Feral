@@ -23,24 +23,17 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
+ 
+#ifndef _FERAL_FILESYSTEM_HPFS_H_
+#define _FERAL_FILESYSTEM_HPFS_H_
 
-#include <feral/stdtypes.h>
-#include <feral/feralstatus.h>
-
-typedef enum MountOptions
-{
-	FS_READ,
-	FS_WRITE,
-	FS_DISK_QUOTA,
-}MountOptions;
-
-/*
-	We store 2 copies of the first 512 bytes of the partition: One at 0 bytes, and one at N/2.
-	Note that N is the size of the disk in bytes.
-	
-	We might store an additional copy at (N - 512): we need this constant offset so we can
-	actually write 512 bytes.
+/* 
+	TODO: Support HPFS (somewhere here I might have Warp 4 floppies installation media, just need to figure out how to actually get them read on a fairly modern PC) 
+ 	Should run plenty fast on some old Core 2 or Ivy Bridge (wayyyy outclass the hardware of it's time) 
  */
+ 
+/* Never actually used OS/2 before, but I've heard it's very rage-inducing, so that's probably a good sign. */
 
 
-FERALSTATUS FsMountFilesystem(STRING DriveLetter, STRING Location, STRING DiskLabel);
+
+#endif
