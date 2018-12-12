@@ -92,6 +92,26 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 	currentContext->CurrentCol = (length % currentContext->ScreenWidth);
 }
 
+VOID internalVgaPushUp()
+{
+	/* Go from 1 to 25 (for 80x25 mode), and take the next 80 bytes, and push them all up. */
+	for (UINT16 iRow = 1; iRow < currentContext->ScreenHeight; ++iRow)
+	{
+		for (UINT16 iCol = 0; iCol < currentContext->ScreenWidth; ++iCol)
+		{
+			UINT16 Offset = (iRow * currentContext->ScreenHeight);
+			UINT16 OffsetUp = (iRow-1 * currentContext->ScreenHeight);
+			currentContext->Framebuffer[OffsetUp + iCol] = currentContext->Framebuffer[Offset + iCol];
+		}
+	}
+
+	/* Purge the last row, ensuring it's totally empty. */
+	for (UINT16 iCol = 0; iCol < currentContext->ScreenWidth; ++iCol)
+	{
+		currentContext->Framebuffer[(currentContext->ScreenWidth * (currentContext->ScreenHeight - 1)) + iCol] = (UINT16)('\0') | ((UINT16)(currentContext->Background) << 8);
+	}	
+}
+
 VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter)
 {
 	uint16_t color = ((background << 4) | foreground);
@@ -100,7 +120,13 @@ VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR lette
 	{
 		currentContext->CurrentRow++;
 		currentContext->CurrentCol = 0;
+		internalVgaPushUp();
 	}
+	if (currentContext->CurrentRow > currentContext->ScreenHeight)
+	{
+		currentContext->CurrentRow = currentContext->ScreenHeight;
+	}
+	//VgaEntry(foreground, background, letter, currentContext->CurrentRow, currentContext->CurrentCol);
 	currentContext->Framebuffer[currentContext->CurrentCol + (currentContext->CurrentRow * currentContext->ScreenWidth)] = ((UINT16)letter | (UINT16) color << 8);
 }
 

@@ -63,9 +63,6 @@ typedef struct VgaGraphicsContextCreateInfo
 	const void* pNext;
 
 	UINT16* Framebuffer;
-	
-	UINT64 VgaDriverProviderLength;
-	const char *VgaDriverProvider;	/* "Feral Generic Video Driver" */
 
 	UINT16 ScreenWidth;
 	UINT16 ScreenHeight;
@@ -135,6 +132,11 @@ VOID VgaTraceCharacters(BOOL value);
 VOID VgaSetCursorEnabled(BOOL value);
 
 UINT8 VgaPrepareEnvironment(VgaContext *context);
+
+
+#ifdef ILOVEBEAR18
+FERALSTATUS VgaBindGraphicsContext(IN CONST VgaGraphicsContextCreateInfo *info, OUT VgaGraphicsContextInfo *context);
+#endif
 
 
 #if defined(__cplusplus)
