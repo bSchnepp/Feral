@@ -35,62 +35,8 @@ IN THE SOFTWARE.
 
 static VgaContext *currentContext;
 
-VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy)
-{
-	uint16_t color = ((background << 4) | foreground);
-	currentContext->Framebuffer[posx + (posy * (currentContext->ScreenWidth))] = ((UINT16)letter | (UINT16) color << 8);
-	currentContext->CurrentCol = posx + 1;
-}
 
-VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
-{
-	for (DWORD h = 0; h < height; h++)
-	{
-		for (DWORD w = 0; w < width; w++)
-		{
-			VgaEntry(color, color, (CHAR)('\0'), w, h);
-		}
-	}
-	currentContext->CurrentRow = 0;
-	currentContext->CurrentCol = 0;
-	currentContext->Background = color;
-}
-
-VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy)
-{
-	DWORD true_x = posx;
-	DWORD true_y = posy;
-	DWORD addedLines = 0;
-	
-	for (DWORD index = 0; index < length; ++index)
-	{
-		CHAR ref = string[index];
-		if (ref == '\t')
-		{
-			true_x += 8;
-			if (true_x > (currentContext->ScreenWidth))
-			{
-				true_x %= (currentContext->ScreenWidth);
-				addedLines++;
-			}
-			continue;
-		}
-		else if (ref == '\n')
-		{
-			true_x = 0;
-			addedLines++;
-			continue;
-		}
-		else if (ref == '\0')
-		{
-			return;
-		}
-		VgaEntry(foreground, background, ref, true_x, true_y+addedLines);
-		true_x++;
-	}
-	currentContext->CurrentRow += addedLines + (length / currentContext->ScreenWidth);
-	currentContext->CurrentCol = (length % currentContext->ScreenWidth);
-}
+typedef UINT16 ColorValue;
 
 VOID internalVgaPushUp()
 {
@@ -104,94 +50,19 @@ VOID internalVgaPushUp()
 			currentContext->Framebuffer[OffsetUp + iCol] = currentContext->Framebuffer[Offset + iCol];
 		}
 	}
-
+	UINT16 lastLine = ((currentContext->ScreenWidth) * (currentContext->ScreenHeight - 1));
 	/* Purge the last row, ensuring it's totally empty. */
 	for (UINT16 iCol = 0; iCol < currentContext->ScreenWidth; ++iCol)
 	{
-		currentContext->Framebuffer[(currentContext->ScreenWidth * (currentContext->ScreenHeight - 1)) + iCol] = (UINT16)('\0') | ((UINT16)(currentContext->Background) << 8);
-	}	
-}
-
-VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter)
-{
-	uint16_t color = ((background << 4) | foreground);
-	currentContext->CurrentCol++;
-	if (currentContext->CurrentCol >= currentContext->ScreenWidth)
-	{
-		currentContext->CurrentRow++;
-		currentContext->CurrentCol = 0;
-		internalVgaPushUp();
+		currentContext->Framebuffer[lastLine + iCol] = (UINT16)('\0') | ((UINT16)(currentContext->Background) << 8);
 	}
-	if (currentContext->CurrentRow > currentContext->ScreenHeight)
-	{
-		currentContext->CurrentRow = currentContext->ScreenHeight;
-	}
-	//VgaEntry(foreground, background, letter, currentContext->CurrentRow, currentContext->CurrentCol);
-	currentContext->Framebuffer[currentContext->CurrentCol + (currentContext->CurrentRow * currentContext->ScreenWidth)] = ((UINT16)letter | (UINT16) color << 8);
 }
 
-VOID VgaPutChar(CHAR letter)
-{
-	VgaAutoEntry(currentContext->Foreground, currentContext->Background, letter);
-}
 
-VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length)
-{
-	DWORD newSpace = (length / currentContext->ScreenWidth) + 1;
-	if (currentContext->CurrentRow >= (currentContext->ScreenHeight - newSpace))
-	{
-		/* Go through every row and get the appropriate stuff up what it needs to. */
-		for (DWORD index = 0; index < (currentContext->ScreenHeight - newSpace); ++index)
-		{
-			/* And act upon each col. */
-			for (DWORD col = 0; col < currentContext->ScreenWidth; ++col)
-			{
-					currentContext->Framebuffer[(index * currentContext->ScreenWidth) + col] = currentContext->Framebuffer[(((index + newSpace) * currentContext->ScreenWidth) + col)];
-			}
-		}
-		VgaStringEntry(foreground, background, string, length, 0, currentContext->CurrentRow - newSpace);
-		currentContext->CurrentRow -= (newSpace);
-	} else {
-		VgaStringEntry(foreground, background, string, length, 0, currentContext->CurrentRow);
-		currentContext->CurrentRow++;
-	}
-	currentContext->CurrentCol = 0;
-}
-
-VOID VgaMoveCursor(DWORD PosX, DWORD PosY)
-{
-	UINT16 FinalPos = (UINT16)((PosY * (currentContext->ScreenWidth)) + PosX);
-	x86outb(VGA_FB_COMMAND_PORT, VGA_LOW_BYTE_COMMAND);
-	x86outb(VGA_FB_DATA_PORT, (UINT8)((FinalPos) & (0x00FF)));
-
-	x86outb(VGA_FB_COMMAND_PORT, VGA_HIGH_BYTE_COMMAND);
-	x86outb(VGA_FB_DATA_PORT, (UINT8)((FinalPos >> 8) & (0x00FF)));
-	VgaEntry(currentContext->Highlight, currentContext->Background, '\0', PosX, PosY);
-}
-
-VOID VgaTraceCharacters(BOOL value)
-{
-	currentContext->FollowingInput = value;
-}
-
-VOID VgaSetCursorEnabled(BOOL value)
-{
-	if (value)
-	{
-		x86outb(VGA_FB_COMMAND_PORT, 0x0A);
-		x86outb(VGA_FB_DATA_PORT, (x86inb(VGA_FB_DATA_PORT) & 0xC0) | 0x00);	//OK, this is complex to explain. Just trust what I'm doing doesn't blow up GPUs.
-
-		x86outb(VGA_FB_COMMAND_PORT, 0x0B);
-		x86outb(VGA_FB_DATA_PORT, (x86inb(0x3E0) & 0xE0) | 0x0F);
-	}
-	else
-	{
-		x86outb(VGA_FB_COMMAND_PORT, 0x0A);
-		x86outb(VGA_FB_DATA_PORT, 0x20);
-	}
-	currentContext->CursorEnabled = value;
-}
-
+/**
+	Prepares a VGA context for use by the kernel in
+	pre-initialization stages.
+ */
 UINT8 VgaPrepareEnvironment(VgaContext *context)
 {
 	// Ensure a bit in port 0x03C2 is set.
@@ -214,4 +85,178 @@ UINT8 VgaPrepareEnvironment(VgaContext *context)
 	
 	currentContext = context;
 	return miscreg;
+}
+
+/**
+	Moves the VGA cursor to a new location.
+ */
+VOID VgaMoveCursor(DWORD PosX, DWORD PosY)
+{
+	UINT16 FinalPos = (UINT16)((PosY * (currentContext->ScreenWidth)) + PosX);
+	x86outb(VGA_FB_COMMAND_PORT, VGA_LOW_BYTE_COMMAND);
+	x86outb(VGA_FB_DATA_PORT, (UINT8)((FinalPos) & (0x00FF)));
+
+	x86outb(VGA_FB_COMMAND_PORT, VGA_HIGH_BYTE_COMMAND);
+	x86outb(VGA_FB_DATA_PORT, (UINT8)((FinalPos >> 8) & (0x00FF)));
+	VgaEntry(currentContext->Highlight, currentContext->Background, '\0', PosX, PosY);
+}
+
+/**
+	Sets the state of the VGA cursor.
+ */
+VOID VgaSetCursorEnabled(BOOL value)
+{
+	if (value)
+	{
+		x86outb(VGA_FB_COMMAND_PORT, 0x0A);
+		x86outb(VGA_FB_DATA_PORT, (x86inb(VGA_FB_DATA_PORT) & 0xC0) | 0x00);	//OK, this is complex to explain. Just trust what I'm doing doesn't blow up GPUs.
+
+		x86outb(VGA_FB_COMMAND_PORT, 0x0B);
+		x86outb(VGA_FB_DATA_PORT, (x86inb(0x3E0) & 0xE0) | 0x0F);
+	}
+	else
+	{
+		x86outb(VGA_FB_COMMAND_PORT, 0x0A);
+		x86outb(VGA_FB_DATA_PORT, 0x20);
+	}
+	currentContext->CursorEnabled = value;
+}
+
+/**
+	Sets the context's "trace characters" value to true.
+	This means that when keyboard input is done,
+	the cursor is moved to the location of the last character added.
+ */
+VOID VgaTraceCharacters(BOOL value)
+{
+	currentContext->FollowingInput = value;
+}
+
+/**
+	Sets a given position on the screen with a given value.
+ */
+VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy)
+{
+	ColorValue color = ((background << 4) | (foreground)) << 8;
+	UINT16 offset = posx + (posy * currentContext->ScreenWidth);
+	currentContext->Framebuffer[offset] = ((UINT16)(letter) | color);
+	currentContext->CurrentCol = posx;
+}
+
+/**
+	Clears the current framebuffer, and ensures
+	that the whole screen, from (0, 0) to (width, height),
+	is replaced with a square of the color color.
+ */
+VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
+{
+	currentContext->CurrentRow = 0;
+	currentContext->CurrentCol = 0;
+	currentContext->Background = color;
+	for (UINT16 h = 0; h < height; ++h)
+	{
+		for (UINT16 w = 0; w < width; ++w)
+		{
+			VgaEntry(color, color, (CHAR)('\0'), w, h);
+		}
+	}
+}
+
+/**
+	Puts a character in the next available cell, with the
+	foreground and background specified.
+ */
+VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter)
+{
+	ColorValue color = ((background << 4) | foreground);
+	
+	/* Increment the current col, so if we overflow, we reset to 0 and increment row. */
+	currentContext->CurrentCol++;
+	
+	if (currentContext->CurrentCol >= currentContext->ScreenWidth)
+	{
+		currentContext->CurrentCol = 0;
+		currentContext->CurrentRow++;
+	}
+	
+	/* Now check if row count is too large, in which case, move everything up one. */
+	if (currentContext->CurrentRow >= currentContext->ScreenHeight)
+	{
+		currentContext->CurrentRow = (currentContext->ScreenHeight - 1);
+		internalVgaPushUp();
+	}
+	
+	/* Now in safe-to-write state. */
+	VgaEntry(foreground, background, letter, currentContext->CurrentCol, currentContext->CurrentRow);
+}
+
+/**
+	Puts a character in with the current colors, as
+	defined by the VGA context.
+ */
+VOID VgaPutChar(CHAR letter)
+{
+	VgaAutoEntry(currentContext->Foreground, currentContext->Background, letter);
+}
+
+VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy)
+{
+	UINT64 index = 0;
+	
+	UINT16 true_x = posx;
+	UINT16 true_y = posy;
+	
+	for (CHAR c = *string; index < length; c = string[++index])
+	{
+		if (true_x > currentContext->ScreenWidth)
+		{
+			true_x = 0;
+			true_y++;
+		}
+		
+		if (c == '\t')
+		{
+			/* Add 8 spaces. */
+			for (int i = 0; i < 8; i++)
+			{
+				VgaPutChar(' ');
+			}
+		} else if (c == '\n')
+		{
+			internalVgaPushUp();
+			/* Now, reset the last row's state. */
+			currentContext->CurrentCol = 0;
+			currentContext->CurrentRow++;
+		} else if (c == '\0')
+		{
+			return;
+		} else {
+			VgaEntry(foreground, background, c, true_x++, true_y);
+		}
+	} 
+}
+
+/* Not refactored yet. */
+
+VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length)
+{
+	DWORD newSpace = (length / currentContext->ScreenWidth) + 1;
+	if (currentContext->CurrentRow >= (currentContext->ScreenHeight - newSpace))
+	{
+		/* Go through every row and get the appropriate stuff up what it needs to. */
+		for (DWORD index = 0; index < (currentContext->ScreenHeight - newSpace); ++index)
+		{
+			/* And act upon each col. */
+			for (DWORD col = 0; col < currentContext->ScreenWidth; ++col)
+			{
+					currentContext->Framebuffer[(index * currentContext->ScreenWidth) + col] = currentContext->Framebuffer[(((index + newSpace) * currentContext->ScreenWidth) + col)];
+			}
+		}
+		VgaStringEntry(foreground, background, string, length, 0, currentContext->CurrentRow - newSpace);
+		currentContext->CurrentRow -= (newSpace);
+	} else {
+		VgaStringEntry(foreground, background, string, length, 0, currentContext->CurrentRow);
+		currentContext->CurrentRow++;
+	}
+	currentContext->CurrentCol = 0;
 }
