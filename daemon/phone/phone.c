@@ -52,10 +52,23 @@ typedef struct VoiceMessage
 	/* TODO */
 }VoiceMessage;
 
+typedef struct TextMessage
+{
+	UINT32 ChannelID;
+	UINT64 UserID;
+	UINT64 MessageLength;
+	CONST WSTRING Content;
+}TextMessage;
+
 typedef struct Channel
 {
 	/* TODO */
 }Channel;
+
+/* "CONOUT$ is deprecated, so redefine it if I ever actually remove it. */
+#ifndef CONOUT$
+#define CONOUT$ SYS$OUTPUT
+#endif
 
 STRING helpMsg = 	"Usage:		\n																												\
 					DIAL <username>, when on the same cluster																					\
@@ -71,7 +84,7 @@ int main(int argc, char** argv)
 {
 	if (argc < 0)
 	{
-		
+		fprintf(CONOUT$, helpMsg);
 	}
 
 	return 0;

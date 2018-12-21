@@ -23,22 +23,19 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
-#ifndef _FERAL_MICE_COMMON_H_
-#define _FERAL_MICE_COMMON_H_
-
-#include <feral/stdtypes.h>
-#include <ddk/frlddk.h>
-#include <ddk/interface.h>
-
-#if defined(__x86_64__) || defined(__i386__)
-#include <arch/x86_64/cpuio.h>
-#endif
-
-#include <colors.h>
-
-
-// We want some common stuff for our peripherals, if they don't obey this, we translate it in the driver.
-// Specifically, I'm looking for compatibility with my current mouse and keyboard, both of which can be controlled over USB.
-// We don't have a USB stack yet, so we pretend we do for now and then lay down a framework to improve now.
-
+ 
+ 
+#ifndef _FERAL_DAREON_ARCTURUS_10_H_
+#define _FERAL_DAREON_ARCTURUS_10_H_
+ 
+#define DAREON_VIDEO_CARD_POLRIS_NAME L"DAREON ARCTURUS"
+/* TODO */
+ 
+ 
+ /* Predictions (obviously I don't know what they'll *actually* be, but this is a good guess.) */
+#define VIDEO_CARD_IDENTIFIER_LOW_END_ONE L"DAREON ARCTURUS RX 4050"
+#define VIDEO_CARD_IDENTIFIER_MAINSTREAM L"DAREON ARCTURUS RX 4060"
+#define VIDEO_CARD_IDENTIFIER_HIGH_END_ONE L"DAREON ARCTURUS RX 4070"
+#define VIDEO_CARD_IDENTIFIER_ENTHUSIAST_ONE L"DAREON ARCTURUS RX 4080"
+ 
 #endif

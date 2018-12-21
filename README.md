@@ -3,7 +3,7 @@
 ## What is Feral?
 Feral is an experimental monolithic kernel intended to be used for my Waypoint operating system. It's primary goals are flexibility,
 reliablility, and good security, and above all else, performance. Feral is intended to run for many architectures, but is currently being
-developed primarilly for the x86_64 platform, and more specifically for Advanced Micro Devices' Family 17h devices ("Zen" architecture)
+developed primarilly for the x86_64 platform, and more specifically for Family 17h x86-64 PCs ("Zen" architecture)
 
 In the future, Feral is intended to run on MIPS, Aarch64, POWER9, and RV64GC hardware.
 
@@ -20,16 +20,28 @@ Feral introduces the idea of a command queue, in which certain system calls are 
 be written with a number of commands, and the kernel executes them sequentially without being interrupted to return to usermode
 without a reason to: this is intended to provide some form of 'inertia' between usermode and kernel-mode, such that a context
 switch is avoided and thus improving performance. Those familiar with graphics programming are likely familiar with a similar concept.
+The idea is that if we enqueue a variety of instructions, preferably on a common, machine-independent bytecode format, we avoid
+more context switches than absolutely necessary and thus games can use more of the precious 16~17ms they have to render a frame
+on more useful things, like loading assets, doing more draw commands, networking, AI, etc. This is similar to an GL call like
+glBindBuffer(). The operating system's job is to *get out of the way of user mode apps (where security is left intact)*.
 
 Feral also does not support "legacy" hardware, such as IA-32. This is intended to keep development focused on current hardware and to
 avoid focusing on legacy structures and ideas which would hold back design of the kernel. What "legacy" actually means depends on
-how such a processor is currently being used.
+how such a processor is currently being used: IA-32 CPUs for desktop gaming use are no longer in production, and thus not supported.
 
 At it's heart, Feral is a hobby project, intended to be useful and fun for learning how to write good C code, building a large, complex project,
 overall design, systems, and hardware-level programming. In addition to this, it's also for fun for me to see how much faster I can get certain applications
 to run simply by changing platforms and doing minimal effort to port programs over. In particular, I would like to see a 5% performance improvement
 or better for certain open sourced games from the 90s as compared to a particularly prolific desktop operating system in active development from a 
-well-known company in Washington state. This is a good and interesting challenge, and aiming at a moving target is more fun. 
+well-known company in Washington state. This is a good and interesting challenge, and aiming at a moving target is more fun. Feral is also
+being developed because bottom-up integration of every system from the operating system and up allows for good optmization, a good foundation in
+designing new applications on top of it, and a well-known, solid base upon which new things can be built from: this is in contrast to re-using an existing
+project in where some design choices may not align with the intended use case. Building *everything* from the ground up allows us to tailor every
+piece of the system to our exact needs, and thus trim away unnecessary bloat from design and implementation. For example, even needing a multi-user
+environment for Feral could be debated, as a multi-user environment has no direct benefit for a __personal__ computer, and costs much in performance:
+consider the performance of an application on Haiku versus a *NIX version on identical systems, specifically in a case where checking user IDs
+is a common operation (ie, a word processor, where writing and reading files is a fairly common operation). If there is only one user for the machine,
+and we always trust the user knows what they're doing (until they mess with system files), do we really need a multi-user environment?
 
 ## Design influences?
 Architecturally, Feral is similar to a variety of prior systems originating between 1969 and 1993, with the most obvious being CMU's Mach project, and the Plan 9 project. Feral discards the "everything is a file"
@@ -88,7 +100,7 @@ I've broken this rule a few times, but this should be fixed as soon as possible.
 
 Functions intended to be stable should use:
 
-	- Minimal characters prefixed to define what it does ('Hal', 'Vd', 'Ke', 'Vga', etc.)
+	- Minimal characters prefixed to define what it does ('Hal', 'Vd', 'Ke', 'Vga', 'Sd', etc.)
 
 Kernel-related functions should ALWAYS
 	
@@ -189,6 +201,8 @@ file path, and should *not* be interpretted as B:/Main, Storage/Files/Stuff/Some
 
 ## Overall goals:
  - Lightweight kernel, insist that processes do most of the work. (service provider does most of the kernel-mode work: programs shouldn't talk to kernel directly that much.)
+ 
+ - Eliminate legacy "bloat" from traditional architecture and design: Our goal is to be **lightweight** and **mostly compatible**. If it gets in the way of lightweight, we won't implement it.
 
  - Enforce a lot of verbosity out of user-mode programs (if what they could want could be ambiguous, there should be a function for every possible meaning.)
    (We have no idea what shell replacements might want to do with native Waypoint programs: just feed them as much information as possible.)
@@ -213,6 +227,8 @@ file path, and should *not* be interpretted as B:/Main, Storage/Files/Stuff/Some
    (we're more awesome if we can even run programs for a totally different CPU architecture, ie, POWER9. A very important historic operating system was very much capable of this (at least I think).)
 
  - Highly modular architecture (portions of the kernel can be ripped out and reused elsewhere, ie, grafted into BSD or used in a commercial product or something.)
+ 
+ - Integrate containers into our existing subsystem architecture, for example, to allow a user to execute a full, isolated not-quite-virtual machine to run untrusted applications in. (useful for security researchers using radare or whatever on malware.)
 
  - Something fun to work on that might be useful one day?
 

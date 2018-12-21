@@ -29,7 +29,6 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 
-#pragma pack(1)
 
 typedef enum
 {
@@ -39,7 +38,9 @@ typedef enum
 	ELF_CORE = 3
 }ElfExecTypes;
 
-typedef struct _ElfHeader
+/* Do we need pragma pack(1)?? */
+
+typedef struct ElfHeader64
 {
 	UINT32 magic;	//ELF magic number...
 	UINT8  cpu_bitsz;
@@ -50,16 +51,35 @@ typedef struct _ElfHeader
 	UINT16 e_type;
 	UINT16 e_machine;
 	UINT32 e_version;
-	UINTN  e_entry;
-	UINTN  e_phoff;
-	UINTN  e_shoff;
+	UINT64  e_entry;
+	UINT64  e_phoff;
+	UINT64  e_shoff;
 	UINT32 e_flags;
 	UINT16 e_ehsize;
 	UINT16 e_phentsize;
 	UINT16 e_phnum;
 	UINT16 e_shentsize;
-	
-}ElfHeader;
-#pragma pack(0)
+}ElfHeader64;
+
+typedef struct ElfHeader32
+{
+	UINT32 magic;	//ELF magic number...
+	UINT8  cpu_bitsz;
+	UINT8  cpu_endian;
+	UINT8  e_version;
+	UINT8  e_identifier;
+	UINT64 e_padding;
+	UINT16 e_type;
+	UINT16 e_machine;
+	UINT32 e_version;
+	UINT32  e_entry;
+	UINT32  e_phoff;
+	UINT32  e_shoff;
+	UINT32 e_flags;
+	UINT16 e_ehsize;
+	UINT16 e_phentsize;
+	UINT16 e_phnum;
+	UINT16 e_shentsize;
+}ElfHeader32;
 
 #endif

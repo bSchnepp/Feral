@@ -221,14 +221,12 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 			{
 				VgaPutChar(' ');
 			}
-		} else if (c == '\n')
-		{
-			internalVgaPushUp();
+		} else if (c == '\n') {
 			/* Now, reset the last row's state. */
 			currentContext->CurrentCol = 0;
 			currentContext->CurrentRow++;
-		} else if (c == '\0')
-		{
+			internalVgaPushUp();
+		} else if (c == '\0') {
 			return;
 		} else {
 			VgaEntry(foreground, background, c, true_x++, true_y);
@@ -236,27 +234,10 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 	} 
 }
 
-/* Not refactored yet. */
-
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length)
 {
 	DWORD newSpace = (length / currentContext->ScreenWidth) + 1;
-	if (currentContext->CurrentRow >= (currentContext->ScreenHeight - newSpace))
-	{
-		/* Go through every row and get the appropriate stuff up what it needs to. */
-		for (DWORD index = 0; index < (currentContext->ScreenHeight - newSpace); ++index)
-		{
-			/* And act upon each col. */
-			for (DWORD col = 0; col < currentContext->ScreenWidth; ++col)
-			{
-					currentContext->Framebuffer[(index * currentContext->ScreenWidth) + col] = currentContext->Framebuffer[(((index + newSpace) * currentContext->ScreenWidth) + col)];
-			}
-		}
-		VgaStringEntry(foreground, background, string, length, 0, currentContext->CurrentRow - newSpace);
-		currentContext->CurrentRow -= (newSpace);
-	} else {
-		VgaStringEntry(foreground, background, string, length, 0, currentContext->CurrentRow);
-		currentContext->CurrentRow++;
-	}
 	currentContext->CurrentCol = 0;
+	VgaStringEntry(foreground, background, string, length, 0, currentContext->CurrentRow);
+	currentContext->CurrentRow++;
 }

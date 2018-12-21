@@ -1,7 +1,0 @@
-[package]
-name = "procmgr"
-version = "0.0.1"
-authors = ["Brian Schnepp <bschneppdev@gmail.com>"]
-
-[lib]
-crate-type = ["staticlib"]

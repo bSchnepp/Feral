@@ -82,15 +82,20 @@ typedef BYTE BOOLEAN;
 typedef char CCHAR;
 typedef char CHAR;
 
+#ifndef FERAL_NO_DEPRECATED
 /* One should avoid DWORD as a word size may differ on various platforms (8-bit word, 32-bit words, etc.) */
 typedef uint32_t DWORD;
 typedef uint64_t DWORDLONG;
+#endif
 
 typedef uint32_t DWORD32;
 typedef uint64_t DWORD64;
 
 typedef float FLOAT;
 typedef double DOUBLE;
+
+typedef float FLOAT32;
+typedef double FLOAT64;
 
 typedef int32_t INT;
 typedef INT BOOL;
