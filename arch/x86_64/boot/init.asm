@@ -55,6 +55,9 @@ _start:
 	; Check for multiboot 2 compliance.
 	cmp eax, 0x36D76289
 	jne boot_panic
+	
+	; Push ebx for when we need it later. (holds multiboot struct)
+	mov [multiboot_value], ebx
 
 	; Check CPUID...
 	pushfd 
@@ -101,7 +104,8 @@ _start:
 
 
 create_page_tables:
-	; (I really don't fully understand what I'm doing here, let's hope this works!)
+	; (I understand about 99% of what we're doing here, but then we (will) have things where virtual memory =/= physical memory 
+	; and virtual memory for task A isn't the same memory as task B and now we're all confused again on what's what.
 
 	; We'll use names like 'p4', 'p3', etc, because it's just easier.
 
@@ -192,9 +196,9 @@ kern_start:
 	mov es, ax
 	mov fs, ax
 	mov gs, ax
-
-	mov rsp, stack_top
-	mov rdi, rbx	; Give us the multiboot info we want.
+	
+	mov rdi, [multiboot_value]			; Give us the multiboot info we want.
+	mov rsp, stack_top	
 
 	extern kern_init
 	call kern_init
@@ -259,6 +263,10 @@ ret
 
 
 section .rodata
+
+; Store our multiboot pointer.
+multiboot_value resd 0
+
 gdt_64:
 	dq 0	; The zero entry, which is needed for the GDT.
 

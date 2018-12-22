@@ -150,8 +150,6 @@ VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, D
  */
 VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 {
-	currentContext->CurrentRow = 0;
-	currentContext->CurrentCol = 0;
 	currentContext->Background = color;
 	for (UINT16 h = 0; h < height; ++h)
 	{
@@ -160,6 +158,8 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 			VgaEntry(color, color, (CHAR)('\0'), w, h);
 		}
 	}
+	currentContext->CurrentRow = 0;
+	currentContext->CurrentCol = 0;
 }
 
 /**
@@ -202,7 +202,6 @@ VOID VgaPutChar(CHAR letter)
 VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy)
 {
 	UINT64 index = 0;
-	
 	UINT16 true_x = posx;
 	UINT16 true_y = posy;
 	
@@ -237,7 +236,7 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length)
 {
 	DWORD newSpace = (length / currentContext->ScreenWidth) + 1;
-	currentContext->CurrentCol = 0;
-	VgaStringEntry(foreground, background, string, length, 0, currentContext->CurrentRow);
+	VgaStringEntry(foreground, background, string, length, currentContext->CurrentCol, currentContext->CurrentRow);
 	currentContext->CurrentRow++;
+	currentContext->CurrentCol = 0;
 }

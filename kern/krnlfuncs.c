@@ -122,6 +122,8 @@ FERALSTATUS KiGetStringLength(IN STRING String, OUT UINTN* Length)
 FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT* UINTN);
 */
 
+/* Todo: aarch64 version(s). This breaks aarch64 port.*/
+
 FERALSTATUS KiPrintLine(STRING string)
 {
 	PRINT_LINE_GENERIC();
@@ -154,6 +156,37 @@ FERALSTATUS KiPrint(STRING string)
 	return STATUS_SUCCESS;
 }
 
+
+
+/* 
+	We don't have a kmalloc() yet, so we can't just free and alloc whenever we want.
+	Thus, our internal itoa _must_ be in-place.
+*/
+VOID internalItoa(UINT64 val, STRING buf)
+{
+	if (val == 0)
+	{
+		buf = "0";
+		return;
+	}
+	
+	UINT64 len = 0;
+	UINT64 base = 10;
+	for (UINT64 valCopy = val; valCopy != 0; valCopy /= base)
+	{
+		CHAR rem = valCopy % base;
+		buf[len++]  =  rem + '0';
+	}
+	
+	for (UINT64 i = 0; i < len; ++i)
+	{
+		buf[(len - 1) - i] = buf[i];
+	}
+	
+	/* Terminate the string. */
+	buf[len] =  '\0';
+}
+
 FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 {
 	va_list args;
@@ -162,7 +195,8 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 	BOOL upState = FALSE;
 	CHAR cur = fmt[0];
 	
-	for (UINT64 index = 0; cur != '\0'; cur = fmt[index++])
+	UINT64 index = 0;
+	for (CHAR cur = fmt[0]; cur != '\0'; cur = fmt[++index])
 	{
 		if (cur == '%' && !upState)
 		{
@@ -174,10 +208,15 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 			{
 				STRING valistnext;
 				valistnext = va_arg(args, STRING);
-				UINT64 sublen = 0;
 				KiPrint(valistnext);
-			} else if (cur == '%')
-			{
+			} else if (cur == 'i' || cur == 'l') {
+				UINT64 valistnext;
+				valistnext = va_arg(args, UINT64);
+				/* Create a buffer to store in. Integer is never longer than 20, so... */
+				CHAR buf[21] = {0};
+				internalItoa(valistnext, buf);
+				KiPrint(buf);
+			} else if (cur == '%') {
 				KiPrint("%");
 			}
 			/* What do you mean %llu is a thing? */

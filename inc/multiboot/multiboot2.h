@@ -35,6 +35,13 @@ IN THE SOFTWARE.
 	and lots of resources out there rely on GNU stuff) 
  */
 
+
+#define MULTIBOOT_TAG_TYPE_END 											(0)
+#define MULTIBOOT_TAG_TYPE_CMD_LINE 									(1)
+#define MULTIBOOT_TAG_TYPE_BOOT_LOADER 								(2)
+/* TODO */
+
+
 #define		MULTIBOOT_BASE_HEADER_TAG_BASE_VALUES			\
 				UINT16	type;										\
 				UINT16	flags;										\
@@ -115,7 +122,7 @@ typedef struct multiboot_mmap_entry
 		UINT64	len;
 		UINT32	type;
 		UINT32	zero;
-} PACKED multiboot_mmap_entry;
+}multiboot_mmap_entry;
 
 typedef multiboot_mmap_entry multiboot_memory_map_t;
 
@@ -132,7 +139,7 @@ typedef struct multiboot_tag_string
 {
 	MULTIBOOT_BASE_TAG_BASE_VALUES;
 	CHAR string[0];
-};
+}multiboot_tag_string;
 
 typedef struct multiboot_tag_module
 {

@@ -39,11 +39,11 @@ IN THE SOFTWARE.
 
 #include <kern_ver.h>
 
-#if 0
 #if defined(__x86_64__) || defined(__i386__)
-#include "feral_multiboot2.h"
+#ifndef FERAL_BUILD_STANDALONE_UEFI_
+#include "multiboot/multiboot2.h"
 #endif
-#endif	//TODO
+#endif
 
 #include <feral/boot/kibootstruct.h>
 #include <feral/kern/krnlfuncs.h>
@@ -313,7 +313,7 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 // (it's also bad when network cards do this, but we'll just rip the freebsd network stack out so it becomes freebsd's problem)
 
 /* AT LEAST THERE'S NO SECURE BOOT. */
-VOID kern_init(UINT64 MBINFO)
+VOID kern_init(UINT32 MBINFO)
 {
 	VgaContext graphicsContext = {0};
 	UINT8 misc = VgaPrepareEnvironment(&graphicsContext);
@@ -337,6 +337,33 @@ VOID kern_init(UINT64 MBINFO)
 	VgaEntry(VGA_GREEN, VGA_BLACK, ('0'), 36, 1);
 	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_PATCH), 37, 1);
 	KiPrintLine("");
+	
+	/* First, request the info from the multiboot header. */
+	multiboot_tag *MultiBootInfo = (multiboot_tag*)(MBINFO);
+	if (MBINFO & 0x07)
+	{
+		/* Unaligned, go panic: todo, clarify it's a multiboot issue. */
+		KiStopError(STATUS_ERROR);
+	}
+	
+	
+	for (multiboot_tag *MultibootInfo = (multiboot_tag*)(MBINFO + 8); MultibootInfo->type != 0; MultibootInfo = (multiboot_tag*)((UINT8*)(MultibootInfo) + ((MultibootInfo->size + 7) & ~0x07)))
+	{
+		UINT16 type = MultibootInfo->type;
+		if (type == MULTIBOOT_TAG_TYPE_BOOT_LOADER)
+		{
+			multiboot_tag_string *mb_as_string = (multiboot_tag_string*)(MultibootInfo);
+			KiPrint("Detected bootloader: ");
+			KiPrint(mb_as_string->string);
+			KiPrintLine(" Hi");
+		}
+	}
+
+
+	for (;;)
+	{
+		/*  Temporarilly halt the kernel here to ensure MB2 is correct.*/
+	}
 
 	// We'd like to have some information about the CPU before we boot further.
 	// Some things like saying CPU vendor, family, brand name, etc.

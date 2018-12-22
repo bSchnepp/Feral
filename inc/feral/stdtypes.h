@@ -135,7 +135,7 @@ typedef  int64_t  INTN;
 typedef uint32_t UINTN;
 typedef  int32_t  INTN;	
 #endif
-// 286 and earlier not supported.
+// 286 and earlier not supported. (16-bit x86 is *very* old and doesn't support paging).
 
 
 // Ensure we define wchar_t. This is important, as we *really* love Unicode.
