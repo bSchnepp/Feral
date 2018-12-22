@@ -355,16 +355,9 @@ VOID kern_init(UINT32 MBINFO)
 			multiboot_tag_string *mb_as_string = (multiboot_tag_string*)(MultibootInfo);
 			KiPrint("Detected bootloader: ");
 			KiPrint(mb_as_string->string);
-			KiPrintLine(" Hi");
 		}
 	}
-
-
-	for (;;)
-	{
-		/*  Temporarilly halt the kernel here to ensure MB2 is correct.*/
-	}
-
+	
 	// We'd like to have some information about the CPU before we boot further.
 	// Some things like saying CPU vendor, family, brand name, etc.
 	// Eventually, supporting a boot-time flag (and somehow emulating some useful CPU features
