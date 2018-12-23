@@ -48,14 +48,12 @@ IN THE SOFTWARE.
 #include <feral/boot/kibootstruct.h>
 #include <feral/kern/krnlfuncs.h>
 
-// Private headers use this convention... (TODO: remove the 'inc' part with directly pointing to it)
-#include "inc/krnl.h"
+#include <krnl.h>
 
 
 #include <arch/processor.h>
 
 static SYSTEM_INFO SystemInfo;
-
 static UINT8 FeralVersionMajor;
 static UINT8 FeralVersionMinor;
 static UINT8 FeralVersionPatch;
@@ -66,14 +64,16 @@ static UINT8 FeralVersionPatch;
  */
 
 #if defined(KERN_DEBUG)
-static BOOL ILOVEBEAR18 = 1;	// flag for experimental kernel features, intentionally something strange such that someone 
-				    				// doesn't see this in an automated flag thing and just turns it on without knowing why.
+#define ILOVEBEAR18 (1)	/* 
+							flag for experimental kernel features, intentionally something strange such that someone 
+							doesn't see this in an automated flag thing and just turns it on without knowing why. 
+						*/
 #endif
 
-static WSTRING RootFsLocation;	// Where is the root? This should normally be A:/, but it can be anywhere.
+static WSTRING RootFsLocation;	/* Where is the root? This should normally be A:/, but it can be anywhere. */
 
 
-// FERAL initialization follows a few basic steps:
+/* FERAL initialization follows a few basic steps: */
 	/*
 		[we'll need to rewrite this, since a lot of this is reworked into the 'master control process'.]
 		The first process is always "Subsystem manager". (SSMGR.PRO), this handles dynamic linking and is essential for all non-native programs.
@@ -163,7 +163,7 @@ static SYSTEM_INFO KernelSystemInfo = {};
  */
 
 
-// TODO
+/* TODO */
 #if defined(__aarch64__)
 FERALSTATUS KiPrintLine()
 {
@@ -174,9 +174,10 @@ FERALSTATUS KiPrintWarnLine()
 }
 #endif
 
-// This is the kernel's *real* entry point. TODO: some mechanism for a Feral-specific bootloader to skip the multiboot stuff and just load this.
+/* This is the kernel's *real* entry point. TODO: some mechanism for a Feral-specific bootloader to skip the multiboot stuff and just load this.*/
 VOID KiSystemStartup(VOID)
 {
+	/*
 	//TODO...
 	//We need to look for every core on the system (We should expect 8, as we're expecting to run on a ZEN 1700X CPU. I will probably upgrade to something on socket TR4 though.)
 	//As such, we need to run a function called HalInitializeProcessor (for the remaining 7 cores... for playing with a 1950X eventually, 15 remaining cores...)
@@ -191,9 +192,9 @@ VOID KiSystemStartup(VOID)
 	//(Especially since games right now don't really utilize that many cores to their full potential... not because the engines are bad, just that no reason to use them.)
 
 	//Of course, don't be bad, actually check if a feature is available before using it.
+	*/
 
-
-	// First off, ensure we load all the drivers, so we know what's going on.
+	/* First off, ensure we load all the drivers, so we know what's going on. */
 	KiPrintLine("Copyright (c) 2018, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
 	
@@ -254,30 +255,21 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 	{
 	} else {
 	}
+	return STATUS_SUCCESS;
 }
 
 
-
-
-
-
-
-#if defined(__i386__) || defined(__x86_64__)
-
-#include <multiboot/multiboot2.h>
-
-// temporary, turn into clean later.
+/* temporary, turn into clean later. */
 VOID InternalPrintRegister(DWORD reg)
 {
 	for (int i = 0; i < 4; i++)
 	{
 		CHAR charToAdd = ((CHAR)(reg >> (i * 8)) & 0xFF);
 		VgaPutChar(charToAdd);
-		//VgaEntry(VGA_WHITE, VGA_BLACK, charToAdd, posx+i, posy);
 	}
 }
 
-// ugly hack, refactor sometime later.
+/* ugly hack, refactor sometime later. */
 VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 {
 	KiPrint(cpu_vendor_msg);
@@ -289,29 +281,19 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 
 /*
 	 We'll need to implement a proper driver for VGA later. For now, we have something to throw text at and not quickly run out of space.
-	  This is great.
-	  
-	  Ideally, I'd like to build my own GPU (something on an FPGA at like 100MHz, but is about as good as say a 520 Fermi GPU. The FPGA implements a single graphics core,
-	  and in an ideal world, we'd fab a whole bunch of these dies and they'd communicate together, so making "god tier" GPUs is adding bigger fans and slapping more on
-	  the same board, then the dies would intercommunicate with PCIe or some crazy bus or something. High power efficiency, aim for low power consumption, find use in
-	  mobile devices???
-	  
-	  Call it FX-SUPER Graphics Support Unit, or just "SUPEREFFECTS" or something fun like that.
-	  
-	  I'm not an EE person, so I have no idea if anything I just said was somewhere close to realistic or some random 19 year old kid fantasizing about making everything from scratch, but
-	  that would be nice. (then you don't have to poke someone for manuals so you can get drivers for things. Because you made them.)
-	  
-	  (that "everything from scratch" includes wanting to melt metal, and mill/carve/solder/etc and build computers **from scratch**, and ideally all the way down to the motherboards and CPUs if that was possible.)
-	  I know, the "Not Invented Here" syndrome is really bad.
  */
 
-// For now, kern_init() is multiboot only while I migrate to UEFI. Everything should be EFI because UEFI is ok and not completely horrible. (80s style bios is headache-inducing when the A20 is sometimes on but sometimes not 
-// and then sometimes it does odd things with memory or just flat out DOES NOT DO what you expected. ughhh. Compound with speculative execution and out of order execution and it's more effort than it's worth to support a
-// dying "standard". That said, UEFI's security is about as solid as swiss cheese, whereas this just doesn't happen with BIOS because the firmware is so small there's not a lot to exploit.)
-// AND THE MOST IRRITATING THING OF ALL TIME IS WHEN SOMEONE HAS A BROKEN FIRMWARE IMPLEMENTATION WHERE THE ACPI TABLE IS LYING!!!!!!
-// (it's also bad when network cards do this, but we'll just rip the freebsd network stack out so it becomes freebsd's problem)
+/*
+	For now, kern_init() is multiboot only while I migrate to UEFI. Everything should be EFI because UEFI is ok and not completely horrible. (80s style bios is headache-inducing when the A20 is sometimes on but sometimes not 
+	and then sometimes it does odd things with memory or just flat out DOES NOT DO what you expected. ughhh. Compound with speculative execution and out of order execution and it's more effort than it's worth to support a
+	dying "standard". That said, UEFI's security is about as solid as swiss cheese, whereas this just doesn't happen with BIOS because the firmware is so small there's not a lot to exploit.)
+	AND THE MOST IRRITATING THING OF ALL TIME IS WHEN SOMEONE HAS A BROKEN FIRMWARE IMPLEMENTATION WHERE THE ACPI TABLE IS LYING!!!!!!
+	(it's also bad when network cards do this, but we'll just rip the freebsd network stack out so it becomes freebsd's problem)
+*/
 
 /* AT LEAST THERE'S NO SECURE BOOT. */
+
+#ifndef FERAL_BUILD_STANDALONE_UEFI_
 VOID kern_init(UINT32 MBINFO)
 {
 	VgaContext graphicsContext = {0};
@@ -336,20 +318,19 @@ VOID kern_init(UINT32 MBINFO)
 	KiPrintLine("");
 	
 	/* First, request the info from the multiboot header. */
-	multiboot_tag *MultiBootInfo = (multiboot_tag*)(MBINFO);
 	if (MBINFO & 0x07)
 	{
 		/* Unaligned, go panic: todo, clarify it's a multiboot issue. */
 		KiStopError(STATUS_ERROR);
 	}
 	
-	for (multiboot_tag *MultibootInfo = (multiboot_tag*)(MBINFO + 8); MultibootInfo->type != 0; MultibootInfo = (multiboot_tag*)((UINT8*)(MultibootInfo) + ((MultibootInfo->size + 7) & ~0x07)))
+	for (multiboot_tag *MultibootInfo = (multiboot_tag*)((UINT64)(MBINFO + 8)); MultibootInfo->type != 0; MultibootInfo = (multiboot_tag*)((UINT8*)(MultibootInfo) + ((MultibootInfo->size + 7) & ~0x07)))
 	{
 		UINT16 type = MultibootInfo->type;
 		if (type == MULTIBOOT_TAG_TYPE_BOOT_LOADER)
 		{
 			multiboot_tag_string *mb_as_string = (multiboot_tag_string*)(MultibootInfo);
-			KiPrint("Detected bootloader:  ");
+			KiPrint("Detected bootloader: ");
 			KiPrintLine(mb_as_string->string);
 		} else if (type == MULTIBOOT_TAG_TYPE_BOOT_DEVICE) {
 			
@@ -413,5 +394,10 @@ VOID kern_init(UINT32 MBINFO)
 	
 	// Kernel initialization is done, move on to actual tasks.
 	KiSystemStartup();
+}
+#else
+kern_init(UINT32 MBINFO)
+{
+	/* TODO (uefi standalone) */
 }
 #endif

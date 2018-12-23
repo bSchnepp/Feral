@@ -38,7 +38,11 @@ static VgaContext *currentContext;
 
 typedef UINT16 ColorValue;
 
-VOID internalVgaPushUp()
+
+/* Internal function, so suppress warning. */
+VOID internalVgaPushUp(VOID);
+
+VOID internalVgaPushUp(VOID)
 {
 	/* Go from 1 to 25 (for 80x25 mode), and take the next 80 bytes, and push them all up. */
 	for (UINT16 iRow = 1; iRow < currentContext->ScreenHeight; ++iRow)
@@ -171,9 +175,7 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 	foreground and background specified.
  */
 VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter)
-{
-	ColorValue color = ((background << 4) | foreground);
-	
+{	
 	if (currentContext->CurrentCol >= currentContext->ScreenWidth)
 	{
 		currentContext->CurrentCol = 0;
@@ -239,7 +241,6 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length)
 {
-	DWORD newSpace = (length / currentContext->ScreenWidth) + 1;
 	VgaStringEntry(foreground, background, string, length, currentContext->CurrentCol, currentContext->CurrentRow);
 	if (currentContext->CurrentRow + 1 >= currentContext->ScreenHeight)
 	{

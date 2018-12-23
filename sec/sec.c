@@ -44,9 +44,15 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 	VgaPrintln(VGA_WHITE, VGA_BLUE, errorMsg, length);
 	
 	KiPrintLine("");
+	
+	KiPrintFmt("Error code: %i", Status);
 	return STATUS_ERROR;
 	/* Todo: be more useful for error checking */
 #endif
+	for (;;)
+	{
+		/* Hang (for now) */
+	}
 }
 
 __attribute__((noreturn))
@@ -54,4 +60,8 @@ VOID __stack_chk_fail(void)
 {
 	/* This is _horribly_ primitive, but for now, good enough. */
 	KiStopError(STATUS_INVALID_MEMORY_LOCATION);
+	for (;;)
+	{
+		/* Hang (for now) */
+	}
 }

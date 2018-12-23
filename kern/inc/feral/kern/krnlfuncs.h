@@ -48,7 +48,7 @@ FERALSTATUS KiSetMemoryBytes(INOUT VOID*, IN UINT8, IN UINTN);
 
 //TODO: Replace bad temp strlen with this
 // String, length of it.
-FERALSTATUS KiGetStringLength(IN STRING, OUT UINTN*);
+FERALSTATUS KiGetStringLength(IN STRING, OUT UINT64*);
 
 //Same as above but with a wide string.
 FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT UINTN*);

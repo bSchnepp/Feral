@@ -35,6 +35,7 @@ FERALSTATUS KiPrintLine(STRING string);
 FERALSTATUS KiPrintGreyLine(STRING string);
 FERALSTATUS KiPrintWarnLine(STRING string);
 FERALSTATUS KiPrint(STRING string);
+FERALSTATUS KiPrintFmt(const STRING fmt, ...);
 
 /*
 	 Security is always turned on when kernel initializes. Why would you want to disable it? 

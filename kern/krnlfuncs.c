@@ -43,7 +43,7 @@ IN THE SOFTWARE.
 #include <arch/x86_64/vga/vga.h>
 
 #define PRINT_LINE_GENERIC()												\
-	UINTN length;															\
+	UINT64 length;															\
 	FERALSTATUS feralStatusError = KiGetStringLength(string, &length);		\
 	if (!(feralStatusError == STATUS_SUCCESS))								\
 	{																		\
@@ -52,7 +52,7 @@ IN THE SOFTWARE.
 
 
 // Start, end, size.
-FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINTN Amount)
+FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
 {
 	UINTN* Destination = ((UINTN*)Dest);
 	UINTN* Src = ((UINTN*)Source);
@@ -60,7 +60,7 @@ FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINTN Amount)
 	{
 		return STATUS_INVALID_MEMORY_LOCATION;
 	}
-	for (UINTN i = 0; i < Amount; i++)
+	for (UINT64 i = 0; i < Amount; i++)
 	{
 		Destination[i] = Src[i];
 	}
@@ -68,13 +68,13 @@ FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINTN Amount)
 }
 
 //First, Second, Size, Equal
-FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINTN Amount, OUT BOOL* Val)
+FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount, OUT BOOL* Val)
 {
 	if ((Source == NULL) || (Dest == NULL))
 	{
 		return STATUS_INVALID_MEMORY_LOCATION;
 	}
-	for (UINTN i = 0; i < Amount; i++)
+	for (UINT64 i = 0; i < Amount; i++)
 	{
 		// Assume they are UINTN. This will probably need to be changed.
 		UINTN* Src = (Source + i);
@@ -102,13 +102,13 @@ FERALSTATUS KiSetMemoryBytes(INOUT VOID*, IN UINT8, IN UINTN);
 #endif
 
 
-FERALSTATUS KiGetStringLength(IN STRING String, OUT UINTN* Length)
+FERALSTATUS KiGetStringLength(IN STRING String, OUT UINT64* Length)
 {
 	if (String == NULL)
 	{
 		return STATUS_INVALID_MEMORY_LOCATION;
 	}
-	UINTN Len = 0;
+	UINT64 Len = 0;
 	while (String[Len])	// false is just 0, so when we dereference and find equal to 0, we terminate.
 	{
 		Len++;
@@ -124,7 +124,7 @@ FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT* UINTN);
 
 /* Todo: aarch64 version(s). This breaks aarch64 port.*/
 
-FERALSTATUS KiPrintLine(STRING string)
+FERALSTATUS KiPrintLine(IN STRING string)
 {
 	PRINT_LINE_GENERIC();
 	// Ok, we call VgaPrintln and use a black on white color set.
@@ -149,14 +149,15 @@ FERALSTATUS KiPrintWarnLine(STRING string)
 FERALSTATUS KiPrint(STRING string)
 {
 	PRINT_LINE_GENERIC();
-	for (int i = 0; i < length; i++)
+	for (UINT64 i = 0; i < length; i++)
 	{
 		VgaPutChar(string[i]);
 	}
 	return STATUS_SUCCESS;
 }
 
-
+/* Internal function: suppress warning (for now) */
+VOID internalItoa(UINT64 val, STRING buf);
 
 /* 
 	We don't have a kmalloc() yet, so we can't just free and alloc whenever we want.
