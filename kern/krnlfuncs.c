@@ -203,10 +203,9 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 	va_start(args, fmt);
 
 	BOOL upState = FALSE;
-	CHAR cur = fmt[0];
 	
 	UINT64 index = 0;
-	for (; cur != '\0'; cur = fmt[++index])
+	for (CHAR cur = fmt[0]; cur != '\0'; cur = fmt[++index])
 	{
 		if (cur == '%' && !upState)
 		{

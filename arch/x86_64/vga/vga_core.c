@@ -174,9 +174,6 @@ VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR lette
 {
 	ColorValue color = ((background << 4) | foreground);
 	
-	/* Increment the current col, so if we overflow, we reset to 0 and increment row. */
-	currentContext->CurrentCol++;
-	
 	if (currentContext->CurrentCol >= currentContext->ScreenWidth)
 	{
 		currentContext->CurrentCol = 0;
@@ -192,6 +189,7 @@ VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR lette
 	
 	/* Now in safe-to-write state. */
 	VgaEntry(foreground, background, letter, currentContext->CurrentCol, currentContext->CurrentRow);
+	currentContext->CurrentCol++;
 }
 
 /**
@@ -211,11 +209,11 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 	
 	for (CHAR c = *string; index < length; c = string[++index])
 	{
-		if (true_x > currentContext->ScreenWidth)
+		if (true_x >= currentContext->ScreenWidth)
 		{
 			true_x = 0;
 			true_y++;
-			currentContext->CurrentRow++;
+			currentContext->CurrentRow = true_y;
 		}
 		
 		if (c == '\t')
@@ -225,6 +223,7 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 			{
 				VgaPutChar(' ');
 			}
+			true_x += 8;
 		} else if (c == '\n') {
 			/* Now, reset the last row's state. */
 			currentContext->CurrentCol = 0;

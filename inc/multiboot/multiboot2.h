@@ -144,11 +144,11 @@ typedef struct multiboot_color
 	UINT8	blue;
 }multiboot_color;
 
-#define	MULTIBOOT_MEMORY_AVAILABLE							(1 << 1)
-#define	MULTIBOOT_MEMORY_RESERVED							(1 << 2)
+#define	MULTIBOOT_MEMORY_AVAILABLE							((1 << 1))
+#define	MULTIBOOT_MEMORY_RESERVED								((1 << 2))
 #define	MULTIBOOT_MEMORY_ACPI_RECLAIMABLE					((1 << 2) | (1 << 1))
-#define	MULTIBOOT_MEMORY_NVS								(1 << 3)
-#define	MULTIBOOT_MEMORY_BADRAM							((1 << 3) | (1 << 1))
+#define	MULTIBOOT_MEMORY_NVS									((1 << 3))
+#define	MULTIBOOT_MEMORY_BADRAM								((1 << 3) | (1 << 1))
 
 typedef struct multiboot_mmap_entry
 {
@@ -334,51 +334,5 @@ typedef struct multiboot_tag_network
 	MULTIBOOT_BASE_TAG_BASE_VALUES;
 	UINT8	dhcpack[0];
 }multiboot_tag_network;
-
-#if 0
-typedef struct Multiboot2Info
-{
-	UINT32	flags;
-	
-	UINT32	mem_lower;
-	UINT32	mem_upper;
-	
-	UINT32	boot_device;
-	
-	UINT32	cmdline;
-
-	UINT32	mods_count;
-	UINT32	mods_addr;
-
-	UINT16	syms;
-	
-	UINT32	mmap_length;
-	UINT32	mmap_addr;
-	
-	UINT32	drives_length;
-	UINT32	drives_addr;
-	
-	UINT32	config_table;
-	
-	UINT32	boot_loader_name;
-	
-	UINT32	apm_table;
-	
-	UINT32	vbe_control_info;
-	UINT32	vbe_mode_info;
-	UINT32	vbe_mode;
-	UINT32	vbe_interface_seg;
-	UINT32	vbe_interface_off;
-	UINT32	vbe_interface_len;
-	
-	UINT16	framebuffer_addr;
-	UINT64	framebuffer_pitch;
-	UINT32	framebuffer_width;
-	UINT32	framebuffer_height;
-	UINT32	framebuffer_bpp;
-	UINT8	framebuffer_type;
-	UINT8	color_info[6];
-}Multiboot2Info PACKED;
-#endif
 
 #endif

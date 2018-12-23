@@ -324,9 +324,7 @@ VOID kern_init(UINT32 MBINFO)
 	FeralVersionMinor = FERAL_VERSION_MINOR;
 	FeralVersionPatch = FERAL_VERSION_PATCH;
 
-	// temporary, hackish, just for now until I implement a proper printk().
-	char* verString = "Starting Feral Kernel Version 00.00.00";
-	KiPrintLine(verString);
+	KiPrintFmt("Starting Feral Kernel Version 00.00.00 %s\n", FERAL_VERSION_SHORT);
 
 	//Row 4, index 30, 32, 34, while we're at it, make it green
 	VgaEntry(VGA_GREEN, VGA_BLACK, ('0'), 30, 1);
@@ -353,6 +351,8 @@ VOID kern_init(UINT32 MBINFO)
 			multiboot_tag_string *mb_as_string = (multiboot_tag_string*)(MultibootInfo);
 			KiPrint("Detected bootloader:  ");
 			KiPrintLine(mb_as_string->string);
+		} else if (type == MULTIBOOT_TAG_TYPE_BOOT_DEVICE) {
+			
 		}
 	}
 	
