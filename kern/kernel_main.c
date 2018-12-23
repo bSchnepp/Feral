@@ -201,7 +201,6 @@ VOID KiSystemStartup(VOID)
 	
 	/* Do we really need this..? */
 	KiPrintLine("If the Boost Software License was not distributed with the OS if it should have, contact your OS vendor with a request for a copy. (this is a test message to demonstrate long strings, and should be removed from release.)");
-	KiPrintLine("");
 	KiPrintLine("Loading all drivers...");
 	FERALSTATUS KiLoadAllDrivers(VOID);
 	KiPrintLine("Preparing execution environment...");
@@ -212,7 +211,7 @@ VOID KiSystemStartup(VOID)
 	VgaMoveCursor(0, 24);
 #endif
 
-	KiPrintFmt("%% It reboots over and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again and over and over and over and over and over and over and over and over and over again %s\n", "Hello, world!");
+	KiPrintFmt("Using math magic, we can equate %i with -1", -1);
 	
 	/* These are macroed away at release builds.  They're eliminated at build time.*/
 	KiDebugPrint("INIT Reached here.");
@@ -346,15 +345,14 @@ VOID kern_init(UINT32 MBINFO)
 		KiStopError(STATUS_ERROR);
 	}
 	
-	
 	for (multiboot_tag *MultibootInfo = (multiboot_tag*)(MBINFO + 8); MultibootInfo->type != 0; MultibootInfo = (multiboot_tag*)((UINT8*)(MultibootInfo) + ((MultibootInfo->size + 7) & ~0x07)))
 	{
 		UINT16 type = MultibootInfo->type;
 		if (type == MULTIBOOT_TAG_TYPE_BOOT_LOADER)
 		{
 			multiboot_tag_string *mb_as_string = (multiboot_tag_string*)(MultibootInfo);
-			KiPrint("Detected bootloader: ");
-			KiPrint(mb_as_string->string);
+			KiPrint("Detected bootloader:  ");
+			KiPrintLine(mb_as_string->string);
 		}
 	}
 	

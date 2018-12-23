@@ -161,12 +161,15 @@ FERALSTATUS KiPrint(STRING string)
 /* 
 	We don't have a kmalloc() yet, so we can't just free and alloc whenever we want.
 	Thus, our internal itoa _must_ be in-place.
+	
+	buf must be at least size 2.
 */
 VOID internalItoa(UINT64 val, STRING buf)
 {
 	if (val == 0)
 	{
-		buf = "0";
+		*buf = '0';
+		*(buf + 1) = '\0';
 		return;
 	}
 	
@@ -178,9 +181,16 @@ VOID internalItoa(UINT64 val, STRING buf)
 		buf[len++]  =  rem + '0';
 	}
 	
-	for (UINT64 i = 0; i < len; ++i)
+	for (UINT64 i = 0; i < len / 2; ++i)
 	{
-		buf[(len - 1) - i] = buf[i];
+		CHAR tmp = buf[i];
+		buf[i] = buf[len - i  - 1];
+		buf[len - i  - 1] = tmp;
+	}
+	
+	if (*buf == '\0')
+	{
+		KiPrintLine("HFKJAHFAKSKJKJ");
 	}
 	
 	/* Terminate the string. */
@@ -196,7 +206,7 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 	CHAR cur = fmt[0];
 	
 	UINT64 index = 0;
-	for (CHAR cur = fmt[0]; cur != '\0'; cur = fmt[++index])
+	for (; cur != '\0'; cur = fmt[++index])
 	{
 		if (cur == '%' && !upState)
 		{
@@ -225,93 +235,6 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 			VgaPutChar(cur);
 		}
 	}
-	
-#if 0
-	/* We'll print in 1024-character buffers at a time.*/
-	CHAR buf[1024];
-	
-	UINT64 index = 0;
-	
-	BOOL lastWasFormat = FALSE;
-	/* Go through everything in fmt. If we come across a %, we need to do something.*/
-	for (const char* ch = fmt; *ch; ch++)
-	{
-		/* We need to check if this is a '%' */
-		if (*ch == '%' && !lastWasFormat)
-		{
-			lastWasFormat = TRUE;
-			continue;
-		}
-		
-		#if 0
-		VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy)
-		#endif
-		/* VGA core is in deparate need of being refactored... */
-		if (lastWasFormat)
-		{
-		switch (*ch)
-		{
-			case '%':
-				VgaAutoEntry(VGA_WHITE, VGA_BLACK, '%');
-				break;
-			
-			case 'i':
-				VgaAutoEntry(VGA_WHITE, VGA_BLACK, *ch);
-				break;
-				
-			default:
-				VgaAutoEntry(VGA_WHITE, VGA_BLACK, *ch);
-				break;
-		}
-		}
-		else
-		{
-			VgaAutoEntry(VGA_WHITE, VGA_BLACK, *ch);
-		}
-	}
-
-
-	CHAR buffer[1024];
-	/* 
-		For now, we have a bug where over 1024 characters causes problems.
-		I'll get around to fixing it when we *really* need it.
-	 */
-	BOOL lastWasFormat = FALSE;
-	UINT64 index = 0;
-	for (UINT32 fmtindex = 0; fmtindex < 1024; fmtindex++)
-	{
-		CHAR c = fmt[fmtindex];
-		if (c != '%' && !lastWasFormat)
-		{
-			buffer[index++] = c;
-		}
-		else if (c == '%' && !lastWasFormat)
-		{
-			lastWasFormat = TRUE;
-		}
-		else if (lastWasFormat)
-		{
-			if (c == '%')
-			{
-				buffer[index++] = '%';
-				lastWasFormat = FALSE;
-			}
-			else if (c == 's')
-			{
-				STRING valistnext;
-				valistnext = va_arg(args, STRING);
-				UINT64 sublen = 0;
-				while (valistnext[sublen] != '\0')
-				{
-					buffer[index++] = valistnext[sublen++];
-				}
-			}
-		}
-	}
-	/*  We're gonna have double newlines for a bit (kludgy TODO hack) */
-	buffer[1023] = '\0';
-	KiPrintLine(buffer);
-#endif
 	va_end(args);
 	KiPrintLine("");
 	return STATUS_SUCCESS;

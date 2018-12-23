@@ -33,10 +33,10 @@ IN THE SOFTWARE.
 #define	CPU_x86_64_FAMILY_BULLDOZER	0x15
 
 /* We *do* however care about jaguar and puma */
-#define CPU_x86_64_FAMILY_JAGUAR	(0x16)
-#define CPU_x86)64_FAMILY_PUMA		(0x16)
+#define CPU_x86_64_FAMILY_JAGUAR		(0x16)
+#define CPU_x86_64_FAMILY_PUMA		(0x16)
 
-#define	CPU_x86_64_FAMILY_ZEN		(0x17)
+#define	CPU_x86_64_FAMILY_ZEN			(0x17)
 
 /* These are all the same die-thingy (*technically*) */
 #define	CPU_x86_64_MODEL_ZEN_NAPLES		(0x01)	/* server */

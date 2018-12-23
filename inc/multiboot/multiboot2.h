@@ -33,13 +33,47 @@ IN THE SOFTWARE.
 	Aim for compatibility with the GNU implementation 
 	(MIT license is too strict for inclusion in Feral kernel, 
 	and lots of resources out there rely on GNU stuff) 
+	
+	(we're ok with gluing the freebsd network stack in FERAL
+	because do we *really* want to write drivers to support hundreds
+	of network cards? We'll get around to jettisoning it after integrating,
+	but that's a long way out.)
+	
+	
+	TODO: figure out how to go purge VLAs here 
+	(VLAs are bad!!!), without breaking the multiboot spec.
+	
+	(it also makes clang go do a big frowny face, and we trust clang)
  */
 
 
-#define MULTIBOOT_TAG_TYPE_END 											(0)
-#define MULTIBOOT_TAG_TYPE_CMD_LINE 									(1)
-#define MULTIBOOT_TAG_TYPE_BOOT_LOADER 								(2)
+#define MULTIBOOT_TAG_TYPE_END 											(0x00)
+#define MULTIBOOT_TAG_TYPE_CMD_LINE 									(0x01)
+#define MULTIBOOT_TAG_TYPE_BOOT_LOADER 								(0x02)
+#define MULTIBOOT_TAG_TYPE_MODULE_TAG								(0x03)
+#define MULTIBOOT_TAG_TYPE_INITIAL_MEMORY_INFO						(0x04)
+#define MULTIBOOT_TAG_TYPE_BOOT_DEVICE								(0x05)
+#define MULTIBOOT_TAG_TYPE_MEM_MAP									(0x06)
+#define MULTIBOOT_TAG_TYPE_VBE_INFO										(0x07)
+#define MULTIBOOT_TAG_TYPE_FRAME_BUFFER								(0x08)
+#define MULTIBOOT_TAG_TYPE_ELF_SECTIONS								(0x09)
+#define MULTIBOOT_TAG_TYPE_APM											(0x0A)
+#define MULTIBOOT_TAG_TYPE_UEFI_32										(0x0B)
+#define MULTIBOOT_TAG_TYPE_UEFI_64										(0x0C)
+#define MULTIBOOT_TAG_TYPE_SMBIOS										(0x0D)
+#define MULTIBOOT_TAG_TYPE_ACPI_LEGACY									(0x0E)
+#define MULTIBOOT_TAG_TYPE_ACPI											(0x0F)
+#define MULTIBOOT_TAG_TYPE_NETWORK									(0x10)
+#define MULTIBOOT_TAG_TYPE_UEFI_MMAP									(0x11)
+#define MULTIBOOT_TAG_TYPE_UEFI_BOOT_SERVICES							(0x12)
+#define MULTIBOOT_TAG_TYPE_UEFI_IMAGE_HANDLE_32						(0x13)
+#define MULTIBOOT_TAG_TYPE_UEFI_IMAGE_HANDLE_64						(0x14)
+#define MULTIBOOT_TAG_TYPE_LOAD_BASE_ADDRESS							(0x15)
 /* TODO */
+
+
+#define MULTIBOOT_ALIGNMENT												(0x08)
+#define MULTIBOOT_BOOTLOADER_MAGIC_NUMBER							(0xE85250D6)
 
 
 #define		MULTIBOOT_BASE_HEADER_TAG_BASE_VALUES			\

@@ -45,8 +45,8 @@ VOID internalVgaPushUp()
 	{
 		for (UINT16 iCol = 0; iCol < currentContext->ScreenWidth; ++iCol)
 		{
-			UINT16 Offset = (iRow * currentContext->ScreenHeight);
-			UINT16 OffsetUp = (iRow-1 * currentContext->ScreenHeight);
+			UINT16 Offset = (iRow * currentContext->ScreenWidth);
+			UINT16 OffsetUp = ((iRow-1) * currentContext->ScreenWidth);
 			currentContext->Framebuffer[OffsetUp + iCol] = currentContext->Framebuffer[Offset + iCol];
 		}
 	}
@@ -137,6 +137,10 @@ VOID VgaTraceCharacters(BOOL value)
  */
 VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy)
 {
+	if (posy >= currentContext->ScreenHeight)
+	{
+		internalVgaPushUp();
+	}
 	ColorValue color = ((background << 4) | (foreground)) << 8;
 	UINT16 offset = posx + (posy * currentContext->ScreenWidth);
 	currentContext->Framebuffer[offset] = ((UINT16)(letter) | color);
@@ -211,6 +215,7 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 		{
 			true_x = 0;
 			true_y++;
+			currentContext->CurrentRow++;
 		}
 		
 		if (c == '\t')
@@ -230,13 +235,18 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 		} else {
 			VgaEntry(foreground, background, c, true_x++, true_y);
 		}
-	} 
+	}
 }
 
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length)
 {
 	DWORD newSpace = (length / currentContext->ScreenWidth) + 1;
 	VgaStringEntry(foreground, background, string, length, currentContext->CurrentCol, currentContext->CurrentRow);
-	currentContext->CurrentRow++;
+	if (currentContext->CurrentRow + 1 >= currentContext->ScreenHeight)
+	{
+		internalVgaPushUp();
+	} else {
+		currentContext->CurrentRow++;
+	}
 	currentContext->CurrentCol = 0;
 }
