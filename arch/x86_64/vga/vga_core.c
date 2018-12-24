@@ -84,7 +84,7 @@ UINT8 VgaPrepareEnvironment(VgaContext *context)
 	context->TextMode = 1;
 	context->FollowingInput = 0;
 	
-	context->CurrentRow = 3;
+	context->CurrentRow = 0;
 	context->CurrentCol = 0;
 	
 	currentContext = context;
@@ -148,7 +148,6 @@ VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, D
 	ColorValue color = ((background << 4) | (foreground)) << 8;
 	UINT16 offset = posx + (posy * currentContext->ScreenWidth);
 	currentContext->Framebuffer[offset] = ((UINT16)(letter) | color);
-	currentContext->CurrentCol = posx;
 }
 
 /**

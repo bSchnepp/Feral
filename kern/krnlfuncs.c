@@ -158,15 +158,19 @@ FERALSTATUS KiPrint(STRING string)
 
 /* Internal function: suppress warning (for now) */
 VOID internalItoa(UINT64 val, STRING buf);
+VOID internalSignedItoa(INT64 val, STRING buf);
 
 /* 
 	We don't have a kmalloc() yet, so we can't just free and alloc whenever we want.
 	Thus, our internal itoa _must_ be in-place.
 	
-	buf must be at least size 2.
+	buf must be at least size 2, and is at most going to use 21 characters.
 */
 VOID internalItoa(UINT64 val, STRING buf)
 {
+	UINT64 len = 0;
+	UINT64 base = 10;
+
 	if (val == 0)
 	{
 		*buf = '0';
@@ -174,8 +178,6 @@ VOID internalItoa(UINT64 val, STRING buf)
 		return;
 	}
 	
-	UINT64 len = 0;
-	UINT64 base = 10;
 	for (UINT64 valCopy = val; valCopy != 0; valCopy /= base)
 	{
 		CHAR rem = valCopy % base;
@@ -189,9 +191,41 @@ VOID internalItoa(UINT64 val, STRING buf)
 		buf[len - i  - 1] = tmp;
 	}
 	
-	if (*buf == '\0')
+	/* Terminate the string. */
+	buf[len] =  '\0';
+}
+
+/* 
+	We don't have a kmalloc() yet, so we can't just free and alloc whenever we want.
+	Thus, our internal itoa _must_ be in-place.
+	
+	buf must be at least size 2, and is at most going to use 22 characters.
+*/
+VOID internalSignedItoa(INT64 val, STRING buf)
+{
+	UINT64 len = 0;
+	UINT64 base = 10;
+	
+	if (val >= 0)
 	{
-		KiPrintLine("HFKJAHFAKSKJKJ");
+		return internalItoa(val, buf);
+	}
+	
+	/* We can assume we're negative: now we can avoid doing / or % on a negative value. */
+	for (INT64 overzero = 0 - val; overzero != 0; overzero /= base)
+	{
+		CHAR rem = overzero % base;
+		buf[len++]  =  rem + '0';
+	}
+	
+	/* Append the -. */
+	buf[len++] = '-';
+	
+	for (UINT64 i = 0; i < len / 2; ++i)
+	{
+		CHAR tmp = buf[i];
+		buf[i] = buf[len - i  - 1];
+		buf[len - i  - 1] = tmp;
 	}
 	
 	/* Terminate the string. */
@@ -207,7 +241,7 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 	
 	UINT64 index = 0;
 	for (CHAR cur = fmt[0]; cur != '\0'; cur = fmt[++index])
-	{
+	{	
 		if (cur == '%' && !upState)
 		{
 			/* Push up */
@@ -220,23 +254,46 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 				valistnext = va_arg(args, STRING);
 				KiPrint(valistnext);
 			} else if (cur == 'i' || cur == 'l') {
-				UINT64 valistnext;
-				valistnext = va_arg(args, UINT64);
+				INT32 valistnext;
+				valistnext = va_arg(args, INT32);
 				/* Create a buffer to store in. Integer is never longer than 20, so... */
 				CHAR buf[21] = {0};
+				internalSignedItoa((UINT64)valistnext, buf);
+				KiPrint(buf);
+			} else if (cur == 'l') {
+				INT64 valistnext;
+				valistnext = va_arg(args, INT64);
+				/* Create a buffer to store in. Integer is never longer than 20, so... */
+				CHAR buf[21] = {0};
+				internalSignedItoa((UINT64)valistnext, buf);
+				KiPrint(buf);
+			} else if (cur == 'u') {
+				UINT64 valistnext;
+				valistnext = va_arg(args, UINT64);
+				/* Create a buffer to store in. Integer is never longer than 21, so... */
+				CHAR buf[22] = {0};
 				internalItoa(valistnext, buf);
 				KiPrint(buf);
-			} else if (cur == '%') {
+			}else if (cur == '%') {
 				KiPrint("%");
 			}
 			/* What do you mean %llu is a thing? */
 			upState = FALSE;
 		} else if (cur >= ' ') {	/* bandage away bug for now. */
 			VgaPutChar(cur);
+		} else if (cur == '\n') {
+			KiPrintLine("");
+		} else if (cur == '\t') {
+			/* Add 8 spaces. */
+			for (int i = 0; i < 8; i++)
+			{
+				KiPrint(" ");
+			}
 		}
+		
+
 	}
 	va_end(args);
-	KiPrintLine("");
 	return STATUS_SUCCESS;
 }
 

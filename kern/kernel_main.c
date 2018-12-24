@@ -212,7 +212,7 @@ VOID KiSystemStartup(VOID)
 	VgaMoveCursor(0, 24);
 #endif
 
-	KiPrintFmt("Using math magic, we can equate %i with -1", -1);
+	KiPrintFmt("Using math magic, we can equate %u with -1\n", -1L);
 	
 	/* These are macroed away at release builds.  They're eliminated at build time.*/
 	KiDebugPrint("INIT Reached here.");
@@ -299,14 +299,13 @@ VOID kern_init(UINT32 MBINFO)
 	VgaContext graphicsContext = {0};
 	UINT8 misc = VgaPrepareEnvironment(&graphicsContext);
 	KiBlankVgaScreen(25, 80, VGA_BLACK);
-	char* string = "Feral kernel booting...";
-	KiPrintLine(string);
+	KiPrintLine("Feral kernel booting...");
 
 	FeralVersionMajor = FERAL_VERSION_MAJOR;
 	FeralVersionMinor = FERAL_VERSION_MINOR;
 	FeralVersionPatch = FERAL_VERSION_PATCH;
 
-	KiPrintFmt("Starting Feral Kernel Version 00.00.00 %s\n", FERAL_VERSION_SHORT);
+	KiPrintFmt("Starting Feral Kernel Version 00.00.00 %s\n\n", FERAL_VERSION_SHORT);
 
 	//Row 4, index 30, 32, 34, while we're at it, make it green
 	VgaEntry(VGA_GREEN, VGA_BLACK, ('0'), 30, 1);
@@ -315,7 +314,6 @@ VOID kern_init(UINT32 MBINFO)
 	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MINOR), 34, 1);
 	VgaEntry(VGA_GREEN, VGA_BLACK, ('0'), 36, 1);
 	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_PATCH), 37, 1);
-	KiPrintLine("");
 	
 	/* First, request the info from the multiboot header. */
 	if (MBINFO & 0x07)
@@ -333,7 +331,8 @@ VOID kern_init(UINT32 MBINFO)
 			KiPrint("Detected bootloader: ");
 			KiPrintLine(mb_as_string->string);
 		} else if (type == MULTIBOOT_TAG_TYPE_BOOT_DEVICE) {
-			
+			multiboot_tag_bootdev *mb_as_boot_dev = (multiboot_tag_bootdev*)(MultibootInfo);
+			KiPrintFmt("Booted from device %i, slice %i, and partition %i.\nThis will be designated as root (A:/)\n",  mb_as_boot_dev->biosdev, mb_as_boot_dev->slice, mb_as_boot_dev->part);
 		}
 	}
 	
