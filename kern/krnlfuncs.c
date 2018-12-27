@@ -176,7 +176,7 @@ VOID internalItoaBaseChange(UINT64 val, STRING buf, UINT8 radix)
 	for (UINT64 valCopy = val; valCopy != 0; valCopy /= radix)
 	{
 		CHAR rem = valCopy % radix;
-		if (rem < 9 && rem >= 0)
+		if (rem <= 9 && rem >= 0)
 		{
 			buf[len++]  =  rem + '0';
 		} else if (rem < 35)
@@ -206,7 +206,6 @@ VOID internalItoaBaseChange(UINT64 val, STRING buf, UINT8 radix)
 */
 VOID internalItoa(UINT64 val, STRING buf)
 {
-	UINT64 base = 10;
 	internalItoaBaseChange(val, buf, 10);
 }
 
