@@ -305,7 +305,7 @@ VOID kern_init(UINT32 MBINFO)
 	FeralVersionMinor = FERAL_VERSION_MINOR;
 	FeralVersionPatch = FERAL_VERSION_PATCH;
 
-	KiPrintFmt("Starting Feral Kernel Version 00.00.00 %s\n\n", FERAL_VERSION_SHORT);
+	KiPrintFmt("Starting Feral Kernel Version %01u.%01u.%01u %s\n\n", FERAL_VERSION_MAJOR, FERAL_VERSION_MINOR, FERAL_VERSION_PATCH, FERAL_VERSION_SHORT);
 
 	//Row 4, index 30, 32, 34, while we're at it, make it green
 	VgaEntry(VGA_GREEN, VGA_BLACK, ('0'), 30, 1);
@@ -333,6 +333,20 @@ VOID kern_init(UINT32 MBINFO)
 		} else if (type == MULTIBOOT_TAG_TYPE_BOOT_DEVICE) {
 			multiboot_tag_bootdev *mb_as_boot_dev = (multiboot_tag_bootdev*)(MultibootInfo);
 			KiPrintFmt("Booted from device %i, slice %i, and partition %i.\nThis will be designated as root (A:/)\n",  mb_as_boot_dev->biosdev, mb_as_boot_dev->slice, mb_as_boot_dev->part);
+		} else if (type == MULTIBOOT_TAG_TYPE_MEM_MAP) {
+			/* Memory map detected... MB2's kludgy mess here makes this a little painful, but we'll go through this step-by-step.*/
+			multiboot_tag_mmap *mb_as_mmap_items = (multiboot_tag_mmap*)(MultibootInfo);
+			multiboot_mmap_entry currentEntry = {0};
+			
+			UINT64 index = 0;
+			UINT64 maxIters = mb_as_mmap_items->size / mb_as_mmap_items->entry_size;
+			UINT64 freemem = 0;
+			for (currentEntry = mb_as_mmap_items->entries[0]; index < maxIters; currentEntry = mb_as_mmap_items->entries[++index])
+			{
+				KiPrintFmt("Possibe memory at: 0x%x, up to 0x%x. (size %u)\n", currentEntry.addr, currentEntry.addr + currentEntry.len, currentEntry.len);
+				freemem += currentEntry.len;
+			}
+			KiPrintFmt("Total free memory: %uMB\n", freemem / (1024 * 1024));
 		}
 	}
 	
@@ -385,7 +399,7 @@ VOID kern_init(UINT32 MBINFO)
 	
 	if ((actualFamily != CPU_x86_64_FAMILY_ZEN))
 	{
-		/* Now we can not feel bad about using SYSCALL and whatnot in particular ways. */
+		/* Now we can not feel bad about over-optimizing for Zen */
 		KiPrintLine("[WARNING] Unsupported CPU: There may be issues running Feral");
 	}
 

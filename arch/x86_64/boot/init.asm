@@ -177,6 +177,10 @@ create_gdt:
 	; kern_start is multiboot-only.
 	; Get around to that later.
 
+	; Force TLB flush
+	mov ecx, cr3
+	mov cr3, ecx
+	
 	; invoke far return to go to 64-bit mode.
 	push 0x08
 	lea eax, [kern_start]
@@ -280,11 +284,11 @@ gdt_64:
 section .bss
 ALIGN 4096
 p4_table:
-	resq 512
+	resb 4096
 p3_table:
-	resq 512
+	resb 4096
 p2_table:
-	resq 512
+	resb 4096
 ALIGN 16
 stack_bottom:
 	resb 16384	; Nice and big (16kb) stack.

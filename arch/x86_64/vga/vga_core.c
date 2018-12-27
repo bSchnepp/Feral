@@ -60,6 +60,8 @@ VOID internalVgaPushUp(VOID)
 	{
 		currentContext->Framebuffer[lastLine + iCol] = (UINT16)('\0') | ((UINT16)(currentContext->Background) << 8);
 	}
+	
+	VgaMoveCursor(currentContext->CurrentCol, currentContext->CurrentRow);
 }
 
 

@@ -45,19 +45,19 @@ clean:
 	## TODO: clean up object files too.
 
 qemu:	iso
-	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 1G --enable-kvm  # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G --enable-kvm  # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
 
 qemu-nokvm:	iso
-	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 1G
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G
 	
 	
 qemu-efi:	iso
 	cp $(EFI_CODE) ./efi.bin
-	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 1G --enable-kvm  -pflash ./efi.bin
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G --enable-kvm  -pflash ./efi.bin
 	rm -rf ./efi.bin
 	
 
 qemu-nokvm-efi:	iso
 	cp $(EFI_CODE) ./efi.bin
-	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 1G -pflash  ./efi.bin
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -pflash  ./efi.bin
 	rm -rf ./efi.bin

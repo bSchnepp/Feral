@@ -159,17 +159,12 @@ FERALSTATUS KiPrint(STRING string)
 /* Internal function: suppress warning (for now) */
 VOID internalItoa(UINT64 val, STRING buf);
 VOID internalSignedItoa(INT64 val, STRING buf);
+VOID internalItoaBaseChange(UINT64 val, STRING buf, UINT8 radix);
 
-/* 
-	We don't have a kmalloc() yet, so we can't just free and alloc whenever we want.
-	Thus, our internal itoa _must_ be in-place.
-	
-	buf must be at least size 2, and is at most going to use 21 characters.
-*/
-VOID internalItoa(UINT64 val, STRING buf)
+
+VOID internalItoaBaseChange(UINT64 val, STRING buf, UINT8 radix)
 {
 	UINT64 len = 0;
-	UINT64 base = 10;
 
 	if (val == 0)
 	{
@@ -178,10 +173,18 @@ VOID internalItoa(UINT64 val, STRING buf)
 		return;
 	}
 	
-	for (UINT64 valCopy = val; valCopy != 0; valCopy /= base)
+	for (UINT64 valCopy = val; valCopy != 0; valCopy /= radix)
 	{
-		CHAR rem = valCopy % base;
-		buf[len++]  =  rem + '0';
+		CHAR rem = valCopy % radix;
+		if (rem < 9 && rem >= 0)
+		{
+			buf[len++]  =  rem + '0';
+		} else if (rem < 35)
+		{
+			buf[len++]  =  (rem - 9) + 'a';
+		} else {
+			buf[len++]  =  (rem - 35) + 'A';
+		}
 	}
 	
 	for (UINT64 i = 0; i < len / 2; ++i)
@@ -194,6 +197,20 @@ VOID internalItoa(UINT64 val, STRING buf)
 	/* Terminate the string. */
 	buf[len] =  '\0';
 }
+
+/* 
+	We don't have a kmalloc() yet, so we can't just free and alloc whenever we want.
+	Thus, our internal itoa _must_ be in-place.
+	
+	buf must be at least size 2, and is at most going to use 21 characters.
+*/
+VOID internalItoa(UINT64 val, STRING buf)
+{
+	UINT64 base = 10;
+	internalItoaBaseChange(val, buf, 10);
+}
+
+
 
 /* 
 	We don't have a kmalloc() yet, so we can't just free and alloc whenever we want.
@@ -238,6 +255,7 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 	va_start(args, fmt);
 
 	BOOL upState = FALSE;
+	UINT8 repeatedCount = 0;
 	
 	UINT64 index = 0;
 	for (CHAR cur = fmt[0]; cur != '\0'; cur = fmt[++index])
@@ -274,8 +292,28 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 				CHAR buf[22] = {0};
 				internalItoa(valistnext, buf);
 				KiPrint(buf);
-			}else if (cur == '%') {
+			} else if (cur == 'x') {
+				UINT64 valistnext;
+				valistnext = va_arg(args, UINT64);
+				/* Create a buffer to store in. Integer is never longer than 16, so... */
+				CHAR buf[17] = {0};
+				internalItoaBaseChange(valistnext, buf, 16);
+				KiPrint(buf);
+			} else if (cur == '%') {
 				KiPrint("%");
+			} else if(cur >= '0' && cur <= '9')
+			{
+				if (fmt[++index] != '\0')
+				{
+					/*  FIXME: fully support it (we only lead with 0-9, and don't count places.) */
+					/* What are we repeating? */
+					repeatedCount = (UINT8)(fmt[index] - '0');
+					/* Go through it some times. */
+					for (UINT8 c = 0; c < repeatedCount; c++)
+					{
+						VgaPutChar(cur);
+					}
+				}
 			}
 			/* What do you mean %llu is a thing? */
 			upState = FALSE;
