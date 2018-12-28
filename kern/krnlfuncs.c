@@ -181,9 +181,9 @@ VOID internalItoaBaseChange(UINT64 val, STRING buf, UINT8 radix)
 			buf[len++]  =  rem + '0';
 		} else if (rem < 35)
 		{
-			buf[len++]  =  (rem - 9) + 'a';
+			buf[len++]  =  (rem - 10) + 'a';
 		} else {
-			buf[len++]  =  (rem - 35) + 'A';
+			buf[len++]  =  (rem - 36) + 'A';
 		}
 	}
 	

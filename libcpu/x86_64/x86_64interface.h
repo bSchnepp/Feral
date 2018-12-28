@@ -30,14 +30,27 @@ IN THE SOFTWARE.
 #define _FERAL_LIBCPU_X86_64_H_
  
 struct x8664Registers;
+struct x87Registers;
+
+
+/* TODO */
+#define RFLAGS_CARRY_FLAG_BIT				(0)
+#define RFLAGS_PARITY_FLAG_BIT			(2)
+ #define RFLAGS_ADJUST_FLAG_BIT			(4)
+ #define RFLAGS_ZERO_FLAG_BIT				(6)
+ #define RFLAGS_SIGN_FLAG_BIT				(7)
+ #define RFLAGS_TRAP_FLAG_BIT				(8)
+ #define RFLAGS_INTERRUPTION_FLAG_BIT	(9)
+ 
  
 typedef struct x8664Core
 {
-	char CpuVendorName[12];	// "FERAL FERAL!"
-	char CpuProductName[48];	// "FERAL FERAL!  x86-64 Compatible Processor (Zen1?)"	(something absurd here)
+	char CpuVendorName[12];	/* "FERAL FERAL!" */
+	char CpuProductName[48];	/* "FERAL Zenlike Virtual CPU 1950  N-Core Processor" */
 	UINT64 NumCores;
-	DOUBLE* Clockspeed;		// 4100000000.0000000 Hz (4.1Ghz)
+	DOUBLE* Clockspeed;		/* 4100000000.0000000 Hz (4.1Ghz) */
 	struct x8664Registers* cores;
+	struct x87Registers* floatingpointunits;
 	/* TODO */
 }
 
@@ -56,8 +69,19 @@ typedef struct x8664Registers
 	UINT64 rip;
 	UINT64 rsp;
 	UINT64 rbp;
+	UINT64 rsi;
+	UINT64 rdi;
 	
 	UINT64 rflags;
+	
+	UINT64 r8;
+	UINT64 r9;
+	UINT64 r10;
+	UINT64 r11;
+	UINT64 r12;
+	UINT64 r13;
+	UINT64 r14;
+	UINT64 r15;
 	/* TODO */
 }x8664Registers;
  

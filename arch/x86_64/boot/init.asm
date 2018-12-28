@@ -11,7 +11,8 @@ header_start:
 	dd MULTIBOOT_ARCH_			; We're on the x86 arch.
 	dd MULTIBOOT_SIZE_			; Size of the header.
 
-	dd 0x100000000 - (MULTIBOOT_MAGIC + MULTIBOOT_ARCH_ + MULTIBOOT_SIZE_)	
+	; Try to avoid negative numbers in general (they can cause compiler issues in rare, specific cases.)
+	dd 0x100000000 - (MULTIBOOT_MAGIC + MULTIBOOT_ARCH_ + MULTIBOOT_SIZE_)
 
 	; Optional Multiboot2 tags should show up here... we'll probably ignore them anyway.
 
@@ -39,7 +40,7 @@ boot_panic:
 	jmp $
 	
 boot_panic_invalid_arch:
-	mov dword [0xB8000], 0x4F004F00		; Address b8000 is VGA memory. As such, by dumping some data there (1F001F00), we create the "blue box of death".
+	mov dword [0xB8000], 0x4F004F00		; If attempting to boot on an IA-32, we'll show the red box of death using the same thing above.
 	mov dword [0xB8004], 0x4F004F00
 	mov dword [0xB80A0], 0x4F004F00
 	mov dword [0xB80A4], 0x4F004F00
@@ -53,8 +54,8 @@ _start:
 	mov esp, stack_top	; Set the stack up.
 
 	; Check for multiboot 2 compliance.
-	cmp eax, 0x36D76289
-	jne boot_panic
+	sub eax, 0x36D76289	; use sub over cmp when we have an excuse for it.
+	jnz boot_panic
 	
 	; Push ebx for when we need it later. (holds multiboot struct)
 	mov [multiboot_value], ebx

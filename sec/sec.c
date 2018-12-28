@@ -45,14 +45,15 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 	
 	KiPrintLine("");
 	
-	KiPrintFmt("Error code: %i", Status);
-	return STATUS_ERROR;
+	KiPrintFmt("Error code: %x", Status);
 	/* Todo: be more useful for error checking */
 #endif
 	for (;;)
 	{
 		/* Hang (for now) */
 	}
+	
+	return STATUS_ERROR;
 }
 
 __attribute__((noreturn))

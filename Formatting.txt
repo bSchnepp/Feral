@@ -156,3 +156,27 @@ a signed number should always be compared against a signed one.
 static variables being reused across source code files should be avoided.
 
 
+
+
+Code where a value may have 2 differing values after an initial arithmetic operation should be avoided where
+possible.
+ie,
+
+if (a < 14)
+{
+	b = 10;
+} else {
+	b = 5;
+}
+
+This should instead be written as follows, assuming the b = 5 case is more common:
+
+b = 5;
+if (a < 14)
+{
+	b = 10;
+}
+
+
+This is part of the Zen optimization guide (page 37, note 5), and thus
+must be included as part of our style guide.

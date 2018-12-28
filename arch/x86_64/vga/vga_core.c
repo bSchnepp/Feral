@@ -98,6 +98,10 @@ UINT8 VgaPrepareEnvironment(VgaContext *context)
  */
 VOID VgaMoveCursor(DWORD PosX, DWORD PosY)
 {
+	if (!currentContext->CursorEnabled)
+	{
+		return;
+	}
 	UINT16 FinalPos = (UINT16)((PosY * (currentContext->ScreenWidth)) + PosX);
 	x86outb(VGA_FB_COMMAND_PORT, VGA_LOW_BYTE_COMMAND);
 	x86outb(VGA_FB_DATA_PORT, (UINT8)((FinalPos) & (0x00FF)));

@@ -322,6 +322,8 @@ VOID kern_init(UINT32 MBINFO)
 		KiStopError(STATUS_ERROR);
 	}
 	
+	UINT64 freemem = 0;
+	
 	for (multiboot_tag *MultibootInfo = (multiboot_tag*)((UINT64)(MBINFO + 8)); MultibootInfo->type != 0; MultibootInfo = (multiboot_tag*)((UINT8*)(MultibootInfo) + ((MultibootInfo->size + 7) & ~0x07)))
 	{
 		UINT16 type = MultibootInfo->type;
@@ -340,7 +342,6 @@ VOID kern_init(UINT32 MBINFO)
 			
 			UINT64 index = 0;
 			UINT64 maxIters = mb_as_mmap_items->size / mb_as_mmap_items->entry_size;
-			UINT64 freemem = 0;
 			for (currentEntry = mb_as_mmap_items->entries[0]; index < maxIters; currentEntry = mb_as_mmap_items->entries[++index])
 			{
 				KiPrintFmt("Possibe memory at: 0x%x, up to 0x%x. (size %u)\n", currentEntry.addr, currentEntry.addr + currentEntry.len, currentEntry.len);
@@ -348,6 +349,12 @@ VOID kern_init(UINT32 MBINFO)
 			}
 			KiPrintFmt("Total free memory: %uMB\n", freemem / (1024 * 1024));
 		}
+	}
+	
+	if (freemem == 0)
+	{
+		/* We somehow have no free memory? */
+		KiStopError(STATUS_SEVERITY_ERROR);
 	}
 	
 	// We'd like to have some information about the CPU before we boot further.
