@@ -323,6 +323,8 @@ VOID kern_init(UINT32 MBINFO)
 	}
 	
 	UINT64 freemem = 0;
+	UINT_PTR kernel_start = 0;
+	UINT64 kernel_size = 0;
 	
 	for (multiboot_tag *MultibootInfo = (multiboot_tag*)((UINT64)(MBINFO + 8)); MultibootInfo->type != 0; MultibootInfo = (multiboot_tag*)((UINT8*)(MultibootInfo) + ((MultibootInfo->size + 7) & ~0x07)))
 	{
@@ -347,9 +349,20 @@ VOID kern_init(UINT32 MBINFO)
 				KiPrintFmt("Possibe memory at: 0x%x, up to 0x%x. (size %u)\n", currentEntry.addr, currentEntry.addr + currentEntry.len, currentEntry.len);
 				freemem += currentEntry.len;
 			}
-			KiPrintFmt("Total free memory: %uMB\n", freemem / (1024 * 1024));
+		} else if (type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS)
+		{
+			/* For now, we'll just use the ELF sections tag. */
+			multiboot_tag_elf_sections *mb_as_elf = (multiboot_tag_elf_sections*)(MultibootInfo);
+			
+			/* Subtract our memory from the free memory, and then update kernel size and kernel address. */
+			kernel_size = mb_as_elf->size;
+			freemem -= kernel_size;
+			
+			/* TODO */
+			kernel_start = 0;
 		}
 	}
+	KiPrintFmt("Total free memory: %uMB (Kernel is %u bytes big)\n", freemem / (1024 * 1024), kernel_size);
 	
 	if (freemem == 0)
 	{
