@@ -27,58 +27,20 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
+#include <fs/nx-files/nx.h>
+
 #ifndef _FERAL_FS_NX_H_
 #define _FERAL_FS_NX_H_
 
-/* 0 is always invalid, and lets us know of filesystem corruption. */
+/* The various things this volume can have in it... */
+typedef UINT64 NxFilesVolumeField;
 
-typedef enum NxFilesMountOptions
+
+
+typedef struct NxFilesVolumeHeader
 {
-	NX_FILES_FS_READ = 		(1 << 0),
-	NX_FILES_FS_WRITE = 		(1 << 1),
-	NX_FILES_FS_DISK_QUOTA = 	(1 << 2),
-}NxFilesMountOptions;
-
-typedef enum NxFilesAttributeType
-{
-	NX_FILES_TYPE_STRING = 		(1 << 0),
-	NX_FILES_TYPE_BOOL8 = 		(1 << 1),	
-	NX_FILES_TYPE_UINT8 = 		(1 << 2),
-	NX_FILES_TYPE_UINT16 = 		(1 << 3),
-	NX_FILES_TYPE_UINT32 = 		(1 << 4),
-	NX_FILES_TYPE_UINT64 =		(1 << 5),
-	NX_FILES_TYPE_UINT128 = 	(1 << 6),
-
-
-
-	NX_FILES_TYPE_FLOAT =		(1 << 30),	/* dangerous?? */
-	NX_FILES_TYPE_DOUBLE =		(1 << 31),	/* dangerous?? */
-}NxFilesAttributeType;
-
-typedef struct NxFilesAttribute
-{
-	NxFilesAttributeType type;
-	union
-	{
-		WSTRING string;
-		UINT64	intVal[2];
-		DOUBLE	numVal;
-		UINT8	boolVal;
-	};
-}NxFilesAttribute;
-
-
-
-/*
-	We store 2 copies of the first 512 bytes of the partition: One at 0 bytes, and one at N/2 (- 512).
-	Note that N is the size of the disk in bytes.
-	
-	We might store an additional copy at (N - 512): we need this constant offset so we can
-	actually write 512 bytes. This way, we back up the MBR several times. (We may change this to a 1G area,
-	and use it instead for backing up the EFI system partition)
- */
-
-
-FERALSTATUS FsMountFilesystem(STRING DriveLetter, STRING Location, STRING DiskLabel);
+	NxFilesAttribute MountLocation;
+	NxFilesAttribute 
+}NxFilesVolumeHeader;
 
 #endif

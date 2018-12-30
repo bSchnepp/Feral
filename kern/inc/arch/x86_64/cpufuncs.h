@@ -30,15 +30,16 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 
 /* does literally anyone care about bulldozer anymore */
-#define	CPU_x86_64_FAMILY_BULLDOZER	0x15
+#define	CPU_x86_64_FAMILY_BULLDOZER	(0x15)
 
 /* We *do* however care about jaguar and puma */
 #define CPU_x86_64_FAMILY_JAGUAR		(0x16)
 #define CPU_x86_64_FAMILY_PUMA		(0x16)
 
+/* What we (actually) care about */
 #define	CPU_x86_64_FAMILY_ZEN			(0x17)
 
-/* These are all the same die-thingy (*technically*) */
+/* These are all the same (*technically*) */
 #define	CPU_x86_64_MODEL_ZEN_NAPLES		(0x01)	/* server */
 #define	CPU_x86_64_MODEL_ZEN_WHITEHAVEN	(0x01) 	/* high-end desktop */
 #define	CPU_x86_64_MODEL_ZEN_SUMMIT_RIDGE	(0x01)	/* mainstream */
@@ -99,7 +100,7 @@ typedef enum
 }CPUID_FEATURES;	//TODO...
 
 void cpuid_vendor_func(DWORD* part1, DWORD* part2, DWORD* part3);
-void cpuid_brand_name(DWORD* part1, DWORD* part2, DWORD* part3, DWORD* part4);	// See comment in kernel_main.c for usage. Cleanup later.
+void cpuid_brand_name(DWORD* part1, DWORD* part2, DWORD* part3, DWORD* part4);	/* See comment in kernel_main.c for usage. Cleanup later. */
 UINT32	cpuid_family_number(void);
 
 /* Useful ("stable") functions. Refactor elsewhere later. */

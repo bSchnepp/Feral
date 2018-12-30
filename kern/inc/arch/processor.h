@@ -30,11 +30,23 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
+typedef struct THREAD_INFO
+{
+	UINT64 ThreadId;		/* On the physical processor, what thread are we? (ie, thread 0, 1, 2, 3 for 4-way SMT) */
+
+	UINT64 TaskCount;
+	/* TODO: task list of this processor/ */
+
+	BOOL ThreadEnabled;		/* Is this thread currently working? */
+
+}
+
 typedef struct PROCESSOR_INFO
 {
 	UINTN ProcessorNumber;
-	BOOL DedicatedToApplication;	// Did we dedicate this processor to one application?
-	BOOL SMTSupported;		// Does this core support SMT?
+	BOOL DedicatedToApplication;	/* Did we dedicate this processor to one application? 	*/
+	BOOL SMTSupported;		/* Does this core support SMT?				*/
+	BOOL SVMSupported;		/* Supported by Secure Virtual Machine ?		*/
 }PROCESSOR_INFO;
 
 typedef struct SYSTEM_INFO
@@ -53,13 +65,13 @@ typedef struct SYSTEM_INFO
 								   for at least a little while to get design right the first time before moving on.*/
 }SYSTEM_INFO;
 
-#define PROCESSOR_ARCH_IA32			0x014C	// We don't _really_ support 32-bit X86, but we might want to later.
+#define PROCESSOR_ARCH_IA32			0x014C	/* We don't _really_ support 32-bit X86, but we might want to later.	*/
 #define PROCESSOR_ARCH_X86_64			0x8664
 #define PROCESSOR_ARCH_IA64			0x0200
 #define PROCESSOR_ARCH_AARCH64			0xAA64
-#define PROCESSOR_ARCH_AARCH32			0xAA32	// Only support those weird versions which can do more than 4GB of RAM.
-#define PROCESSOR_ARCH_RISCV32			0x5032	// Only support if we _really have to_.
-#define PROCESSOR_ARCH_RISCV64			0x5064	// We expect RVGC64.
+#define PROCESSOR_ARCH_AARCH32			0xAA32	/* Only support those weird versions which can do more than 4GB of RAM.	*/
+#define PROCESSOR_ARCH_RISCV32			0x5032	/* Only support if we _really have to_.	*/
+#define PROCESSOR_ARCH_RISCV64			0x5064	/* We expect RVGC64.	*/
 #define PROCESSOR_ARCH_RISCV128			0x5128
 
 
