@@ -117,6 +117,8 @@ in the kernel. For example, an implied int assignment is not allowed, nor is an 
 where, while existing, is not explicitly declared as a function name elsewhere and prior to it's invokation,
 ie, "int somefunctionFoo()", before "somefunctionFoo()" is called.
 
+All variables must be declared with an explicit type.
+
 
 All functions in the kernel must be called using the cdecl calling convention. When this is not possible,
 the function in question must have a driver function to call it using the cdecl calling convention. The exception

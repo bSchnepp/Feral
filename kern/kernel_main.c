@@ -343,7 +343,7 @@ VOID kern_init(UINT32 MBINFO)
 			multiboot_mmap_entry currentEntry = {0};
 			
 			UINT64 index = 0;
-			UINT64 maxIters = mb_as_mmap_items->size / mb_as_mmap_items->entry_size;
+			UINT64 maxIters = (mb_as_mmap_items->size - 12) / mb_as_mmap_items->entry_size;
 			for (currentEntry = mb_as_mmap_items->entries[0]; index < maxIters; currentEntry = mb_as_mmap_items->entries[++index])
 			{
 				KiPrintFmt("Possibe memory at: 0x%x, up to 0x%x. (size %u)\n", currentEntry.addr, currentEntry.addr + currentEntry.len, currentEntry.len);
@@ -357,6 +357,9 @@ VOID kern_init(UINT32 MBINFO)
 			/* Subtract our memory from the free memory, and then update kernel size and kernel address. */
 			kernel_size = mb_as_elf->size;
 			freemem -= kernel_size;
+			
+			UINT64 index = 0;
+			UINT64 maxIters = (mb_as_elf->size - 40) / mb_as_elf->entsize;
 			
 			/* TODO */
 			kernel_start = 0;
