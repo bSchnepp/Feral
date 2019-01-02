@@ -42,6 +42,7 @@ IN THE SOFTWARE.
 #if defined(__x86_64__) || defined(__i386__)
 #ifndef FERAL_BUILD_STANDALONE_UEFI_
 #include "multiboot/multiboot2.h"
+#include <drivers/proc/elf/elf.h>
 #endif
 #endif
 
@@ -64,9 +65,13 @@ static UINT8 FeralVersionPatch;
  */
 
 #if defined(KERN_DEBUG)
-#define ILOVEBEAR18 (1)	/* 
+#define BOUNCING_MONITOR_BEAR (0x01)	
+						/* 
 							flag for experimental kernel features, intentionally something strange such that someone 
 							doesn't see this in an automated flag thing and just turns it on without knowing why. 
+							
+							(We'll change this every once in a while to ensure we catch and delete things that should
+							have been trimmed away and refactored.)
 						*/
 #endif
 
@@ -102,7 +107,7 @@ static WSTRING RootFsLocation;	/* Where is the root? This should normally be A:/
 			Network resources would be accessed via:
 			\\.\0x93252290D23F0B5E84B58AC3F8C4CD62D630C525B91FB962B14C7B63E5DFD2CDBD273C09886A51AE4EA6F806C8A3AE55FB5C60553D7121A6CBC304C3B22916BDD63F5AF36688728A1458F7763320B2FB96972A33644A401431E0A6024370FC/index.html
 			for example, where without specifying 'ipv4::', 'ipv6::', '9p::', etc. before the address, we assume RENEGADE.
-			Obviously we'll implement a domain service so that mass of numbers isn't required.
+			Obviously we'll implement a domain service so that mass of numbers isn't required. (Do you really want to memorize that mess for *every single website*?)
 
 			It also assigns drive letters (the system default 'A', secondary drives get some way of assigning a letter to them, 
 			(usually in alphabetical order (A:/,, B:/, ...,  AB:/, ...,  AZ:/, AAA:/, AAB:/, and so on)
@@ -134,7 +139,8 @@ static SYSTEM_INFO KernelSystemInfo = {};
 	Work on being self-hosting: Feral needs to compile on Feral.
 	Create a generic, VESA-compatible desktop environment. Assume legacy GPUs don't exist, and we're eventually going to need to support EFI stuff.
 	Network driver for whatever NIC I happen to have lying around. Look for supporting whatever wifi chip is in my laptop too. (Hopefully an easy one.) Most of mine are Chipzilla (or clones), but not all of them.
-	Create a vega10 GPU driver, get Vulkan-based desktop ready. (we do not care about vega11 or vega20 just yet, primarilly because I dont have the hardware, we *do* care about vega12 though.)
+	Create a vega10 GPU driver, get Vulkan-based desktop ready. (we also care about vega11 and vega12, but not vega20: vega11/12 are low power Vegas with minimal changes, vega20 is a discrete card I don't have.)
+	(Also it would be nice to not worry about accidentally blowing up a $500 graphics card.)
 	We don't care about green GPUs at all. It's much too hard to support, overly complex, and no official reference drivers to peek at when lost at what to do.
 	Create an alternative to the LiveCD tools we need currently, create a bootloader that understands (U)EFI. We implement UEFI ourselves, because tangling with inconsistently applied BSD license 
 	is too much effort (not some easy shell script, and at that, I probably won't use bash on Waypoint, but maybe something more Virtual Memory System-y. We're aiming to not be *NIX anyway, so.).
@@ -145,7 +151,8 @@ static SYSTEM_INFO KernelSystemInfo = {};
 	Get a working Vulkan driver for the vega10 GPU (Do some magic to port AMDVLK (is this possible?) and/or RADV or something, then just modify them as needed?).
 	Port some open source games over, see if we can get it to outperform some other OSes just by running on Feral Waypoint. (specifically, everything we can from the 90s)
 	We probably can't outperform Linux, but we'd better outperform some other desktop operating systems...
-		(we're *always* 20-30 years late so we'd better catch up........). Linux tends to outperform RedmondOS (esp. CPU efficiency: TR4's 2990WX nearly double performance in many workloads) anyway. (Otherwise we'll *never* be taken seriously, instead of just "probably won't be")
+		(we're *always* 20-30 years late so we'd better catch up........). Linux tends to outperform RedmondOS (esp. CPU efficiency: TR4's 2990WX (allegedy, I don't actually have the hardware) nearly double performance in many workloads) anyway. 
+		(Otherwise we'll *never* be taken seriously, instead of just "probably won't be": it'd be nice to go beyond a little hobby project into something people actually use.)
 	???
 
 	Since we don't want to support anything older than the vega10 GPU, we should just cut out the unnecessary parts of whatever drivers we do adapt.
@@ -153,11 +160,15 @@ static SYSTEM_INFO KernelSystemInfo = {};
 	Migrate VCS server from ext4/btrfs/zfs to FeralFS. (again, dogfooding!!!!) Port FeralFS to BSD and Linux. The idea is that if it's bad, we'll fix it before bad things happen.
 		Better put,  "We don't like garbage, so when we use garbage, we make garbage not garbage because otherwise we'd be using garbage, and we don't like garbage."
 	
-	Port mesa or get some graphics stack running atop Feral's existing driver structure, then fork Firefox and use it as system's web browser (and/or replace Gecko, move JS engine to ChakraCore, ...?).
-	Hope a ReactOS compatibility layer falls out of the sky, so we can run some stuff, benchmark it, etc. The main thing is that we want at least 5% performance improvement over RedmondOS wherever we can get it.
+	Polaris seems to be having a very, *very* long life time. Maybe consider supporting it? (Should we even keep up with GCN, and instead focus on Arcturus, whenever those come out?)
+		
+	Get a web browser running: possibly fork Gecko, integrate it with V8 or ChakraCore? Look into building one from scratch? Just needs to be enough to *barely* comply with HTML5, sans the DRM stuff.
+	(at least pass the ACID2 test, and have at least HTML4 support.)
+	We don't *care* about Blink compatibility, we care about standards compatibility.
 	
 	Consider C# on Feral, port WinForms and all that whole stuff. (Mainly, porting Mono)
 	
+	Get a 5% performance improvement in any and all cirumstances where OS architecture matters over RedmondOS wherever we can get it. (ie, filesystems, memory allocation, especially the scheduler, etc.)
 	
 	__before any full 0.0.1 release, ensure and triple-check that we've removed __all__ trademarked phrases in the kernel. We don't want to put up with the legal nonsense.
  */
@@ -326,7 +337,10 @@ VOID kern_init(UINT32 MBINFO)
 	UINT_PTR kernel_start = 0;
 	UINT64 kernel_size = 0;
 	
-	for (multiboot_tag *MultibootInfo = (multiboot_tag*)((UINT64)(MBINFO + 8)); MultibootInfo->type != 0; MultibootInfo = (multiboot_tag*)((UINT8*)(MultibootInfo) + ((MultibootInfo->size + 7) & ~0x07)))
+	/* We need to do some kludgy pointer magic to get this to work. We interpret a pointer as an integer when booting, now need to reinterpret cast to a proper type. */
+	/* (We need to treat as an integer initially so that we can check the validity of it: it _must_ be aligned properly. */
+	for (multiboot_tag *MultibootInfo = (multiboot_tag*)((UINT64)(MBINFO + 8)); MultibootInfo->type != MULTIBOOT_TAG_TYPE_END; 
+	MultibootInfo = (multiboot_tag*)((UINT8*)(MultibootInfo) + ((MultibootInfo->size + 7) & ~0x07)))
 	{
 		UINT16 type = MultibootInfo->type;
 		if (type == MULTIBOOT_TAG_TYPE_BOOT_LOADER)
@@ -349,8 +363,7 @@ VOID kern_init(UINT32 MBINFO)
 				KiPrintFmt("Possibe memory at: 0x%x, up to 0x%x. (size %u)\n", currentEntry.addr, currentEntry.addr + currentEntry.len, currentEntry.len);
 				freemem += currentEntry.len;
 			}
-		} else if (type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS)
-		{
+		} else if (type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS) {
 			/* For now, we'll just use the ELF sections tag. */
 			multiboot_tag_elf_sections *mb_as_elf = (multiboot_tag_elf_sections*)(MultibootInfo);
 			
@@ -365,6 +378,7 @@ VOID kern_init(UINT32 MBINFO)
 			kernel_start = 0;
 		}
 	}
+	
 	KiPrintFmt("Total free memory: %uMB (Kernel is %u bytes big)\n", freemem / (1024 * 1024), kernel_size);
 	
 	if (freemem == 0)

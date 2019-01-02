@@ -2,7 +2,7 @@
 
 include ../Makerules
 
-CFLAGS += -I./inc -I../inc
+CFLAGS += -I./inc -I../inc -I../
 
 KERN_FILES != ls ./*.c
 

@@ -30,6 +30,57 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 
 
+#define PT_NULL					(0x00)
+#define PT_LOAD					(0x01)
+#define PT_DYNAMIC				(0x02)
+#define PT_INTERP					(0x03)
+#define PT_NOTE					(0x04)
+#define PT_SHLIB					(0x05)
+#define PT_PHDR					(0x06)
+
+#define PT_LOOS					(0x60000000)
+#define PT_HIOS					(0x6FFFFFFF)
+#define PT_LOPROC					(0x70000000)
+#define PT_HIPROC					(0x7FFFFFFF)
+
+#define SHT_NULL 					(0x00)
+#define SHT_PROGBITS				(0x01)
+#define SHT_SYMTAB				(0x02)
+#define SHT_STRTAB					(0x03)
+#define SHT_RELA					(0x04)
+#define SHT_HASH					(0x05)
+#define SHT_DYNAMIC				(0x06)
+#define SHT_NOTE					(0x07)
+#define SHT_NOBITS					(0x08)
+#define SHT_REL						(0x09)
+#define SHT_SHLIB					(0x0A)
+#define SHT_DYNSYM				(0x0B)
+
+#define SHT_INIT_ARRAY				(0x0E)
+#define SHT_FINI_ARRAY				(0x0F)
+
+#define SHT_PREINIT_ARRAY			(0x10)
+#define SHT_GROUP					(0x11)
+#define SHT_SYMTAB_SHNDX		(0x12)
+
+#define SHT_SHT_LOOS				(0x60000000)
+
+#define SHF_WRITE					(0x001)
+#define SHF_ALLOC					(0x002)
+#define SHF_EXECINSTR				(0x004)
+#define SHF_MERGE					(0x010)
+#define SHF_STRINGS				(0x020)
+#define SHF_INFO_LINK				(0x040)
+#define SHF_LINK_ORDER			(0x080)
+#define SHF_OS_NONCONFIRMING	(0x100)
+#define SHF_GROUP					(0x200)
+#define SHF_TLS						(0x400)
+
+#define SHF_MASKOS				(0x0FF00000)
+#define SHF_MASKPROC				(0xF0000000)
+#define SHF_ORDERED				(0x40000000)
+#define SHF_EXCLUDE				(0x80000000)
+
 typedef enum
 {
 	ELF_RELOCATABLE = 0,
@@ -45,7 +96,7 @@ typedef struct ElfHeader64
 	UINT32 magic;	//ELF magic number...
 	UINT8  cpu_bitsz;
 	UINT8  cpu_endian;
-	UINT8  e_version;
+	UINT8  elf_version;
 	UINT8  e_identifier;
 	UINT64 e_padding;
 	UINT16 e_type;
@@ -66,7 +117,7 @@ typedef struct ElfHeader32
 	UINT32 magic;	//ELF magic number...
 	UINT8  cpu_bitsz;
 	UINT8  cpu_endian;
-	UINT8  e_version;
+	UINT8  elf_version;
 	UINT8  e_identifier;
 	UINT64 e_padding;
 	UINT16 e_type;
@@ -81,5 +132,65 @@ typedef struct ElfHeader32
 	UINT16 e_phnum;
 	UINT16 e_shentsize;
 }ElfHeader32;
+
+typedef struct ElfProgramHeader64
+{
+	UINT32 p_type;
+	UINT32 p_flags;
+	UINT64 p_offset;
+	UINT64 p_vaddr;
+	UINT64 p_paddr;
+	UINT64 p_filesz;
+	UINT64 p_memsz;
+	UINT64 p_align;
+}ElfProgramHeader64;
+
+typedef struct ElfSectionHeader64
+{
+	UINT32 sh_name;
+	UINT32 sh_type;
+	
+	UINT64 sh_flags;
+	
+	UINT64 sh_addr;
+	UINT64 sh_offset;
+	UINT64 sh_size;
+	
+	UINT32 sh_link;
+	UINT32 sh_info;
+	
+	UINT64 sh_addralign;
+	UINT64 sh_entsize;
+}ElfSectionHeader64;
+
+typedef struct ElfProgramHeader32
+{
+	UINT32 p_type;
+	UINT32 p_offset;
+	UINT32 p_vaddr;
+	UINT32 p_paddr;
+	UINT32 p_filesz;
+	UINT32 p_memsz;
+	UINT32 p_flags;
+	UINT32 p_align;
+}ElfProgramHeader32;
+
+typedef struct ElfSectionHeader32
+{
+	UINT32 sh_name;
+	UINT32 sh_type;
+	
+	UINT64 sh_flags;
+	
+	UINT32 sh_addr;
+	UINT32 sh_offset;
+	UINT32 sh_size;
+	
+	UINT32 sh_link;
+	UINT32 sh_info;
+	
+	UINT32 sh_addralign;
+	UINT32 sh_entsize;
+}ElfSectionHeader32;
 
 #endif

@@ -34,6 +34,17 @@ IN THE SOFTWARE.
 #include <arch/x86_64/vga/vga.h>
 #endif
 
+/* TODO: Refactor to have return as FERALSTATUS, and an INOUT parameter for the string. */
+STRING KiGetErrorType(IN FERALSTATUS Status)
+{
+	if (Status == STATUS_STACK_GUARD_VIOLATION)
+	{
+		return "STATUS_STACK_GUARD_VIOLATION";
+	} else {
+		/* TODO */
+	}
+}
+
 FERALSTATUS KiStopError(IN FERALSTATUS Status)
 {
 #if defined(__x86_64__)
@@ -42,12 +53,20 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 	UINTN length = 0;
 	KiGetStringLength(errorMsg, &length);
 	VgaPrintln(VGA_WHITE, VGA_BLUE, errorMsg, length);
+#endif
+	KiPrintFmt("If this is the first time this error has occured, try restarting your computer.\n");
 	
 	KiPrintLine("");
 	
-	KiPrintFmt("Error code: %x", Status);
-	/* Todo: be more useful for error checking */
-#endif
+	KiPrintFmt("If the error persists, contact tech support and provide the following info:\n");
+	KiPrintFmt("Bug Check: 0x%x: %s\n", Status, KiGetErrorType(Status));
+	
+	/* TODO */
+	/* KiPrintFmt("Bug Check occured at epoch time %l\n", (KiGetCurrentTime())); */
+	/* KiPrintFmt("System uptime is %l\n", (KiGetCurrentUptime() / 1000)); */
+	/* KiPrintFmt("System had %l tasks running\n", (KiGetTaskCount())); */
+	
+	/* KiPrintFmt("Feral will reboot in 15 seconds: log contents will be written to A:/System/Logs.\n"); */
 	for (;;)
 	{
 		/* Hang (for now) */
@@ -59,8 +78,7 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 __attribute__((noreturn))
 VOID __stack_chk_fail(void)
 {
-	/* This is _horribly_ primitive, but for now, good enough. */
-	KiStopError(STATUS_INVALID_MEMORY_LOCATION);
+	KiStopError(STATUS_STACK_GUARD_VIOLATION);
 	for (;;)
 	{
 		/* Hang (for now) */
