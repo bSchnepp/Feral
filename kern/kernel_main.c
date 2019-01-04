@@ -59,24 +59,13 @@ static UINT8 FeralVersionMajor;
 static UINT8 FeralVersionMinor;
 static UINT8 FeralVersionPatch;
 
-/* 
-	TODO: comments are bad, and all of this is C99 mess, and needs to be redone in C89 comment style.
-	 We can bother with that later, so if you want this running on your "Actual Potato computer", just compile with GNU extensions or something. 
- */
+static CHAR* cpu_vendor_msg = "CPU Vendor: ";
+static SYSTEM_INFO KernelSystemInfo = {};
 
 #if defined(KERN_DEBUG)
-#define BOUNCING_MONITOR_BEAR (0x01)	
-						/* 
-							flag for experimental kernel features, intentionally something strange such that someone 
-							doesn't see this in an automated flag thing and just turns it on without knowing why. 
-							
-							(We'll change this every once in a while to ensure we catch and delete things that should
-							have been trimmed away and refactored.)
-						*/
+/* Experimental features flag. Always involves some sort of bear. */
+#define BOUNCING_MONITOR_BEAR (0x01)
 #endif
-
-static WSTRING RootFsLocation;	/* Where is the root? This should normally be A:/, but it can be anywhere. */
-
 
 /* FERAL initialization follows a few basic steps: */
 	/*
@@ -112,9 +101,6 @@ static WSTRING RootFsLocation;	/* Where is the root? This should normally be A:/
 			It also assigns drive letters (the system default 'A', secondary drives get some way of assigning a letter to them, 
 			(usually in alphabetical order (A:/,, B:/, ...,  AB:/, ...,  AZ:/, AAA:/, AAB:/, and so on)
 	 */
-
-static CHAR* cpu_vendor_msg = "CPU Vendor: ";
-static SYSTEM_INFO KernelSystemInfo = {};
 
 
 /* TODO: Remove the "enormous ego" out of this.
@@ -206,7 +192,7 @@ VOID KiSystemStartup(VOID)
 	*/
 
 	/* First off, ensure we load all the drivers, so we know what's going on. */
-	KiPrintLine("Copyright (c) 2018, Brian Schnepp");
+	KiPrintLine("Copyright (c) 2018-2019, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
 	
 	SystemInfo.Arch = PROCESSOR_ARCH_X86_64;
@@ -230,10 +216,10 @@ VOID KiSystemStartup(VOID)
 }
 
 //UINT64 because one day someone is going to do something _crazy_ like have an absurd amount of processors (manycore), but be 32-bit and only 4GB addressable.
-//RAM is reasonably cheap (less cheap than before) in 2018, so we don't mind using an unneccessary 7 bytes more than we really need to.
+//RAM is reasonably cheap (less cheap than before) in 2018, so we don't mind using an unneccessary 7 bytes more than we really need to. It's not the 90s where we have to care about a massive 16MB of RAM requirement.
 VOID KiStartupProcessor(UINT64 ProcessorNumber)
 {
-	
+	/*  Create a new stack for this core.*/
 }
 
 
@@ -271,12 +257,12 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 
 
 /* temporary, turn into clean later. */
-VOID InternalPrintRegister(DWORD reg)
+VOID InternalPrintRegister(UINT32 reg)
 {
 	for (int i = 0; i < 4; i++)
 	{
 		CHAR charToAdd = ((CHAR)(reg >> (i * 8)) & 0xFF);
-		VgaPutChar(charToAdd);
+		KiPutChar(charToAdd);
 	}
 }
 
@@ -368,11 +354,16 @@ VOID kern_init(UINT32 MBINFO)
 			multiboot_tag_elf_sections *mb_as_elf = (multiboot_tag_elf_sections*)(MultibootInfo);
 			
 			/* Subtract our memory from the free memory, and then update kernel size and kernel address. */
-			kernel_size = mb_as_elf->size;
-			freemem -= kernel_size;
-			
+			UINT64 maxIters = (mb_as_elf->size - 20) / (mb_as_elf->entsize);
 			UINT64 index = 0;
-			UINT64 maxIters = (mb_as_elf->size - 40) / mb_as_elf->entsize;
+			
+			KiPrintFmt("Found %u ELF entries\n", maxIters);
+			
+			ElfSectionHeader64 currentEntry;
+			for (int i = 0; i < maxIters; i++)
+			{
+				KiPrintLine("i is %u");
+			}
 			
 			/* TODO */
 			kernel_start = 0;

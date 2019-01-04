@@ -223,6 +223,11 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 			currentContext->CurrentRow = true_y;
 		}
 		
+		if (true_y >= currentContext->ScreenHeight)
+		{	
+			true_y = currentContext->ScreenHeight - 1;
+		}
+		
 		if (c == '\t')
 		{
 			/* Add 8 spaces. */
@@ -246,12 +251,13 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length)
 {
-	VgaStringEntry(foreground, background, string, length, currentContext->CurrentCol, currentContext->CurrentRow);
-	if (currentContext->CurrentRow + 1 >= currentContext->ScreenHeight)
+	if (currentContext->CurrentRow >= currentContext->ScreenHeight)
 	{
+		currentContext->CurrentRow = currentContext->ScreenHeight - 1;
 		internalVgaPushUp();
-	} else {
-		currentContext->CurrentRow++;
 	}
+
+	VgaStringEntry(foreground, background, string, length, currentContext->CurrentCol, currentContext->CurrentRow);
+	currentContext->CurrentRow++;
 	currentContext->CurrentCol = 0;
 }

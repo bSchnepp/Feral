@@ -50,6 +50,8 @@ qemu:	iso
 qemu-nokvm:	iso
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G
 	
+qemu-lldb:	iso
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -S -s
 	
 qemu-efi:	iso
 	cp $(EFI_CODE) ./efi.bin

@@ -42,6 +42,13 @@ IN THE SOFTWARE.
 #if defined(__x86_64__)
 #include <arch/x86_64/vga/vga.h>
 
+
+FERALSTATUS KiPutChar(CHAR c)
+{
+	VgaPutChar(c);
+	return STATUS_SUCCESS;
+}
+
 #define PRINT_LINE_GENERIC()												\
 	UINT64 length;															\
 	FERALSTATUS feralStatusError = KiGetStringLength(string, &length);		\
@@ -151,10 +158,18 @@ FERALSTATUS KiPrint(STRING string)
 	PRINT_LINE_GENERIC();
 	for (UINT64 i = 0; i < length; i++)
 	{
-		VgaPutChar(string[i]);
+		CHAR let = string[i];
+		if (string[i] >= '0' && let <= 'z')
+		{
+			KiPutChar(let);
+		} else if (let == '\n') {
+			KiPrintLine("");
+		}
 	}
 	return STATUS_SUCCESS;
 }
+
+
 
 /* Internal function: suppress warning (for now) */
 VOID internalItoa(UINT64 val, STRING buf);
