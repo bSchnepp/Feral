@@ -61,15 +61,15 @@ FERALSTATUS KiPutChar(CHAR c)
 // Start, end, size.
 FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
 {
-	UINTN* Destination = ((UINTN*)Dest);
-	UINTN* Src = ((UINTN*)Source);
 	if ((Source == NULL) || (Dest == NULL))
 	{
 		return STATUS_INVALID_MEMORY_LOCATION;
 	}
-	for (UINT64 i = 0; i < Amount; i++)
+	CHAR* srcAsChar = (CHAR*)(Source);
+	CHAR* dstAsChar = (CHAR*)(Dest);
+	for (UINT64 c = 0; c < Amount; ++c)
 	{
-		Destination[i] = Src[i];
+		*srcAsChar++ = *dstAsChar++;
 	}
 	return STATUS_SUCCESS;
 }

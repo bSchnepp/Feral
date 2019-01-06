@@ -52,6 +52,10 @@ BSD and other then-current *NIX distributions, specifically intending to avoid "
 Feral is also intended to be very easy to develop for by game developers: in general, the APIs for Feral "feel like a graphics API". Once a port is opened, some data structures
 and context info needs to be obtained from it, some settings set, and the system should do much of the work needed to get something going. However, Feral is very
 explicit and verbose in how operations are done: care should be taken that undefined behavior is avoided, since the behavior may change in between minor and especially major releases.
+This architecture allows for a game developer to take and bundle a specific libos and runtime environment for their programs, which would allow them to drastically
+simplify application code, as they become in control of *exactly* how the kernel processes their data: there is no ambiguity between file access priorities, networking requirements,
+and so on, and a simpler application API can be exposed to their games which help simplify code. Every application on Feral potentially can be it's own "ecosystem", and share data
+with each other through simple interfaces that avoid getting in the way of usermode applications.
 
 Feral's layout and design is also intended to be simple for new developers to read the code and understand it, or perhaps even use it for their own projects.
 Care is being taken to avoid creating a mess in the source code, and that all important details are explained and documented well.
@@ -64,7 +68,7 @@ the kernel, the kernel is very modular and by itself does not provide more than 
 CPU dynamic recompilation and run code intended for an entirely different platform, or run executables not directly intended for Feral, eliminating the need to port
 applications to Feral entirely. However, I only intend to distribute Feral with enough to build Feral on itself, as well as provide a Waypoint reference libos.
 
-Feral is best described as a "modular macrokernel", or just a "monolithic kernel with loadable drivers at runtime".
+Feral is best described as a "modular macrokernel", or just a "monolithic kernel with loadable drivers at runtime", which is a little bit harder to say.
 
 ![Feral Architecture](Documentation/images/feralarch.png)
 

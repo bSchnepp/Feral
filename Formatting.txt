@@ -182,3 +182,25 @@ if (a < 14)
 
 This is part of the Zen optimization guide (page 37, note 5), and thus
 must be included as part of our style guide.
+
+
+
+
+Memory allocations ("kmalloc()" and associated functions) and their associated deallocations ("kfree()" and associated functions)
+should be done at the same level of scope.
+
+Ie,
+
+void hello()
+{
+	struct io_queue *item = (struct io_queue*)(malloc(sizeof(struct io_queue)));
+	/* Do something with item... */
+	free(item);
+}
+
+As opposed to being placed within a wrapper function.
+This is to ensure memory safety, and to ensure that there is a clear path from memory allocation to deallocation.
+
+
+
+
