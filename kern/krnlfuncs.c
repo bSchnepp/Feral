@@ -69,7 +69,7 @@ FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
 	CHAR* dstAsChar = (CHAR*)(Dest);
 	for (UINT64 c = 0; c < Amount; ++c)
 	{
-		*srcAsChar++ = *dstAsChar++;
+		*dstAsChar++ = *srcAsChar++;
 	}
 	return STATUS_SUCCESS;
 }
