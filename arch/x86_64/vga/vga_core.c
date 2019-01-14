@@ -181,6 +181,7 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
  */
 VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter)
 {	
+	/* Check if we're overflowing. */
 	if (currentContext->CurrentCol >= currentContext->ScreenWidth)
 	{
 		currentContext->CurrentCol = 0;
@@ -216,18 +217,8 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 	
 	for (CHAR c = *string; index < length; c = string[++index])
 	{
-		if (true_x >= currentContext->ScreenWidth)
-		{
-			true_x = 0;
-			true_y++;
-			currentContext->CurrentRow = true_y;
-		}
-		
-		if (true_y >= currentContext->ScreenHeight)
-		{	
-			true_y = currentContext->ScreenHeight - 1;
-		}
-		
+		BOOL safeToPrint = FALSE;
+
 		if (c == '\t')
 		{
 			/* Add 8 spaces. */
@@ -244,6 +235,23 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 		} else if (c == '\0') {
 			return;
 		} else {
+			safeToPrint = TRUE;
+		}
+
+		if (true_x >= currentContext->ScreenWidth)
+		{
+			true_x = 0;
+			currentContext->CurrentRow = ++true_y;
+		}
+		
+		if (true_y >= currentContext->ScreenHeight)
+		{	
+			true_y = currentContext->ScreenHeight - 1;
+			internalVgaPushUp();
+		}
+
+		if (safeToPrint)
+		{
 			VgaEntry(foreground, background, c, true_x++, true_y);
 		}
 	}
