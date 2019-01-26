@@ -29,11 +29,54 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 #include <bogus/fluff.h>
-#include <conio.h>
+/*#include <conio.h>*/
 
 #include <stdio.h>
 
 #define FERAL_MAKE_VERSION(Major, Minor, Patch) (((Major) << 22) | ((Minor) << 12) | (Patch))
+
+
+/* last semicolon is intentionally missing (force style convention in that every
+   statement does end in a semicolon.) */
+   
+   /* pNext is for extensions for the Waypoint API. The intent is that programming
+      for a Waypoint system "feels" like writing a glNext or gl app,
+      
+      (largely for familiarity)
+   */
+#define WP_BASE_STRUCT_MEMBERS		\
+	WpDataType	sType;		\
+	VOID*		pNext
+
+/* Applications can 'extend' these structures however they'd like. 
+   As long as the sType is correct, it should be OK.
+   
+   A compliant Waypoint OS should retain previous API-breaking
+   libraries such that an application can specify which environment
+   it wants in case we change the __ABI__ in the future.
+   
+   ie, if SystemProperties is modified, then the OS should link with
+   a previous version of the library refactored to support the new
+   stuff.
+   
+   
+   (we may change this to be opaque structs, and ask the programmer to
+    just build a buffer and supply a used size)
+ */
+typedef enum
+{
+	WP_DATA_TYPE_APPLICATION;
+	WP_DATA_TYPE_SYSTEM_PROPERTIES;
+	WP_DATA_TYPE_APPLICATION_PROPERTIES;
+	WP_DATA_TYPE_CONTENT_LANGUAGE;
+	WP_DATA_TYPE_SYSTEM_STATE;
+	WP_DATA_TYPE_GLOBAL_APPLICATION_STATE;
+	WP_DATA_TYPE_APPLICATION_STATE;
+	
+	
+	WP_DATA_TYPE_WAYPOINT_FRAME;
+}WpDataType;
+
 
 typedef enum
 {
@@ -72,17 +115,43 @@ typedef enum GPUVENDOR
 	GPU_VENDOR_POWERVR,
 	GPU_VENDOR_UNKNOWN,	// custom chips (graphics ASICs and all for consoles, you're on your own for any generic driver)
 	GPU_VENDOR_NONE,	// There is no GPU. Vulkan "graphics" are executed on the CPU. We may be compute only (headless).
+	
+	/* Reserved block (for vendors that do not currently make GPUs or do not exist yet) */
+	GPU_VENDOR_RESERVED1,
+	GPU_VENDOR_RESERVED2,
+	GPU_VENDOR_RESERVED3,
+	GPU_VENDOR_RESERVED4,
+	GPU_VENDOR_RESERVED5,
+	GPU_VENDOR_RESERVED6,
+	GPU_VENDOR_RESERVED7,
+	GPU_VENDOR_RESERVED8,
+	GPU_VENDOR_RESERVED9,
+	GPU_VENDOR_RESERVED10,
+	GPU_VENDOR_RESERVED11,
+	GPU_VENDOR_RESERVED12,
+	GPU_VENDOR_RESERVED13,
+	GPU_VENDOR_RESERVED14,
+	GPU_VENDOR_RESERVED15,
+	GPU_VENDOR_RESERVED16,
+	GPU_VENDOR_RESERVED17,
+	GPU_VENDOR_RESERVED18,
+	GPU_VENDOR_RESERVED19,
+	GPU_VENDOR_RESERVED20,
+	
 	GPU_VENDOR_VIRTUAL,	// Our GPU is actually a CPU emulating a GPU.
 	GPU_VENDOR_MANYCORE,	// We're (ab)using a CPU somewhere else on the network (or this PC) to handle graphics. Ie, something like Larrabee, or a TR4 CPU for it.
 };
 
 typedef struct SystemProperties
 {
+	WP_BASE_STRUCT_MEMBERS;
+	
 	UINT64 NumProcessors;
 	UINT64 NumThreads;
 	
 	UINT64 NumGraphicsProcessors;
 	GPUVENDOR* Vendors;
+
 	STRING* GraphicsProcessorNames;
 	UINT64* GraphicsProcessorMemorySizes;
 	UINT64* AvailableGraphicsProcessorMemorySizes;
@@ -95,6 +164,8 @@ typedef struct SystemProperties
 
 typedef struct ApplicationProperties
 {
+	WP_BASE_STRUCT_MEMBERS;
+	
 	SystemProperties SystemProps;
 	ApplicationType AppPurpose;
 	UINT32 AppVersion;
@@ -103,6 +174,8 @@ typedef struct ApplicationProperties
 
 typedef struct ContentLanguage
 {
+	WP_BASE_STRUCT_MEMBERS;
+	
 	/* The abbreviation of the language, (ie, en_US, en_UK, etc.) */
 	STRING LangShort;
 
@@ -131,10 +204,10 @@ typedef UINT32 MessageBoxType;
 #define MB_OK			((MessageBoxType)0x00)
 #define MB_CANCEL		((MessageBoxType)0x01)
 #define MB_YES			((MessageBoxType)0x02)
-#define MB_RETRY			((MessageBoxType)0x04)
+#define MB_RETRY		((MessageBoxType)0x04)
 #define MB_NO			((MessageBoxType)0x08)
 #define MB_IGNORE		((MessageBoxType)0x10)
-#define MB_ABORT			((MessageBoxType)0x20)
+#define MB_ABORT		((MessageBoxType)0x20)
 #define MB_CONTINUE		((MessageBoxType)0x30)
 
 // The window manager (part of the kernel) does special things in this case.
@@ -146,7 +219,7 @@ typedef UINT32 MessageBoxType;
 // And a couple defaults.
 #define MB_OKCANCEL		((MessageBoxType)(MB_OK     | MB_CANCEL))
 #define MB_RETRYCANCEL		((MessageBoxType)(MB_RETRY  | MB_CANCEL))
-#define MB_YESNO			((MessageBoxType)(MB_YES)   | MB_NO))
+#define MB_YESNO		((MessageBoxType)(MB_YES)   | MB_NO))
 #define MB_ABORTRETRYIGNORE	((MessageBoxType)(MB_IGNORE | MB_RETRY    | MB_ABORT))
 #define MB_CANCELRETRYCONTINUE	((MessageBoxType)(MB_IGNORE | MB_CONTINUE | MB_CANCEL))
 #define MB_YESNOCANCEL		((MessageBoxType)(MB_YES)   | MB_NO       | MB_CANCEL))
@@ -191,6 +264,9 @@ struct WPFRAME;
 
 typedef struct WPFRAME
 {
+
+	WP_BASE_STRUCT_MEMBERS;
+	
 	WSTRING FrameTitle;			// The title of this frame.
 	WPFRAME_HEADER_BUTTONS HeaderButtons;	// What buttons does the window manager assign to this frame?
 
@@ -247,6 +323,8 @@ typedef struct
 	//TODO... this is #if 0ed for now just to get the rough idea of what to do.
 	// Importantly, we lock applications to picking which peripherals to use. This is so that we can let games choose better, avoid multiple keyboards causing issues (mouse/trackpads!!!)
 	// and so on.
+	
+	WP_BASE_STRUCT_MEMBERS;
 #if 0
 	UINT64 NumKeyboards;
 	KBRDHANDLE* Keyboards;	// Handles to various keyboards. (For me, I have a 1532:010F, from "the other Green team")
@@ -278,6 +356,8 @@ typedef struct
 
 typedef struct
 {
+	WP_BASE_STRUCT_MEMBERS;
+	
 	COLORREF PreferredForegroundColor;
 	COLORREF PreferredBackgroundColor;
 
@@ -288,6 +368,8 @@ typedef struct
 
 typedef struct
 {
+	WP_BASE_STRUCT_MEMBERS;
+	
 	COLORREF CurrentForegroundColor;
 	COLORREF CurrentBackgroundColor;
 	
