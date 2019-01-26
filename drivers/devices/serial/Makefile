@@ -1,7 +1,7 @@
 include ../../../Makerules
 
 all:
-	$(CC) $(CFLAGS) -I../../../inc serial.c -o ../serial.o
+	$(CC) $(CFLAGS) -I../../../inc serial.c -I../../../kern/inc -o ../serial.o
 
 clean:
 	rm -rf ../serial

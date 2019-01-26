@@ -29,7 +29,6 @@ IN THE SOFTWARE.
 
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
-#include <bogus/fluff.h>	//Maybe give this a more 'appropriate' name later or something. Thos definitions don't have a real purpose other than readability.
 
 #if defined(__cplusplus)
 extern "C" {

@@ -1,15 +1,16 @@
 Overall outline for what to do:
 
-	- NEVER EVER EVER prefer an SMT thread over a physical core (unless we have a hard limit saying to ignore this rule)
+	- NEVER EVER EVER prefer an SMT thread over a physical core ON THE SAME DIE (unless we have a hard limit saying to ignore this rule)
 		(on the x86, if we run on processor n, we can be lazy and schedule a new thread on n + 2, and cycle back to 1 when we
 		 run out of execution units. This should be temporary (and later possible to re-enable), and avoids us having to
-		 actually check for SMT or not. So far, SMT on the x86 is only 2-way, not 4-way (like on some RISCs))
-			(obviously that doesn't apply to Larrabee, but that's not (really) a CPU.)
+		 actually check for SMT or not. So far, SMT on the x86 is only 2-way, not 4-way (like on some RISCs, ie, SPARC))
+			(obviously that doesn't apply to Larrabee, but that's not (really) a CPU, it's more appropriate to call it a "supercomputer on a chip")
 
 	- We should query what information we have on the CPU to do the following:
-		- Never put the same task on two different CPUs if we can help ie (ie, dual-socket systems)
+		- Never put the same task on two different CPUs if we can help ie (ie, dual-socket systems, anything on TR4, etc.)
 		- From here, check how many dies there actually are. In the case of ZEN, there is between 1 and 4.
 			- In the case of ZEN, each die has two "mini-CPUs" in it. Again, keep execution threads together.
+			- No clue what to expect for Zen 2. They might do a big die shrink and bring in 6 dies. They may add 2 more cores per CCX. etc. etc.
 
 	These are all for performance mainly, as ZEN gets a signifigant performance improvement just by using it well.
 
@@ -20,3 +21,19 @@ debatable, we should fully expect non-games to turn the flag on to go faster (es
 this goes to everyone so that "now everything is priority #1" and we then need to create a "priority #0" and this process never ends.
 We should (carefully) design everything assuming it will be abused, and try to mitigate that while not restricting useful
 features.
+
+
+Organizationally, we should be:
+	- Optimize for NUMA configurations. Figure out which parts of memory are closest to each core and schedule appropriately. Always assume NUMA.
+		(games tend to like NUMA better than multi-die UMA)
+		
+
+
+Essentially, what I'm thinking of is more or less like this:
+	- Create a base group, call it a "bucket". A variety of non-conflicting applications, of the same user, of the same needed permissions, are placed here.
+		(for example, it may be your web browser and some program untarring an archive: these two generally do not compete (one is network heavy and the other is disk heavy)
+		This can be 1 program, 2 programs, 6 programs, etc.
+		
+	- Each bucket is given an initial priority. All of the programs in a bucket have equal priority. (generally 16 levels, maybe 32. half denoting "hard-like" realtime requirements, the other being general purpose)
+	- Priorities are only ever BOOSTED, not lowered. Thus, in order to have a high priority app, you need Administrator permission.
+	- Buckets will ALWAYS STAY ON THE SAME CPUs. Thus, a program using 4 cores will get a whole Zen CCX to itself. If it needs 8 cores, then it gets a whole die. etc, etc. Prefer threads on same die over spilling into another die.

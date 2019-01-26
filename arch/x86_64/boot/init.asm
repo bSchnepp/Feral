@@ -11,7 +11,8 @@ header_start:
 	dd MULTIBOOT_ARCH_			; We're on the x86 arch.
 	dd MULTIBOOT_SIZE_			; Size of the header.
 
-	dd 0x100000000 - (MULTIBOOT_MAGIC + MULTIBOOT_ARCH_ + MULTIBOOT_SIZE_)	
+	; Try to avoid negative numbers in general (they can cause compiler issues in rare, specific cases.)
+	dd 0x100000000 - (MULTIBOOT_MAGIC + MULTIBOOT_ARCH_ + MULTIBOOT_SIZE_)
 
 	; Optional Multiboot2 tags should show up here... we'll probably ignore them anyway.
 
@@ -31,16 +32,33 @@ BITS 32
 ; The real panic() (KeInternalWarn() for warning, KeStopError() for actual 'panic()') later.
 boot_panic:
 	mov dword [0xB8000], 0x1F001F00		; Address b8000 is VGA memory. As such, by dumping some data there (1F001F00), we create the "blue box of death".
+	mov dword [0xB8004], 0x1F001F00
+	mov dword [0xB80A0], 0x1F001F00
+	mov dword [0xB80A4], 0x1F001F00
 	cli
-	hlt	
+	hlt
 	jmp $
+	
+boot_panic_invalid_arch:
+	mov dword [0xB8000], 0x4F004F00		; If attempting to boot on an IA-32, we'll show the red box of death using the same thing above.
+	mov dword [0xB8004], 0x4F004F00
+	mov dword [0xB80A0], 0x4F004F00
+	mov dword [0xB80A4], 0x4F004F00
+	cli
+	hlt
+	jmp $
+	
+
 global _start
 _start:
 	mov esp, stack_top	; Set the stack up.
 
 	; Check for multiboot 2 compliance.
-	cmp eax, 0x36D76289
-	jne boot_panic
+	sub eax, 0x36D76289	; use sub over cmp when we have an excuse for it.
+	jnz boot_panic
+	
+	; Push ebx for when we need it later. (holds multiboot struct)
+	mov [multiboot_value], ebx
 
 	; Check CPUID...
 	pushfd 
@@ -82,11 +100,13 @@ _start:
 
 	test edx, 1 << 29      ; Check if we do support long mode (bit 30)
 	; If zero, we panic.
+	je boot_panic_invalid_arch
 
 
 
 create_page_tables:
-	; (I really don't fully understand what I'm doing here, let's hope this works!)
+	; (I understand about 99% of what we're doing here, but then we (will) have things where virtual memory =/= physical memory 
+	; and virtual memory for task A isn't the same memory as task B and now we're all confused again on what's what.
 
 	; We'll use names like 'p4', 'p3', etc, because it's just easier.
 
@@ -126,12 +146,12 @@ create_page_tables:
 ; Let's start...
 
 enable_paging:
-	mov eax, p4_table	; Put the address for the p4 table in EAX.
+	lea eax, [p4_table]	; Put the address for the p4 table in EAX.
 	mov cr3, eax		; Then clobber whatever is in CR3 and move it there.
 	
 	; We need to enable PAE. (Long mode is a superset of PAE which requires PAE to be enabled.)
 	mov eax, cr4
-	or eax, 100000b		; Enable the PAE flag in control register 4.
+	or eax, (1 << 5)		; Enable the PAE flag in control register 4.
 	mov cr4, eax		; And put it back in CR4.
 
 	; We assume EFER is here, because x86_64 just doesn't work without it.
@@ -144,6 +164,7 @@ enable_paging:
 	; Now we finish enable paging.
 	mov eax, cr0
 	or eax, (1 << 31)	; Just flip bit 31, the bit in binary is LOOONNNGGG.
+	or eax, 1
 	mov cr0, eax		; And write to CR0.
 	
 
@@ -157,9 +178,17 @@ create_gdt:
 	; kern_start is multiboot-only.
 	; Get around to that later.
 
-	jmp gdt_64.code:kern_start
+	; Force TLB flush
+	mov ecx, cr3
+	mov cr3, ecx
+	
+	; invoke far return to go to 64-bit mode.
+	push 0x08
+	lea eax, [kern_start]
+	push eax
+	retf
 
-
+	jmp $
 
 BITS 64
 kern_start:
@@ -172,9 +201,9 @@ kern_start:
 	mov es, ax
 	mov fs, ax
 	mov gs, ax
-
-	mov rsp, stack_top
-	mov rsi, rbx	; Give us the multiboot info we want.
+	
+	mov rdi, [multiboot_value]			; Give us the multiboot info we want.
+	mov rsp, stack_top	
 
 	extern kern_init
 	call kern_init
@@ -224,8 +253,25 @@ mov [eax], edx
 pop rbp
 ret
 
+global cpuid_family_number
+
+cpuid_family_number:
+push rbx
+push rcx
+push rdx
+mov rax, 1
+cpuid
+pop rdx
+pop rcx
+pop rbx
+ret
+
 
 section .rodata
+
+; Store our multiboot pointer.
+multiboot_value resd 0
+
 gdt_64:
 	dq 0	; The zero entry, which is needed for the GDT.
 
@@ -239,11 +285,11 @@ gdt_64:
 section .bss
 ALIGN 4096
 p4_table:
-	resq 512
+	resb 4096
 p3_table:
-	resq 512
+	resb 4096
 p2_table:
-	resq 512
+	resb 4096
 ALIGN 16
 stack_bottom:
 	resb 16384	; Nice and big (16kb) stack.

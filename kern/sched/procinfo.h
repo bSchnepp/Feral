@@ -25,8 +25,20 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 
  */
-
-// Processor control region (various bits of info about this processor)
+ 
+typedef enum SdPriorityLevel
+{
+	SCHED_PRIORITY_LEVEL_IDLE = 0x0,
+	SCHED_PRIORITY_LEVEL_FAR_BELOW_NORMAL = 0x8000
+	SCHED_PRIORITY_LEVEL_BELOW_NORMAL = 0x8001,
+	SCHED_PRIORITY_LEVEL_NORMAL = 0x0001,
+	SCHED_PRIORITY_LEVEL_ABOVE_NORMAL = 0x0001,
+	SCHED_PRIORITY_LEVEL_FAR_ABOVE_NORMAL = 0x0002,
+	
+	SCHED_PRIORITY_LEVEL_REALTIME = 0x7FFF,
+}SdPriorityLevel;
+ 
+/*Processor control region (various bits of info about this processor) */
 typedef struct
 {
 #if defined(__i386__) || defined(__x86_64__)
@@ -34,7 +46,8 @@ typedef struct
 	const char ProcessorName[48];
 #endif
 
-	UINT64 ProcNumber;
+	UINT64	ProcNumber;
+	UINT32	SMTThreads;
 	
 	//TODO
 

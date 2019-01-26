@@ -1,0 +1,8 @@
+image: debian:sid
+
+stages:
+        - build
+
+build-iso:
+       stage: build
+       script: "./build.sh x86_64 iso"

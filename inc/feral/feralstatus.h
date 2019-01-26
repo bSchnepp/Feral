@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining  a copy of the software and accompanying documentation covered by 
@@ -37,31 +37,38 @@ extern "C" {
 /* These are the only bits that actually matter, though I would suggest leaving bit 3 alone in case we do use it. */
 /* Since the kernel is already 'unstable' enough as it is, not going to bother with leaving things reserved for forward compatibility. We'll break everything until 1.0 anyway. */
 
-#define STATUS_SEVERITY_SUCCESS 		0x00000000		/* Nothing wrong, do whatever. */
-#define STATUS_SEVERITY_INFORMATIONAL 		0x40000000		/* Kernel felt the need to do some kind of warning. */
-#define STATUS_SEVERITY_WARNING			0x80000000		/* You really should catch this, something's not right. */
-#define STATUS_SEVERITY_ERROR	 		0xC0000000		/* Stopped by the kernel, something VERY bad has happened. (Disk doesn't exist, I/O error, etc.) */
+#define STATUS_SEVERITY_SUCCESS 				(0x00000000)		/* Nothing wrong, do whatever. */
+#define STATUS_SEVERITY_INFORMATIONAL 		(0x40000000)		/* Kernel felt the need to do some kind of warning. */
+#define STATUS_SEVERITY_WARNING				(0x80000000)		/* You really should catch this, something's not right. */
+#define STATUS_SEVERITY_ERROR	 				(0xC0000000)		/* Stopped by the kernel, something VERY bad has happened. (Disk doesn't exist, I/O error, etc.) */
 
 typedef uint32_t FERALSTATUS;
 
 /* Standard internal stuff: */
-#define STATUS_SUCCESS (STATUS_SEVERITY_SUCCESS)			/* Nothing went wrong. Everything's OK. */
-#define STATUS_INFORMATIONAL (STATUS_SEVERITY_INFORMATIONAL)
-#define STATUS_WARNING (STATUS_SEVERITY_WARNING)
-#define STATUS_ERROR (STATUS_SEVERITY_ERROR)
+#define STATUS_SUCCESS 					(STATUS_SEVERITY_SUCCESS)			/* Nothing went wrong. Everything's OK. */
 
 /* Informational:  */
+#define STATUS_INFORMATIONAL 			(STATUS_SEVERITY_INFORMATIONAL | 0x00000000)
+#define STATUS_WAS_UNLOCKED			(STATUS_SEVERITY_INFORMATIONAL) | (0x00000017)
 
 /* Warnings: */
-#define STATUS_UNAUTHORIZED_MEMORY_LOCATION 	(0x000000A0 | STATUS_SEVERITY_WARNING)
+#define STATUS_WARNING 								(STATUS_SEVERITY_WARNING | 0x00000000)
+#define STATUS_UNAUTHORIZED_MEMORY_LOCATION 	(STATUS_SEVERITY_WARNING | 0x000000A0)
 
 /* Errors: */
-#define STATUS_WRONG_VOLUME       (0x00000012 | STATUS_SEVERITY_ERROR)		/* A volume we're not expecting is there. */
-#define STATUS_NO_MEDIA_IN_DEVICE (0x00000013 | STATUS_SEVERITY_ERROR)		/* There is no media in /Device/Disk<N>. */
-#define STATUS_UNRECOGNIZED_MEDIA (0x00000014 | STATUS_SEVERITY_ERROR) 		/* We don't know the media.*/
-#define STATUS_NONEXISTENT_SECTOR (0x00000015 | STATUS_SEVERITY_ERROR)		/* Sector of the requested device doesn't exist. */
+#define STATUS_ERROR 								(STATUS_SEVERITY_ERROR | 0x00000000)
+#define STATUS_STACK_GUARD_VIOLATION			(STATUS_SEVERITY_ERROR | 0x00000001)
 
-#define STATUS_INVALID_MEMORY_LOCATION (0x000000A0 | STATUS_SEVERITY_ERROR)		/* Memory location attempted to access is invalid. */
+#define STATUS_MEMORY_ACCESS_VIOLATION		(STATUS_SEVERITY_ERROR | 0x00000005)
+#define STATUS_MEMORY_PAGE_FAILURE				(STATUS_SEVERITY_ERROR | 0x00000006)
+
+#define STATUS_WRONG_VOLUME       				(STATUS_SEVERITY_ERROR | 0x00000012)		/* A volume we're not expecting is there. */
+#define STATUS_NO_MEDIA_IN_DEVICE				(STATUS_SEVERITY_ERROR | 0x00000013)		/* There is no media in /Device/Disk<N>. */
+#define STATUS_UNRECOGNIZED_MEDIA 				(STATUS_SEVERITY_ERROR | 0x00000014) 		/* We don't know the media.*/
+#define STATUS_NONEXISTENT_SECTOR 				(STATUS_SEVERITY_ERROR | 0x00000015)		/* Sector of the requested device doesn't exist. */
+
+#define STATUS_OUT_OF_MEMORY					(STATUS_SEVERITY_ERROR | 0x00000017)
+#define STATUS_INVALID_MEMORY_LOCATION 		(STATUS_SEVERITY_ERROR | 0x000000A0)		/* Memory location attempted to access is invalid. */
 
 
 #if defined(__cplusplus)

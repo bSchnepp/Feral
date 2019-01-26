@@ -1,2 +1,0 @@
-Work on legacy bootloader (this way we can use VGA however we want to, and maybe just get rid of GRUB/Multiboot altogether...)
-(We already have the headers necessary to set VGA mode to mode 0x03 (what we want for now).

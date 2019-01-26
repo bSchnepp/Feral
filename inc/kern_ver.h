@@ -34,7 +34,7 @@ extern "C" {
 
 // Increment whenever the kernel API changes signifigantly.
 // For now, since we're unstable, we're *always* changing, so only actually bother once we get to version 1.0.0
-// (we should increment to 0.0.2 when we have the _bare minimum_ features required to be "usable", ie, it can ARP on the network.)
+// (we should increment to 0.0.2 when we have the _bare minimum_ features required to be "usable", ie, it can *a* user mode program.)
 
 
 #define FERAL_VERSION_MAJOR (0000000)
@@ -45,9 +45,12 @@ extern "C" {
 #define FERAL_VERSION_STRING "FERAL Kernel 0.01 Release 'Alpha Aligator'"
 #define FERAL_VERSION_SHORT "Alpha Aligator"
 
-// *NIX uname stuff. We'd like to pretend to be all of the *NIXes for compatibility reasons. (someone may create a service provider implementing lxss.sys to do Linux on Feral, userspace needs to cooperate.)
-#define UNAME_NAME "Mach 2019, like Linux, like XNU, like FreeBSD"	// -s, claim something that doesn't exist. (bunch of 'likes' in case there's a strstr looking for (Free)BSD or XNU or Linux or whatver)
-#define UNAME_VERSION "2095.09.3-44-feral" // Something bogus for -r
+/* 
+	Majority of *NIX out there is Linux, and the stuff that isn't Linux is mostly compatible with Linux 
+	anyway. Exception are a few odd BSDs, but our toolchain is on Linux, and we need to make it think it's on Linux. 
+*/
+#define UNAME_NAME "Linux"
+#define UNAME_VERSION "2038.01.19-44-feral" /* Something bogus for -r */
 
 
 

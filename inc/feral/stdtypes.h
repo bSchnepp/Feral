@@ -32,7 +32,45 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <bogus/fluff.h>
+
+/*  Some function decorators.*/
+/* This is an input to a function. */
+#define IN
+
+/* This is an output of a function. */
+#define OUT
+
+/* This is expected as input, but will also be modified by the function. */
+#define INOUT
+
+/* This is optional input. Not required. */
+#define INOPT
+
+/* Optional (other) */
+#define OPT
+
+/* May be null on return. */
+#define OUTOPT
+
+/* Optional, does something to this object. */
+#define INOUTOPT
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+/* Yes, 'API' is not a typo, even though we're dealing with ABIs. This is because this is how the API would be called. Slightly confusing, yes, but I'm just following an established thing. */
+
+#define FERALAPI __attribute__((cdecl))	/* Team Red's ABI. (the one basically everyone else uses). */
+
+#define  MSAPI __attribute__((ms_abi))
+#define WINAPI __attribute__((ms_abi))
+#define EFIAPI __attribute__((ms_abi))
+
 
 #define CONST const
 #define INLINE inline
@@ -44,15 +82,20 @@ typedef BYTE BOOLEAN;
 typedef char CCHAR;
 typedef char CHAR;
 
+#ifndef FERAL_NO_DEPRECATED
 /* One should avoid DWORD as a word size may differ on various platforms (8-bit word, 32-bit words, etc.) */
 typedef uint32_t DWORD;
 typedef uint64_t DWORDLONG;
+#endif
 
 typedef uint32_t DWORD32;
 typedef uint64_t DWORD64;
 
 typedef float FLOAT;
 typedef double DOUBLE;
+
+typedef float FLOAT32;
+typedef double FLOAT64;
 
 typedef int32_t INT;
 typedef INT BOOL;
@@ -72,10 +115,12 @@ typedef int32_t LONG;
 typedef int64_t LONGLONG;
 
 // We're LP64.
-#if defined(__x86_64__)
+#if defined(__x86_64__) || defined(__aarch64__)
 typedef int64_t INT_PTR;
+typedef uint64_t UINT_PTR;
 #elif defined(__i386__)
 typedef int32_t INT_PTR;
+typedef uint32_t UINT_PTR;
 #endif
 
 typedef INT_PTR LONG_PTR;
@@ -83,14 +128,15 @@ typedef INT_PTR LONG_PTR;
 typedef uint64_t QUAD;
 typedef QUAD QWORD;
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) || defined(__aarch64__)
 typedef uint64_t UINTN;
 typedef  int64_t  INTN;
 #elif defined(__i386__)
 typedef uint32_t UINTN;
 typedef  int32_t  INTN;	
 #endif
-// 286 and earlier not supported.
+// 286 and earlier not supported. (16-bit x86 is *very* old and doesn't support paging).
+
 
 // Ensure we define wchar_t. This is important, as we *really* love Unicode.
 typedef unsigned short wchar_t;
@@ -138,7 +184,7 @@ typedef struct GUID
 	UINT8 Data4[8];
 }GUID;
 
-//Please avoid using this. (some archs don't like packed structs)
+/* Please avoid using this. (some archs don't like packed structs) */
 #define PACKED __attribute__((packed))
 
 
@@ -154,4 +200,7 @@ typedef void* POINTER;
 
 #include <feral/feraluser.h>
 
+
+/* TEMPORARY */
+UINT_PTR __stack_chk_guard;
 #endif

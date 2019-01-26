@@ -35,7 +35,6 @@ extern "C" {
 
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
-#include <bogus/fluff.h>
 
 
 /* Struct to define a verbose string (O(1) to get the length of the string) */
@@ -47,7 +46,7 @@ typedef struct FERALSTRING
 
 /* Inline functions to do string comparison. We do NOT want the overhead of a function call for something trivial. */
 /* Returns 0 if equal, 1 if they differ in length, and 2 if their content differs at some point, -1 for erronous length on a string causing an error.*/
-static inline BOOL FrlStringCmp(FERALSTRING* String1, FERALSTRING* String2)
+static BOOL FrlStringCmp(FERALSTRING* String1, FERALSTRING* String2)
 {
 	if (String1->Length != String2->Length)
 	{

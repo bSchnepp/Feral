@@ -34,12 +34,11 @@ IN THE SOFTWARE.
 #include <arch/x86_64/cpuio.h>
 #endif
 
+#include <colors.h>
+
 
 // We want some common stuff for our peripherals, if they don't obey this, we translate it in the driver.
 // Specifically, I'm looking for compatibility with my current mouse and keyboard, both of which can be controlled over USB.
 // We don't have a USB stack yet, so we pretend we do for now and then lay down a framework to improve now.
-
-#define MOUSE_LED_ON 1
-#define MOUSE_LED_OFF 0
 
 #endif

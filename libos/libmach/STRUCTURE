@@ -1,0 +1,21 @@
+libmach
+	bootstrap
+		[necessary wrappers to get what should be machine-specific things to map to Feral primitives]
+		
+	kernel
+		bogus
+			[necessary things to get mach3 apps to compile]
+		
+		device
+			[wrappers around Feral device drivers, ie, amdgpu]
+			
+		kern
+			[Other kernel code, wrapped to call into Feral]
+			
+		scsi
+			[wrappers into Feral disk drivers]
+			
+		vm
+			[Wrappers into Feral virtual memory management]
+			
+		

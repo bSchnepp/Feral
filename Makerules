@@ -2,22 +2,29 @@ MAKE       = bmake
 
 GDB        = lldb # Use LLVM debugger when we can, if we make a makerule for this in the future. (I just happen to be a little more familiar with lldb, that's all)
 
-ARCH       = x86_64
+# Change to aarch64 to target those devices.
+#ARCH       = ${ARCH}
 KERNEL    := build/$(ARCH)/FERALKER.NEL
 ISO       := build/WAYPOINT.ISO
 
 LINKIN    := arch/$(ARCH)/linkin.lld
 GRUB_CFG  := arch/$(ARCH)/grub.cfg
 
+TARGET     = -target $(ARCH)-pc-none-gnu
+
 AS        := yasm       # We use yasm to assemble.
 CC        := clang      # We use clang to compile.
 CXX       := clang++    # We may use C++ for something later. (Would only ever really be a "C with classes" anyway.)
-LD        := ld.lld
-
-TARGET     = -target $(ARCH)-pc-none-gnu
+LD        := ld.lld -flavor gnu --verbose
 
 INCLUDES  := inc
-CFLAGS    := -std=c11 -ffreestanding -nostdlib -O2 -Wall -Wextra -mno-red-zone -c -v -mno-mmx -mno-sse -msoft-float -fno-vectorize $(TARGET)
+
+CFLAGS := -std=c11 -ffreestanding -nostdlib -Wall -Wextra -mno-red-zone -c -v -mno-mmx -mno-sse -msoft-float -fno-vectorize -O2 -Wstrict-prototypes -fstack-protector-all -Wvla -Wmissing-prototypes
+
+# Comment for release. This will be changed to be based upon an environment variable later.
+CFLAGS += -g3 -DKERN_DEBUG -DDEBUG
+
+CFLAGS += $(TARGET)
 # -c prevents linking (important!!!) and -v for verbosity.
 
 # We don't really care about 'Entering directory...'.

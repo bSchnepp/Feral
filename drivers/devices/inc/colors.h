@@ -24,17 +24,19 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+// Defines the global color state.
 #ifndef _FERAL_DRIVERS_CHROMATIC_
 #define _FERAL_DRIVERS_CHROMATIC_
 
-// Defines the global color state.
 #include <feral/stdtypes.h>
 
-
 // RGB for the various peripherals: specific drivers interpret this color accordingly.
-static UINT8 Red;
-static UINT8 Green;
-static UINT8 Blue; 
+typedef struct RGBState
+{
+	UINT8 Red;
+	UINT8 Green;
+	UINT8 Blue; 
+}RGBState;
 
 // We may have some rules set up elsewhere, or the device itself supports it.
 // If unsupported, we throw the colors at the device and emulate it in software!
@@ -42,5 +44,31 @@ static UINT8 Blue;
 #define RGB_COLORS_BLINKING (1 << 0)	// It blinks. Just as the name says. Stays the color for a bit. Turns off. Repeat.
 #define RGB_COLORS_PULSING  (1 << 1)	// It gently goes into the color, then goes off the color.
 #define RGB_COLORS_SPECTRUM (1 << 2)	// SHOW ALL THE RGB GLORY!
+
+
+#define LED_STATE_OFF 	(0x00)
+#define LED_STATE_ON 	(0x01)
+
+
+/* We will remap these to specific devices if needed: for now, follow what the hardware I have happens to be. */
+/* I have a 1532:0053 and a 1532:010f, both are from the same vendor (obviously), and share a lot of hardware details in regards to RGB stuff.*/
+#define LED_SCROLL_WHEEL 			(0x01)
+#define LED_UNKNOWN_PART 		(0x02)
+#define LED_BATTERY_LED 			(0x03)
+#define LED_LOGO 					(0x04)
+#define LED_BACKLIGHT				(0x05)
+#define LED_UNKNOWN_PART_2		(0x06)
+#define LED_GAME_INTEGRATION	(0x07)
+
+/* Generic 'red', 'blue', 'green' mapped to 12, 13, and 14 (0xC, 0xD, 0xE) */
+
+typedef UINT8 LEDSTATUS;
+
+/* LED error codes, like FERALSTATUS. */
+#define LED_ERROR_CODE_BUSY				(0x01)
+#define LED_ERROR_CODE_SUCCESS			(0x02)
+#define LED_ERROR_CODE_FAILED			(0x03)
+#define LED_ERROR_CODE_TIMED_OUT		(0x04)
+#define LED_ERROR_CODE_UNSUPPORTED	(0x05)
 
 #endif
