@@ -218,6 +218,17 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 	for (CHAR c = *string; index < length; c = string[++index])
 	{
 		BOOL safeToPrint = FALSE;
+		if (true_x >= currentContext->ScreenWidth)
+		{
+			true_x = 0;
+			currentContext->CurrentRow = ++true_y;
+		}
+		
+		if (true_y >= currentContext->ScreenHeight)
+		{	
+			true_y = currentContext->ScreenHeight - 1;
+			internalVgaPushUp();
+		}
 
 		if (c == '\t')
 		{
@@ -236,18 +247,6 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 			return;
 		} else {
 			safeToPrint = TRUE;
-		}
-
-		if (true_x >= currentContext->ScreenWidth)
-		{
-			true_x = 0;
-			currentContext->CurrentRow = ++true_y;
-		}
-		
-		if (true_y >= currentContext->ScreenHeight)
-		{	
-			true_y = currentContext->ScreenHeight - 1;
-			internalVgaPushUp();
 		}
 
 		if (safeToPrint)

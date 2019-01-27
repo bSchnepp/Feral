@@ -3,6 +3,7 @@ ENTRY(_start)
 SECTIONS
 {
 	. = 1M;
+	kern_start = .;
 	
 	.multiboot2 :
 	{
@@ -24,4 +25,5 @@ SECTIONS
 	{
 		*(.bss)
 	}
+	kern_end = .;
 }

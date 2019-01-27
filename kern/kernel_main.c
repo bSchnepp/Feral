@@ -353,16 +353,24 @@ VOID kern_init(UINT32 MBINFO)
 			/* For now, we'll just use the ELF sections tag. */
 			multiboot_tag_elf_sections *mb_as_elf = (multiboot_tag_elf_sections*)(MultibootInfo);
 			
-			/* Subtract our memory from the free memory, and then update kernel size and kernel address. */
+			/* Multiboot expects us to magically summon an elf header out of thin air or something.
+			     If we just read it directly, it's just 0s. So.....??????????????
+			     
+			     This is the sort of thing that makes supporting EFI **really** tempting.
+			 */
+			 
+			 /* 20 is here because multiboot said so. Don't know why, but that's the size, so go with it. */
 			UINT64 maxIters = (mb_as_elf->size - 20) / (mb_as_elf->entsize);
 			UINT64 index = 0;
 			
 			KiPrintFmt("Found %u ELF entries\n", maxIters);
 			
-			ElfSectionHeader64 currentEntry;
 			for (int i = 0; i < maxIters; i++)
 			{
-				KiPrintLine("i is %u");
+				/* Life would have ben 10000000x easier if the spec __JUST SAID THIS__. */
+				ElfSectionHeader64 *currentEntry = (&mb_as_elf->sections[i * mb_as_elf->entsize]);
+				KiPrintFmt("Entry size: %u\n", currentEntry->sh_size);
+				kernel_size += currentEntry->sh_size;
 			}
 			
 			/* TODO */

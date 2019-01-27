@@ -27,9 +27,15 @@ IN THE SOFTWARE.
  #ifndef _FERAL_RENEGADE_PROTOCOL_REN_H_
  #define _FERAL_RENEGADE_PROTOCOL_REN_H_
  
- #include <net/renegade/protocol.h>
+#include <net/renegade/protocol.h>
  
- BOOL NetPingAddress(UINT8 Address[64]);
+BOOL NetPingAddress(UINT8 Address[64]);
+ 
+typedef struct RenegadeConnectionContext
+{
+	/* Ping time on average (in nanoseconds) We can go up to something like 500 years of latency.*/
+	UINT64 AvgPingTime;
+}; 
  
  
  #endif

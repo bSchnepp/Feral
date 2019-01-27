@@ -2,7 +2,7 @@
 
 ## What is Feral?
 Feral is an experimental monolithic kernel intended to be used for my Waypoint operating system. It's primary goals are flexibility,
-reliablility, and good security, and above all else, performance. Feral is intended to run for many architectures, but is currently being
+reliablility, performance, and security. Feral is intended to run for many architectures, but is currently being
 developed primarilly for the x86_64 platform, and more specifically for Family 17h x86-64 PCs ("Zen" architecture)
 
 In the future, Feral is intended to run on MIPS, Aarch64, POWER9, and RV64GC hardware.
@@ -28,26 +28,35 @@ glBindBuffer(). The operating system's job is to *get out of the way of user mod
 Feral also does not support "legacy" hardware, such as IA-32. This is intended to keep development focused on current hardware and to
 avoid focusing on legacy structures and ideas which would hold back design of the kernel. What "legacy" actually means depends on
 how such a processor is currently being used: IA-32 CPUs for desktop gaming use are no longer in production, and thus not supported.
+It is unlikely that Feral will ever run on 32-bit hardware of any kind (x86 or otherwise), as the security subsystem will incorporate features based upon
+physical memory locations in order to thwart exploits making use of return-oriented programming and direct memory access, and lock certain areas of physical
+memory to be non-writable and executable, such that an exploit breaking into the kernel is unlikely to work 100% of the time. In mind specifically is to change
+which chunks of physical memory are allowed for things like shared objects, where they will be loaded, and what parts of physical memory will be used for
+virtual executable or writable memory. When we are not using a shared object (ie, libc.so), a page cannot be writable and then later on executable: permission
+*must* be granted by the security subsystem to do this, and done through a special, trusted shared object (usually the libos). At no point under
+any circumstances should any memory be both writable and executable at the same time.
 
-At it's heart, Feral is a hobby project, intended to be useful and fun for learning how to write good C code, building a large, complex project,
-overall design, systems, and hardware-level programming. In addition to this, it's also for fun for me to see how much faster I can get certain applications
-to run simply by changing platforms and doing minimal effort to port programs over. In particular, I would like to see a 5% performance improvement
-or better for certain open sourced games from the 90s as compared to a particularly prolific desktop operating system in active development from a 
-well-known company in Washington state. This is a good and interesting challenge, and aiming at a moving target is more fun. Feral is also
-being developed because bottom-up integration of every system from the operating system and up allows for good optmization, a good foundation in
-designing new applications on top of it, and a well-known, solid base upon which new things can be built from: this is in contrast to re-using an existing
-project in where some design choices may not align with the intended use case. Building *everything* from the ground up allows us to tailor every
-piece of the system to our exact needs, and thus trim away unnecessary bloat from design and implementation. For example, even needing a multi-user
-environment for Feral could be debated, as a multi-user environment has no direct benefit for a __personal__ computer, and costs much in performance:
-consider the performance of an application on Haiku versus a *NIX version on identical systems, specifically in a case where checking user IDs
-is a common operation (ie, a word processor, where writing and reading files is a fairly common operation). If there is only one user for the machine,
-and we always trust the user knows what they're doing (until they mess with system files), do we really need a multi-user environment?
+At it's heart, Feral is a hobby project, intended to be useful and fun for learning how to write a good, security-focused operating system with an emphasis on 
+ensuring maximum performance where possible, building a large, complex project, overall design, systems, and hardware-level programming. In addition to this, 
+it's also for fun for me to see how much faster I can get certain applications to run simply by changing platforms and doing minimal effort to port programs over. 
+In particular, I would like to see a 5% performance improvement or better for certain open sourced games from the 90s as compared to a particularly prolific 
+desktop operating system in active development from a well-known company in Washington state. This is a good and interesting challenge, and aiming at a 
+moving target is more fun. Feral is also being developed because bottom-up integration of every system from the operating system and up allows for good optmization, 
+a good foundation in designing new applications on top of it, and a well-known, solid base upon which new things can be built from: this is in contrast to re-using an existing
+project in where some design choices may not align with the intended use case, or especially with design of modern hardware.
+
+Feral is also partially the result of a dissatisfaction with the security model of many current operating systems, being insufficient to guarantee being secure out-of-the-box,
+or outright preventing hardening of core infrastructure (ie, preventing the ability to disable any sort of data collection) and/or outright discouraging such practice.
 
 ## Design influences?
 Architecturally, Feral is similar to a variety of prior systems originating between 1969 and 1993, with the most obvious being CMU's Mach project, and the Plan 9 project. Feral discards the "everything is a file"
 design in favor of "everything is a 'network resource'", which is intended to align with more modern hardware and software designs. Everything can be sent packets and recieve packets:
 writing to the filesystem is much the same as opening a web page and sending/recieving data to/from that. Feral also takes a lot of design inspiration from a variety of products which competed with
-BSD and other then-current *NIX distributions, specifically intending to avoid "just creating another *NIX clone".
+BSD and other then-current *NIX distributions, specifically intending to avoid "just creating another *NIX clone". This could even be expanded in the future to make everything in Feral "REST-like",
+and expose a small number of functions that can apply to various objects, and allow them to be hooked into a network stack and accessible over a network given sufficient permissions.
+This would make it possible for various nodes in a Feral cluster to communicate through existing network protocols, and sufficiently distribute computational workload.
+
+In other words, Feral flips the conventional "network stuff are just special files" on it's head: files are just special kinds of network stuff.
 
 Feral is also intended to be very easy to develop for by game developers: in general, the APIs for Feral "feel like a graphics API". Once a port is opened, some data structures
 and context info needs to be obtained from it, some settings set, and the system should do much of the work needed to get something going. However, Feral is very
@@ -59,10 +68,11 @@ with each other through simple interfaces that avoid getting in the way of userm
 
 Feral's layout and design is also intended to be simple for new developers to read the code and understand it, or perhaps even use it for their own projects.
 Care is being taken to avoid creating a mess in the source code, and that all important details are explained and documented well.
+Currently, there is a lot of work to be done to achieve this, in order to comply with my own programming style standards.
 
 ## Why Feral?
 
-Feral, while aiming to be a monolithic kernel, has much in common with the nanokernel and microkernel ideas. Feral itself only supports a specific format to load drivers in,
+Feral, while being a monolithic kernel, has much in common with the nanokernel and microkernel designs. Feral itself only supports a specific format to load drivers in,
 and these drivers define executable formats, file formats, network structures, and more, and simply hook into the existing Feral kernel. While most services are made available in
 the kernel, the kernel is very modular and by itself does not provide more than the absolute minimum for a given service. This allows Feral to even, in theory, support
 CPU dynamic recompilation and run code intended for an entirely different platform, or run executables not directly intended for Feral, eliminating the need to port
@@ -206,7 +216,7 @@ file path, and should *not* be interpretted as B:/Main, Storage/Files/Stuff/Some
 ## Overall goals:
  - Lightweight kernel, insist that processes do most of the work. (service provider does most of the kernel-mode work: programs shouldn't talk to kernel directly that much.)
  
- - Eliminate legacy "bloat" from traditional architecture and design: Our goal is to be **lightweight** and **mostly compatible**. If it gets in the way of lightweight, we won't implement it.
+ - Eliminate legacy "bloat" from traditional architecture and design: Our goal is to be **lightweight** and **mostly compatible** and **secure**.
 
  - Enforce a lot of verbosity out of user-mode programs (if what they could want could be ambiguous, there should be a function for every possible meaning.)
    (We have no idea what shell replacements might want to do with native Waypoint programs: just feed them as much information as possible.)
