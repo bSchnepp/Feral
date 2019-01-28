@@ -119,7 +119,7 @@ VOID VgaSetCursorEnabled(BOOL value)
 	if (value)
 	{
 		x86outb(VGA_FB_COMMAND_PORT, 0x0A);
-		x86outb(VGA_FB_DATA_PORT, (x86inb(VGA_FB_DATA_PORT) & 0xC0) | 0x00);	//OK, this is complex to explain. Just trust what I'm doing doesn't blow up GPUs.
+		x86outb(VGA_FB_DATA_PORT, (x86inb(VGA_FB_DATA_PORT) & 0xC0) | 0x00);	/* Read in a spot, and write a specific value so that we get a nice cursor. */
 
 		x86outb(VGA_FB_COMMAND_PORT, 0x0B);
 		x86outb(VGA_FB_DATA_PORT, (x86inb(0x3E0) & 0xE0) | 0x0F);

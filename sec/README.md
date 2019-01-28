@@ -105,7 +105,6 @@ In particular, we're looking to mitigate/thwart threats like
 	- Overwriting system configuration
 	- Theft of encryption keys
 	- User account theft
-	- ANYTHING THAT COULD POSSIBLY MAKE YOU LOSE SLEEP AT NIGHT.
 	
 ## Ideology
 No level of "good enough" is acceptable: we should always assume there are flaws in the kernel that we need to mitigate.
@@ -116,4 +115,7 @@ but we can at least make the effort of trying to break through as difficult as p
 We should assume *every* user mode process is *potentially* hostile to the system.
 This doesn't exclude clang (malicious code could have been injected), logon (again, malicious code), or even the liboses to some extent.
 
-
+## Why do you care so much?
+Simply because security should always be a high priority.
+(also mostly because it'd be really fun to seriously try and be better than OpenBSD--not going to happen,
+but we can pretend like it can!)
