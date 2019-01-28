@@ -30,6 +30,13 @@ Really, that's it.
 Nothing obscure, special, anything like that.
 
 
+## What are we doing?
+We'll aim for what *could* be considered B3 in the Orange Book,
+but we're not bothering with any formal compliance or anything like that.
+(again, if you *really* want security, use OpenBSD or Linux with AppArmor.)
+
+Thus, we'll break rules when it's convenient to implementation.
+
 ## Ideas?
 **there is no root user.**
 
@@ -85,9 +92,6 @@ to a single one. (we be more trusting of code in the kernel except driver
 code, since once you're in the kernel, you have better things to worry
 about than some linked list somewhere being abused for some vulnerability.)
 
-
-===
-
 Possible threats:
 
 In particular, we're looking to mitigate/thwart threats like
@@ -114,6 +118,7 @@ but we can at least make the effort of trying to break through as difficult as p
 
 We should assume *every* user mode process is *potentially* hostile to the system.
 This doesn't exclude clang (malicious code could have been injected), logon (again, malicious code), or even the liboses to some extent.
+
 
 ## Why do you care so much?
 Simply because security should always be a high priority.

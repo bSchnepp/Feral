@@ -25,7 +25,7 @@ IN THE SOFTWARE.
  */
  
 #ifndef _FERAL_RENEGADE_PROTOCOL_H_
-#define _FERAL_RENEGADE_PROTOCL_H_
+#define _FERAL_RENEGADE_PROTOCOL_H_
 
 /*	
 	Address space is 512 bits, or the same as IPv6 squared twice. (10 billion people could have 10 billion devices and still not 
@@ -64,6 +64,21 @@ IN THE SOFTWARE.
  */
 
 #include <feral/stdtypes.h>
+
+/** LETS START TOTALLY OVER **/
+/** Each gateway performs address translation. A given address on one node could be different to another. **/
+/* In order to establish a communication, they need to use a shared mechanism to bridge them: 
+	A packet is sent identifying the source, and the target, and an awknoledgement is sent back to authenticate back to the source.
+	The path between them can change during transmission, so this process needs to be repeated every time a new path is used. */
+
+typedef struct
+{
+	CHAR GatewayAddress[64];
+	CHAR OriginAddress[64];
+	CHAR DestinationAddress[64];
+}RenegadeHeader;
+
+
 
 /* For now, we trust CryptoNight v7 since it's memory-bound and hard to create useful ASICs for.*/
 typedef struct renegade_version_one_blockchain
