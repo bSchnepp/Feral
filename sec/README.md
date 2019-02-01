@@ -19,9 +19,7 @@ It is mostly intended to fill the same role as SELinux or AppArmor do to the Lin
 (Fittingly, I'm considering the name "Beaker", as in a laboratory beaker.)
 
 
-___
-
-(we'll call it 'BKR' for now: generalized prefix is 'Se', specific is 'Bkr')
+Beaker specific code is prefixed with "Bkr", and the general function prefix is "Se".
 
 
 ## Name?
@@ -31,11 +29,12 @@ Nothing obscure, special, anything like that.
 
 
 ## What are we doing?
-We'll aim for what *could* be considered B3 in the Orange Book,
+We'll aim for what *could* be considered B3 in the Orange Book, (or better)
 but we're not bothering with any formal compliance or anything like that.
-(again, if you *really* want security, use OpenBSD or Linux with AppArmor.)
+(again, if you *really* want security, use OpenBSD or Linux with AppArmor/SELinux.)
 
-Thus, we'll break rules when it's convenient to implementation.
+Thus, we'll break rules when it's convenient to implementation, or when it doesn't
+make sense in the context of Feral, if those cases exist.
 
 ## Ideas?
 **there is no root user.**
@@ -45,7 +44,7 @@ by this security subsystem. By default, *everything is
 denied access to everything but a very specific subset of 
 possible system calls.*
 
-The kernel enforces this via port rights and hash values.
+The kernel enforces this via port rights, this security system, and hash values.
 Depending on kernel configuration, we go up to
 3 layers of in-memory encryption for kernel objects,
 and up to 3 copies of each item, with checksums taken
@@ -109,12 +108,41 @@ In particular, we're looking to mitigate/thwart threats like
 	- Overwriting system configuration
 	- Theft of encryption keys
 	- User account theft
+	- Hijacking another process on the same machine (ie, subverting Chromium and sniffing outbound traffic)
+	- Attacking random pages in memory, marking them as free to cause crashes on random programs.
+	- Leaking pages, such that it's possible to see another program's memory space.
+
+## Specific details?
+Essentially re-implementing SELinux (and by extension, building yet another Flask implementation).
+However, this is just one part of Beaker (we do other things here on top of the same stuff SELinux does)
+The kernel provides a security server in which call objects are assigned an ID.
+This is cached by the object manager.
+We do stuff to check a given object has permission to do certain tasks.
+The above process must be atomic: we can't let an object exists without an accompanying
+security token.
+
+Don't let objects without specific permissions do thing they're not allowed to do.
+etc. etc.
+
+Even if an administrative account is compromised, it shouldn't bring down a whole system.
 	
+
+We can even extend this to be used for the filesystem, such that the tokens are unique to the system
+and simply taking a hard drive and attempting to read it without taking over the host system becomes
+much more difficult.
+
+We're the operating system, we have to think of everything that could possibly go wrong
+and lead to compromised systems which is bad for everyone.
+
 ## Ideology
 No level of "good enough" is acceptable: we should always assume there are flaws in the kernel that we need to mitigate.
 The security monitor's job is to make it as difficult as possible to hack a given system running Feral with appropriate configuration.
 We might not be able to stop *all* hacks (there is inevitably a flaw in some part of the system, or worse yet, a flaw in the hardware itself.),
 but we can at least make the effort of trying to break through as difficult as possible.
+
+Since at the end of the day we're just software, we have to assume the hardware below is
+correct in at least basic functionality. For better compatibility, we should
+avoid rdrand (One of my test machines doesn't support it).
 
 We should assume *every* user mode process is *potentially* hostile to the system.
 This doesn't exclude clang (malicious code could have been injected), logon (again, malicious code), or even the liboses to some extent.
@@ -124,3 +152,49 @@ This doesn't exclude clang (malicious code could have been injected), logon (aga
 Simply because security should always be a high priority.
 (also mostly because it'd be really fun to seriously try and be better than OpenBSD--not going to happen,
 but we can pretend like it can!)
+
+It's perhaps elucidated by providing an example: a device like a laptop or phone
+connects to many networks, of which many other people could also be on. Some of these
+might be malicious, and of those that might be malicious, they may specifically
+be targetting you for one reason or another: they want to take payment information,
+private keys, browser cookies, simply take your hardware, or do something "for the lulz". 
+No matter the case, security should always be a high priority, especially when you don't have
+complete control of every possible interaction a given machine might make.
+
+
+
+## Additional things?
+All "root"s (we have different permission 'pools' for every given task) have special
+IDs based upon specific hardware configurations, which changes at every boot and upon
+every hardware change. A function must be called to get these user IDs.
+
+This is to make it difficult to target a server running Feral over the Internet
+(or some RENEGADE network or something), since the attacker must either use this
+function (difficult, requires remote code execution), or know exactly
+the system they're targetting, what time it was booted, and details of all
+the hardware components.... (or somehow otherwise access a cache page holding
+the IDs, but this is basically the same as the first case.)
+
+This is done at boot time, and does not change for removable media (hard disks
+are ignored, including CD drives and USB sticks and all that.) We'll have to
+deal with systems where RAM can be hot-swapped, but that's for some other
+time to worry about.
+
+We don't use random number generators because
+	- We can't validate how good they are (except maybe software ones, but....)
+	- We have a contradiction anyway: we need one that's both perfectly random (cryptographically secure) and psuedo-random (possible to guess outcomes.)
+	- Even if we avoided above by caching perfectly random values, we'd then have a page where things are just open, and if the memory system is compromised, there everything is.
+	- We can check the integrity of results by just performing the check again: if an attacker replaced a value with a different one, we would know.
+
+
+
+## Goals
+	If it's more efficient for an attacker to physically compomise a piece of hardware than
+	it is to attack it through software, we've achieved our goal. We should then also do everything
+	in our power to make it as difficult as possible to break into data even with physical compromise.
+	(we can't halt attackers **forever**, but we can make it take many many many years to break encryption, make it difficult
+	to perform arbitrary/remote code execution, and hard to otherwise compromise security.)
+
+
+
+

@@ -28,11 +28,31 @@ IN THE SOFTWARE.
 #include <feral/kern/frlos.h>
 #include <feral/kern/krnlfuncs.h>
 
+#include <feral/string.h>
+#include <feral/feraluser.h>
+
 #include "sec.h"
 
 #if defined(__x86_64__)
 #include <arch/x86_64/vga/vga.h>
 #endif
+
+typedef struct
+{
+	FERALSTRING UserMapping;
+	WSTRING RootDir;
+}SeUserContext;
+
+
+typedef struct
+{
+	UINT64 IdentifierPrimary;
+	UINT64 IdentifierSeconday;
+
+	SeUserContext UserContext;
+		
+}SeSecurityContext;
+
 
 /* TODO: Refactor to have return as FERALSTATUS, and an INOUT parameter for the string. */
 STRING KiGetErrorType(IN FERALSTATUS Status)
@@ -61,10 +81,10 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 	KiPrintFmt("If the error persists, contact tech support and provide the following info:\n");
 	KiPrintFmt("Bug Check: 0x%x: %s\n", Status, KiGetErrorType(Status));
 	
-	/* TODO */
-	/* KiPrintFmt("Bug Check occured at epoch time %l\n", (KiGetCurrentTime())); */
-	/* KiPrintFmt("System uptime is %l\n", (KiGetCurrentUptime() / 1000)); */
-	/* KiPrintFmt("System had %l tasks running\n", (KiGetTaskCount())); */
+	/* TODO: We haven't implemented these function quite just yet, so uncomment when we do. */
+	/* KiPrintFmt("Bug Check occured at epoch time %l\n", (KeGetCurrentTime())); */
+	/* KiPrintFmt("System uptime is %l\n", (KeGetCurrentUptime() / 1000)); */
+	/* KiPrintFmt("System had %l tasks running\n", (KeGetTaskCount())); */
 	
 	/* KiPrintFmt("Feral will reboot in 15 seconds: log contents will be written to A:/System/Logs.\n"); */
 	for (;;)

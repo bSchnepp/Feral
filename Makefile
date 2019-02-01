@@ -21,12 +21,12 @@ kernel:
 	cd io && $(MAKE) 
 	cd drivers && $(MAKE)
 	cd kern && $(MAKE)
+	cd sec && $(MAKE)
 	
 	# libmm.a libprocmgr.a 
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) arch/$(ARCH)/extras.c -o ./iofuncs.o
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS)  sec/*.c -o ./sec.o
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES) -o vga.o io.o driver.o iofuncs.o kern/kernel_main.o kern/krnlfuncs.o kern/krnlfuncs.o kern/krnl_private.o kern/objmgr.o sec.o
-	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES) -o vga.o io.o driver.o iofuncs.o kern/kernel_main.o kern/krnlfuncs.o kern/krnlfuncs.o kern/krnl_private.o kern/objmgr.o
+	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o ./sec/*.o
 
 iso:	kernel
 	mkdir -p build/isofiles/boot/grub
@@ -41,6 +41,7 @@ clean:
 	rm -rf ./*.a
 	
 	cd kern && $(MAKE) clean
+	cd sec && $(MAKE) clean
 #	cd proc && $(MAKE)  clean && cd ../mm && $(MAKE) clean
 	## TODO: clean up object files too.
 

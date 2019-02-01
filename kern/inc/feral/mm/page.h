@@ -93,7 +93,15 @@ typedef struct
 	the kernel.
 */
 
-MmPage GetContainingFrame(IN UINT_PTR Address);
+
+/**
+	Gets the containing page of a given address.
+	@param Address The address to find the page descriptor for
+	@param Page A reference to the page belonging to that address.
+	
+	@return The status of the kernel after this operation.
+ */
+FERALSTATUS GetContainingFrame(IN UINT_PTR Address, OUT MmPage *Address);
 
 /**
 	Allocates a given page with given size and at the requested address.
