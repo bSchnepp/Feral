@@ -68,7 +68,7 @@ IN THE SOFTWARE.
 /* TODO: Identify Genoa (server CPUs succeding Milan) */
 
 #define	CPU_x86_64_FAMILY_INTEL_GENERAL	0x6
-/* Broadwell and earlier not supported. */
+/* Broadwell and earlier isn't defined (for now). */
 #define	CPU_x86_64_MODEL_SKYLAKE_CLIENT_MAINSTREAM	(94)
 #define	CPU_x86_64_MODEL_SKYLAKE_CLIENT_LOW_POWER	(78)
 #define	CPU_x86_64_MODEL_SKYLAKE_SERVER				(85)
@@ -97,11 +97,18 @@ typedef enum
 	CPUID_FEATURES_ECX_CX16       = (1 << 13),
 	CPUID_FEATURES_ECX_ETPRD      = (1 << 14),
 	CPUID_FEATURES_ECX_PDCM       = (1 << 15),
-}CPUID_FEATURES;	//TODO...
+}CPUID_ECX_FEATURES;	//TODO...
 
 void cpuid_vendor_func(DWORD* part1, DWORD* part2, DWORD* part3);
 void cpuid_brand_name(DWORD* part1, DWORD* part2, DWORD* part3, DWORD* part4);	/* See comment in kernel_main.c for usage. Cleanup later. */
 UINT32	cpuid_family_number(void);
+
+UINT32 x86_read_cr0(void);
+UINT32 x86_read_cr3(void);
+
+VOID x86_write_cr0(UINT32 val);
+VOID x86_write_cr3(UINT32 val);
+
 
 /* Useful ("stable") functions. Refactor elsewhere later. */
 VOID KiRestoreInterrupts(IN BOOLEAN value);
