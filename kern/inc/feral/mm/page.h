@@ -101,7 +101,7 @@ typedef struct
 	
 	@return The status of the kernel after this operation.
  */
-FERALSTATUS GetContainingFrame(IN UINT_PTR Address, OUT MmPage *Address);
+FERALSTATUS MmGetContainingFrame(IN UINT_PTR Address, OUT MmPage *Address);
 
 /**
 	Allocates a given page with given size and at the requested address.
@@ -113,6 +113,10 @@ FERALSTATUS GetContainingFrame(IN UINT_PTR Address, OUT MmPage *Address);
  */
 FERALSTATUS MmAllocateMemory(IN UINT_PTR RequestedAddress, UINTN Size, INOPT UINT_PTR LowerBound, INOPT UINT_PTR UpperBound, OUT UINT_PTR *ActualAddress);
 
+
+/**
+ */
+FERALSTATUS MmAllocateFrames
 
 /**
 	Marks a given page as empty.
