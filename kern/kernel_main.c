@@ -213,6 +213,7 @@ VOID KiSystemStartup(VOID)
 	
 	/* These are macroed away at release builds.  They're eliminated at build time.*/
 	KiDebugPrint("INIT Reached here.");
+	KiPrintLine("");
 }
 
 //UINT64 because one day someone is going to do something _crazy_ like have an absurd amount of processors (manycore), but be 32-bit and only 4GB addressable.
@@ -352,12 +353,6 @@ VOID kern_init(UINT32 MBINFO)
 		} else if (type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS) {
 			/* For now, we'll just use the ELF sections tag. */
 			multiboot_tag_elf_sections *mb_as_elf = (multiboot_tag_elf_sections*)(MultibootInfo);
-			
-			/* Multiboot expects us to magically summon an elf header out of thin air or something.
-			     If we just read it directly, it's just 0s. So.....??????????????
-			     
-			     This is the sort of thing that makes supporting EFI **really** tempting.
-			 */
 			 
 			 /* 20 is here because multiboot said so. Don't know why, but that's the size, so go with it. */
 			UINT64 maxIters = (mb_as_elf->size - 20) / (mb_as_elf->entsize);
@@ -365,13 +360,12 @@ VOID kern_init(UINT32 MBINFO)
 			
 			KiPrintFmt("Found %u ELF entries\n", maxIters);
 			
-			for (int i = 0; i < maxIters; i++)
+			/*for (int i = 0; i < maxIters; i++)
 			{
-				/* Life would have ben 10000000x easier if the spec __JUST SAID THIS__. */
 				ElfSectionHeader64 *currentEntry = (&mb_as_elf->sections[i * mb_as_elf->entsize]);
 				KiPrintFmt("Entry size: %u\n", currentEntry->sh_size);
 				kernel_size += currentEntry->sh_size;
-			}
+			}*/
 			
 			/* TODO */
 			kernel_start = 0;

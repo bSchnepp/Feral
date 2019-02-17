@@ -156,15 +156,10 @@ FERALSTATUS KiPrintWarnLine(STRING string)
 FERALSTATUS KiPrint(STRING string)
 {
 	PRINT_LINE_GENERIC();
-	for (UINT64 i = 0; i < length; i++)
+	for (UINT64 i = 0; i < length; ++i)
 	{
 		CHAR let = string[i];
-		if (string[i] >= '0' && let <= 'z')
-		{
-			KiPutChar(let);
-		} else if (let == '\n') {
-			KiPrintLine("");
-		}
+		KiPutChar(let);
 	}
 	return STATUS_SUCCESS;
 }

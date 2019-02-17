@@ -217,7 +217,6 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 	
 	for (CHAR c = *string; index < length; c = string[++index])
 	{
-		BOOL safeToPrint = FALSE;
 		if (true_x >= currentContext->ScreenWidth)
 		{
 			true_x = 0;
@@ -246,11 +245,6 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 		} else if (c == '\0') {
 			return;
 		} else {
-			safeToPrint = TRUE;
-		}
-
-		if (safeToPrint)
-		{
 			VgaEntry(foreground, background, c, true_x++, true_y);
 		}
 	}
