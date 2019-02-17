@@ -168,6 +168,32 @@ enable_paging:
 	mov cr0, eax		; And write to CR0.
 	
 
+; In the future, we need to refactor the
+; above code to call into these nice small utility
+; functions.
+
+
+[global x86_read_cr0]
+[global x86_write_cr0]
+[global x86_read_cr3]
+[global x86_write_cr3]
+
+x86_read_cr0:
+	mov eax, cr0
+	ret
+
+x86_write_cr0:
+	mov cr0, edi
+	ret
+
+x86_read_cr3:
+	mov eax, cr3
+	ret
+
+x86_write_cr3:
+	mov cr3, edi
+	ret
+
 
 ; We still need to create a GDT so we can run 64-bit code.
 ; Let's start...
