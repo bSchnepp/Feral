@@ -198,10 +198,11 @@ VOID KiSystemStartup(VOID)
 	SystemInfo.Arch = PROCESSOR_ARCH_X86_64;
 	
 	/* Do we really need this..? */
-	KiPrintLine("If the Boost Software License was not distributed with the OS if it should have, contact your OS vendor with a request for a copy. (this is a test message to demonstrate long strings, and should be removed from release.)");
-	KiPrintLine("Loading all drivers...");
+	KiPrintFmt("If the Boost Software License was not distributed with the OS if it should have, contact your OS vendor with a request for a copy. (this is a test message to demonstrate long strings, and should be removed from release.)\n");
+	KiPrintFmt("Loading all drivers...\n");
 	FERALSTATUS KiLoadAllDrivers(VOID);
-	KiPrintLine("Preparing execution environment...");
+	KiPrintFmt("%s\n", "Preparing execution environment...");
+	
 	
 #if defined(__x86_64__) || defined(__i386__)
 	VgaSetCursorEnabled(1);
@@ -360,12 +361,11 @@ VOID kern_init(UINT32 MBINFO)
 			
 			KiPrintFmt("Found %u ELF entries\n", maxIters);
 			
-			/*for (int i = 0; i < maxIters; i++)
+			for (int i = 0; i < maxIters; i++)
 			{
 				ElfSectionHeader64 *currentEntry = (&mb_as_elf->sections[i * mb_as_elf->entsize]);
-				KiPrintFmt("Entry size: %u\n", currentEntry->sh_size);
 				kernel_size += currentEntry->sh_size;
-			}*/
+			}
 			
 			/* TODO */
 			kernel_start = 0;

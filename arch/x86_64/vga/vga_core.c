@@ -41,27 +41,35 @@ typedef UINT16 ColorValue;
 
 /* Internal function, so suppress warning. */
 VOID internalVgaPushUp(VOID);
+UINT16 internalGetItem(UINT16 row, UINT16 col);
+VOID internalSetItem(UINT16 row, UINT16 col, UINT16 content);
+
+UINT16 internalGetItem(UINT16 row, UINT16 col)
+{
+	return currentContext->Framebuffer[(row * currentContext->ScreenWidth) + col];
+}
+
+VOID internalSetItem(UINT16 row, UINT16 col, UINT16 content)
+{
+	currentContext->Framebuffer[(row * currentContext->ScreenWidth) + col] = content;
+}
 
 VOID internalVgaPushUp(VOID)
 {
-	/* Go from 1 to 25 (for 80x25 mode), and take the next 80 bytes, and push them all up. */
-	for (UINT16 iRow = 1; iRow < currentContext->ScreenHeight; ++iRow)
+	UINT16 row;
+	for (row = 0; row < currentContext->ScreenHeight - 1; ++row)
 	{
-		for (UINT16 iCol = 0; iCol < currentContext->ScreenWidth; ++iCol)
+		for (UINT16 col = 0; col < currentContext->ScreenWidth; ++col)
 		{
-			UINT16 Offset = (iRow * currentContext->ScreenWidth);
-			UINT16 OffsetUp = ((iRow-1) * currentContext->ScreenWidth);
-			currentContext->Framebuffer[OffsetUp + iCol] = currentContext->Framebuffer[Offset + iCol];
+			internalSetItem(row, col, internalGetItem(row+1, col));
 		}
 	}
-	UINT16 lastLine = ((currentContext->ScreenWidth) * (currentContext->ScreenHeight - 1));
-	/* Purge the last row, ensuring it's totally empty. */
-	for (UINT16 iCol = 0; iCol < currentContext->ScreenWidth; ++iCol)
-	{
-		currentContext->Framebuffer[lastLine + iCol] = (UINT16)('\0') | ((UINT16)(currentContext->Background) << 8);
-	}
 	
-	VgaMoveCursor(currentContext->CurrentCol, currentContext->CurrentRow);
+	for (UINT16 col = 0; col < currentContext->ScreenWidth; ++col)
+	{
+		internalSetItem(row, col, (UINT16)(0));
+	} 
+	VgaMoveCursor(0, currentContext->ScreenHeight - 1);
 }
 
 

@@ -173,28 +173,6 @@ enable_paging:
 ; functions.
 
 
-[global x86_read_cr0]
-[global x86_write_cr0]
-[global x86_read_cr3]
-[global x86_write_cr3]
-
-x86_read_cr0:
-	mov eax, cr0
-	ret
-
-x86_write_cr0:
-	mov cr0, edi
-	ret
-
-x86_read_cr3:
-	mov eax, cr3
-	ret
-
-x86_write_cr3:
-	mov cr3, edi
-	ret
-
-
 ; We still need to create a GDT so we can run 64-bit code.
 ; Let's start...
 create_gdt:
@@ -251,6 +229,27 @@ mov [edx], ecx		; This is the last chunk of text we need for CPUID vendor.
 pop rbp			; Return the original base pointer.
 mov rax, 0		; Return 0 always.
 ret
+
+[global x86_read_cr0]
+[global x86_write_cr0]
+[global x86_read_cr3]
+[global x86_write_cr3]
+
+x86_read_cr0:
+	mov rax, cr0
+	ret
+
+x86_write_cr0:
+	mov cr0, rdi
+	ret
+
+x86_read_cr3:
+	mov rax, cr3
+	ret
+
+x86_write_cr3:
+	mov cr3, rdi
+	ret
 
 global cpuid_brand_name
 
