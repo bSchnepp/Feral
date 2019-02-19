@@ -27,8 +27,75 @@ IN THE SOFTWARE.
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
 
-FFERALSTATUS MmCreatePage(BOOL HugePage, UINT8 PageLevel, UINT64 NumPages, UINT8 RingLevel)
+#include <mm/mm.h>
+#include <mm/page.h>
+
+
+/* These need to be moved out, and just here for now. */
+FERALSTATUS KiInitializeMemMgr(VOID)
+{
+	return STATUS_SUCCESS;
+}
+
+
+FERALSTATUS MmCreatePageTables(VOID)
+{
+	return STATUS_SUCCESS;
+}
+
+FERALSTATUS MmAllocateProcess(VOID)
+{
+	return STATUS_SUCCESS;
+}
+
+
+
+
+
+
+
+FERALSTATUS MmGetContainingFrame(IN UINT_PTR Address, OUT MmPage *Page)
+{
+	return STATUS_SUCCESS;	
+}
+
+
+FERALSTATUS MmAllocateMemory(IN UINT_PTR RequestedAddress, UINTN Size, INOPT UINT_PTR LowerBound, INOPT UINT_PTR UpperBound, OUT UINT_PTR *ActualAddress)
+{
+	return STATUS_SUCCESS;	
+}
+
+
+/**
+	Allocates a given page with given size and at the requested address.
+	If the specific address with the specific size cannot be allocated,
+	then an error status is returned.
+	
+	SpecificAddress will be set to the actual location in memory where
+	the needed space was allocated.
+ */
+FERALSTATUS MmAllocateSpecificMemory(INOUT UINT_PTR SpecificAddress, UINTN Size)
+{
+	return STATUS_SUCCESS;	
+}
+
+/**
+	Marks a given page as empty.
+	@param AddressLocation The location to free
+	@param Size The amount to free
+	
+	@return The status of the kernel at this given time.
+ */
+FERALSTATUS MmDeallocateMemory(IN UINT_PTR AddressLocation, UINTN Size)
+{
+	return STATUS_SUCCESS;
+}
+
+
+
+FERALSTATUS MmCreatePage(BOOL HugePage, UINT8 PageLevel, UINT64 NumPages, UINT8 RingLevel)
 {
 	// todo
+	return STATUS_SUCCESS;
 }
 

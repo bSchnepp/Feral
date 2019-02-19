@@ -3,12 +3,12 @@
 things, and we should avoid doing any rendering while a game is running so it can get as much of the GPU's power as possible.
 
 	- Load games in kernel mode through some sort of kernel-mode loader.
-		(Avoid context switching, improve performance, maybe even allow games to directly program the hardware. For security purposes, ensure SYSTEM must be the one elevating the program, and the program doesn't know if it's actually in kernel-mode or not. Obviously warn the user doing this is potentially dangerous but might be helpful in cases where a game is not performing ideally, and an additional ~2-5 FPS makes it playable.)
+		(Avoid context switching, improve performance, maybe even allow games to directly program the hardware. For security purposes, ensure SYSTEM must be the one elevating the program, and the program doesn't know if it's actually in kernel-mode or not. Obviously warn the user doing this is potentially dangerous but might be helpful in cases where a game is not performing ideally, and an additional ~2-5 FPS makes it playable. (*can* we do this, given how complex things are? We'll need to call GL or VK or whatever in kernel mode, but also tons of otherwise user mode libraries in what's essentially a flat memory model. This seems *very* hard to achieve.)
 		
-	- Get a kernel-level hypervisor going.
+	- Get a kernel-level hypervisor going (something like KVM).
 
 	- Retain the 4-ring model. (Kernel, Executive, Supervisor, and User).
-		- On systems where there is only 2 rings, merge Executive into Kernel and Supervisor into User. Use system calls for Supervisor to keep portable.)
+		- On systems where there is only 2 rings, merge Executive into Kernel and Supervisor into User. Use system calls for Supervisor to keep portable. We'll need to deal with ambiguties (some systems call ring 0 "Supervisor", but for us thaat's ring 2.)
 
 	-  Assume users typing in a terminal may make mistakes (and thus be very verbose: it should not take 8 characters as SYSTEM to destroy the OS), but still be very easy 
 	to automate and simple. Add in things like floating point values (since they may be useful in some applications, ie, doing arithmetic very quickly on a command line), and simple to use the OS' registry.
@@ -17,6 +17,7 @@ things, and we should avoid doing any rendering while a game is running so it ca
 	(and adding a user, something like "USERADD \NAME="brian" \IDENTIFIED-BY="password" \PARENT="Administrator" GROUPS="wheel","audio","power";"
 
 	- Avoid being yet another *NIX clone: there's nothing wrong with *NIX really, it's just that everybody's done it before, and for some things, representation as a file might not be ideal. (it's great to always be experimental.)
+		(Some things, like representing the clock speed of a hardware device, just aren't ideal to represent as files. This is an integer (or a float), and should be represented as a network resource that reports that information.)
 	
 	- Add some new mechanism like VBOs but for system calls: we want to avoid system calls as much as possible because they will slow down userland (and performance is priority #1), The intent is that if usermode schedules
 		a whole bunch in advance, and then has a page or two where these are all dedicated to run, and just remaps that page when done, then we'd never have to go back and forth and back and forth (this is useful for example,
@@ -26,9 +27,10 @@ TODO to port:
 	- We want clang, llvm, yasm, etc. as soon as possible. We should aim to be self-hosting as soon as we can.
 	- We should also port python, and maybe get some version of Firefox up. At least links for a web browser.	
 	- Mesa would be nice to have.
+	- Port some 90s game over! (so we can slay some demons or something)
 
 User facing stuff:
-	- Animated wallpapers are an absolute must. We don't use potatos for CPUs anymore.
+	- Animated wallpapers are an absolute must. We don't use potatos for CPUs anymore. (also so we can brag we have something that RedmondOS doesn't have natively)
 
 	- We *really* like the colors black and gold (they're great together), and the occasional red highlight isn't bad, but shouldn't be used too much.
 	
@@ -37,4 +39,5 @@ User facing stuff:
 	- Strive to be user-friendly: a user shouldn't need to open a terminal for most simple tasks (like updating, installing a program, etc.), unless they want to.
 		- GUI tools for pretty much everything.
 		
-	- Virtual desktops, intuitive home folder structure, a "Recently played" list for games, etc.
+	- Virtual desktops, intuitive home folder structure, a "Recently played" list for games, etc. Virtual filesystem is a must (we can try to emulate the *NIX "every disk is mounted to a folder" by mapping it to DOS-style drive letters, ie, analagous 
+		to RedmondOS' '/mnt/d/' thing under WSL.)

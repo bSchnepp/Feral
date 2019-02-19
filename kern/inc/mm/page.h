@@ -34,17 +34,30 @@ typedef struct MmPage
 	UINTN PageIndex;
 	UINT_PTR PageSize;
 	UINT32 Flags;
-	MmPage* NextPage;
+	struct MmPage* NextPage;
 }MmPage;
+
+typedef enum MmFrameType
+{
+	/* We don't expect to deallocate this frame for a *very* long time. */
+	FRAME_TYPE_STATIC = 0,
+	
+	/* This may be variable size and asked to reallocate later */
+	FRAME_TYPE_DYNAMIC,
+	
+	/* This is small and expected to deallocate soon. */
+	FRAME_TYPE_CACHE,
+}MmFrameType;
 
 
 #define MM_PAGE_FLAG_END_OF_MEMORY	(1 << 1)
 
 /* 
 	This is 3 bits intentionally: it's to avoid a Rowhammer attack causing a single bit to be flipped and an attacker
-	able to overwrite a section of memory of something important. 
+	able to overwrite a section of memory of something important. (Flipping 3 bits to cause a page in used to be mistakenly labed as free
+	is *much* harder than a single bit. ECC memory doesn't protect us against 3 bits, only 2, but this should be sufficient.)
 */
-#define MM_PAGE_FLAG_FREE				(3 << 2)
+#define MM_PAGE_FLAG_FREE				(5 << 2)
 
 #define MM_PAGE_FLAG_READONLY			(1 << 6)
 
@@ -79,7 +92,7 @@ typedef struct
 }MmManagerContext;
 
 
-/* For now, we'll use a **really** simple linked list
+/* 	For now, we'll use a **really** simple linked list
 	allocator. This needs to be purged from the kernel 
 	once we get more complex, but for now, it works.
 	
@@ -101,7 +114,7 @@ typedef struct
 	
 	@return The status of the kernel after this operation.
  */
-FERALSTATUS MmGetContainingFrame(IN UINT_PTR Address, OUT MmPage *Address);
+FERALSTATUS MmGetContainingFrame(IN UINT_PTR Address, OUT MmPage *Page);
 
 /**
 	Allocates a given page with given size and at the requested address.
@@ -113,10 +126,21 @@ FERALSTATUS MmGetContainingFrame(IN UINT_PTR Address, OUT MmPage *Address);
  */
 FERALSTATUS MmAllocateMemory(IN UINT_PTR RequestedAddress, UINTN Size, INOPT UINT_PTR LowerBound, INOPT UINT_PTR UpperBound, OUT UINT_PTR *ActualAddress);
 
+/**
+	Allocates a given page with given size and at the requested address.
+	If the specific address with the specific size cannot be allocated,
+	then an error status is returned.
+	
+	SpecificAddress will be set to the actual location in memory where
+	the needed space was allocated.
+ */
+FERALSTATUS MmAllocateSpecificMemory(INOUT UINT_PTR SpecificAddress, UINTN Size);
+
 
 /**
+	Allocates a number of frames.
  */
-FERALSTATUS MmAllocateFrames
+FERALSTATUS MmAllocateFrames(IN UINTN Amount, OUT UINTN *Address);
 
 /**
 	Marks a given page as empty.
