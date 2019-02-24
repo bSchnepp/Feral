@@ -292,6 +292,9 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 
 /* AT LEAST THERE'S NO SECURE BOOT. */
 
+extern UINTN kern_start;
+extern UINTN kern_end;
+
 #ifndef FERAL_BUILD_STANDALONE_UEFI_
 VOID kern_init(UINT32 MBINFO)
 {
@@ -322,8 +325,9 @@ VOID kern_init(UINT32 MBINFO)
 	}
 	
 	UINT64 freemem = 0;
-	UINT_PTR kernel_start = 0;
-	UINT64 kernel_size = 0;
+	UINT64 kernel_start = &kern_start;
+	UINT64 kernel_end = &kern_end;
+	UINT64 kernel_size = kernel_end - kernel_start;
 	
 	/* We need to do some kludgy pointer magic to get this to work. We interpret a pointer as an integer when booting, now need to reinterpret cast to a proper type. */
 	/* (We need to treat as an integer initially so that we can check the validity of it: it _must_ be aligned properly. */
@@ -345,6 +349,7 @@ VOID kern_init(UINT32 MBINFO)
 			multiboot_mmap_entry currentEntry = {0};
 			
 			UINT64 index = 0;
+			/* 12 is the size of the rest of the items in this struct. */
 			UINT64 maxIters = (mb_as_mmap_items->size - 12) / mb_as_mmap_items->entry_size;
 			for (currentEntry = mb_as_mmap_items->entries[0]; index < maxIters; currentEntry = mb_as_mmap_items->entries[++index])
 			{
@@ -364,11 +369,8 @@ VOID kern_init(UINT32 MBINFO)
 			for (int i = 0; i < maxIters; i++)
 			{
 				ElfSectionHeader64 *currentEntry = (&mb_as_elf->sections[i * mb_as_elf->entsize]);
-				kernel_size += currentEntry->sh_size;
+				/* todo... */
 			}
-			
-			/* TODO */
-			kernel_start = 0;
 		}
 	}
 	
