@@ -32,7 +32,7 @@ IN THE SOFTWARE.
 
 
 /* These need to be moved out, and just here for now. */
-FERALSTATUS KiInitializeMemMgr(VOID)
+FERALSTATUS KiInitializeMemMgr(MemoryManagementCreateInfo info)
 {
 	return STATUS_SUCCESS;
 }

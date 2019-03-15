@@ -30,6 +30,7 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/handle.h>
 #include <feral/kern/frlos.h>
+#include <mm/mm.h>
 
 #if defined(__x86_64__)
 #include <arch/x86_64/vga/vga.h>
@@ -252,6 +253,12 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 {
 	if (subsystem == FERAL_SUBSYSTEM_MEMORY_MANAGEMENT)
 	{
+		MemoryManagementCreateInfo info;
+		info.MemoryLowerBoundSize = 64;
+		info.PageAllocSize = 4096;
+		/* INFINITY!!!!!! */
+		info.MemoryUseQuota = 0xFFFFFFFFFFFFFFFF;
+		return KiInitializeMemMgr(info);
 	} else {
 	}
 	return STATUS_SUCCESS;

@@ -26,10 +26,12 @@ IN THE SOFTWARE.
 
  */
  
+ #include <feral/stdtypes.h>
+ 
 typedef enum SdPriorityLevel
 {
 	SCHED_PRIORITY_LEVEL_IDLE = 0x0,
-	SCHED_PRIORITY_LEVEL_FAR_BELOW_NORMAL = 0x8000
+	SCHED_PRIORITY_LEVEL_FAR_BELOW_NORMAL = 0x8000,
 	SCHED_PRIORITY_LEVEL_BELOW_NORMAL = 0x8001,
 	SCHED_PRIORITY_LEVEL_NORMAL = 0x0001,
 	SCHED_PRIORITY_LEVEL_ABOVE_NORMAL = 0x0001,
@@ -39,17 +41,21 @@ typedef enum SdPriorityLevel
 }SdPriorityLevel;
  
 /*Processor control region (various bits of info about this processor) */
-typedef struct
+typedef struct PcProcessor
 {
 #if defined(__i386__) || defined(__x86_64__)
 	const char ProcessorVendor[12];
 	const char ProcessorName[48];
+#elif defined(__arm__) || defined(__aarch64__)
+	const char *ProcessorVendor;
+	const char *ProcessorName;
+	const char *Architecture;
+	const char *PartNumber;
+	const char *PartRevision;
 #endif
 
 	UINT64	ProcNumber;
 	UINT32	SMTThreads;
 	
 	//TODO
-
-
-}SdPcr;
+}PcProcessor;

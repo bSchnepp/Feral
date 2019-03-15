@@ -1,8 +1,8 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,27 +24,36 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-
-// C definitions for the memory stuff written in Rust.
-// (I might just drop writing part of the kernel in Rust and just do what I wanted to in C anyway, though.)
-#include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
+#include <feral/stdtypes.h>
 
 
-typedef struct MemoryManagementCreateInfo
+#ifndef _FERAL_MM_COMMON_H_
+#define _FERAL_MM_COMMON_H_
+
+/* 
+	When designing this, we'd probably do best referencing chapter 10 of RedmondOS Internals (6th edition),
+	and some other books out there.
+	
+	We want to do some things, like overcommit virtual memory by default (~125% of what it wants initially, so adding an extra 4th, round down),
+	so that a program which does a ton of malloc() and whatnot doesn't need to invoke the kernel per-se all that often (performance hack)
+	... It already owns that memory, so let the C library deal with it. 
+	
+	We can make this easy by doing (initial_mem) + (initial_mem >> 2), so we don't do division at all.
+ */
+
+/* TODO */
+typedef enum MmCoreContextStructureType
 {
-	/* Min size of a block from level 2 allocator. */
-	UINT_PTR	MemoryLowerBoundSize;
+	MM_CORE_CONTEXT_STRUCTURE_TYPE_MAIN_STRUCTURE_TYPE = 0,
 	
-	/* Default page size. */
-	UINT_PTR	PageAllocSize;
+}MmCoreContextStructureType;
+
+typedef struct MmCoreContext
+{
+	MmCoreContextStructureType sType;
 	
-	/* Limit on memory we can use total (ever). */
-	UINT_PTR		MemoryUseQuota;
-}MemoryManagementCreateInfo;
+}MmCoreContext;
 
-//(Obviously, these are TODO.)
 
-FERALSTATUS KiInitializeMemMgr(MemoryManagementCreateInfo info);	//TODO!!!
-FERALSTATUS MmCreatePageTables(VOID);	//TODO!!!
-FERALSTATUS MmAllocateProcess(VOID);	//TODO!!!
+#endif

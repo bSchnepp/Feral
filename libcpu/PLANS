@@ -10,3 +10,8 @@ Kernel is asked to run a non-native program:
 			 	(we are avoiding syscalls. This *really* hurts performance. Avoid syscalls as much as we can. Once we're in kernel mode, avoid going out, and vice versa, until we have nothing else to do.)
 			 
 		- Emulators need a certain SDK (exported by this library), and to be dynamically linked to a loader library.
+		
+		
+		
+TODO: Scrap all of this, jettison into user-mode, and just be dynamically invoked when program arch != host arch, so that it becomes a user mode
+wrapper executing a binary, Emulators can hook into this and control it, but by default, libcpu assumes it's something like x86-64 Waypoint --> RISC-V Waypoint or something.

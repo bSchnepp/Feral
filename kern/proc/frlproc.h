@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining  a copy of the software and accompanying documentation covered by 
@@ -23,28 +23,30 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
+ 
+ 
+#ifndef _FERAL_PROCESS_H_
+#define _FERAL_PROCESS_H_
+ 
+ #include <feral/stdtypes.h>
+ 
+ /* 	By default, Feral allocates an **empty** process (nothing is linked in).
+ 	We expect the process driver (elf, maco, pe, etc.) to associate it
+ 	with an appropriate emulation layer (elf-waypoint, pe-reactos, etc.)
+ 	The appropriate libos is linked into the process, and should proceed as
+ 	if it was "native"--
+ 	
+ 	Feral **immediately** diverts all system calls into the appropriate emulation
+ 	layer (ie, WINE on FERAL), unless the program registers itself as part of a **native**
+ 	subsystem, which should only be true for things like phone or mcp. This way, the system calls
+ 	are processed by the libos to do the appropriate Feral thing and return results back to
+ 	the appropriate process as though it were a different OS.
+   */
 
 
-// C definitions for the memory stuff written in Rust.
-// (I might just drop writing part of the kernel in Rust and just do what I wanted to in C anyway, though.)
-#include <feral/stdtypes.h>
-#include <feral/feralstatus.h>
-
-
-typedef struct MemoryManagementCreateInfo
+typedef struct PcProcessEntry
 {
-	/* Min size of a block from level 2 allocator. */
-	UINT_PTR	MemoryLowerBoundSize;
 	
-	/* Default page size. */
-	UINT_PTR	PageAllocSize;
-	
-	/* Limit on memory we can use total (ever). */
-	UINT_PTR		MemoryUseQuota;
-}MemoryManagementCreateInfo;
-
-//(Obviously, these are TODO.)
-
-FERALSTATUS KiInitializeMemMgr(MemoryManagementCreateInfo info);	//TODO!!!
-FERALSTATUS MmCreatePageTables(VOID);	//TODO!!!
-FERALSTATUS MmAllocateProcess(VOID);	//TODO!!!
+}PcProcessEntry;
+ 
+#endif

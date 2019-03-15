@@ -29,14 +29,21 @@ IN THE SOFTWARE.
 #ifndef _FERAL_KERN_FERAL_MM_PAGE_H_
 #define _FERAL_KERN_FERAL_MM_PAGE_H_
 
+#define PAGE_SIZE_ENTRY_SMALLEST	(4096)
+
 typedef struct MmPage
 {
 	UINTN PageIndex;
-	UINT_PTR PageSize;
+	UINT64 PageSize;		/* For now, we only support 4kb pages.*/
+	UINT64 PageLocation;
 	UINT32 Flags;
 	struct MmPage* NextPage;
 }MmPage;
 
+/* 
+	Depending on how we'll work on this later, we may go like Linux and be overcommit-by-default.
+	We thus have less realloc() requiring us to mess with paging, and help performance somewhat.
+ */
 typedef enum MmFrameType
 {
 	/* We don't expect to deallocate this frame for a *very* long time. */
@@ -61,7 +68,7 @@ typedef enum MmFrameType
 
 #define MM_PAGE_FLAG_READONLY			(1 << 6)
 
-/* For similar reasons, these are separate flags. If > 1 are set, we better do something. */
+/* For similar reasons, these are separate flags. If > 1 are set, we better do something (something like W^X). */
 #define MM_PAGE_FLAG_KERNEL_LEVEL			(1 << 7)
 #define MM_PAGE_FLAG_INTERMEDIATE_LEVEL	(1 << 8)
 #define MM_PAGE_FLAG_USER_LEVEL				(1 << 9)
@@ -88,8 +95,8 @@ typedef struct
 	
 	/* The last page we allocated (in distance from 0, not the last one used.) */
 	MmPage *FurthestPage;
-	
 }MmManagerContext;
+
 
 
 /* 	For now, we'll use a **really** simple linked list

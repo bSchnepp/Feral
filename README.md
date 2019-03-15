@@ -55,6 +55,7 @@ writing to the filesystem is much the same as opening a web page and sending/rec
 BSD and other then-current *NIX distributions, specifically intending to avoid "just creating another *NIX clone". This could even be expanded in the future to make everything in Feral "REST-like",
 and expose a small number of functions that can apply to various objects, and allow them to be hooked into a network stack and accessible over a network given sufficient permissions.
 This would make it possible for various nodes in a Feral cluster to communicate through existing network protocols, and sufficiently distribute computational workload.
+All Feral objects must expose at least one of the functions "GET", "POST", "MOVE", "DEL", and "PUT".
 
 In other words, Feral flips the conventional "network stuff are just special files" on it's head: files are just special kinds of network stuff.
 
@@ -126,11 +127,12 @@ Kernel-related functions should ALWAYS
 I'm intending to either port Mesa/amdgpu/whatever or AMDVLK, or just writing a brand new Vulkan driver from scratch.
 	OpenGL isn't intended to be supported (unless I do port the entirety of Mesa or something).
 	The desktop will be composited in Vulkan (so a Vulkan *graphics* driver **is necessary**).
+	Behind the scenes, we'll probably be making something more or less like DRI/DRM.
 
 ## How will frame creation be done on a desktop (when it gets there)
 When this eventually happens, I'd like to have GUIs created something like as follows:
 
-```
+```c
 // (this is pseudocode of course). 'Wp' is for 'Waypoint'. This probably won't compile with a real compiler.
 #define APPLICATION_NAME GenericSample
 
