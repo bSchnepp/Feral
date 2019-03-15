@@ -278,7 +278,7 @@ VOID InternalPrintRegister(UINT32 reg)
 /* ugly hack, refactor sometime later. */
 VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 {
-	KiPrint(cpu_vendor_msg);
+	KiPrintFmt(cpu_vendor_msg);
 	InternalPrintRegister(part1);
 	InternalPrintRegister(part2);
 	InternalPrintRegister(part3);
