@@ -105,6 +105,7 @@ UINT64 kernel_size;
 			Network resources would be accessed via:
 			\\.\0x93252290D23F0B5E84B58AC3F8C4CD62D630C525B91FB962B14C7B63E5DFD2CDBD273C09886A51AE4EA6F806C8A3AE55FB5C60553D7121A6CBC304C3B22916BDD63F5AF36688728A1458F7763320B2FB96972A33644A401431E0A6024370FC/index.html
 			for example, where without specifying 'ipv4::', 'ipv6::', '9p::', etc. before the address, we assume RENEGADE.
+			We'll need to consider alternative encoding, like base64.
 			Obviously we'll implement a domain service so that mass of numbers isn't required. (Do you really want to memorize that mess for *every single website*?)
 
 			It also assigns drive letters (the system default 'A', secondary drives get some way of assigning a letter to them, 

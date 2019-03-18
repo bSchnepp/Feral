@@ -50,10 +50,50 @@ FERALSTATUS MmAllocateProcess(VOID)
 	return STATUS_SUCCESS;
 }
 
+typedef enum MmStructureType
+{
+	MM_STRUCTURE_TYPE_FRAME_ALLOCATION_CONTEXT = 0,
+	MM_STRUCTURE_TYPE_MAX = 0xFFFF
+}MmStructureType;
 
+typedef struct MmFrameAllocationContext
+{
+	MmStructureType sType;
+	const void *pNext;
+	
+	UINT8 *PageMap;
+	UINTN PageMapSize;
+	UINT_PTR StartingAddress;
+	UINT_PTR *ForbiddenAddresses;
+	UINTN ForbiddenAddressedCount;
+}MmFrameAllocationContext;
 
+/* Likewise, here temporarilly, need to be moved out. */
+/**
+	Prepares a given location to be allocated by MmAllocateFrame.
+	This simply marks a given page as in use in the page map,
+	and then returns the associated address in AllocatedLocation.
+ */
+FERALSTATUS MmPreAllocateFrame(IN UINTN MaxPages, IN MmFrameAllocationContext AllocationContext, OUT *UINT_PTR AllocatedLocation)
+{
+	UINTN Counter = 0;
+	while (PageMarker[Counter] != 0x00)
+	{
+		if (++Counter == MaxPages)
+		{
+			/*  TODO: Add error in FERALSTATUS*/
+			return STATUS_ERROR;
+		}
+	}
+	PageMarker[Counter] = 0x01;
+	return StartingAddress + (0x1000 * Counter);
+}
 
-
+FERALSTATUS MmAllocateFrame(IN UINTN MaxPages, IN MmFrameAllocationContext AllocationContext, OUT *UINT_PTR AllocatedLocation)
+{
+	/* TODO */
+	return STATUS_SUCCESS;
+}
 
 
 FERALSTATUS MmGetContainingFrame(IN UINT_PTR Address, OUT MmPage *Page)
