@@ -31,6 +31,8 @@ IN THE SOFTWARE.
 #include <mm/page.h>
 
 
+/* We'll allow processes up to ~140TB of virtual memory. This should be more than enough for the time being. */
+
 /* These need to be moved out, and just here for now. */
 FERALSTATUS KiInitializeMemMgr(MemoryManagementCreateInfo info)
 {

@@ -63,6 +63,14 @@ static UINT8 FeralVersionPatch;
 static CHAR* cpu_vendor_msg = "CPU Vendor: ";
 static SYSTEM_INFO KernelSystemInfo = {};
 
+extern UINTN kern_start;
+extern UINTN kern_end;
+
+/* Convert the addresses into integers for easier comparison. */
+UINT64 kernel_start = &kern_start;
+UINT64 kernel_end = &kern_end;
+UINT64 kernel_size;
+
 #if defined(KERN_DEBUG)
 /* Experimental features flag. Always involves some sort of bear. */
 #define BOUNCING_MONITOR_BEAR (0x01)
@@ -299,12 +307,10 @@ VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
 
 /* AT LEAST THERE'S NO SECURE BOOT. */
 
-extern UINTN kern_start;
-extern UINTN kern_end;
-
 #ifndef FERAL_BUILD_STANDALONE_UEFI_
 VOID kern_init(UINT32 MBINFO)
 {
+	kernel_size = kernel_end - kernel_start;
 	VgaContext graphicsContext = {0};
 	UINT8 misc = VgaPrepareEnvironment(&graphicsContext);
 	KiBlankVgaScreen(25, 80, VGA_BLACK);
@@ -332,9 +338,6 @@ VOID kern_init(UINT32 MBINFO)
 	}
 	
 	UINT64 freemem = 0;
-	UINT64 kernel_start = &kern_start;
-	UINT64 kernel_end = &kern_end;
-	UINT64 kernel_size = kernel_end - kernel_start;
 	
 	/* We need to do some kludgy pointer magic to get this to work. We interpret a pointer as an integer when booting, now need to reinterpret cast to a proper type. */
 	/* (We need to treat as an integer initially so that we can check the validity of it: it _must_ be aligned properly. */
