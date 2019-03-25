@@ -30,12 +30,64 @@ IN THE SOFTWARE.
 #include <mm/mm.h>
 #include <mm/page.h>
 
+#if defined(__x86_64__) || defined(__i386__)
+/* TODO: Deal with 32-bit x86 not supporting everything. Maybe force PAE? */
+#include <arch/x86_64/mm/pageflags.h>
+#endif
 
-/* We'll allow processes up to ~140TB of virtual memory. This should be more than enough for the time being. */
+typedef enum MmStructureType
+{
+	MM_STRUCTURE_TYPE_FRAME_ALLOCATION_CONTEXT = 0,
+	MM_STRUCTURE_TYPE_PAGE_DIRECTORY,
+	MM_STRUCTURE_TYPE_MAX = 0xFFFF
+}MmStructureType;
+
+/* An entry in the page table. */
+typedef uint64_t PageTableEntry;
+
+typedef struct MmPageDirectory
+{
+	MmStructureType sType;
+	const char* pNext;
+	
+	PageTableEntry	*Tables[1024];
+	UINT_PTR PhysicalAddresses[1024];
+	UINT_PTR PhysicalTableRealAddress;
+}MmPageDirectory;
+
+typedef struct MmFrameAllocationContext
+{
+	MmStructureType sType;
+	const void *pNext;
+	
+	UINT8 *PageMap;
+	UINTN PageMapSize;
+	
+	UINT_PTR PageTable;
+	
+	UINT_PTR StartingAddress;
+	UINT_PTR *ForbiddenAddresses;
+	UINTN ForbiddenAddressedCount;
+}MmFrameAllocationContext;
+
+
+
+
+/* We'll allow processes up to ~140TB of virtual memory. This should be more than enough for the time being. 
+ 	Maybe we can be *really* aggressive and only allow 1TB or less of virtual memory for the kernel?
+ 	We'll probably have no need for something even that massive for the time being, (realistically,
+ 	if the kernel needs more than 4GB of RAM, something is very wrong.)
+ */
+
+/* TODO: Make this cleaner... */
+static MmFrameAllocationContext CurrentAllocationContext;
 
 /* These need to be moved out, and just here for now. */
 FERALSTATUS KiInitializeMemMgr(MemoryManagementCreateInfo info)
 {
+#if defined(__x86_64__) || defined(__i386__)
+	CurrentAllocationContext.PageTable = x86_read_cr3();
+#endif
 	return STATUS_SUCCESS;
 }
 
@@ -50,34 +102,32 @@ FERALSTATUS MmAllocateProcess(VOID)
 	return STATUS_SUCCESS;
 }
 
-typedef enum MmStructureType
-{
-	MM_STRUCTURE_TYPE_FRAME_ALLOCATION_CONTEXT = 0,
-	MM_STRUCTURE_TYPE_MAX = 0xFFFF
-}MmStructureType;
 
-typedef struct MmFrameAllocationContext
-{
-	MmStructureType sType;
-	const void *pNext;
-	
-	UINT8 *PageMap;
-	UINTN PageMapSize;
-	UINT_PTR StartingAddress;
-	UINT_PTR *ForbiddenAddresses;
-	UINTN ForbiddenAddressedCount;
-}MmFrameAllocationContext;
 
-/* Likewise, here temporarilly, need to be moved out. */
+/* 
+	Likewise, here temporarilly, need to be moved out.
+	In the future, we want to replace all of this
+	with a buddy memory system (the same as what Linux usses.)
+	I'm mostly interested in filesystem and scheduling,
+	we just need a malloc() to make everything else possible
+	first.
+ */
+ 
 /**
 	Prepares a given location to be allocated by MmAllocateFrame.
-	This simply marks a given page as in use in the page map,
+	This simply marks a single given page as in use in the page map,
 	and then returns the associated address in AllocatedLocation.
  */
-FERALSTATUS MmPreAllocateFrame(IN UINTN MaxPages, IN MmFrameAllocationContext AllocationContext, OUT *UINT_PTR AllocatedLocation)
+FERALSTATUS MmPreAllocateFrame(IN UINTN MaxPages, IN MmFrameAllocationContext AllocationContext, OUT UINT_PTR *AllocatedLocation)
 {
+	if (AllocationContext.sType != MM_STRUCTURE_TYPE_FRAME_ALLOCATION_CONTEXT)
+	{
+		/* Something got passed in very wrong. */
+		return STATUS_ERROR;
+	}
+	
 	UINTN Counter = 0;
-	while (PageMarker[Counter] != 0x00)
+	while (AllocationContext.PageMap[Counter] != 0x00)
 	{
 		if (++Counter == MaxPages)
 		{
@@ -85,11 +135,11 @@ FERALSTATUS MmPreAllocateFrame(IN UINTN MaxPages, IN MmFrameAllocationContext Al
 			return STATUS_ERROR;
 		}
 	}
-	PageMarker[Counter] = 0x01;
-	return StartingAddress + (0x1000 * Counter);
+	AllocationContext.PageMap[Counter] = 0x01;
+	return AllocationContext.StartingAddress + (0x1000 * Counter);
 }
 
-FERALSTATUS MmAllocateFrame(IN UINTN MaxPages, IN MmFrameAllocationContext AllocationContext, OUT *UINT_PTR AllocatedLocation)
+FERALSTATUS MmAllocateFrame(IN UINTN MaxPages, IN MmFrameAllocationContext AllocationContext, OUT UINT_PTR *AllocatedLocation)
 {
 	/* TODO */
 	return STATUS_SUCCESS;
@@ -137,7 +187,11 @@ FERALSTATUS MmDeallocateMemory(IN UINT_PTR AddressLocation, UINTN Size)
 
 FERALSTATUS MmCreatePage(BOOL HugePage, UINT8 PageLevel, UINT64 NumPages, UINT8 RingLevel)
 {
-	// todo
+	PageTableEntry entry = 0;;
+	if (HugePage)
+	{
+		
+	}
 	return STATUS_SUCCESS;
 }
 

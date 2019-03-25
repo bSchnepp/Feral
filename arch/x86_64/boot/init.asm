@@ -54,6 +54,8 @@ _start:
 	mov esp, stack_top	; Set the stack up.
 
 	; Check for multiboot 2 compliance.
+	; This number is the multiboot2 magic number: if this is present, then the kernel was booted correctly.
+	; If it was not, then something went wrong, and we'll panic.
 	sub eax, 0x36D76289	; use sub over cmp when we have an excuse for it.
 	jnz boot_panic
 	
@@ -105,9 +107,6 @@ _start:
 
 
 create_page_tables:
-	; (I understand about 99% of what we're doing here, but then we (will) have things where virtual memory =/= physical memory 
-	; and virtual memory for task A isn't the same memory as task B and now we're all confused again on what's what.
-
 	; We'll use names like 'p4', 'p3', etc, because it's just easier.
 
 	; We need to link up P4 to P3.
@@ -158,7 +157,7 @@ enable_paging:
 	; Now, we actually enable long mode.
 	mov ecx, 0xC0000080
 	rdmsr			; Read model specific register (x86-64 EFER)
-	or eax, 100000000b	; Flip bit 8. (We could also do a bitshift but oh well.)
+	or eax, (1 << 8)	; Flip bit 8.
 	wrmsr			; And write back to the MSR.
 
 	; Now we finish enable paging.
@@ -207,7 +206,8 @@ kern_start:
 	mov gs, ax
 	
 	mov rdi, [multiboot_value]			; Give us the multiboot info we want.
-	mov rsp, stack_top	
+	mov rsp, stack_top
+	and rsp, -16	; Guarantee that we're in fact, aligned correctly.	
 
 	extern kern_init
 	call kern_init
@@ -270,6 +270,27 @@ pop rcx
 pop rbx
 ret
 
+
+global get_initial_p4_table
+global get_initial_p3_table
+global get_initial_p2_table
+global get_initial_p1_table
+
+get_initial_p4_table:
+	mov rax, [p4_table]
+	ret
+
+get_initial_p3_table:
+	mov rax, [p3_table]
+	ret
+	
+get_initial_p2_table:
+	mov rax, [p2_table]
+	ret
+
+get_initial_p1_table:
+	mov rax, [p1_table]
+	ret	
 
 section .rodata
 

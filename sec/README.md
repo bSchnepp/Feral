@@ -60,7 +60,7 @@ make easier to break into via something like a side-channel
 attack. We can't use one-time pads because we can't
 guarantee *true randomness*. (Nor could we really use
 one time pads for filesystems anyway without requiring enormous
-encryption keys.)
+encryption keys... do you really want a key that's 5TB long?)
 
 We should also provide each object with 3 different kinds of
 checksums to be provided with it, depending on how
@@ -113,7 +113,7 @@ In particular, we're looking to mitigate/thwart threats like
 	- Leaking pages, such that it's possible to see another program's memory space.
 
 ## Specific details?
-Essentially re-implementing SELinux (and by extension, building yet another Flask implementation).
+Essentially re-implementing SELinux (and by extension, building yet another FLASK implementation).
 However, this is just one part of Beaker (we do other things here on top of the same stuff SELinux does)
 The kernel provides a security server in which call objects are assigned an ID.
 This is cached by the object manager.
@@ -129,10 +129,13 @@ Even if an administrative account is compromised, it shouldn't bring down a whol
 
 We can even extend this to be used for the filesystem, such that the tokens are unique to the system
 and simply taking a hard drive and attempting to read it without taking over the host system becomes
-much more difficult.
+much more difficult. (The CTR-001 does something like this?)... though this makes disk recovery when
+a motherboard or CPU or whatever goes out to be rather hard.
 
 We're the operating system, we have to think of everything that could possibly go wrong
-and lead to compromised systems which is bad for everyone.
+and lead to compromised systems which is bad for everyone. User mode being compromised
+isn't reaally our problem, in the sense of "we'll protect it, but you ask to get broken into, and we won't
+stop it."
 
 ## Ideology
 No level of "good enough" is acceptable: we should always assume there are flaws in the kernel that we need to mitigate.
@@ -142,11 +145,14 @@ but we can at least make the effort of trying to break through as difficult as p
 
 Since at the end of the day we're just software, we have to assume the hardware below is
 correct in at least basic functionality. For better compatibility, we should
-avoid rdrand (One of my test machines doesn't support it).
+avoid rdrand (One of my test machines doesn't support it). We also don't know
+exactly how rdrand works anyway, and we can't *prove* it's correct. (Though it's probably
+in one of the software development manuals... but even I haven't actually read the entire thing.)
 
 We should assume *every* user mode process is *potentially* hostile to the system.
 This doesn't exclude clang (malicious code could have been injected), logon (again, malicious code), or even the liboses to some extent.
-
+We can't be overly paranoid and assume everything *is* hostile to the system, since then we couldn't get anything done, but we should
+try to always be wary of what's going on and shut it down whenever it poses a threat.
 
 ## Why do you care so much?
 Simply because security should always be a high priority.
@@ -161,6 +167,8 @@ private keys, browser cookies, simply take your hardware, or do something "for t
 No matter the case, security should always be a high priority, especially when you don't have
 complete control of every possible interaction a given machine might make.
 
+There's a lot of dangerous things out there, and since we're the OS, it's our job to
+deal with it as best we can.
 
 
 ## Additional things?
@@ -170,7 +178,9 @@ every hardware change. A function must be called to get these user IDs.
 
 This is to make it difficult to target a server running Feral over the Internet
 (or some RENEGADE network or something), since the attacker must either use this
-function (difficult, requires remote code execution), or know exactly
+function (difficult, requires remote code execution, since we don't allow all rwx bits on pages,
+they have to resort to ROPing, which (hopefully) should thwart all but the most dedicated
+attackers), or know exactly
 the system they're targetting, what time it was booted, and details of all
 the hardware components.... (or somehow otherwise access a cache page holding
 the IDs, but this is basically the same as the first case.)
@@ -178,7 +188,7 @@ the IDs, but this is basically the same as the first case.)
 This is done at boot time, and does not change for removable media (hard disks
 are ignored, including CD drives and USB sticks and all that.) We'll have to
 deal with systems where RAM can be hot-swapped, but that's for some other
-time to worry about.
+time to worry about. (Or we can flat out refuse to support it)
 
 We don't use random number generators because
 	- We can't validate how good they are (except maybe software ones, but....)
@@ -194,7 +204,3 @@ We don't use random number generators because
 	in our power to make it as difficult as possible to break into data even with physical compromise.
 	(we can't halt attackers **forever**, but we can make it take many many many years to break encryption, make it difficult
 	to perform arbitrary/remote code execution, and hard to otherwise compromise security.)
-
-
-
-

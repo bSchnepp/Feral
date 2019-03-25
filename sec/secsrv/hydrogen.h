@@ -37,9 +37,11 @@ typedef enum SecurityClearanceLevel
 	SECURITY_LEVEL_UNTRUSTED = 0,
 	SECURITY_LEVEL_LOW_TRUST = 1,
 	SECURITY_LEVEL_MED_TRUST = 2,
-	SECURITY_LEVEL_HIGH_TRUST = 3,
-	SECURITY_LEVEL_SUPERVISOR = 7,
-	SECURITY_LEVEL_MANAGER = 15,
+	SECURITY_LEVEL_HIGH_TRUST = 7,
+	SECURITY_LEVEL_SUPERVISOR = 15,
+	SECURITY_LEVEL_MANAGER = 31,
+	SECURITY_LEVEL_ADMINISTRATOR = 63,
+	/* We have 2 more bits left. What to do with them? */
 }SecurityClearanceLevel;
 
 typedef enum SecurityClassStructureType
@@ -74,6 +76,10 @@ typedef enum SecurityClassStructureType
 	
 }SecurityClassStructureType;
 
+/* 
+	object oriented c is fun: all structs need to implement this,
+	and then other stuff.
+ */
 typedef struct SecurityClassCommon
 {
 	SecurityClassStructureType sType;

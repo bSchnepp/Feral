@@ -39,4 +39,10 @@ IN THE SOFTWARE.
 
 #define X86_PAGE_NO_EXECUTE					(1 << 63)
 
+#if defined(__i386__)
+#define PAGE_ALIGN(x) (x & 0xFFFFF000)
+#elif defined(__x86_64__)
+#define PAGE_ALIGN(x) (x & 0xFFFFFFFFFFFFF000)
+#endif
+
 #endif
