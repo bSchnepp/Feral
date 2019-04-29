@@ -274,7 +274,6 @@ ret
 global get_initial_p4_table
 global get_initial_p3_table
 global get_initial_p2_table
-global get_initial_p1_table
 
 get_initial_p4_table:
 	mov rax, [p4_table]
@@ -288,9 +287,6 @@ get_initial_p2_table:
 	mov rax, [p2_table]
 	ret
 
-get_initial_p1_table:
-	mov rax, [p1_table]
-	ret	
 
 section .rodata
 
