@@ -387,9 +387,9 @@ VOID kern_init(UINT32 MBINFO)
 	
 	KiPrintFmt("Total free memory: %uMB (Kernel is %u bytes big)\n", freemem / (1024 * 1024), kernel_size);
 	
-	if (freemem == 0)
+	if (freemem <= 1024)
 	{
-		/* We somehow have no free memory? */
+		/* We somehow have no free memory? We alwo want 1024 bytes left over. */
 		KiStopError(STATUS_SEVERITY_ERROR);
 	}
 	
@@ -423,6 +423,7 @@ VOID kern_init(UINT32 MBINFO)
 		InternalPrintRegister(part3);
 		InternalPrintRegister(part4);
 	}
+	KiPrintLine("");	/* Flush to newline. */
 
 	UINT32 familyStuff = cpuid_family_number();
 	UINT32 actualFamily = (familyStuff >> 8) & 15;
@@ -432,18 +433,33 @@ VOID kern_init(UINT32 MBINFO)
 	
 	if (actualFamily == 0x6 || actualFamily == 0xF)
 	{
+		/* Family 15 wants us to report the family number as such. */
 		if (actualFamily == 15)
 		{
 			actualFamily += (familyStuff >> 20) & 0x0FFFFFFF;
 		}
+		/* In both cases, we also need to append some more info from cpuid. */
 		actualFamily += ((familyStuff >> 16) & 0x4);
 	}
 	
 	
 	if ((actualFamily != CPU_x86_64_FAMILY_ZEN))
 	{
-		/* Now we can not feel bad about over-optimizing for Zen */
-		KiPrintLine("[WARNING] Unsupported CPU: There may be issues running Feral");
+		/* 
+			Trim down the error messages. TODO: Inspect model number.
+			If the model number *is* Zen, but not *first generation 
+			Zen*, then also complain about unsupported CPU. 
+		*/
+		KiPrintLine("Unsupported CPU");
+	} 
+	if (TRUE)
+	{
+		/* 
+			Put this here until we get B350, X370, etc. drivers.
+			Feral (for now) doesn't support _any_ platform controller
+			hub, so this message is pretty much meaningless.
+		 */
+		KiPrintLine("Unsupported PCH");
 	}
 
 	KiPrintLine("");

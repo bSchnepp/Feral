@@ -187,11 +187,13 @@ FERALSTATUS MmDeallocateMemory(IN UINT_PTR AddressLocation, UINTN Size)
 
 FERALSTATUS MmCreatePage(BOOL HugePage, UINT8 PageLevel, UINT64 NumPages, UINT8 RingLevel)
 {
-	PageTableEntry entry = 0;;
+#if defined(__x86_64__) || defined(__i386__)
+	PageTableEntry entry = X86_PRESENT_WRITABLE_PAGE;
 	if (HugePage)
 	{
-		
+		entry |= X86_PAGE_HUGE;  
 	}
+#endif
 	return STATUS_SUCCESS;
 }
 

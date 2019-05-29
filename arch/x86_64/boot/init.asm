@@ -305,6 +305,7 @@ gdt_64:
 
 section .bss
 ALIGN 4096
+; Note we go p2 --> p3 --> p4.
 p4_table:
 	resb 4096
 p3_table:

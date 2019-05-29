@@ -24,29 +24,22 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
  
-#ifndef _FERAL_X86_64_PAGE_FLAGS_H_
-#define _FERAL_X86_64_PAGE_FLAGS_H_
+ 
+/* 
+	TODO: this needs to actually work (one day). We'll
+	need to carefully consider how to do system calls, how it's different
+	from x86, etc. etc.
+ */
 
-#define X86_PAGE_FLAG_PRESENT				(1 << 0)
-#define X86_PAGE_FLAG_WRITABLE				(1 << 1)
-#define X86_PAGE_FLAG_USER_READ				(1 << 2)
-#define X86_PAGE_FLAG_WRITE_PAST_CACHE			(1 << 3)
-#define X86_PAGE_FLAG_CACHE_DISABLED			(1 << 4)
-#define X86_PAGE_ACCESSED_FLAG				(1 << 5)
-#define X86_PAGE_DIRTY					(1 << 6)
-#define X86_PAGE_HUGE					(1 << 7)
-#define X86_PAGE_GLOBAL					(1 << 8)
 
-#define X86_PAGE_NO_EXECUTE				(1 << 63)
+#include <feral/stdtypes.h>
 
-#if defined(__i386__)
-#define PAGE_ALIGN(x) (x & 0xFFFFF000)
-#elif defined(__x86_64__)
-#define PAGE_ALIGN(x) (x & 0xFFFFFFFFFFFFF000)
+#if defined(__riscv__) || defined(__riscv64__)
+VOID RV64EnterUserMode(VOID* ip, UINT_PTR StackTop)
+{
+	/* TODO: Stub */
+	return;
+}
 #endif
 
-/* Helper to make things easier. */
-#define X86_PRESENT_WRITABLE_PAGE (X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE)
-#define X86_PRESENT_PAGE_NO_EXEC (X86_PAGE_FLAG_PRESENT | X86_PAGE_NO_EXECUTE)
 
-#endif
