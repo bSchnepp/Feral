@@ -110,6 +110,7 @@ UINT64 kernel_size;
 
 			It also assigns drive letters (the system default 'A', secondary drives get some way of assigning a letter to them, 
 			(usually in alphabetical order (A:/,, B:/, ...,  AB:/, ...,  AZ:/, AAA:/, AAB:/, and so on)
+			I already implemented that algorithm some time ago, just need to go find my implementation in one of my archive servers' folders somewhere...
 	 */
 
 
@@ -119,6 +120,7 @@ UINT64 kernel_size;
 	always missing one thing, or just could be done better, or could exist. Also because I really like building everything from the ground up.
 	Really bad not-invented-here I guess.)
 */
+
 /* 
 	Things to do in order:
 	Memory management subsystems, RAMFS filesystem
@@ -184,23 +186,6 @@ FERALSTATUS KiPrintWarnLine()
 /* This is the kernel's *real* entry point. TODO: some mechanism for a Feral-specific bootloader to skip the multiboot stuff and just load this.*/
 VOID KiSystemStartup(VOID)
 {
-	/*
-	//TODO...
-	//We need to look for every core on the system (We should expect 8, as we're expecting to run on a ZEN 1700X CPU. I will probably upgrade to something on socket TR4 though.)
-	//As such, we need to run a function called HalInitializeProcessor (for the remaining 7 cores... for playing with a 1950X eventually, 15 remaining cores...)
-	// I do now have a 1950X (turns out you don't need $1500 to fall out of the sky if you wait long enough after all), so we can build the kernel VERY VERY FAST and have plenty of Zen cores to run in VMs with.
-	//And then call KiInitializeKernel as needed. We'll also have to use SMT when we can.
-
-	//SMP support would also be nice, but I can't really imagine any desktop motherboards supporting a dual-CPU configuration. (though this would be AWESOME! And it doubles as a heater!)
-	// We may need to support SMP anyway, ie, on X399, since the CPU on that platform is *technically* 2 - 4 "CPUs" put together on a single package (with each of those CPUs *technically* being "2 CPUs").
-	// Better put, we have 4 cores per CCX. We have 2 CCXes per die, and we have 2 dies, so 4 * 2 * 2 = 8 * 2 = 16 cores. Each core has 2 threads, and thus we get 32 threads, but each core isn't really the same.
-	// We have to be careful about this with the scheduler and not just see "hey there's 32 threads" and just throw code on whichever CPU we just feel like.
-	//At best, only consoles would do it, and seeing as how console systems tend to be low on power consumption, a dual-CPU configuration seems fairly unlikely today.
-	//(Especially since games right now don't really utilize that many cores to their full potential... not because the engines are bad, just that no reason to use them.)
-
-	//Of course, don't be bad, actually check if a feature is available before using it.
-	*/
-
 	/* First off, ensure we load all the drivers, so we know what's going on. */
 	KiPrintLine("Copyright (c) 2018-2019, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
@@ -224,7 +209,12 @@ VOID KiSystemStartup(VOID)
 	
 	/* These are macroed away at release builds.  They're eliminated at build time.*/
 	KiDebugPrint("INIT Reached here.");
-	KiPrintLine("");
+	
+	/* 
+		TODO: Call up KiStartupProcessor for each processor listed in APIC.
+		Each processor should have it's x87 enabled, so we can do SSE stuff
+		in usermode. 
+	 */
 }
 
 //UINT64 because one day someone is going to do something _crazy_ like have an absurd amount of processors (manycore), but be 32-bit and only 4GB addressable.
@@ -322,14 +312,6 @@ VOID kern_init(UINT32 MBINFO)
 	FeralVersionPatch = FERAL_VERSION_PATCH;
 
 	KiPrintFmt("Starting Feral Kernel Version %01u.%01u.%01u %s\n\n", FERAL_VERSION_MAJOR, FERAL_VERSION_MINOR, FERAL_VERSION_PATCH, FERAL_VERSION_SHORT);
-
-	//Row 4, index 30, 32, 34, while we're at it, make it green
-	VgaEntry(VGA_GREEN, VGA_BLACK, ('0'), 30, 1);
-	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MAJOR), 31, 1);
-	VgaEntry(VGA_GREEN, VGA_BLACK, ('0'), 33, 1);
-	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_MINOR), 34, 1);
-	VgaEntry(VGA_GREEN, VGA_BLACK, ('0'), 36, 1);
-	VgaEntry(VGA_GREEN, VGA_BLACK, ('0' + FERAL_VERSION_PATCH), 37, 1);
 	
 	/* First, request the info from the multiboot header. */
 	if (MBINFO & 0x07)
@@ -364,8 +346,12 @@ VOID kern_init(UINT32 MBINFO)
 			UINT64 maxIters = (mb_as_mmap_items->size - 12) / mb_as_mmap_items->entry_size;
 			for (currentEntry = mb_as_mmap_items->entries[0]; index < maxIters; currentEntry = mb_as_mmap_items->entries[++index])
 			{
-				KiPrintFmt("Possibe memory at: 0x%x, up to 0x%x. (size %u)\n", currentEntry.addr, currentEntry.addr + currentEntry.len, currentEntry.len);
-				freemem += currentEntry.len;
+				/* Check the type first. */
+				if (currentEntry.type == 1)
+				{
+					KiPrintFmt("Possible memory at: 0x%x, up to 0x%x. (size %u)\n", currentEntry.addr, currentEntry.addr + currentEntry.len, currentEntry.len);
+					freemem += currentEntry.len;
+				}
 			}
 		} else if (type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS) {
 			/* For now, we'll just use the ELF sections tag. */
@@ -448,7 +434,28 @@ VOID kern_init(UINT32 MBINFO)
 		/* 
 			Trim down the error messages. TODO: Inspect model number.
 			If the model number *is* Zen, but not *first generation 
-			Zen*, then also complain about unsupported CPU. 
+			Zen*, then also complain about unsupported CPU.
+			
+			We identify this based on the presence of "1", as in
+			1950X, 1700X, 1800X, etc. We must *also* check for "2"
+			and "3", since 2000-series are all either Zen+ (supported for sure)
+			or zen (also supported for sure.) We have these tight checks
+			because inevitably I will make a mistake somewhere and use
+			FMA3/RDRAND/etc in a Zen-specific way at some point probably, and won't
+			get around to fixing it for a while. Also because the way
+			the scheduler is going to be built is *specifically* for
+			Zen's chiplet, really-big-cache design. It'll *probably*
+			be fine for Zen 2, but I dont have the hardware so I can't
+			prove it, even anecdotally. The scheduler is to be built
+			with the latency between chiplets in mind, and trying our
+			hardest to avoid shuffling between cores, and especially
+			between CCXs.
+			
+			Do note that some APUs ("3000-series") are actually Zen+,
+			not Zen 2. These are identified with the suffix "GE" and "G".
+			
+			Then we have to deal with the embedded CPUs. (V, R-series).
+			Both of these are Zen 1.
 		*/
 		KiPrintLine("Unsupported CPU");
 	} 
@@ -458,11 +465,15 @@ VOID kern_init(UINT32 MBINFO)
 			Put this here until we get B350, X370, etc. drivers.
 			Feral (for now) doesn't support _any_ platform controller
 			hub, so this message is pretty much meaningless.
+			
+			We need to actually write code to identify between
+			X370, X470, X570, B350, B450, B550, B320, B420, and B520.
+			(oh and panther point and wellsburg or whatever for
+			the blue team if we care.)
 		 */
 		KiPrintLine("Unsupported PCH");
 	}
 
-	KiPrintLine("");
 	
 	// Kernel initialization is done, move on to actual tasks.
 	KiSystemStartup();
@@ -470,6 +481,6 @@ VOID kern_init(UINT32 MBINFO)
 #else
 kern_init(UINT32 MBINFO)
 {
-	/* TODO (uefi standalone) */
+	/* TODO (uefi standalone). Bootloader directly calls KiSystemStartup. */
 }
 #endif

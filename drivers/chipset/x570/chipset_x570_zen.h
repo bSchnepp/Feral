@@ -1,8 +1,8 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,35 +24,4 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
  
-#ifndef  _FERAL_3D_CYNIC_API_H_
-#define _FERAL_3D_CYNIC_API_H_
-
-#define CYNIC_VENDOR_NAME "Feral Generic Cynic Driver"
-
-/*  TODO: Support graphic and compute APIs. */
-
-typedef enum CynStructureType
-{
-	CYN_STRUCTURE_TYPE_NULL = 0,
-	CYN_STRUCTURE_TYPE_GRAPHICS_FACTORY,
-	CYN_STRUCTURE_TYPE_DEVICE_INSTANCE,
-	
-}CynStructureType;
-
-typedef struct CynGfxFactory
-{
-	CynStructureType sType;
-	const void* pNext;
-	/* TODO */
-}CynGfxFactory;
-
-
-typedef struct CynDeviceInstance 
-{
-	CynStructureType sType;
-	const void* pNext;
-	/* TODO */
-}CynDeviceInstance;
-
-
-#endif
+ // Specific things for x86 x570 chipset (mainly RAID)

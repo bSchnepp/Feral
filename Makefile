@@ -50,6 +50,10 @@ qemu:	iso
 
 qemu-nokvm:	iso
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G
+
+# The most alien CPU we can get.
+qemu-nokvm-unsupportedcpu:	iso
+	qemu-system-$(ARCH) -cpu KnightsMill -cdrom $(ISO) -smp 2 -m 6G
 	
 qemu-lldb:	iso
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -S -s &

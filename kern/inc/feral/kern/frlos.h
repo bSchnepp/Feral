@@ -63,7 +63,8 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem);
 #ifdef KERN_DEBUG
 static FERALSTATUS KiDebugPrint(STRING string)
 {
-	return KiPrintWarnLine(string);
+	KiPrintWarnLine(string);
+	return KiPrintFmt("\n");
 }
 #else
 #define KiDebugPrint(x)
