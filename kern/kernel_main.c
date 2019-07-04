@@ -328,8 +328,20 @@ VOID kern_init(UINT32 MBINFO)
 	MultibootInfo = (multiboot_tag*)((UINT8*)(MultibootInfo) + ((MultibootInfo->size + 7) & ~0x07)))
 	{
 		UINT16 type = MultibootInfo->type;
-		if (type == MULTIBOOT_TAG_TYPE_BOOT_LOADER)
+		if (type == MULTIBOOT_TAG_TYPE_CMD_LINE)
 		{
+			multiboot_tag_string *mb_as_string = (multiboot_tag_string*)(MultibootInfo);
+			STRING str = mb_as_string->string;
+			UINT64 len = 0;
+			if (KiGetStringLength(str, &len) == STATUS_SUCCESS)
+			{
+				if (len != 0)
+				{
+					KiPrintFmt("Got command line: %s\n", mb_as_string->string);
+				}
+			}
+			
+		} else if (type == MULTIBOOT_TAG_TYPE_BOOT_LOADER) {
 			multiboot_tag_string *mb_as_string = (multiboot_tag_string*)(MultibootInfo);
 			KiPrint("Detected bootloader: ");
 			KiPrintLine(mb_as_string->string);
@@ -347,11 +359,19 @@ VOID kern_init(UINT32 MBINFO)
 			for (currentEntry = mb_as_mmap_items->entries[0]; index < maxIters; currentEntry = mb_as_mmap_items->entries[++index])
 			{
 				/* Check the type first. */
-				if (currentEntry.type == 1)
+				if (currentEntry.type == E820_MEMORY_TYPE_FREE)
 				{
 					KiPrintFmt("Possible memory at: 0x%x, up to 0x%x. (size %u)\n", currentEntry.addr, currentEntry.addr + currentEntry.len, currentEntry.len);
 					freemem += currentEntry.len;
+				} else if (currentEntry.type == E820_MEMORY_TYPE_ACPI) {
+					KiPrintFmt("ACPI memory at: 0x%x, up to 0x%x\n", currentEntry.addr, currentEntry.addr + currentEntry.len); 
+				} else if (currentEntry.type == E820_MEMORY_TYPE_NVS) {
+					KiPrintFmt("Reserved hardware memory at: 0x%x, up to 0x%x\n", currentEntry.addr, currentEntry.addr + currentEntry.len); 
+				} else if (currentEntry.type == E820_MEMORY_TYPE_BADMEM) {
+					KiPrintFmt("DEFECTIVE MEMORY AT: 0x%x, up to 0x%x\n", currentEntry.addr, currentEntry.addr + currentEntry.len);
 				}
+				
+				/* E820_MEMORY_TYPE_RESERVED, E820_MEMORY_TYPE_DISABLED, E820_MEMORY_TYPE_INV ignored. */
 			}
 		} else if (type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS) {
 			/* For now, we'll just use the ELF sections tag. */

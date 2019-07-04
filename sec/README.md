@@ -180,7 +180,7 @@ This is to make it difficult to target a server running Feral over the Internet
 (or some RENEGADE network or something), since the attacker must either use this
 function (difficult, requires remote code execution, since we don't allow all rwx bits on pages,
 they have to resort to ROPing, which (hopefully) should thwart all but the most dedicated
-attackers), or know exactly
+attackers with ASLR and being *very* careful to prevent use-after-frees), or know exactly
 the system they're targetting, what time it was booted, and details of all
 the hardware components.... (or somehow otherwise access a cache page holding
 the IDs, but this is basically the same as the first case.)

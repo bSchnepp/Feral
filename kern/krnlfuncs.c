@@ -263,6 +263,16 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 	va_list args;
 	va_start(args, fmt);
 
+	/* 
+		Note that out of some laziness,
+		we're not properly checking
+		any datatypes here.
+		
+		You can pass a an int as a string
+		and it'll run just fine... and never stop
+		parsing. Not great.
+	*/
+
 	BOOL upState = FALSE;
 	UINT8 repeatedCount = 0;
 	
@@ -275,8 +285,14 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 			upState = TRUE;
 		} else if (upState)
 		{
+			/* 
+				If this state is up, it means we're in a special
+				format mode (ie, the % char was present and were
+				not done parsing it.)
+			 */
 			if (cur == 's')
 			{
+				/* We interpret as a string. */
 				STRING valistnext;
 				valistnext = va_arg(args, STRING);
 				KiPrint(valistnext);

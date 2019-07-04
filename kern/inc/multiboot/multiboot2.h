@@ -81,6 +81,19 @@ IN THE SOFTWARE.
 				UINT16	flags;										\
 				UINT32	size
 
+
+
+typedef enum multiboot_e820_mm_type
+{
+	E820_MEMORY_TYPE_INV = 0x00,
+	E820_MEMORY_TYPE_FREE = 0x01,
+	E820_MEMORY_TYPE_RESERVED = 0x02,
+	E820_MEMORY_TYPE_ACPI = 0x03,
+	E820_MEMORY_TYPE_NVS = 0x04,
+	E820_MEMORY_TYPE_BADMEM = 0x05,
+	E820_MEMORY_TYPE_DISABLED = 0x06,
+}multiboot_e820_mm_type;
+
 typedef struct multiboot_header
 {
 	UINT32	magic;

@@ -28,15 +28,25 @@ IN THE SOFTWARE.
 #define _FERAL_HYDROGEN_H_
 
 /* 
-	We're not stupid: don't let 0 be maximum access (just set it to null 
-	in memory and everything cracks open, absolutely STUPID idea.) 
+	We're not stupid: don't let 0 be maximum access (There are *many*
+	ways to set things to 0, but much fewer to set things to some
+	very specific value, or it takes more time. Even if we can't
+	hold security that long, if we can stall an attacker for another 2-3 
+	seconds to look in memory for a value to memcpy()... enough time to
+	rip power coords out and ethernet cables?)
+	
+	Security server's purpose is to prevent exploitation *after* we've been
+	compromised, and to add some layers of security beforehand
+	to try and avoid privilege escalation.
  */
 
+
+/* _MUST_ be castable to UINT8 for proofs and stuff. */
 typedef enum SecurityClearanceLevel
 {
 	SECURITY_LEVEL_UNTRUSTED = 0,
 	SECURITY_LEVEL_LOW_TRUST = 1,
-	SECURITY_LEVEL_MED_TRUST = 2,
+	SECURITY_LEVEL_MED_TRUST = 3,
 	SECURITY_LEVEL_HIGH_TRUST = 7,
 	SECURITY_LEVEL_SUPERVISOR = 15,
 	SECURITY_LEVEL_MANAGER = 31,
@@ -86,5 +96,7 @@ typedef struct SecurityClassCommon
 	const void* pNext;
 	
 }
+
+BOOL CheckSecurityClearance(SecurityClearanceLevel userHas, SecurityClearanceLevel wanted);
 
 #endif
