@@ -207,6 +207,8 @@ VOID KiSystemStartup(VOID)
 
 	KiPrintFmt("Using math magic, we can equate %u with -1\n", -1L);
 	
+	
+	KiStartupSystem(FERAL_SUBSYSTEM_MEMORY_MANAGEMENT);
 	/* These are macroed away at release builds.  They're eliminated at build time.*/
 	KiDebugPrint("INIT Reached here.");
 	
@@ -255,9 +257,14 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 		MemoryManagementCreateInfo info;
 		info.MemoryLowerBoundSize = 64;
 		info.PageAllocSize = 4096;
-		/* INFINITY!!!!!! */
-		info.MemoryUseQuota = 0xFFFFFFFFFFFFFFFF;
-		return KiInitializeMemMgr(info);
+		/* Heap is less than 1G for now. Note this is an **upper** bound
+		   on the size of the heap, and it *could* be less than this
+		   (and usually is).
+		 */
+		info.HeapSize = 900000;
+		KiPrintFmt("Starting up memory manager...\n");
+		/* Temporary hack, (where the heap is) for now. */
+		return KiInitializeMemMgr(info, 0x100000);
 	} else {
 	}
 	return STATUS_SUCCESS;

@@ -63,6 +63,9 @@ typedef struct MmFrameAllocationContext
 	UINT8 *PageMap;
 	UINTN PageMapSize;
 	
+	UINT8 *HeapMap;
+	UINTN HeapSize;
+	
 	UINT_PTR PageTable;
 	
 	UINT_PTR StartingAddress;
@@ -77,29 +80,56 @@ typedef struct MmFrameAllocationContext
  	Maybe we can be *really* aggressive and only allow 1TB or less of virtual memory for the kernel?
  	We'll probably have no need for something even that massive for the time being, (realistically,
  	if the kernel needs more than 4GB of RAM, something is very wrong.)
+ 	
+ 	
+ 	What needs to happen is we create a bare-bones malloc here,
+ 	with the presumption we have something like at least 64MB of RAM
+ 	(which is pretty reasonable, actually, and we use it to bootstrap
+ 	a new GDT so we eventually get to higher half. (along with
+ 	a physical memory manager)
+ 	
+ 	When that happens, we *reinitialize* this same allocator, and
+ 	use it for a now permanent kernel heap.
  */
 
 /* TODO: Make this cleaner... */
 static MmFrameAllocationContext CurrentAllocationContext;
 
 /* These need to be moved out, and just here for now. */
-FERALSTATUS KiInitializeMemMgr(MemoryManagementCreateInfo info)
+FERALSTATUS KiInitializeMemMgr(MemoryManagementCreateInfo info, UINT8 *HeapArea)
 {
 #if defined(__x86_64__) || defined(__i386__)
 	CurrentAllocationContext.PageTable = x86_read_cr3();
 #endif
+	CurrentAllocationContext.HeapMap = HeapArea;
+	/* Do we need this...? */
+	CurrentAllocationContext.PageMapSize = info.PageAllocSize;
+	/* Trim last 4 hex vals, so it becomes aligned. 256 is minimum size for malloc. */
+	UINT64 AreaAligned = ((UINT64)(info.HeapSize)) & 0xFFFFFFFFFFFF0000;
+	KiPrintFmt("Heap size is actually %u bytes big \n", AreaAligned);
+	
+	/* Which means we need an area of that size, but divided by 256. */
+	UINT64 HeapMapSize = AreaAligned / 256;
+	/* And an area to put it at... Add 4096 since we should keep a page in 
+	to block buffer overruns (todo: implement that). We need to check we 
+	actually have this much RAM though. */
+	CurrentAllocationContext.HeapMap = (UINTN*)(HeapArea + AreaAligned + 4096);
+	KiPrintFmt("Heap chunk area is at: 0x%x\n", CurrentAllocationContext.HeapMap);
 	return STATUS_SUCCESS;
 }
 
 
 FERALSTATUS MmCreatePageTables(VOID)
 {
-	return STATUS_SUCCESS;
+	/* On x86, we need to flush the CR3 and update it.
+	   This will cause a TLB flush.
+	 */
+	return STATUS_ERROR;
 }
 
 FERALSTATUS MmAllocateProcess(VOID)
 {
-	return STATUS_SUCCESS;
+	return STATUS_ERROR;
 }
 
 

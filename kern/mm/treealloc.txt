@@ -1,0 +1,55 @@
+Some initial notes scribbed together about how to deal with malloc()
+
+
+We define a heap as:
+	- An area in RAM, which is all mapped and accessible by the kernel...
+	- Some power of n, with some space for metadata and guard pages.
+	
+	
+	Each malloc() call is fit to the nearest power of n: we start at the
+	total area, and if we can clear some space and still make room,
+	we keep repeating to find the size we want.
+	
+	Then, we go in, and find the space in a tree which corresponds to this.
+		Each leaf has two bits: a 'dirty' bit (where it's not *all* free),
+		and a used bit (where it's in use).
+		
+	malloc() will set the dirty bit of everything on the way to the place
+	actually being allocated, and the used bit for the chunk it's actually at.
+	
+	
+	free() simply un-sets the used bit, but does not necesarilly un-set dirty.
+		(this kinda sorta helps mitigate use-after-free... we want to
+		prefer using clean memory before spilling into dirty memory.)
+		
+		
+
+
+Problems:
+	- We can probably implement this as O(1), but the easy way is O(log_n(k)),
+		where k is the size of the item, and n is the number of leaves.
+		
+	- Guard pages might be a little funny.
+	
+	- Performance issues when we malloc() too much (lots of dirty bits, worst case
+	becomes O(n)!!!!).
+	
+	- we'll need an analogue of himem.sys, so we can jettison dynamic memory altogether.
+	
+	
+	
+	
+	
+	
+We should try to represent the heap as well, a heap, as continuous memory.
+What we *can* do is have a data structure off to the side to tell us
+where we have free memory or not...
+		(but this gets back to inefficient bitmap)
+		
+Easy way: Create minimum allocation unit (let's say 64 bytes), and just use
+two bits to represent the leaf it's at as dirty or free.
+This requires some auxillary memory (and thus himem.sys), since we
+*really* don't want to use dynamic malloc() unless we absolutely must.
+
+
+

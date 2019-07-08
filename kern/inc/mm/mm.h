@@ -39,12 +39,11 @@ typedef struct MemoryManagementCreateInfo
 	/* Default page size. */
 	UINT_PTR	PageAllocSize;
 	
-	/* Limit on memory we can use total (ever). */
-	UINT_PTR		MemoryUseQuota;
+	UINTN		HeapSize;
 }MemoryManagementCreateInfo;
 
 //(Obviously, these are TODO.)
 
-FERALSTATUS KiInitializeMemMgr(MemoryManagementCreateInfo info);	//TODO!!!
+FERALSTATUS KiInitializeMemMgr(MemoryManagementCreateInfo info, UINT8 *HeapArea);	//TODO!!!
 FERALSTATUS MmCreatePageTables(VOID);	//TODO!!!
 FERALSTATUS MmAllocateProcess(VOID);	//TODO!!!
