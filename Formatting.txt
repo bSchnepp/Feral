@@ -200,7 +200,32 @@ void hello()
 
 As opposed to being placed within a wrapper function.
 This is to ensure memory safety, and to ensure that there is a clear path from memory allocation to deallocation.
+Consequently, any object allocated on one thread must be deallocated on the same thread.
+This helps us reduce inconsistencies with freeing, and helps reduce use-after-free bugs,
+as well as reducing memory leaks.
 
 
 
+
+Calls to a kernel malloc() function __should__ be cast to the appropriate type.
+It is up to the authors to ensure the appropriate headers (mm.h) are included
+and used properly.
+
+We do this because:
+	- It is more explicit about the _exact_ type being used.
+	- It's more verbose and expresses _exactly_ what we wanted.
+	- It allows for a more object-oriented C approach:
+			SUB_GENERIC_THING *thing = (SUB_GENERIC_THING*)malloc(sizeof(struct GENERIC_THING));
+			alternatively,
+			GENERIC_THING *thing = (GENERIC_THING*)malloc(sizeof(struct SUB_GENERIC_THING));
+			
+		Such that if we guarantee all sub-types of GENERIC_THING are the same size, we can use our sType identifier
+		for object-oriented programming in C. It's clear that the items inside are GENERIC_THING, so this can be
+		safely cast to that type, but this specific declaration expects SUB_GENERIC_THING at least.
+		
+		(This is in contrast to declaring/leaving it as a void*, in which case type safety goes out the window entirely.)
+		
+		(We do _not_ want C++ in the kernel because C++'s standard is way too complicated, is awkward ABI wise, and too messy to read in my opinion, on top of having name mangling.)
+		
+		
 

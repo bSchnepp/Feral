@@ -127,6 +127,41 @@ FERALSTATUS MmCreatePageTables(VOID)
 	return STATUS_ERROR;
 }
 
+
+FERALSTATUS internalLookupFreePage(IN UINT8 mapSection, IN UINT8 offset, OUT BOOL *Status)
+{
+	if (offset > 4)
+	{
+		/* Invalid spot... */
+		*Status = FALSE;
+		return STATUS_ERROR;
+	}
+	UINT8 MapFlags = (mapSection >> offset) & 0x03;
+	/* Bit 0 is free, bit 1 is dirty. */
+	if (!MapFlags)
+	{
+		*Status = TRUE;
+		return STATUS_SUCCESS;
+	}
+} 
+
+FERALSTATUS MmAllocateHeapMemory(UINT64 amount)
+{
+	
+	return STATUS_ERROR;
+}
+
+
+
+
+
+
+
+
+
+
+/* Deprecate everything below this. It's too overly complex. Get rid of it all. */
+
 FERALSTATUS MmAllocateProcess(VOID)
 {
 	return STATUS_ERROR;
@@ -166,25 +201,26 @@ FERALSTATUS MmPreAllocateFrame(IN UINTN MaxPages, IN MmFrameAllocationContext Al
 		}
 	}
 	AllocationContext.PageMap[Counter] = 0x01;
-	return AllocationContext.StartingAddress + (0x1000 * Counter);
+	AllocationContext.StartingAddress + (0x1000 * Counter);
+	return STATUS_SUCCESS;
 }
 
 FERALSTATUS MmAllocateFrame(IN UINTN MaxPages, IN MmFrameAllocationContext AllocationContext, OUT UINT_PTR *AllocatedLocation)
 {
 	/* TODO */
-	return STATUS_SUCCESS;
+	return STATUS_ERROR;
 }
 
 
 FERALSTATUS MmGetContainingFrame(IN UINT_PTR Address, OUT MmPage *Page)
 {
-	return STATUS_SUCCESS;	
+	return STATUS_ERROR;	
 }
 
 
 FERALSTATUS MmAllocateMemory(IN UINT_PTR RequestedAddress, UINTN Size, INOPT UINT_PTR LowerBound, INOPT UINT_PTR UpperBound, OUT UINT_PTR *ActualAddress)
 {
-	return STATUS_SUCCESS;	
+	return STATUS_ERROR;	
 }
 
 
@@ -198,7 +234,7 @@ FERALSTATUS MmAllocateMemory(IN UINT_PTR RequestedAddress, UINTN Size, INOPT UIN
  */
 FERALSTATUS MmAllocateSpecificMemory(INOUT UINT_PTR SpecificAddress, UINTN Size)
 {
-	return STATUS_SUCCESS;	
+	return STATUS_ERROR;	
 }
 
 /**
@@ -210,7 +246,7 @@ FERALSTATUS MmAllocateSpecificMemory(INOUT UINT_PTR SpecificAddress, UINTN Size)
  */
 FERALSTATUS MmDeallocateMemory(IN UINT_PTR AddressLocation, UINTN Size)
 {
-	return STATUS_SUCCESS;
+	return STATUS_ERROR;
 }
 
 
@@ -224,6 +260,6 @@ FERALSTATUS MmCreatePage(BOOL HugePage, UINT8 PageLevel, UINT64 NumPages, UINT8 
 		entry |= X86_PAGE_HUGE;  
 	}
 #endif
-	return STATUS_SUCCESS;
+	return STATUS_ERROR;
 }
 
