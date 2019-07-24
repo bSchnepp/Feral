@@ -75,9 +75,9 @@ static MemoryManagementState MmState;
 
 
 /* TODO: Move to other source file. */
-FERALSTATUS KiInitializeMemMgr(MmCreateInfo info)
+FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 {
-	MmState.pAllocInfo = info.pPhysicalAlloctationInfo;
+	MmState.pAllocInfo = info->pPhysicalAllocationInfo;
 	
 	UINT64 FreeMemory = 0;
 	for (UINT64 n = 0; n < MmState.pAllocInfo->FreeAreaRangeCount; ++n)
@@ -87,11 +87,10 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo info)
 		{
 			KiStopError(STATUS_MEMORY_ACCESS_VIOLATION);
 		}
-		KiPrintFmt("Areas: %x - %x\n", range.End, range.Start); 
-		FreeMemory += (UINT64)	(range.End - range.Start);
+		FreeMemory += (UINT64)range.End - (UINT64)range.Start;
 	}
 	
-	KiPrintFmt("Registered free memory: %u\n", FreeMemory / (1024 * 1024 * 1024));
+	KiPrintFmt("Registered free memory: %uMB\n", FreeMemory / (1024 * 1024));
 	
 	/* Shift over based on the size of pages being used. */
 	UINT64 sz = MmState.pAllocInfo->FrameSize;

@@ -57,11 +57,16 @@ typedef struct
 /* TODO: Refactor to have return as FERALSTATUS, and an INOUT parameter for the string. */
 STRING KiGetErrorType(IN FERALSTATUS Status)
 {
-	if (Status == STATUS_STACK_GUARD_VIOLATION)
-	{
+	if (Status == STATUS_SUCCESS) {
+		return "STATUS_SUCCESS";
+	} else if (Status == STATUS_STACK_GUARD_VIOLATION) {
 		return "STATUS_STACK_GUARD_VIOLATION";
+	} else if (Status == STATUS_MEMORY_ACCESS_VIOLATION) {
+		return "STATUS_MEMORY_ACCESS_VIOLATION";
+	} else if (Status == STATUS_MEMORY_PAGE_FAILURE) {
+		return "STATUS_MEMORY_PAGE_FAILURE";
 	} else {
-		/* TODO */
+		return "OTHER_ERROR";
 	}
 }
 

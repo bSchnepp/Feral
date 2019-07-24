@@ -73,7 +73,8 @@ UINT64 kernel_size;
 
 /* hack for now */
 static UINT64 FreeMemCount;
-static UINT_PTR *FreeMemLocs;
+/* Support up to 8 regions. Hack for now until we get a real malloc. */
+static UINT_PTR FreeMemLocs[16];
 
 /* FERAL initialization follows a few basic steps: */
 	/*
@@ -253,28 +254,32 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 {
 	if (subsystem == FERAL_SUBSYSTEM_MEMORY_MANAGEMENT)
 	{
-		MmPhysicalAllocationInfo pAllocInfo;
-		pAllocInfo.sType = MM_STRUCTURE_TYPE_PHYSICAL_ALLOCATION_INFO;
-		pAllocInfo.pNext = (void*)(0);
-		pAllocInfo.FrameSize = 4096;
+		MmPhysicalAllocationInfo allocInfo;
+		allocInfo.sType = MM_STRUCTURE_TYPE_PHYSICAL_ALLOCATION_INFO;
+		allocInfo.pNext = (void*)(0);
+		allocInfo.FrameSize = 4096;
 		
-		pAllocInfo.FreeAreaRangeCount = FreeMemCount;
+		allocInfo.FreeAreaRangeCount = FreeMemCount;
 		MmFreeAreaRange ranges[FreeMemCount];
 		for (UINT64 i = 0; i < FreeMemCount; ++i)
 		{
 			ranges[i].sType = MM_STRUCTURE_TYPE_FREE_AREA_RANGE;
 			ranges[i].pNext = (void*)(0);
-			ranges[i].Start = FreeMemLocs[i];
-			ranges[i].End = FreeMemLocs[i+1];
+			/* We need in groups of 2. i gives us the group of 2
+			   at present.
+			 */
+			ranges[i].Start = FreeMemLocs[i*2];
+			ranges[i].End = FreeMemLocs[(i*2)+1];
+			KiPrintFmt("%x %x\n", ranges[i].Start, ranges[i].End);
 		}
-		
-	
+		allocInfo.Ranges = ranges;
 		MmCreateInfo info;
+		
 		info.sType = MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO;
 		info.pNext = (void*)(0);
-		info.pPhysicalAlloctationInfo = &pAllocInfo;
+		info.pPhysicalAllocationInfo = &allocInfo;
 		/* TODO... */
-		return KiInitializeMemMgr(info);
+		return KiInitializeMemMgr(&info);
 	} else {
 	}
 	return STATUS_SUCCESS;
@@ -376,8 +381,6 @@ VOID kern_init(UINT32 MBINFO)
 			
 			/* Issue: We add region for every possible area. They're not all free, so we have bigger buffer than needed. */
 			FreeMemCount = maxIters;
-			/* Evens are start, odds are ends. */
-			UINT_PTR FreeMemAreas[FreeMemCount];
 			UINT64 FreeAreasWritten = 0;
 			
 			
@@ -387,12 +390,12 @@ VOID kern_init(UINT32 MBINFO)
 				if (currentEntry.type == E820_MEMORY_TYPE_FREE)
 				{
 					/* Write 1: Start pointer */
-					FreeMemAreas[FreeAreasWritten++] = currentEntry.addr;
-					
+					FreeMemLocs[FreeAreasWritten] = (UINT_PTR)currentEntry.addr;
 					/* Write 2: End pointer */
-					FreeMemAreas[FreeAreasWritten++] = currentEntry.addr + currentEntry.len;
+					FreeMemLocs[FreeAreasWritten+1] = (UINT_PTR)currentEntry.addr + (UINT_PTR)currentEntry.len;
+					FreeAreasWritten += 2;
 					
-					KiPrintFmt("Possible memory at: 0x%x, up to 0x%x. (size %u)\n", currentEntry.addr, currentEntry.addr + currentEntry.len, currentEntry.len);
+					KiPrintFmt("On multiboot: %x <= %x \n", FreeMemLocs[FreeAreasWritten-2], FreeMemLocs[FreeAreasWritten-1]);
 					freemem += currentEntry.len;
 				} else if (currentEntry.type == E820_MEMORY_TYPE_ACPI) {
 					KiPrintFmt("ACPI memory at: 0x%x, up to 0x%x\n", currentEntry.addr, currentEntry.addr + currentEntry.len); 
@@ -405,7 +408,7 @@ VOID kern_init(UINT32 MBINFO)
 				/* E820_MEMORY_TYPE_RESERVED, E820_MEMORY_TYPE_DISABLED, E820_MEMORY_TYPE_INV ignored. */
 			}
 			FreeMemCount = FreeAreasWritten >> 1;
-			FreeMemLocs = FreeMemAreas;
+			
 		} else if (type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS) {
 			/* For now, we'll just use the ELF sections tag. */
 			multiboot_tag_elf_sections *mb_as_elf = (multiboot_tag_elf_sections*)(MultibootInfo);
@@ -416,7 +419,7 @@ VOID kern_init(UINT32 MBINFO)
 			
 			KiPrintFmt("Found %u ELF entries\n", maxIters);
 			
-			for (int i = 0; i < maxIters; i++)
+			for (UINT64 i = 0; i < maxIters; i++)
 			{
 				ElfSectionHeader64 *currentEntry = (&mb_as_elf->sections[i * mb_as_elf->entsize]);
 				/* todo... */

@@ -73,7 +73,7 @@ typedef struct MmCreateInfo
 	MmStructureType sType;
 	void *pNext;
 	
-	MmPhysicalAllocationInfo *pPhysicalAlloctationInfo;
+	MmPhysicalAllocationInfo *pPhysicalAllocationInfo;
 	/* TODO on the rest of this. For now, it gets to be identity mapped! */
 	
 	
@@ -81,6 +81,6 @@ typedef struct MmCreateInfo
 
 //(Obviously, these are TODO.)
 
-FERALSTATUS KiInitializeMemMgr(IN MmCreateInfo info);	//TODO!!!
+FERALSTATUS KiInitializeMemMgr(IN MmCreateInfo *info);	//TODO!!!
 FERALSTATUS MmCreatePageTables(VOID);	//TODO!!!
 FERALSTATUS MmAllocateProcess(VOID);	//TODO!!!
