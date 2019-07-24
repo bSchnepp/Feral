@@ -73,6 +73,7 @@ UINT64 kernel_size;
 
 /* hack for now */
 static UINT64 FreeMemCount;
+
 /* Support up to 8 regions. Hack for now until we get a real malloc. */
 static UINT_PTR FreeMemLocs[16];
 
@@ -270,7 +271,6 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 			 */
 			ranges[i].Start = FreeMemLocs[i*2];
 			ranges[i].End = FreeMemLocs[(i*2)+1];
-			KiPrintFmt("%x %x\n", ranges[i].Start, ranges[i].End);
 		}
 		allocInfo.Ranges = ranges;
 		MmCreateInfo info;
@@ -297,7 +297,7 @@ VOID InternalPrintRegister(UINT32 reg)
 }
 
 /* ugly hack, refactor sometime later. */
-VOID InternalPrintCpuVendor(DWORD part1, DWORD part2, DWORD part3)
+VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
 {
 	KiPrintFmt(cpu_vendor_msg);
 	InternalPrintRegister(part1);
@@ -341,8 +341,6 @@ VOID kern_init(UINT32 MBINFO)
 		/* Unaligned, go panic: todo, clarify it's a multiboot issue. */
 		KiStopError(STATUS_ERROR);
 	}
-	
-	UINT64 freemem = 0;
 	
 	/* We need to do some kludgy pointer magic to get this to work. We interpret a pointer as an integer when booting, now need to reinterpret cast to a proper type. */
 	/* (We need to treat as an integer initially so that we can check the validity of it: it _must_ be aligned properly. */
@@ -394,9 +392,6 @@ VOID kern_init(UINT32 MBINFO)
 					/* Write 2: End pointer */
 					FreeMemLocs[FreeAreasWritten+1] = (UINT_PTR)currentEntry.addr + (UINT_PTR)currentEntry.len;
 					FreeAreasWritten += 2;
-					
-					KiPrintFmt("On multiboot: %x <= %x \n", FreeMemLocs[FreeAreasWritten-2], FreeMemLocs[FreeAreasWritten-1]);
-					freemem += currentEntry.len;
 				} else if (currentEntry.type == E820_MEMORY_TYPE_ACPI) {
 					KiPrintFmt("ACPI memory at: 0x%x, up to 0x%x\n", currentEntry.addr, currentEntry.addr + currentEntry.len); 
 				} else if (currentEntry.type == E820_MEMORY_TYPE_NVS) {
@@ -427,14 +422,6 @@ VOID kern_init(UINT32 MBINFO)
 		}
 	}
 	
-	KiPrintFmt("Total free memory: %uMB (Kernel is %u bytes big)\n", freemem / (1024 * 1024), kernel_size);
-	
-	if (freemem <= 1024)
-	{
-		/* We somehow have no free memory? We alwo want 1024 bytes left over. */
-		KiStopError(STATUS_SEVERITY_ERROR);
-	}
-	
 	// We'd like to have some information about the CPU before we boot further.
 	// Some things like saying CPU vendor, family, brand name, etc.
 	// Eventually, supporting a boot-time flag (and somehow emulating some useful CPU features
@@ -442,10 +429,10 @@ VOID kern_init(UINT32 MBINFO)
 	// We'll probably use the crypto coprocessor (SHA, etc.) to our advantage with A:/Devices/Hash or something.
 
 	/* This will represent the 4 core registers we need for CPU-specific stuff. */
-	DWORD part1 = 0;
-	DWORD part2 = 0;
-	DWORD part3 = 0;
-	DWORD part4 = 0;
+	UINT32 part1 = 0;
+	UINT32 part2 = 0;
+	UINT32 part3 = 0;
+	UINT32 part4 = 0;
 
 	cpuid_vendor_func(&part1, &part2, &part3);
 	InternalPrintCpuVendor(part1, part2, part3);	//TODO: cleanup.
