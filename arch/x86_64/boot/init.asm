@@ -314,6 +314,6 @@ p2_table:
 	resb 4096
 ALIGN 16
 stack_bottom:
-	resb 16384	; Nice and big (2MB) stack.
+	resb 16384	; Nice and big (16KiB) stack.
 stack_top:
 

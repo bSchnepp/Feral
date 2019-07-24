@@ -42,11 +42,16 @@ typedef enum MmStructureType
 	MM_STRUCTURE_TYPE_HEAP_ALLOCATION_INFO,
 	MM_STRUCTURE_TYPE_HEAP_ALLOCATOR,
 	
+	MM_STRUCTURE_TYPE_FREE_AREA_RANGE,
+	
 	MM_STRUCTURE_TYPE_MAX = 0xFFFF
 }MmStructureType;
 
 typedef struct MmFreeAreaRange
 {
+	MmStructureType sType;
+	void *pNext;
+	
 	UINT_PTR Start;
 	UINT_PTR End;
 }MmFreeAreaRange;

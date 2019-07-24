@@ -82,9 +82,16 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo info)
 	UINT64 FreeMemory = 0;
 	for (UINT64 n = 0; n < MmState.pAllocInfo->FreeAreaRangeCount; ++n)
 	{
-		FreeMemory += (UINT64)	(MmState.pAllocInfo->Ranges[n].End - 
-					MmState.pAllocInfo->Ranges[n].Start);
+		MmFreeAreaRange range = MmState.pAllocInfo->Ranges[n];
+		if (range.sType != MM_STRUCTURE_TYPE_FREE_AREA_RANGE)
+		{
+			KiStopError(STATUS_MEMORY_ACCESS_VIOLATION);
+		}
+		KiPrintFmt("Areas: %x - %x\n", range.End, range.Start); 
+		FreeMemory += (UINT64)	(range.End - range.Start);
 	}
+	
+	KiPrintFmt("Registered free memory: %u\n", FreeMemory / (1024 * 1024 * 1024));
 	
 	/* Shift over based on the size of pages being used. */
 	UINT64 sz = MmState.pAllocInfo->FrameSize;
