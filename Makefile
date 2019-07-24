@@ -49,7 +49,7 @@ qemu:	iso
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G --enable-kvm  # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
 
 qemu-nokvm:	iso
-	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -m 2G -d cpu_reset
 
 # The most alien CPU we can get.
 qemu-nokvm-unsupportedcpu:	iso

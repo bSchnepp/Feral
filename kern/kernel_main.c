@@ -71,10 +71,9 @@ UINT64 kernel_start = &kern_start;
 UINT64 kernel_end = &kern_end;
 UINT64 kernel_size;
 
-#if defined(KERN_DEBUG)
-/* Experimental features flag. Always involves some sort of bear. */
-#define BOUNCING_MONITOR_BEAR (0x01)
-#endif
+/* hack for now */
+static UINT64 FreeMemCount;
+static UINT_PTR *FreeMemLocs;
 
 /* FERAL initialization follows a few basic steps: */
 	/*
@@ -254,17 +253,26 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 {
 	if (subsystem == FERAL_SUBSYSTEM_MEMORY_MANAGEMENT)
 	{
-		MemoryManagementCreateInfo info;
-		info.MemoryLowerBoundSize = 64;
-		info.PageAllocSize = 4096;
-		/* Heap is less than 1G for now. Note this is an **upper** bound
-		   on the size of the heap, and it *could* be less than this
-		   (and usually is).
-		 */
-		info.HeapSize = 900000;
-		KiPrintFmt("Starting up memory manager...\n");
-		/* Temporary hack, (where the heap is) for now. */
-		return KiInitializeMemMgr(info, 0x100000);
+		MmPhysicalAllocationInfo pAllocInfo;
+		pAllocInfo.sType = MM_STRUCTURE_TYPE_PHYSICAL_ALLOCATION_INFO;
+		pAllocInfo.pNext = (void*)(0);
+		pAllocInfo.FrameSize = 4096;
+		
+		pAllocInfo.FreeAreaRangeCount = FreeMemCount;
+		MmFreeAreaRange ranges[FreeMemCount];
+		for (UINT64 i = 0; i < FreeMemCount; ++i)
+		{
+			ranges[i].Start = FreeMemLocs[i];
+			ranges[i].End = FreeMemLocs[i+1];
+		}
+		
+	
+		MmCreateInfo info;
+		info.sType = MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO;
+		info.pNext = (void*)(0);
+		info.pPhysicalAlloctationInfo = &pAllocInfo;
+		/* TODO... */
+		return KiInitializeMemMgr(info);
 	} else {
 	}
 	return STATUS_SUCCESS;
@@ -363,11 +371,26 @@ VOID kern_init(UINT32 MBINFO)
 			UINT64 index = 0;
 			/* 12 is the size of the rest of the items in this struct. */
 			UINT64 maxIters = (mb_as_mmap_items->size - 12) / mb_as_mmap_items->entry_size;
+			
+			/* Issue: We add region for every possible area. They're not all free, so we have bigger buffer than needed. */
+			FreeMemCount = maxIters;
+			/* Evens are start, odds are ends. */
+			UINT_PTR FreeMemAreas[FreeMemCount << 2];
+			FreeMemLocs = FreeMemAreas;
+			UINT64 FreeAreasWritten = 0;
+			
+			
 			for (currentEntry = mb_as_mmap_items->entries[0]; index < maxIters; currentEntry = mb_as_mmap_items->entries[++index])
 			{
 				/* Check the type first. */
 				if (currentEntry.type == E820_MEMORY_TYPE_FREE)
 				{
+					/* Write 1: Start pointer */
+					FreeMemLocs[++FreeAreasWritten] = currentEntry.addr;
+					
+					/* Write 2: End pointer */
+					FreeMemLocs[++FreeAreasWritten] = currentEntry.addr + currentEntry.len;
+					
 					KiPrintFmt("Possible memory at: 0x%x, up to 0x%x. (size %u)\n", currentEntry.addr, currentEntry.addr + currentEntry.len, currentEntry.len);
 					freemem += currentEntry.len;
 				} else if (currentEntry.type == E820_MEMORY_TYPE_ACPI) {
@@ -380,6 +403,7 @@ VOID kern_init(UINT32 MBINFO)
 				
 				/* E820_MEMORY_TYPE_RESERVED, E820_MEMORY_TYPE_DISABLED, E820_MEMORY_TYPE_INV ignored. */
 			}
+			FreeMemCount = FreeAreasWritten >> 2;
 		} else if (type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS) {
 			/* For now, we'll just use the ELF sections tag. */
 			multiboot_tag_elf_sections *mb_as_elf = (multiboot_tag_elf_sections*)(MultibootInfo);

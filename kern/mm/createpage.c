@@ -35,231 +35,156 @@ IN THE SOFTWARE.
 #include <arch/x86_64/mm/pageflags.h>
 #endif
 
-typedef enum MmStructureType
+
+/*
+	Let's totally overhaul this.
+	
+	The lowest level is the physical memory manager.
+	We get the ranges from the init process,
+	which creates a structure holding valid physical ranges.
+	
+	The virtual memory manager handles the mapping somehow to
+	virtual addresses? 
+	
+	**then** we use kmalloc().
+	
+	(in other words, stop mashing everything together because it's making
+	an incoherent mess.)
+*/
+
+typedef struct MemoryManagementState
 {
-	MM_STRUCTURE_TYPE_FRAME_ALLOCATION_CONTEXT = 0,
-	MM_STRUCTURE_TYPE_PAGE_DIRECTORY,
-	MM_STRUCTURE_TYPE_MAX = 0xFFFF
-}MmStructureType;
+	/* For now, we *do not* support huge pages generally. */
+	MmPhysicalAllocationInfo *pAllocInfo;
+	
+	/* Sum up total free area, right bitshift 3. */
+	UINT8 *BitmaskUsedFrames;
+	
+	/* NOTE: We need to check if the frame goes beyond
+	   the first range. If it did, then we need to move
+	   on to the next one. Keep going for each range
+	   we've got.
+	   
+	   Each bit represents free or in use. 0 for free,
+	   1 for in use.
+	 */
+}MemoryManagementState;
 
-/* An entry in the page table. */
-typedef uint64_t PageTableEntry;
+/* Not the best thing ever, but... */
+static MemoryManagementState MmState;
 
-typedef struct MmPageDirectory
+
+/* TODO: Move to other source file. */
+FERALSTATUS KiInitializeMemMgr(MmCreateInfo info)
 {
-	MmStructureType sType;
-	const char* pNext;
+	MmState.pAllocInfo = info.pPhysicalAlloctationInfo;
 	
-	PageTableEntry	*Tables[1024];
-	UINT_PTR PhysicalAddresses[1024];
-	UINT_PTR PhysicalTableRealAddress;
-}MmPageDirectory;
-
-typedef struct MmFrameAllocationContext
-{
-	MmStructureType sType;
-	const void *pNext;
+	UINT64 FreeMemory = 0;
+	for (UINT64 n = 0; n < MmState.pAllocInfo->FreeAreaRangeCount; ++n)
+	{
+		FreeMemory += (UINT64)	(MmState.pAllocInfo->Ranges[n].End - 
+					MmState.pAllocInfo->Ranges[n].Start);
+	}
 	
-	UINT8 *PageMap;
-	UINTN PageMapSize;
+	/* Shift over based on the size of pages being used. */
+	UINT64 sz = MmState.pAllocInfo->FrameSize;
+	UINT8 ShiftAmt = 3;	/* Map 1 bit to 8 bytes at least (2^3) */
+	while (sz >>= 1)
+	{ 
+		++ShiftAmt;
+	}
 	
-	UINT8 *HeapMap;
-	UINTN HeapSize;
+	FreeMemory >>= ShiftAmt;
 	
-	UINT_PTR PageTable;
-	
-	UINT_PTR StartingAddress;
-	UINT_PTR *ForbiddenAddresses;
-	UINTN ForbiddenAddressedCount;
-}MmFrameAllocationContext;
-
-
-
-
-/* We'll allow processes up to ~140TB of virtual memory. This should be more than enough for the time being. 
- 	Maybe we can be *really* aggressive and only allow 1TB or less of virtual memory for the kernel?
- 	We'll probably have no need for something even that massive for the time being, (realistically,
- 	if the kernel needs more than 4GB of RAM, something is very wrong.)
- 	
- 	
- 	What needs to happen is we create a bare-bones malloc here,
- 	with the presumption we have something like at least 64MB of RAM
- 	(which is pretty reasonable, actually, and we use it to bootstrap
- 	a new GDT so we eventually get to higher half. (along with
- 	a physical memory manager)
- 	
- 	When that happens, we *reinitialize* this same allocator, and
- 	use it for a now permanent kernel heap.
- */
-
-/* TODO: Make this cleaner... */
-static MmFrameAllocationContext CurrentAllocationContext;
-
-/* These need to be moved out, and just here for now. */
-FERALSTATUS KiInitializeMemMgr(MemoryManagementCreateInfo info, UINT8 *HeapArea)
-{
-#if defined(__x86_64__) || defined(__i386__)
-	CurrentAllocationContext.PageTable = x86_read_cr3();
-#endif
-	CurrentAllocationContext.HeapMap = HeapArea;
-	/* Do we need this...? */
-	CurrentAllocationContext.PageMapSize = info.PageAllocSize;
-	/* Trim last 4 hex vals, so it becomes aligned. 256 is minimum size for malloc. */
-	UINT64 AreaAligned = ((UINT64)(info.HeapSize)) & 0xFFFFFFFFFFFF0000;
-	KiPrintFmt("Heap size is actually %u bytes big \n", AreaAligned);
-	
-	/* Which means we need an area of that size, but divided by 256. */
-	UINT64 HeapMapSize = AreaAligned / 256;
-	/* And an area to put it at... Add 4096 since we should keep a page in 
-	to block buffer overruns (todo: implement that). We need to check we 
-	actually have this much RAM though. */
-	CurrentAllocationContext.HeapMap = (UINTN*)(HeapArea + AreaAligned + 4096);
-	KiPrintFmt("Heap chunk area is at: 0x%x\n", CurrentAllocationContext.HeapMap);
+	UINT8 map[FreeMemory];
+	MmState.BitmaskUsedFrames = map;
 	return STATUS_SUCCESS;
 }
 
-
-FERALSTATUS MmCreatePageTables(VOID)
+FERALSTATUS GetMemoryAlreadyInUse(UINT_PTR Location, BOOL *Status)
 {
-	/* On x86, we need to flush the CR3 and update it.
-	   This will cause a TLB flush.
-	 */
-	return STATUS_ERROR;
-}
-
-
-FERALSTATUS internalLookupFreePage(IN UINT8 mapSection, IN UINT8 offset, OUT BOOL *Status)
-{
-	if (offset > 4)
-	{
-		/* Invalid spot... */
-		*Status = FALSE;
-		return STATUS_ERROR;
+	/* Get the containing frame. */
+	UINT64 sz = MmState.pAllocInfo->FrameSize;
+	UINT8 ShiftAmt = 3;	/* Map 1 bit to 8 bytes at least (2^3) */
+	while (sz >>= 1)
+	{ 
+		++ShiftAmt;
 	}
-	UINT8 MapFlags = (mapSection >> offset) & 0x03;
-	/* Bit 0 is free, bit 1 is dirty. */
-	if (!MapFlags)
-	{
-		*Status = TRUE;
-		return STATUS_SUCCESS;
-	}
-} 
-
-FERALSTATUS MmAllocateHeapMemory(UINT64 amount)
-{
+	UINT64 Loc = (Location >> ShiftAmt);
 	
-	return STATUS_ERROR;
-}
-
-
-
-
-
-
-
-
-
-
-/* Deprecate everything below this. It's too overly complex. Get rid of it all. */
-
-FERALSTATUS MmAllocateProcess(VOID)
-{
-	return STATUS_ERROR;
-}
-
-
-
-/* 
-	Likewise, here temporarilly, need to be moved out.
-	In the future, we want to replace all of this
-	with a buddy memory system (the same as what Linux usses.)
-	I'm mostly interested in filesystem and scheduling,
-	we just need a malloc() to make everything else possible
-	first.
- */
- 
-/**
-	Prepares a given location to be allocated by MmAllocateFrame.
-	This simply marks a single given page as in use in the page map,
-	and then returns the associated address in AllocatedLocation.
- */
-FERALSTATUS MmPreAllocateFrame(IN UINTN MaxPages, IN MmFrameAllocationContext AllocationContext, OUT UINT_PTR *AllocatedLocation)
-{
-	if (AllocationContext.sType != MM_STRUCTURE_TYPE_FRAME_ALLOCATION_CONTEXT)
+	/* Check if this is out of range... */
+	UINT_PTR maxRange = 0;
+	for (UINT64 i = 0; i < MmState.pAllocInfo->FreeAreaRangeCount; ++i)
 	{
-		/* Something got passed in very wrong. */
-		return STATUS_ERROR;
-	}
-	
-	UINTN Counter = 0;
-	while (AllocationContext.PageMap[Counter] != 0x00)
-	{
-		if (++Counter == MaxPages)
+		UINT_PTR curEnd = MmState.pAllocInfo->Ranges[i].End; 
+		if (curEnd > maxRange)
 		{
-			/*  TODO: Add error in FERALSTATUS*/
-			return STATUS_ERROR;
+			maxRange = curEnd;
 		}
 	}
-	AllocationContext.PageMap[Counter] = 0x01;
-	AllocationContext.StartingAddress + (0x1000 * Counter);
+	if (Location > maxRange)
+	{
+		*Status = FALSE;
+		return STATUS_INVALID_MEMORY_LOCATION;
+	}
+	
+	/* Now let's look at our PMM bitmap. */
+	UINT8 ContainingByte = MmState.BitmaskUsedFrames[Loc];
+	
+	/* Think this is right? */
+	UINT8 BitNum = (Loc << 3) % 8;
+	UINT8 BitStatus = (ContainingByte >> BitNum) & 0x01;
+	*Status = BitStatus;
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS MmAllocateFrame(IN UINTN MaxPages, IN MmFrameAllocationContext AllocationContext, OUT UINT_PTR *AllocatedLocation)
+FERALSTATUS SetMemoryAlreadyInUse(UINT_PTR Location, BOOL Status)
 {
-	/* TODO */
-	return STATUS_ERROR;
-}
 
-
-FERALSTATUS MmGetContainingFrame(IN UINT_PTR Address, OUT MmPage *Page)
-{
-	return STATUS_ERROR;	
-}
-
-
-FERALSTATUS MmAllocateMemory(IN UINT_PTR RequestedAddress, UINTN Size, INOPT UINT_PTR LowerBound, INOPT UINT_PTR UpperBound, OUT UINT_PTR *ActualAddress)
-{
-	return STATUS_ERROR;	
-}
-
-
-/**
-	Allocates a given page with given size and at the requested address.
-	If the specific address with the specific size cannot be allocated,
-	then an error status is returned.
-	
-	SpecificAddress will be set to the actual location in memory where
-	the needed space was allocated.
- */
-FERALSTATUS MmAllocateSpecificMemory(INOUT UINT_PTR SpecificAddress, UINTN Size)
-{
-	return STATUS_ERROR;	
-}
-
-/**
-	Marks a given page as empty.
-	@param AddressLocation The location to free
-	@param Size The amount to free
-	
-	@return The status of the kernel at this given time.
- */
-FERALSTATUS MmDeallocateMemory(IN UINT_PTR AddressLocation, UINTN Size)
-{
-	return STATUS_ERROR;
-}
-
-
-
-FERALSTATUS MmCreatePage(BOOL HugePage, UINT8 PageLevel, UINT64 NumPages, UINT8 RingLevel)
-{
-#if defined(__x86_64__) || defined(__i386__)
-	PageTableEntry entry = X86_PRESENT_WRITABLE_PAGE;
-	if (HugePage)
-	{
-		entry |= X86_PAGE_HUGE;  
+	/* Get the containing frame. */
+	UINT64 sz = MmState.pAllocInfo->FrameSize;
+	UINT8 ShiftAmt = 3;	/* Map 1 bit to 8 bytes at least (2^3) */
+	while (sz >>= 1)
+	{ 
+		++ShiftAmt;
 	}
-#endif
-	return STATUS_ERROR;
-}
+	UINT64 Loc = (Location >> ShiftAmt);
+	
+	/* Check if this is out of range... */
+	UINT_PTR maxRange = 0;
+	for (UINT64 i = 0; i < MmState.pAllocInfo->FreeAreaRangeCount; ++i)
+	{
+		UINT_PTR curEnd = MmState.pAllocInfo->Ranges[i].End; 
+		if (curEnd > maxRange)
+		{
+			maxRange = curEnd;
+		}
+	}
+	if (Location > maxRange)
+	{
+		return STATUS_INVALID_MEMORY_LOCATION;
+	}
+	
+	
+	/* Now let's look at our PMM bitmap. */
+	UINT8 ContainingByte = MmState.BitmaskUsedFrames[Loc];
+	
+	/* Think this is right? */
+	UINT8 BitNum = (Loc << 3) % 8;
+	UINT8 InUse = ContainingByte >> BitNum;
 
+	if (InUse && !Status)
+	{
+		/* Free it */
+		MmState.BitmaskUsedFrames[Loc] = (ContainingByte) & ((255) ^ (1 << BitNum));
+		return STATUS_SUCCESS;
+	} else if (!InUse && Status) {
+		/* Allocate it. */
+		MmState.BitmaskUsedFrames[Loc] = (ContainingByte) | (1 << BitNum);
+		return STATUS_SUCCESS;
+	} else {
+		return STATUS_MEMORY_ACCESS_VIOLATION;
+	}
+	
+	
+}

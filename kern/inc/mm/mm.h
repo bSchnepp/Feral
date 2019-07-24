@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining  a copy of the software and accompanying documentation covered by 
@@ -24,26 +24,58 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-
-// C definitions for the memory stuff written in Rust.
-// (I might just drop writing part of the kernel in Rust and just do what I wanted to in C anyway, though.)
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
-
-typedef struct MemoryManagementCreateInfo
+typedef enum MmStructureType
 {
-	/* Min size of a block from level 2 allocator. */
-	UINT_PTR	MemoryLowerBoundSize;
+	MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO = 0,
+
+	MM_STRUCTURE_TYPE_PHYSICAL_ALLOCATION_INFO,
+	MM_STRUCTURE_TYPE_PHYSICAL_FRAME_ALLOCATOR,
+	MM_STRUCTURE_TYPE_PHYSICAL_FRAME_BLOCK,
 	
-	/* Default page size. */
-	UINT_PTR	PageAllocSize;
+	MM_STRUCTURE_TYPE_VIRTUAL_ALLOCATION_INFO,
+	MM_STRUCTURE_TYPE_VIRTUAL_FRAME_ALLOCATOR,
+	MM_STRUCTURE_TYPE_VIRTUAL_FRAME_BLOCK,
 	
-	UINTN		HeapSize;
-}MemoryManagementCreateInfo;
+	MM_STRUCTURE_TYPE_HEAP_ALLOCATION_INFO,
+	MM_STRUCTURE_TYPE_HEAP_ALLOCATOR,
+	
+	MM_STRUCTURE_TYPE_MAX = 0xFFFF
+}MmStructureType;
+
+typedef struct MmFreeAreaRange
+{
+	UINT_PTR Start;
+	UINT_PTR End;
+}MmFreeAreaRange;
+
+
+typedef struct MmPhysicalAllocationInfo
+{
+	MmStructureType sType;
+	void *pNext;
+	
+	UINT64 FrameSize;	/*Expect 4096 for now. Possibly use 2MB pages?*/
+	UINT64 FreeAreaRangeCount;
+	MmFreeAreaRange *Ranges;
+}MmPhysicalAllocationInfo;
+
+
+typedef struct MmCreateInfo
+{
+	MmStructureType sType;
+	void *pNext;
+	
+	MmPhysicalAllocationInfo *pPhysicalAlloctationInfo;
+	/* TODO on the rest of this. For now, it gets to be identity mapped! */
+	
+	
+}MmCreateInfo;
 
 //(Obviously, these are TODO.)
 
-FERALSTATUS KiInitializeMemMgr(MemoryManagementCreateInfo info, UINT8 *HeapArea);	//TODO!!!
+FERALSTATUS KiInitializeMemMgr(IN MmCreateInfo info);	//TODO!!!
 FERALSTATUS MmCreatePageTables(VOID);	//TODO!!!
 FERALSTATUS MmAllocateProcess(VOID);	//TODO!!!
