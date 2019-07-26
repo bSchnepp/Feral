@@ -290,7 +290,6 @@ get_initial_p2_table:
 	mov rax, [p2_table]
 	ret
 
-
 section .rodata
 
 ; Store our multiboot pointer.
@@ -308,6 +307,7 @@ gdt_64:
 
 section .bss
 ALIGN 4096
+
 ; Note we go p2 --> p3 --> p4.
 p4_table:
 	resb 4096

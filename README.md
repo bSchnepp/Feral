@@ -1,11 +1,18 @@
 # FERAL KERNEL
 
 ## What is Feral?
-Feral is an experimental monolithic kernel intended to be used for my Waypoint operating system. It's primary goals are flexibility,
-reliablility, performance, and security. Feral is intended to run for many architectures, but is currently being
-developed primarilly for the x86_64 platform, and more specifically for Family 17h x86-64 PCs ("Zen" and "Zen+" architecture)
-Do note that we do *not* support non-PC x86 systems (ie, "Liverpool" APU). We assume your hardware has an APIC, is capable
-of having Multiboot or UEFI support, and communicates to disks using some variant of the ATA or SCSI protocols.
+Feral is an experimental monolithic kernel, which is intended for use by my Waypoint operating system. It's primary goals
+are flexibility, compatibility, performance, and security.
+
+Feral currently runs on x86-64 personal computers belonging to Family 17h ("Zen") under virtualization with KVM, 
+but may work for other systems that are still PC-compatible (ie, not Liverpool or Scorpio APU). Feral is also 
+known to work on an 6000-series x86-64 CPUs from a different CPU vendor, but this is not tested as often.
+
+Feral will probably also work on systems based upon future revisions of the Zen architecture, but this is not tested.
+(Limited to Zen 1, Zen+ and Zen 2 are untested.)
+
+Feral for now, if on a PC, assumes your hardware has an APIC, storage devices are usually ATA or SCSI/SAS, and is booted
+from Multiboot 2. An experimental bootloader to boot directly from EFI firmware is in progress, but is at a low priority.
 
 In the future, Feral is intended to run on MIPS, Aarch64, POWER9, and RV64GC hardware.
 
@@ -13,13 +20,16 @@ Feral, when complete, may find use in gaming consoles, handheld devices, or as i
 Our goals are intended to be achieved by careful construction and design of the kernel, such that the kernel
 naturally allows for various things to help usermode applications improve performance.
 
-In particular, Feral is built with a client-server model for most tasks, and is built in layers and components.
-This is to facilitate packaging and organization of the kernel such that it would be simple to create a unikernel
-based upon Feral, and only link in the absolute necessary parts as well as one static user mode (or several) applications
-to achieve a meaningful task. This potentially could have a use in single-tasking embedded systems in a single-user mode,
-such that we can strip away much of the kernel while retaining satisfactory functionality.
+Feral is best described as being designed with a client-server model in mind for every task. Each component is
+built in layers and groups, and to communicate between them naturally requires interacting with an object manager
+to facilitate any interaction. A client typically sends a buffer to a server for the server to fill out, then
+returns. This design allows portions of the kernel to be ripped out without fear of damaging the integrity of
+the rest of the system, as well-written drivers will simply error out or find an alternative if a given module is
+missing from the kernel. This may also allow easier construction of unikernels based on Feral, as unneeded components
+can simply be removed. This potentially could have a use in single-tasking embedded systems in a single-user mode,
+such that we can strip away much of the kernel while retaining satisfactory functionality. 
 
-Feral introduces the idea of a command queue, in which certain system calls are queue-based, allowing for a page of memory to
+Feral will introduce the idea of a command queue, in which certain system calls are queue-based, allowing for a page of memory to
 be written with a number of commands, and the kernel executes them sequentially without being interrupted to return to usermode
 without a reason to: this is intended to provide some form of 'inertia' between usermode and kernel-mode, such that a context
 switch is avoided and thus improving performance. Those familiar with graphics programming are likely familiar with a similar concept.
@@ -51,6 +61,8 @@ There's also the "if we totally redesign the OS, can get get apps to run faster?
 Feral is also partially the result of a dissatisfaction with the security model of many current operating systems, being insufficient to guarantee being secure out-of-the-box,
 or outright preventing hardening of core infrastructure (ie, preventing the ability to disable any sort of data collection) and/or outright discouraging such practice. To me,
 this seems totally unsatisfactory, wastes precious network bandwidth, and interrupts me when I do *not* want to be interrupted.
+
+Feral, in the future, will support SVM virtualization extensions ("Pacifica"), 
 
 ## Design influences?
 Architecturally, Feral is similar to a variety of prior systems originating between 1969 and 1993, with the most obvious being CMU's Mach project, and the Plan 9 project. Feral discards the "everything is a file"

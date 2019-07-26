@@ -130,12 +130,14 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	
 	/* Take our location from before, and use it accordingly. */
 	UINT8 *map = (UINT8*)(PmmLocation);
-	/* Zero it out. */
-	for (UINT64 index = 0; index < BufferSize; ++index)
+	KiSetMemoryBytes(map, 0, BufferSize);
+	MmState.BitmaskUsedFrames = map;
+	
+	/* Mark everything as in use. */
+	for (UINT_PTR index = kern_start; index < PmmLocation + BufferSize; index += FrameSize)
 	{
-		map[index] = 0;
+		SetMemoryAlreadyInUse(index, TRUE);
 	}
-	MmState.BitmaskUsedFrames = map;	
 	return STATUS_SUCCESS;
 }
 
