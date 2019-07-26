@@ -110,14 +110,8 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 		{
 			MaximumPAddr = range.End;
 		}
-		
-		/* Do we have a suitable place for PMM? (TODO: avoid start at 0) */
-		if (PmmLocation == 0)
-		{
-			/* End buffer right on the end of this. */
-			PmmLocation = range.End;
-		}
 	}
+	PmmLocation = kernel_end + 4096;
 	KiPrintFmt("Detected %uMB of free RAM\n", TotalSystemMemory / (1024 * 1024));
 	
 	/* Bit of ehhh here. Assume everything from 0 - MaximumPAddr is valid. */
@@ -135,7 +129,7 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	BufferSize >>= ShiftAmt;
 	
 	/* Take our location from before, and use it accordingly. */
-	UINT8 *map = (UINT8*)(PmmLocation - (FrameSize + BufferSize));
+	UINT8 *map = (UINT8*)(PmmLocation);
 	/* Zero it out. */
 	for (UINT64 index = 0; index < BufferSize; ++index)
 	{
