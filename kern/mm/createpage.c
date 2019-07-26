@@ -36,6 +36,12 @@ IN THE SOFTWARE.
 #endif
 
 
+extern UINTN kern_start;
+extern UINTN kern_end;
+
+/* Convert the addresses into integers for easier comparison. */
+UINT_PTR kernel_start = &kern_start;
+UINT_PTR kernel_end = &kern_end;
 /*
 	Let's totally overhaul this.
 	
@@ -59,6 +65,7 @@ typedef struct MemoryManagementState
 	
 	/* Sum up total free area, right bitshift 3. */
 	UINT8 *BitmaskUsedFrames;
+	UINT_PTR MaxPAddr;
 	
 	/* NOTE: We need to check if the frame goes beyond
 	   the first range. If it did, then we need to move
@@ -77,140 +84,137 @@ static MemoryManagementState MmState;
 /* TODO: Move to other source file. */
 FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 {
+	/* Association the pAllocInfo first. */
 	MmState.pAllocInfo = info->pPhysicalAllocationInfo;
 	
-	UINT64 FreeMemory = 0;
-	UINT_PTR MemSz = 0;
-	MmFreeAreaRange AreaToPlaceBuffer = {0};
+	/* Look through the memory locations. Place at PMM in first place 
+	   I guess for now. 
+	 */
+	UINT64 TotalSystemMemory = 0;
+	UINT_PTR PmmLocation = 0;
+	UINT_PTR MaximumPAddr = 0;
 	for (UINT64 n = 0; n < MmState.pAllocInfo->FreeAreaRangeCount; ++n)
 	{
 		MmFreeAreaRange range = MmState.pAllocInfo->Ranges[n];
 		if (range.sType != MM_STRUCTURE_TYPE_FREE_AREA_RANGE)
 		{
+			/* Prevent odd memory-based flaws the hard way. */
 			KiStopError(STATUS_MEMORY_ACCESS_VIOLATION);
 		}
-		/* HACK: Don't do it in the small area below 1MB. */
-		if (MemSz == 0)
+		
+		/* Add the size in to the total. */
+		TotalSystemMemory += range.Size;
+		
+		/* What's the end address here? Is it bigger? */
+		if (range.End > MaximumPAddr)
 		{
-			MemSz = range.Size;
-			AreaToPlaceBuffer = range;
+			MaximumPAddr = range.End;
 		}
-		FreeMemory += (UINT64)range.Size;
+		
+		/* Do we have a suitable place for PMM? (TODO: avoid start at 0) */
+		if (PmmLocation == 0)
+		{
+			/* End buffer right on the end of this. */
+			PmmLocation = range.End;
+		}
 	}
+	KiPrintFmt("Detected %uMB of free RAM\n", TotalSystemMemory / (1024 * 1024));
 	
-	KiPrintFmt("Registered free memory: %uMB\n", FreeMemory / (1024 * 1024));
-	
-	/* Shift over based on the size of pages being used. */
-	UINT64 sz = MmState.pAllocInfo->FrameSize;
+	/* Bit of ehhh here. Assume everything from 0 - MaximumPAddr is valid. */
+	/* We'll take our total, copy it, and shift it over to be a valid map. */
+	/* In our model, 1 bit = (FrameSize). 1 byte = 8 * FrameSize. */
+	/* Since the PMM also includes *non-free* RAM, use 0 - MaximumPAddr. */
+	UINT64 BufferSize = (MaximumPAddr);
+	UINT64 FrameSize = MmState.pAllocInfo->FrameSize;
 	UINT8 ShiftAmt = 3;	/* Map 1 bit to 8 bytes at least (2^3) */
-	while (sz >>= 1)
-	{ 
+	while (FrameSize >>= 1)
+	{
+		/* FrameSize must be power of 2, but can technically be any power. */
 		++ShiftAmt;
 	}
+	BufferSize >>= ShiftAmt;
 	
-	FreeMemory >>= ShiftAmt;
-	
-	/* We don't have a malloc yet.*/
-	UINT8 *map = (UINT8*)AreaToPlaceBuffer.Start;
-	KiSetMemoryBytes(map, 0, FreeMemory);
-	MmState.BitmaskUsedFrames = map;
-	
-	/* Mark this area as in use. */
-	for (UINT64 part = 0; part <= AreaToPlaceBuffer.Start / MmState.pAllocInfo->FrameSize; ++part)
+	/* Take our location from before, and use it accordingly. */
+	UINT8 *map = (UINT8*)(PmmLocation - (FrameSize + BufferSize));
+	/* Zero it out. */
+	for (UINT64 index = 0; index < BufferSize; ++index)
 	{
-		FERALSTATUS Status = SetMemoryAlreadyInUse(AreaToPlaceBuffer.Start + (MmState.pAllocInfo->FrameSize * part), TRUE);
-		if (Status != STATUS_SUCCESS)
-		{
-			KiStopError(Status);
-		}
-	} 
+		map[index] = 0;
+	}
+	MmState.BitmaskUsedFrames = map;	
 	return STATUS_SUCCESS;
 }
 
 FERALSTATUS GetMemoryAlreadyInUse(UINT_PTR Location, BOOL *Status)
 {
-	/* Get the containing frame. */
-	UINT64 sz = MmState.pAllocInfo->FrameSize;
-	UINT8 ShiftAmt = 3;	/* Map 1 bit to 8 bytes at least (2^3) */
-	while (sz >>= 1)
-	{ 
-		++ShiftAmt;
-	}
-	UINT64 Loc = (Location >> ShiftAmt);
-	
-	/* Check if this is out of range... */
-	UINT_PTR maxRange = 0;
-	for (UINT64 i = 0; i < MmState.pAllocInfo->FreeAreaRangeCount; ++i)
+	/* Can't talk about a physical address we don't have. */
+	if (Location > MmState.MaxPAddr)
 	{
-		UINT_PTR curEnd = MmState.pAllocInfo->Ranges[i].End; 
-		if (curEnd > maxRange)
-		{
-			maxRange = curEnd;
-		}
-	}
-	if (Location > maxRange)
-	{
-		*Status = FALSE;
 		return STATUS_INVALID_MEMORY_LOCATION;
 	}
+	/* Try to get everything before this cell out of the way. */
+	/* Each bit represents MmState.pAllocInfo->FrameSize bytes...
+	  Mult. this by 8 for per byte. Look until expected address > Location.
+	*/
 	
-	/* Now let's look at our PMM bitmap. */
-	UINT8 ContainingByte = MmState.BitmaskUsedFrames[Loc];
-	
-	/* Think this is right? */
-	UINT8 BitNum = (Loc << 3) % 8;
-	UINT8 BitStatus = (ContainingByte >> BitNum) & 0x01;
-	*Status = BitStatus;
+	UINT_PTR FrameSize = MmState.pAllocInfo->FrameSize;
+	UINT_PTR BaseAddr = 0;
+	/* This is the size of each *byte* in our buffer. */
+	UINT_PTR Increment = (FrameSize) << 3;
+	while (BaseAddr + Increment <= Location)
+	{
+		BaseAddr += Increment;
+	}
+	 
+	 /* BaseAddr will now be at the *byte* we want. */
+	 /* We take the formula (FrameSize) % 8 in order to find the bit 
+	    to check. 
+	  */
+	UINT8 ContainingByte = MmState.BitmaskUsedFrames[BaseAddr];
+	UINT8 BitNum = (Location / FrameSize) % 8;
+	*Status = (ContainingByte >> BitNum) & 0x01;
 	return STATUS_SUCCESS;
 }
 
 FERALSTATUS SetMemoryAlreadyInUse(UINT_PTR Location, BOOL Status)
 {
-
-	/* Get the containing frame. */
-	UINT64 sz = MmState.pAllocInfo->FrameSize;
-	UINT8 ShiftAmt = 3;	/* Map 1 bit to 8 bytes at least (2^3) */
-	while (sz >>= 1)
-	{ 
-		++ShiftAmt;
-	}
-	UINT64 Loc = (Location >> ShiftAmt);
-	
-	/* Check if this is out of range... */
-	UINT_PTR maxRange = 0;
-	for (UINT64 i = 0; i < MmState.pAllocInfo->FreeAreaRangeCount; ++i)
-	{
-		UINT_PTR curEnd = MmState.pAllocInfo->Ranges[i].End; 
-		if (curEnd > maxRange)
-		{
-			maxRange = curEnd;
-		}
-	}
-	if (Location > maxRange)
+	/* Can't talk about a physical address we don't have. */
+	if (Location > MmState.MaxPAddr)
 	{
 		return STATUS_INVALID_MEMORY_LOCATION;
 	}
+	/* Try to get everything before this cell out of the way. */
+	/* Each bit represents MmState.pAllocInfo->FrameSize bytes...
+	  Mult. this by 8 for per byte. Look until expected address > Location.
+	*/
 	
-	
-	/* Now let's look at our PMM bitmap. */
-	UINT8 ContainingByte = MmState.BitmaskUsedFrames[Loc];
-	
-	/* Think this is right? */
-	UINT8 BitNum = (Loc << 3) % 8;
-	UINT8 InUse = ContainingByte >> BitNum;
-
+	UINT_PTR FrameSize = MmState.pAllocInfo->FrameSize;
+	UINT_PTR BaseAddr = 0;
+	/* This is the size of each *byte* in our buffer. */
+	UINT_PTR Increment = (FrameSize) << 3;
+	while (BaseAddr + Increment <= Location)
+	{
+		BaseAddr += Increment;
+	}
+	 
+	 /* BaseAddr will now be at the *byte* we want. */
+	 /* We take the formula (FrameSize) % 8 in order to find the bit 
+	    to check. 
+	  */
+	UINT8 ContainingByte = MmState.BitmaskUsedFrames[BaseAddr];
+	UINT8 BitNum = (Location / FrameSize) % 8;
+	BOOL InUse = (ContainingByte >> BitNum) & 0x01;
+	  
 	if (InUse && !Status)
 	{
 		/* Free it */
-		MmState.BitmaskUsedFrames[Loc] = (ContainingByte) & ((255) ^ (1 << BitNum));
+		MmState.BitmaskUsedFrames[BaseAddr] = (ContainingByte) & ((255) ^ (1 << BitNum));
 		return STATUS_SUCCESS;
 	} else if (!InUse && Status) {
 		/* Allocate it. */
-		MmState.BitmaskUsedFrames[Loc] = (ContainingByte) | (1 << BitNum);
+		MmState.BitmaskUsedFrames[BaseAddr] = (ContainingByte) | (1 << BitNum);
 		return STATUS_SUCCESS;
 	} else {
 		return STATUS_MEMORY_ACCESS_VIOLATION;
-	}
-	
-	
+	}	
 }

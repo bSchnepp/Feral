@@ -63,14 +63,6 @@ static UINT8 FeralVersionPatch;
 static CHAR* cpu_vendor_msg = "CPU Vendor: ";
 static SYSTEM_INFO KernelSystemInfo = {};
 
-extern UINTN kern_start;
-extern UINTN kern_end;
-
-/* Convert the addresses into integers for easier comparison. */
-UINT64 kernel_start = &kern_start;
-UINT64 kernel_end = &kern_end;
-UINT64 kernel_size;
-
 /* hack for now */
 static UINT64 FreeMemCount;
 
@@ -324,7 +316,6 @@ VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
 #ifndef FERAL_BUILD_STANDALONE_UEFI_
 VOID kern_init(UINT32 MBINFO)
 {
-	kernel_size = kernel_end - kernel_start;
 	VgaContext graphicsContext = {0};
 	UINT8 misc = VgaPrepareEnvironment(&graphicsContext);
 	KiBlankVgaScreen(25, 80, VGA_BLACK);

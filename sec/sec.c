@@ -67,6 +67,8 @@ STRING KiGetErrorType(IN FERALSTATUS Status)
 		return "STATUS_MEMORY_PAGE_FAILURE";
 	} else if (Status == STATUS_INVALID_MEMORY_LOCATION) {
 		return "STATUS_INVALID_MEMORY_LOCATION";
+	} else if (Status == STATUS_OUT_OF_MEMORY) {
+		return "STATUS_OUT_OF_MEMORY";
 	} else {
 		return "OTHER_ERROR";
 	}
@@ -75,6 +77,24 @@ STRING KiGetErrorType(IN FERALSTATUS Status)
 FERALSTATUS KiStopError(IN FERALSTATUS Status)
 {
 #if defined(__x86_64__)
+	UINT64 a;
+	UINT64 b;
+	UINT64 c;
+	UINT64 d;
+	UINT64 sp;
+	UINT64 bp;
+	
+	/* Clang doesn't really like blue syntax. Oh well. */
+	__asm__ volatile (
+		"movq %%rax, %0\n"
+		"movq %%rbx, %1\n"
+		"movq %%rcx, %2\n"
+		"movq %%rdx, %3\n"
+		"movq %%rsp, %4\n"
+		"movq %%rbp, %5\n"
+		: "=r"(a), "=r"(b), "=r"(c), "=r"(d), "=r"(sp), "=r"(bp)
+	);
+	
 	KiBlankVgaScreen(25, 80, VGA_BLUE);
 	char* errorMsg = "A problem has been detected and Feral has shutdown to prevent further damage.";
 	UINTN length = 0;
@@ -88,6 +108,10 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 	KiPrintFmt("If the error persists, contact tech support and provide the following info:\n");
 	KiPrintFmt("Bug Check: 0x%x: %s\n", Status, KiGetErrorType(Status));
 	
+#if defined(__x86_64__)
+	KiPrintFmt("RAX: 0x%x\t RBX: 0x%x\t RCX: 0x%x\n", a, b, c);
+	KiPrintFmt("RDX: 0x%x\t RSP: 0x%x\t RBP: 0x%x\n", d, sp, bp);
+#endif
 	/* TODO: We haven't implemented these function quite just yet, so uncomment when we do. */
 	/* KiPrintFmt("Bug Check occured at epoch time %l\n", (KeGetCurrentTime())); */
 	/* KiPrintFmt("System uptime is %l\n", (KeGetCurrentUptime() / 1000)); */
@@ -99,7 +123,7 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 		/* Hang (for now) */
 	}
 	
-	return STATUS_ERROR;
+	return STATUS_SUCCESS;
 }
 
 __attribute__((noreturn))

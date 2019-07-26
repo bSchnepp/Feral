@@ -187,6 +187,9 @@ create_gdt:
 	
 	; invoke far return to go to 64-bit mode.
 	push 0x08
+	; do a short little dance to ensure we load the right address.
+	; We do a call in a sort of odd way: return is just a funny "pop %rip".
+	; at the end of the day, so take advantage of that.
 	lea eax, [kern_start]
 	push eax
 	retf
