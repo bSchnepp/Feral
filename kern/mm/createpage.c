@@ -80,6 +80,8 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	MmState.pAllocInfo = info->pPhysicalAllocationInfo;
 	
 	UINT64 FreeMemory = 0;
+	UINT_PTR MemSz = 0;
+	MmFreeAreaRange AreaToPlaceBuffer = {0};
 	for (UINT64 n = 0; n < MmState.pAllocInfo->FreeAreaRangeCount; ++n)
 	{
 		MmFreeAreaRange range = MmState.pAllocInfo->Ranges[n];
@@ -87,7 +89,13 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 		{
 			KiStopError(STATUS_MEMORY_ACCESS_VIOLATION);
 		}
-		FreeMemory += (UINT64)range.End - (UINT64)range.Start;
+		/* HACK: Don't do it in the small area below 1MB. */
+		if (MemSz == 0 && range.Size > 1024 * 1024)
+		{
+			MemSz = range.Size;
+			AreaToPlaceBuffer = range;
+		}
+		FreeMemory += (UINT64)range.Size;
 	}
 	
 	KiPrintFmt("Registered free memory: %uMB\n", FreeMemory / (1024 * 1024));
@@ -102,8 +110,15 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	
 	FreeMemory >>= ShiftAmt;
 	
-	UINT8 map[FreeMemory];
+	/* We don't have a malloc yet.*/
+	UINT8 *map = (UINT8*)AreaToPlaceBuffer.Start;
 	MmState.BitmaskUsedFrames = map;
+	UINT_PTR MaxArea = map;
+	/* Mark this area as in use. */
+	for (UINT64 part = 0; part <= AreaToPlaceBuffer.Start / MmState.pAllocInfo->FrameSize; ++part)
+	{
+		SetMemoryAlreadyInUse(AreaToPlaceBuffer.Start + (MmState.pAllocInfo->FrameSize * part), TRUE);
+	} 
 	return STATUS_SUCCESS;
 }
 

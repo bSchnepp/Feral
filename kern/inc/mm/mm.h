@@ -54,6 +54,7 @@ typedef struct MmFreeAreaRange
 	
 	UINT_PTR Start;
 	UINT_PTR End;
+	UINT_PTR Size;	/* Not *actually* a pointer, but matches addr size. */
 }MmFreeAreaRange;
 
 
@@ -82,5 +83,6 @@ typedef struct MmCreateInfo
 //(Obviously, these are TODO.)
 
 FERALSTATUS KiInitializeMemMgr(IN MmCreateInfo *info);	//TODO!!!
-FERALSTATUS MmCreatePageTables(VOID);	//TODO!!!
-FERALSTATUS MmAllocateProcess(VOID);	//TODO!!!
+
+FERALSTATUS GetMemoryAlreadyInUse(IN UINT_PTR Location, OUT BOOL *Status);
+FERALSTATUS SetMemoryAlreadyInUse(IN UINT_PTR Location, IN BOOL Status);

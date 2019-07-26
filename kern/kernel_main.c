@@ -271,6 +271,7 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 			 */
 			ranges[i].Start = FreeMemLocs[i*2];
 			ranges[i].End = FreeMemLocs[(i*2)+1];
+			ranges[i].Size = ranges[i].End - ranges[i].Start;
 		}
 		allocInfo.Ranges = ranges;
 		MmCreateInfo info;
