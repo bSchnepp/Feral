@@ -65,6 +65,8 @@ STRING KiGetErrorType(IN FERALSTATUS Status)
 		return "STATUS_MEMORY_ACCESS_VIOLATION";
 	} else if (Status == STATUS_MEMORY_PAGE_FAILURE) {
 		return "STATUS_MEMORY_PAGE_FAILURE";
+	} else if (Status == STATUS_INVALID_MEMORY_LOCATION) {
+		return "STATUS_INVALID_MEMORY_LOCATION";
 	} else {
 		return "OTHER_ERROR";
 	}

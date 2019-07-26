@@ -90,7 +90,7 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 			KiStopError(STATUS_MEMORY_ACCESS_VIOLATION);
 		}
 		/* HACK: Don't do it in the small area below 1MB. */
-		if (MemSz == 0 && range.Size > 1024 * 1024)
+		if (MemSz == 0)
 		{
 			MemSz = range.Size;
 			AreaToPlaceBuffer = range;
@@ -112,12 +112,17 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	
 	/* We don't have a malloc yet.*/
 	UINT8 *map = (UINT8*)AreaToPlaceBuffer.Start;
+	KiSetMemoryBytes(map, 0, FreeMemory);
 	MmState.BitmaskUsedFrames = map;
-	UINT_PTR MaxArea = map;
+	
 	/* Mark this area as in use. */
 	for (UINT64 part = 0; part <= AreaToPlaceBuffer.Start / MmState.pAllocInfo->FrameSize; ++part)
 	{
-		SetMemoryAlreadyInUse(AreaToPlaceBuffer.Start + (MmState.pAllocInfo->FrameSize * part), TRUE);
+		FERALSTATUS Status = SetMemoryAlreadyInUse(AreaToPlaceBuffer.Start + (MmState.pAllocInfo->FrameSize * part), TRUE);
+		if (Status != STATUS_SUCCESS)
+		{
+			KiStopError(Status);
+		}
 	} 
 	return STATUS_SUCCESS;
 }

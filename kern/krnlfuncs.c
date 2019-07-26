@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -103,10 +103,19 @@ FERALSTATUS KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINTN);
 
 //Where, with what, and how many UINTNs to set.
 FERALSTATUS KiSetMemory(INOUT VOID*, IN UINTN, IN UINTN);
+#endif
 
 // Same as above, but with bytes.
-FERALSTATUS KiSetMemoryBytes(INOUT VOID*, IN UINT8, IN UINTN);
-#endif
+FERALSTATUS KiSetMemoryBytes(INOUT VOID* Dest, IN UINT8 Val, IN UINTN Amt)
+{
+	UINT8 *dest = (UINT8*)Dest;
+	for (UINTN amt = 0; amt < Amt; ++amt)
+	{
+		dest[amt] = Val;
+	}
+	return STATUS_SUCCESS;
+}
+
 
 
 FERALSTATUS KiGetStringLength(IN STRING String, OUT UINT64* Length)
