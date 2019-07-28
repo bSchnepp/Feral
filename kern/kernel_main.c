@@ -184,11 +184,6 @@ VOID KiSystemStartup(VOID)
 	KiPrintLine("Licensed under the Boost Software License.");
 	
 	SystemInfo.Arch = PROCESSOR_ARCH_X86_64;
-	
-	/* Do we really need this..? */
-	KiPrintFmt("If the Boost Software License was not distributed with the OS if it should have, contact your OS vendor with a request for a copy. (this is a test message to demonstrate long strings, and should be removed from release.)\n");
-	KiPrintFmt("Loading all drivers...\n");
-	FERALSTATUS KiLoadAllDrivers(VOID);
 	KiPrintFmt("%s\n", "Preparing execution environment...");
 	
 	
@@ -202,6 +197,11 @@ VOID KiSystemStartup(VOID)
 	
 	
 	KiStartupSystem(FERAL_SUBSYSTEM_MEMORY_MANAGEMENT);
+	
+	/* Only load drivers *after* base system initializtion. */
+	KiPrintFmt("Loading all drivers...\n");
+	FERALSTATUS KiLoadAllDrivers(VOID);
+	
 	/* These are macroed away at release builds.  They're eliminated at build time.*/
 	KiDebugPrint("INIT Reached here.");
 	
@@ -216,14 +216,15 @@ VOID KiSystemStartup(VOID)
 //RAM is reasonably cheap (less cheap than before) in 2018, so we don't mind using an unneccessary 7 bytes more than we really need to. It's not the 90s where we have to care about a massive 16MB of RAM requirement.
 VOID KiStartupProcessor(UINT64 ProcessorNumber)
 {
-	/*  Create a new stack for this core.*/
+	/*  Create a new stack for this core. */
 }
 
 
 
 FERALSTATUS KeBootstrapSystem(VOID)
 {
-	
+	/* Bootstrap process to actually get to user mode. */
+	return STATUS_SUCCESS;
 }
 
 
@@ -510,7 +511,7 @@ VOID kern_init(UINT32 MBINFO)
 	}
 
 	
-	// Kernel initialization is done, move on to actual tasks.
+	/* Kernel initialization is done, move on to actual tasks. */
 	KiSystemStartup();
 }
 #else

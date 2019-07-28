@@ -50,7 +50,6 @@ typedef struct
 	UINT64 IdentifierSeconday;
 
 	SeUserContext UserContext;
-		
 }SeSecurityContext;
 
 

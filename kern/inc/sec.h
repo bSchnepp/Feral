@@ -30,4 +30,6 @@ IN THE SOFTWARE.
 
 // todo
 
+VOID __stack_chk_fail(void);
+
 #endif
