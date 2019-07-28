@@ -1,3 +1,0 @@
-TODO: FAT32 implementation.
-
-(Until patents expire (whenever they do), limit to 8.3 filenames (aka not VFAT support).)

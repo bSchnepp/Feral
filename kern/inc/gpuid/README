@@ -1,5 +1,0 @@
-# gpuid
-
-## What is gpuid?
-GPUID is a module for the Feral kernel to identify graphics chips.
-(Though this can later be expanded to all PCI-connected devices)

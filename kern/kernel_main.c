@@ -47,7 +47,6 @@ IN THE SOFTWARE.
 #endif
 #endif
 
-#include <feral/boot/kibootstruct.h>
 #include <feral/kern/krnlfuncs.h>
 
 #include <krnl.h>
@@ -55,13 +54,11 @@ IN THE SOFTWARE.
 
 #include <arch/processor.h>
 
-static SYSTEM_INFO SystemInfo;
 static UINT8 FeralVersionMajor;
 static UINT8 FeralVersionMinor;
 static UINT8 FeralVersionPatch;
 
 static CHAR* cpu_vendor_msg = "CPU Vendor: ";
-static SYSTEM_INFO KernelSystemInfo = {};
 
 /* hack for now */
 static UINT64 FreeMemCount;
@@ -182,8 +179,6 @@ VOID KiSystemStartup(VOID)
 	/* First off, ensure we load all the drivers, so we know what's going on. */
 	KiPrintLine("Copyright (c) 2018-2019, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
-	
-	SystemInfo.Arch = PROCESSOR_ARCH_X86_64;
 	KiPrintFmt("%s\n", "Preparing execution environment...");
 	
 	
