@@ -46,23 +46,17 @@ typedef struct PROCESSOR_INFO
 	UINTN ProcessorNumber;
 	BOOL DedicatedToApplication;	/* Did we dedicate this processor to one application? 	*/
 	BOOL SMTSupported;		/* Does this core support SMT?				*/
-	BOOL SVMSupported;		/* Supported by Secure Virtual Machine ?		*/
+	BOOL SVMSupported;		/* Supported by Pacifica VM extensions? ?		*/
 }PROCESSOR_INFO;
 
 typedef struct SYSTEM_INFO
 {
 	UINT16 Arch;
+	UINT64 ProductNameLength;
 	CHAR* ProductName;
-
-	UINT64 PageSize;	/* How big is each virtual memory page  (in bytes) */
+	
 	UINTN ProcessorCount;
 	PROCESSOR_INFO* Processors;
-
-	UINT64 MemoryInstalled;	/* We expect gaming machines to have 16GB or more of RAM, though this value can be anything. */
-								/* (We should panic (not literally) if we have less than 8, and use actual system RAM as more of a big cache and use the swapfile as much as possible.) */
-								/* (That is, of course, unless all the running programs hapilly fit in less than 8GB, but this is unlikely in 2018.) */
-								/* Oh, and this value is bytes, not bits. (we may change to pages instead, to support enormous things. We're below any 0.0.1 release, so we can be unstable.
-								   for at least a little while to get design right the first time before moving on.*/
 }SYSTEM_INFO;
 
 #define PROCESSOR_ARCH_IA32			0x014C	/* We don't _really_ support 32-bit X86, but we might want to later.	*/

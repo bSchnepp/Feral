@@ -90,16 +90,18 @@ Currently, there is a lot of work to be done to achieve this, in order to comply
 
 ## Why Feral?
 
-Feral is intended to drastically depart from the traditional *NIX architecture in favor or being far more verbose, explicit, and direct to usermode apps. In my opinion,
-something like an "ioctl" call is rather ugly, and trying *too hard* to make things into files ironically ends up being more difficult than just saying "it supports reads and/or writes, and
-is located here through this protocol." If we have something like *ioctl*, then **everything** should be like *ioctl*, or **nothing** should be. Feral prefers something like the former.
-While this approach might be insecure if badly handled, if we design this well, we don't handle it badly.
+Feral is partly created out of boredom of "yet another *NIX clone". There isn't anything inherently wrong with that architecture,
+but it's been done a lot and it's always more or less the same, without really exploring any ideas outside of that narrow "everything is a file"
+approach.
 
-We could potentially even provide susbsystems in the kernel or core usermode libraries and bundle a CPU emulator, which would allow us to execute code intended for
-a totally different CPU architecture. This could allow Feral to be used for backwards compatibility with legacy systems, and keep old programs running on
-new hardware and new software, aiding in software preservation. While we can't get 100% compatibility, we can do "good enough" to hopefully be a good
-starting ground for emulator developers to aid in cross-compiled software development, and be especially of use for game developers who have since lost the original 
-source code for some of their older games.
+Another part is "how 'alien' can an operating system be from *NIX, while still being fairly simple to use, port software to, and having a clean design"?
+Feral tries to get as far away from "everything is a file" as possible, instead exposing "everything is a network resource". This is useful for
+some cases where some component may not make sense as being exposed as a file, such as the temperture indicator of a video card. It wouldn't make
+any sense to be able to write to that. Rather than making it complicated with writes denied for everyone (including root, who should be able to do anything!), 
+Feral opts to just expose something like that as a network resource rejecting any inbound traffic, but allowing incoming connections to read it's data.
+
+This, conceptually, allows any component to expose itself as possible to read, possible to write, have stateless or statefulness, and
+allows it to be streamed over a network (in a cluster configuration), allowing scalability horizontally.
 
 Feral is best described as a "modular macrokernel", or just a "monolithic kernel with loadable drivers at runtime", which is a little bit harder to say.
 
@@ -114,21 +116,19 @@ This is temporary, and will be replaced with a proper
 build system (Kconfig) later.
 
 ## Is there any naming convention?
-Folders should be named in a way to avoid unnecessary characters (ie, 'inc' vs 'include'.) This is just because I tend to have too many tabs of ~~Nautilus~~ 
-flavor-of-the-month-file-explorer open and each one very small. Not important. 3 monitors isn't enough to make that OK.
+Folders should be named in a way to avoid unnecessary characters (ie, 'inc' vs 'include'.)
+Likewise, for a given module, the folder name should reflect the prefix, such that
+memory management is in "mm", and object management is in "ob", and so on.
 
-Functions should *always* be prefixed with 'internal' if they are temporary. (ie, to test something.) These should be wrapped in an
-```
-#ifdef DEBUG
-
+Functions prefixed with "internal" are for application-specific functions which are simply helper routines, or even temporary ones.
+They are typically not defined in a header file, and should not be used outside of the source file they are present in.
+```c
 VOID internalDoSomething()
 {
 	return;
 }
 
-
 internalDoSomething();
-#endif DEBUG
 ```
 
 I've broken this rule a few times, but this should be fixed as soon as possible.
@@ -150,119 +150,72 @@ I'm intending to either port Mesa/amdgpu/whatever or AMDVLK, or just writing a b
 	OpenGL isn't intended to be supported (unless I do port the entirety of Mesa or something).
 	The desktop will be composited in Vulkan (so a Vulkan *graphics* driver **is necessary**).
 	Behind the scenes, we'll probably be making something more or less like DRI/DRM.
-
-## How will frame creation be done on a desktop (when it gets there)
-When this eventually happens, I'd like to have GUIs created something like as follows:
-
-```c
-// (this is pseudocode of course). 'Wp' is for 'Waypoint'. This probably won't compile with a real compiler.
-#define APPLICATION_NAME GenericSample
-
-HFRAME Frame = UiCreateFrame(L"Hello, world!", 600, 800, NULL, NULL);		// Create a top-level frame on the desktop.
-struct SystemProperties props;							// System properties (themes, frame control location, etc.)
-WpStatus status = WpGetSystemProperties(APPLICATION_NAME, &props);		// Put the properties into the struct.
-
-struct ApplicationProperties* appProps;
-
-appProps = (struct ApplicationProperties*)malloc(sizeof(struct ApplicationProperties));
-
-appProps->SystemProps = props;
-appProps->AppPurpose = FERAL_GENERIC_GUI_APPLICATION;
-appProps->AppVersion = FERAL_MAKE_VERSION(1, 0);
-// etc. etc.
-
-if (status < 0)	//This will signal that there is an error. Positive values are just warnings.
-{
-	fprintf(stderr, "Error getting system properties. Is there a GUI?");
-	exit(-1);								// Quit if we're not running a desktop of some sort.
-}
-
-UINTN systemPeripherals = 0;
-status = WpQuerySystemPeripherals(APPLICATION_NAME, appProps, &systemPeripherals, NULL);	// Query what devices this application is allowed to use. The API handles actual permissions itself.
-
-if (status < 0)
-{
-	fprintf(stderr, "Unable to query system devices.");
-	exit(-1);
-}
-
-struct WpSystemPeripherals[systemPeripherals] peripherals;
-status = WpQuerySystemPeripherals(APPLICATION_NAME, appProps, &systemPeripherals, peripherals);
-if (status < 0)
-{
-	fprintf(stderr, "Unable to enumerate system devices.");
-	exit(-1);
-}
-
-// By default, all peripherals are ignored. You need to allow the keyboard to talk to the app (beyond system controls like Alt+F4, mouse to click 'Exit', etc.) by calling the appropriate functions.
-// This is done basically just to make it as verbose as possible with attaching events to things. All user interactions should be expected and handled by the developer.
-// (also to make it more "Vulkan-like"--we want applications to be *very* verbose as a way to make it very clear to any theme engine or shell replacement what an app is trying to do.)
-
-// Bottom left corner is (0, 0).
-// Draw a black rectangle at (90, 90) of size (100, 200).
-UiDrawReactangle(&Frame, UI_COLOR_BLACK, 90, 90, 100, 200);
-
-// Come up with some idea to handle widgets (either borrow ideas from GTK or Swing).
-// Maybe try some sort of 'subframe' thing, and have the desktop daemon define a whole bunch to use (up to GUI developers).
-// This also happens to make it very easy to embed a 3D environment into an application (no ugly toolkit hacks), so that might be good for game engine developers.
-
-HCOLORREF* FrameColors = UiGetRawImage(&Frame);	//This is just an array of colors which can then be thrown numbers at to have them show up. Use this in a Vulkan app. Expect this to be renamed.
-
-//blah blah blah, wait(), all the fun stuff. Multithreading, all objects need to be thread safe, etc. etc.
-
-//Time to free the app. Destroy in reverse order of allocation.
-WpDestroySystemPeripherals(peripherals);
-WpDestroyApplicationProperties(appProps);
-WpDestroySystemProperties(props);
-UiDestroyFrame(Frame);
-return 0;
-
-```
-
-The usual process of doing things in Waypoint (and Feral in general) is:
 	
-		- Open port
-		- Create context
-		- Do things
-		- Close context
-		- Release port
+## General process for everything?
+	The "native" API generally works as follows:
+	```c
+		UINT32 somethingLength;
+		FERALSTATUS status = wpDoSomethingWithTwoValues(nullptr, somethingLength, someVal);
+		if (status != STATUS_SUCCESS)
+		{
+			exit(-1);
+		}
+		/* Yes this is a VLA. Yes, I know it's not always great. */
+		/* Stricter C code should use malloc()/free() instead. */
+		Something someBuffer[somethingLength];
+		status = wpDoSomethingWithTwoValues(someBuffer, somethingLength, someVal);
+		if (status != STATUS_SUCCESS)
+		{
+			exit(-1);
+		}
+	```
+	
+	Generally speaking, the majority of internal kernel data structures
+	will contain two values, a type sType describing (within a given context)
+	what the object is, such as if it's a virtual memory table or filesystem
+	table or something. The second type, sType, is a const void*. This is
+	used to point to (currently) unknown data structures which may be added
+	to the kernel in the future.
+	
+	Feral promises to keep compatibility between major versions, and have
+	a stable internal and external ABI. However, this will only be
+	achieved after version 1.0.0, when everything is put together
+	in a meaningful way and well-tested such that it is fair
+	to assume that many (if not all) the internal structures need not to be
+	changed too often.
 
-For example, opening a file would be as simple as opening a resource on the filesystem server (sometimes a kernel subsystem, often the local libos, possibly FUSE),
-constructing a context (setting up case sensitivity, naming restrictions, error handling, etc.), and writing to the port.
-This is more flexible than the "everything is a file" approach, as it allows for a subsystem provider to clearly define what "write" and "read" mean:
-'reading' data from an arbitrary location could mean many different things, and without corrections, could result in various oddities (reading int
-as little endian in big endian format, for example). Subsystems and servers take care of that.
-It also allows us to deal with badly written programs that assume spaces don't appear in a given path: B:/Main Storage/Files/Stuff/Something Cool/ is a valid
-file path, and should *not* be interpretted as B:/Main, Storage/Files/Stuff/Something, and Cool/.
-(This will introduce new problems, like when we actually *do* want to interpret as 3 new paths, but we can figure that out along the way.)
+	This allows third party drivers loaded outside of the kernel to be
+	fairly certain that for the near future, their drivers will probably
+	be just fine. (if written for version 1.0.0, it'll probably work from
+	1.0.0 to 1.999.999).
+	
+	When this promise must be broken, the kernel *will* go up a major version
+	number. At that point, it is up to third party driver developers to update
+	their drivers accordingly, if any update is necessary.
+	
+	
+	
 
 
 ## Overall goals:
- - Lightweight kernel, insist that processes do most of the work. (service provider does most of the kernel-mode work: programs shouldn't talk to kernel directly that much.)
+ - Lightweight core kernel. Majority of functionality in drivers. Processes communiate to libos (syscalls go to a kernel table which tells a libos driver that this was called.)
  
- - Eliminate legacy "bloat" from traditional architecture and design: Our goal is to be **lightweight** and **mostly compatible** and **secure**.
+ - Much more clear, explicit kernel operations. Eliminate guessing--the kernel is *VERY* clear about exactly what it will do.
 
- - Enforce a lot of verbosity out of user-mode programs (if what they could want could be ambiguous, there should be a function for every possible meaning.)
-   (We have no idea what shell replacements might want to do with native Waypoint programs: just feed them as much information as possible.)
+ - Convince user-mode apps that they're running on the real thing (when they're not.) Ie, run GNU Mach programs unmodified.
 
- - Monolithic kernel design, supporting modules, but prefering to avoid them.
-   (This is to avoid driver conflicts... simply refer to a kernel version and maybe provide a loadable module just in case. All important drivers should be in upstream.)
+ - Stable, internal kernel ABI. Third party drivers should work across minor revisions. Use the pNext pointer for any serious changes.
 
- - Support a new, high performance filesystem intended for modern storage hardware. (ie, SSDs, shingled hard drives, etc.)  (btrfs???)
+ - Stable, versioning filesystem included, such that an accidental `deltree` doesn't delete everything forever. Assume the user makes no backups.
 
  - Support Vulkan out of the box. Use Vulkan as "the native graphics language" of the OS.
-   (ie, everything graphics-wise, one way or another, goes through Vulkan rendering. OpenGL is implemented on top of Vulkan, if at all.)
+   (ie, everything graphics-wise, one way or another, goes through Vulkan rendering. GL is implemented on top of Vulkan, if at all.)
    Under Waypoint, you should be able to assume any graphics card plugged in using built-in drivers can support Vulkan 1.1.
    (we wouldn't expose it if it was a GPU that can't do Vulkan)
 
- - (Eventually) create fully Vulkan compliant drivers for the "Vega" and "Polaris" family of GPUs. (or just port radv)
+ - (Eventually) create fully Vulkan compliant drivers for the "Vega" and "Navi" family of GPUs.
 
- - Integrate a high-performance virtual machine into the kernel, intended for use for "write once, run anywere" kinds of games that can take the performance hit. (Will never be close to native, but we can try...)
- 
- - Maximize performance for most compute-intensive 3D applications, specifically do everything we can to make games faster from the OS' side. (this won't be much, but it should still be a priority)
-
- - Be "platform agnostic" in that the kernel can be combined with an arbitrary program loader and be able to execute "foreign applications", ie, Linux ELF programs or NTOS PE programs.
-   (we're more awesome if we can even run programs for a totally different CPU architecture, ie, POWER9. A very important historic operating system was very much capable of this (at least I think).)
+ - Support x86-64 virtualization extensions ("Pacifica").
 
  - Highly modular architecture (portions of the kernel can be ripped out and reused elsewhere, ie, grafted into BSD or used in a commercial product or something.)
  

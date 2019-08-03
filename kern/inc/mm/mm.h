@@ -27,6 +27,11 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
+#include <mm/mmcommon.h>
+
+#ifndef _FERAL_KERN_MM_H_
+#define _FERAL_KERN_MM_H_
+
 typedef enum MmStructureType
 {
 	MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO = 0,
@@ -86,3 +91,5 @@ FERALSTATUS KiInitializeMemMgr(IN MmCreateInfo *info);	//TODO!!!
 
 FERALSTATUS GetMemoryAlreadyInUse(IN UINT_PTR Location, OUT BOOL *Status);
 FERALSTATUS SetMemoryAlreadyInUse(IN UINT_PTR Location, IN BOOL Status);
+
+#endif

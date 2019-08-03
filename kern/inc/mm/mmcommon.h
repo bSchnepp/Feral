@@ -31,29 +31,9 @@ IN THE SOFTWARE.
 #ifndef _FERAL_MM_COMMON_H_
 #define _FERAL_MM_COMMON_H_
 
-/* 
-	When designing this, we'd probably do best referencing chapter 10 of RedmondOS Internals (6th edition),
-	and some other books out there.
-	
-	We want to do some things, like overcommit virtual memory by default (~125% of what it wants initially, so adding an extra 4th, round down),
-	so that a program which does a ton of malloc() and whatnot doesn't need to invoke the kernel per-se all that often (performance hack)
-	... It already owns that memory, so let the C library deal with it. 
-	
-	We can make this easy by doing (initial_mem) + (initial_mem >> 2), so we don't do division at all.
- */
-
-/* TODO */
-typedef enum MmCoreContextStructureType
-{
-	MM_CORE_CONTEXT_STRUCTURE_TYPE_MAIN_STRUCTURE_TYPE = 0,
-	
-}MmCoreContextStructureType;
-
-typedef struct MmCoreContext
-{
-	MmCoreContextStructureType sType;
-	
-}MmCoreContext;
+#if defined(__x86_64__)
+#include <arch/x86_64/mm/pageflags.h>
+#endif
 
 
 #endif

@@ -32,10 +32,16 @@ IN THE SOFTWARE.
 #define X86_PAGE_FLAG_USER_READ				(1 << 2)
 #define X86_PAGE_FLAG_WRITE_PAST_CACHE			(1 << 3)
 #define X86_PAGE_FLAG_CACHE_DISABLED			(1 << 4)
+
 #define X86_PAGE_ACCESSED_FLAG				(1 << 5)
 #define X86_PAGE_DIRTY					(1 << 6)
+
 #define X86_PAGE_HUGE					(1 << 7)
+/* If PGE bit of CR4 is set, then we can use this for global pages. */
 #define X86_PAGE_GLOBAL					(1 << 8)
+
+
+/* We can use bits 9 through 11 for whatever we want? */
 
 #define X86_PAGE_NO_EXECUTE				(1 << 63)
 
@@ -48,5 +54,29 @@ IN THE SOFTWARE.
 /* Helper to make things easier. */
 #define X86_PRESENT_WRITABLE_PAGE (X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE)
 #define X86_PRESENT_PAGE_NO_EXEC (X86_PAGE_FLAG_PRESENT | X86_PAGE_NO_EXECUTE)
+
+#define X86_PRESENT_WRITABLE_PAGE_USER 	( X86_PRESENT_WRITABLE_PAGE | (X86_PAGE_FLAG_USER_READ) )
+#define X86_PRESENT_PAGE_NO_EXEC 	( X86_PRESENT_PAGE_NO_EXEC | (X86_PAGE_FLAG_USER_READ) )
+
+/* Reimplemented for each arch. */
+typedef struct PageMapEntry
+{
+	UINT8 PresentFlag : 1;
+	UINT8 WritableFlag : 1;
+	UINT8 UserReadFlag : 1;
+	UINT8 WriteThroughFlag : 1;
+	UINT8 CacheDisabledFlag : 1;
+	UINT8 AccessedFlag : 1;
+	UINT8 DirtyFlag : 1;
+	UINT8 HugeFlag : 1;
+	UINT8 GlobalFlag : 1;
+	UINT8 Unused : 3;
+#if defined(__i386__)
+	#error GDT entry not implemented for legacy x86!
+#elif defined(__x86_64__)
+	UINT_PTR Address : 51;
+#endif
+	UINT8 NoExecuteFlag : 1;
+}PageMapEntry PACKED;
 
 #endif
