@@ -39,6 +39,7 @@ clean:
 	rm -rf build/
 	rm -rf ./*.o
 	rm -rf ./*.a
+	rm -rf bootloader/*.o bootloader/*.EFI
 	
 	cd kern && $(MAKE) clean
 	cd sec && $(MAKE) clean
@@ -56,9 +57,24 @@ qemu-nokvm-unsupportedcpu:	iso
 	qemu-system-$(ARCH) -cpu KnightsMill -cdrom $(ISO) -smp 2 -m 6G
 	
 qemu-lldb:	iso
-	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -S -s &
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -S -s &	
 	
-qemu-efi:	iso
+qemu-efi:
+	mkdir -p build/$(ARCH)/	
+	
+	cd arch && $(MAKE)
+#	cd proc && $(MAKE) 
+#	cd mm && $(MAKE) 
+	cd io && $(MAKE) 
+	cd drivers && $(MAKE)
+	cd kern && $(MAKE)
+	cd sec && $(MAKE)
+	
+	# libmm.a libprocmgr.a 
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) -DFERAL_BUILD_STANDALONE_UEFI_ -o ./iofuncs.o
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) -DFERAL_BUILD_STANDALONE_UEFI_ $(VGA_FILES) -o ./*.o kern/kernel_main.o kern/krnlfuncs.o kern/krnlfuncs.o kern/krnl_private.o kern/objmgr.o
+	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o ./sec/*.o
+	
 	cp $(EFI_CODE) ./efi.bin
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G --enable-kvm  -pflash ./efi.bin
 	rm -rf ./efi.bin

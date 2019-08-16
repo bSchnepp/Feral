@@ -27,6 +27,8 @@ IN THE SOFTWARE.
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
 
+#include <krnl.h>
+
 #include <mm/mm.h>
 #include <mm/page.h>
 
@@ -119,6 +121,7 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	/* In our model, 1 bit = (FrameSize). 1 byte = 8 * FrameSize. */
 	/* Since the PMM also includes *non-free* RAM, use 0 - MaximumPAddr. */
 	UINT64 BufferSize = (MaximumPAddr);
+	MmState.MaxPAddr = MaximumPAddr;
 	UINT64 FrameSize = MmState.pAllocInfo->FrameSize;
 	UINT8 ShiftAmt = 3;	/* Map 1 bit to 8 bytes at least (2^3) */
 	while (FrameSize >>= 1)
@@ -136,7 +139,7 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	/* Mark everything as in use. */
 	for (UINT_PTR index = kern_start; index < PmmLocation + BufferSize; index += FrameSize)
 	{
-		SetMemoryAlreadyInUse(index, TRUE);
+		VALIDATE_SUCCESS(SetMemoryAlreadyInUse(index, TRUE));
 	}
 	return STATUS_SUCCESS;
 }
@@ -213,4 +216,16 @@ FERALSTATUS SetMemoryAlreadyInUse(UINT_PTR Location, BOOL Status)
 	} else {
 		return STATUS_MEMORY_ACCESS_VIOLATION;
 	}	
+}
+
+
+FERALSTATUS ExtractAddressFromPageEntry(IN PageMapEntry *Entry, OUT UINT_PTR *Address)
+{
+	if (!Entry->PresentFlag)
+	{
+		/* HACK (for now) since we don't have pager. */
+		return STATUS_MEMORY_ACCESS_VIOLATION;
+	}
+	*Address = (UINT_PTR)((Entry->Address) << 13);
+	return STATUS_SUCCESS;
 }

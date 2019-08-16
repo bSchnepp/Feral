@@ -64,7 +64,7 @@ this seems totally unsatisfactory, wastes precious network bandwidth, and interr
 
 Feral, in the future, will support SVM virtualization extensions ("Pacifica"), 
 
-## Design influences?
+## Core architecture?
 Architecturally, Feral is similar to a variety of prior systems originating between 1969 and 1993, with the most obvious being CMU's Mach project, and the Plan 9 project. Feral discards the "everything is a file"
 design in favor of "everything is a 'network resource'", which is intended to align with more modern hardware and software designs. Everything can be sent packets and recieve packets:
 writing to the filesystem is much the same as opening a web page and sending/recieving data to/from that. Feral also takes a lot of design inspiration from a variety of products which competed with
@@ -114,6 +114,22 @@ is the command to run (qemu, qemu-nokvm, clean, etc.)
 
 This is temporary, and will be replaced with a proper
 build system (Kconfig) later.
+
+## Minimum requirements?
+Feral should run comfortably on any PC implementing the x86-64 instruction set
+(ie, at least K8 CPU), and at least 1GB of system memory. This memory requirement 
+is done out of laziness in the assembly bootstrapping stage, and Feral is expected
+to lower system requirements to 128MB of RAM in the future.
+
+Feral expects a VGA-compatible display adapter to be present for a PC. As such,
+you'll need some form of video adapter capable of running in VGA mode. Most
+consumer-class CPUs and GPUs implement this.
+
+Feral is tested on a 1950X processor, and is only *supported* running on version
+1 of the Zen microarchitecture. Issues due to a lack of instruction set support,
+misrepresented FMA4 support, etc. from another uarch may not be patched immediately.
+
+
 
 ## Is there any naming convention?
 Folders should be named in a way to avoid unnecessary characters (ie, 'inc' vs 'include'.)

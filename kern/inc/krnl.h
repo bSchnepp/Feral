@@ -31,6 +31,9 @@ IN THE SOFTWARE.
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
 
+
+#define VALIDATE_SUCCESS(x) if (x != STATUS_SUCCESS) { KiStopError(x); }
+
 typedef enum FeralStructureType
 {
 	FERAL_STRUCTURE_TYPE_APPLICATION_INFO = 0,

@@ -92,4 +92,6 @@ FERALSTATUS KiInitializeMemMgr(IN MmCreateInfo *info);	//TODO!!!
 FERALSTATUS GetMemoryAlreadyInUse(IN UINT_PTR Location, OUT BOOL *Status);
 FERALSTATUS SetMemoryAlreadyInUse(IN UINT_PTR Location, IN BOOL Status);
 
+FERALSTATUS ExtractAddressFromPageEntry(IN PageMapEntry *Entry, OUT UINT_PTR *Address);
+
 #endif
