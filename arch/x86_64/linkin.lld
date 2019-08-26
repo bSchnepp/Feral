@@ -4,26 +4,35 @@ SECTIONS
 {
 	. = 1M;
 	kern_start = .;
+	KERN_VIRT_OFFSET = 0xFFFF800000000000;
 	
 	.multiboot2 :
 	{
 		/* Ensure this is at the very beginning for sure. */
 		*(.multiboot2)
 	}
+	
+	.earlybss :
+	{
+		*(.earlybss)
+	}
+	
+	/* . += KERN_VIRT_OFFSET; */
 
-	.text :
+	.text : AT(ADDR(.text) - 0)
 	{
 		*(.text)
 	}
 
-	.rodata :
+	.rodata : AT(ADDR(.rodata) - 0)
 	{
 		*(.rodata)
 	}
 
-	.bss :
+	.bss : AT(ADDR(.bss) - 0)
 	{
 		*(.bss)
 	}
+	
 	kern_end = .;
 }

@@ -362,8 +362,7 @@ VOID kern_init(UINT32 MBINFO)
 			multiboot_mmap_entry currentEntry = {0};
 			
 			UINT64 index = 0;
-			/* 12 is the size of the rest of the items in this struct. */
-			UINT64 maxIters = (mb_as_mmap_items->size - 12) / mb_as_mmap_items->entry_size;
+			UINT64 maxIters = (mb_as_mmap_items->size) / mb_as_mmap_items->entry_size;
 			
 			/* Issue: We add region for every possible area. They're not all free, so we have bigger buffer than needed. */
 			FreeMemCount = maxIters;

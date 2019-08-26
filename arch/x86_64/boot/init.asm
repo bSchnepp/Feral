@@ -51,7 +51,7 @@ boot_panic_invalid_arch:
 
 global _start
 _start:
-	mov esp, stack_top	; Set the stack up.
+	mov esp, early_stack_top
 
 	; Check for multiboot 2 compliance.
 	; This number is the multiboot2 magic number: if this is present, then the kernel was booted correctly.
@@ -103,6 +103,15 @@ _start:
 	test edx, 1 << 29      ; Check if we do support long mode (bit 30)
 	; If zero, we panic.
 	je boot_panic_invalid_arch
+	
+	; Before moving on, make sure the whole BSS section
+	; is zeroed out.
+	xor eax, eax
+	mov edi, bss_start
+	mov ecx, bss_end
+	sub ecx, edi
+	cld
+	rep stosb
 
 
 
@@ -195,6 +204,18 @@ create_gdt:
 	retf
 
 	jmp $
+	
+	
+section .earlybss
+; Before we jump to 64-bit mode,
+; we need a BSS section for the early initialization.
+; This is just a temporary stack, and we don't really
+; need it for all that long.
+early_stack_bottom:
+	resb 4096	; Teeny little 4K stack.
+early_stack_top:
+
+
 
 BITS 64
 kern_start:
@@ -306,17 +327,24 @@ gdt_64:
 	dq gdt_64	; The pointer that the GDT wants.
 
 section .bss
-ALIGN 4096
+bss_start:
 
-; Note we go p2 --> p3 --> p4.
+; Stack overflow will cause a problem in the p4 table.
+; This is done _intentionally_ since when we remap, we make a new
+; page table, and in the process, we get to use the old page tables
+; to handle stack overflows and mark them as null pages or something.
+
+ALIGN 16
+stack_bottom:
+	resb 16384	; Nice and big (16KiB) stack.
+stack_top:
+
+ALIGN 4096
 p4_table:
 	resb 4096
 p3_table:
 	resb 4096
 p2_table:
 	resb 4096
-ALIGN 16
-stack_bottom:
-	resb 16384	; Nice and big (16KiB) stack.
-stack_top:
-
+	
+bss_end:

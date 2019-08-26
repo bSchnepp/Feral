@@ -21,12 +21,12 @@ kernel:
 	cd io && $(MAKE) 
 	cd drivers && $(MAKE)
 	cd kern && $(MAKE)
-	cd sec && $(MAKE)
+#	cd sec && $(MAKE)
 	
 	# libmm.a libprocmgr.a 
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES) -o ./*.o kern/kernel_main.o kern/krnlfuncs.o kern/krnlfuncs.o kern/krnl_private.o kern/objmgr.o
-	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o ./sec/*.o
+	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
 
 iso:	kernel
 	mkdir -p build/isofiles/boot/grub
