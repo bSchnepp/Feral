@@ -218,7 +218,7 @@ kern_start:
 	mov fs, ax
 	mov gs, ax
 	
-	mov rdi, qword (multiboot_value)			; Give us the multiboot info we want.
+	mov rdi, [multiboot_value - KERN_VIRT_OFFSET]			; Give us the multiboot info we want.
 	mov rsp, qword (stack_top)
 	and rsp, -16	; Guarantee that we're in fact, aligned correctly.	
 
