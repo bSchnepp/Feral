@@ -4,7 +4,8 @@ SECTIONS
 {
 	. = 1M;
 	kern_start = .;
-	KERN_VIRT_OFFSET = 0xFFFF800000000000;
+	KERN_VIRT_OFFSET = 0xFFFFFF8000000000;
+	
 	
 	.multiboot2 :
 	{
@@ -12,27 +13,41 @@ SECTIONS
 		*(.multiboot2)
 	}
 	
+	.earlytext :
+	{
+		*(.earlytext)
+	}
+
 	.earlybss :
 	{
 		*(.earlybss)
 	}
 	
-	/* . += KERN_VIRT_OFFSET; */
+	/* Once we get past initial stage, we can jettison all that code above. */
+	
+	. += KERN_VIRT_OFFSET;
+	kern_virt_start = .;
 
-	.text : AT(ADDR(.text) - 0)
+	.text : AT(ADDR(.text) - KERN_VIRT_OFFSET)
 	{
 		*(.text)
 	}
 
-	.rodata : AT(ADDR(.rodata) - 0)
+	.rodata : AT(ADDR(.rodata) - KERN_VIRT_OFFSET)
 	{
 		*(.rodata)
 	}
 
-	.bss : AT(ADDR(.bss) - 0)
+	.bss : AT(ADDR(.bss) - KERN_VIRT_OFFSET)
 	{
 		*(.bss)
 	}
 	
-	kern_end = .;
+	.data : AT(ADDR(.data) - KERN_VIRT_OFFSET)
+	{
+		*(.data)
+	}
+	
+	kern_end = . - KERN_VIRT_OFFSET;
+	kern_virt_end = .;
 }

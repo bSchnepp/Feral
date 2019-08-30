@@ -311,12 +311,12 @@ VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
 
 #ifndef FERAL_BUILD_STANDALONE_UEFI_
 VOID kern_init(UINT32 MBINFO)
-{
+{	
 	VgaContext graphicsContext = {0};
 	UINT8 misc = VgaPrepareEnvironment(&graphicsContext);
 	KiBlankVgaScreen(25, 80, VGA_BLACK);
 	KiPrintLine("Feral kernel booting...");
-
+	
 	FeralVersionMajor = FERAL_VERSION_MAJOR;
 	FeralVersionMinor = FERAL_VERSION_MINOR;
 	FeralVersionPatch = FERAL_VERSION_PATCH;

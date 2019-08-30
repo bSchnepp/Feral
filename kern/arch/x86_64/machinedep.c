@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -23,39 +23,13 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
-
-
+ 
+ 
 #include <feral/stdtypes.h>
+#include <arch/x86_64/idt/idt.h>
 
-#ifndef  _FERAL_X86_IDT_H_
-#define _FERAL_X86_IDT_H_
 
-#if defined(__x86_64__)
-typedef struct
-{
-	UINT16 Offset;	 // First 16 bits of the address (0 - 15)
-	UINT16 Selector;
-	UINT8 IST;
-	UINT8 TypeAttr;
-	UINT16 Offset2;	 // Second 16 bits		(16 - 31)
-	UINT32 Offset3;	 // Last 4 bytes of the address	(32 - 61)
-	UINT32 RESERVED; // These are reserved.
-}IDTDescriptor PACKED;
-#else
-typedef struct
-{
-	UINT16 Offset;	// First 16 bits of the address
-	UINT16 Selector;
-	UINT8 IST;
-	UINT8 TypeAttr;
-	UINT16 Offset2;	// Second 16 bits
-}IDTDescriptor PACKED;
-#endif
+static IDTDescriptor IDT[256];
+static IDTLocation IDTPTR;
 
-typedef struct
-{
-	UINT16 Limit;
-	UINTN  Location;
-}IDTLocation PACKED; 
 
-#endif

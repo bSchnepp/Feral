@@ -33,6 +33,8 @@ IN THE SOFTWARE.
 #include <arch/x86_64/vga/vgaregs.h>
 #include <arch/x86_64/cpuio.h>
 
+#include <arch/x86_64/mm/pageflags.h>
+
 static VgaContext *currentContext;
 
 
@@ -83,7 +85,7 @@ UINT8 VgaPrepareEnvironment(VgaContext *context)
 	UINT8 miscreg = x86inb(0x3CC);
 	x86outb(VGA_MISC_OUTPUT_REG, (miscreg | 0xE7));
 	
-	context->Framebuffer = (UINT16*)(0xB8000);
+	context->Framebuffer = (UINT16*)(KERN_PHYS_TO_VIRT(0xB8000));
 	context->ScreenWidth = 80;
 	context->ScreenHeight = 25;
 	
