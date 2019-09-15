@@ -4,7 +4,7 @@ SECTIONS
 {
 	. = 1M;
 	kern_start = .;
-	KERN_VIRT_OFFSET = 0xFFFFFF8000000000;
+	KERN_VIRT_OFFSET = 0xFFFFFFFFC0000000;
 	
 	
 	.multiboot2 :
@@ -23,6 +23,11 @@ SECTIONS
 		*(.earlybss)
 	}
 	
+	.earlydata :
+	{
+		*(.earlydata)
+	}
+	
 	/* Once we get past initial stage, we can jettison all that code above. */
 	
 	. += KERN_VIRT_OFFSET;
@@ -30,12 +35,12 @@ SECTIONS
 
 	.text : AT(ADDR(.text) - KERN_VIRT_OFFSET)
 	{
-		*(.text)
+		*(.text*)
 	}
 
 	.rodata : AT(ADDR(.rodata) - KERN_VIRT_OFFSET)
 	{
-		*(.rodata)
+		*(.rodata*)
 	}
 
 	.bss : AT(ADDR(.bss) - KERN_VIRT_OFFSET)

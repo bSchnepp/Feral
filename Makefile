@@ -24,7 +24,7 @@ kernel:
 #	cd sec && $(MAKE)
 	
 	# libmm.a libprocmgr.a 
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) -o ./iofuncs.o
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES) -o ./*.o kern/kernel_main.o kern/krnlfuncs.o kern/krnlfuncs.o kern/krnl_private.o kern/objmgr.o
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
 
@@ -50,14 +50,14 @@ qemu:	iso
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G --enable-kvm  # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
 
 qemu-nokvm:	iso
-	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -m 2G -d cpu_reset
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -m 2G -d int,cpu_reset -no-reboot -no-shutdown
 
 # The most alien CPU we can get.
 qemu-nokvm-unsupportedcpu:	iso
 	qemu-system-$(ARCH) -cpu KnightsMill -cdrom $(ISO) -smp 2 -m 6G
 	
 qemu-lldb:	iso
-	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -S -s -d int,cpu_reset &	
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -S -s -d int,cpu_reset -no-reboot&	
 	
 qemu-efi:
 	mkdir -p build/$(ARCH)/	

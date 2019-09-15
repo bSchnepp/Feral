@@ -1,0 +1,75 @@
+Note that when the Feral kernel boots, all system calls are diverted to
+an appropriate runtime driver.
+(This allows Feral to imitate New Technology, Mach, traditional *NIX, etc.
+all at the same time.)
+
+To be specific, what happens when usermode calls 'syscall' is that
+the kernel looks up the runtime environment belonging to that process,
+checks if there is a driver loaded for it, and then passes in
+the values of all the registers, states, and process context
+to that driver, to make the driver handle it. 
+
+The kernel proper does nothing in 'syscall' other than throw the work at 
+a driver. *
+
+
+'Waypoint' is the "native" runtime environment for Feral, though there
+is nothing special about it. (One could easilly replace it with
+an ECMA 234 driver, and still be a valid Feral system... we'd probably
+dub that "Feral/ECMA234", or as I've recently taken to calling it,
+"Feral plus EMCA-234".
+
+
+
+For now, I'd like to keep Waypoint focused on being useful to game developers,
+and to build our "native" API to really reflect that.
+
+
+Waypoint typically returns a Status for each call, which
+should be checked for STATUS_SUCCESS before moving on
+with anything else.
+
+Which register contains what depends on the architecture.
+Waypoint on x86_64 will obey the same conventions
+used by other systems on the same hardware.
+
+For now, the API looks something like:
+
+Syscall Number		|	Function Name		|	Output					|		Input			|
+1			|	ServiceSetHeapSize	|	Status, (void*) to heap			|		Requested Size		|
+2			|	ServiceSetMemPermission	|	Status					|		Location, Flags		|
+
+
+...
+(TODO)
+
+
+
+
+______
+
+
+* While here, I'd like to argue the reason *why* this architecture is chosen.
+Feral is intended to be useful for many, *many* years to come, and to be
+open for future operating systems development. To lower the barrier to entry
+for compatibility, instead of wasting 6 months writing some boot stubs
+and re-engineering the same thing everyone else has done for the last 40
+years, if all you care about is process management, scheduling, filesystems,
+etc., just write it as a Feral driver, or use another perfectly suitable
+project like OSKit. (and you can always write a Linux driver too, but
+kernel internals over there change all the time, for usually valid reasons,
+that I don't recally care about here: I'd like to extend "WE DO NOT BREAK
+USERSPACE", with "WE DO NOT BREAK DRIVERS TOO.".)
+
+Your driver has control (within it's domain) to tell the kernel which
+process to schedule next, what storage devices it should expose, etc.
+As long as you're the only runtime environment, the environment
+driver has a lot of control over the way the kernel works.
+
+(It's also nice to have cake and eat it too: we want the modularity of
+microkernels, but without any of the downsides of microkernels on the desktop.)
+
+I have no idea what interfaces would look like 20-30 years from now, and this
+design allows the kernel to be relevant many years later by just pretending
+to be someone else. No need to trash the kernel, just give it a new coat of
+paint.

@@ -368,7 +368,7 @@ VOID kern_init(UINT32 MBINFO)
 			FreeMemCount = maxIters;
 			UINT64 FreeAreasWritten = 0;
 			
-			
+
 			for (currentEntry = mb_as_mmap_items->entries[0]; index < maxIters; currentEntry = mb_as_mmap_items->entries[++index])
 			{
 				/* Check the type first. */

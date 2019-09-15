@@ -3,8 +3,10 @@ include ../../Makerules
 FILES += vga/*.c
 CFLAGS += -I../inc
 
-ASM_FILES = boot/*.asm
-
-
 all:
-	$(AS) -felf64 $(ASM_FILES) -o ../../multiboot.o
+	$(AS) -felf64 boot/helper.asm
+	$(AS) -felf64 boot/init.asm
+	mv ./boot/*.o ../../
+	
+clean:
+	rm -rf *.o

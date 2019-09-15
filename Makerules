@@ -15,11 +15,11 @@ TARGET     = -target $(ARCH)-pc-none-gnu
 AS        := nasm       # We use nasm to assemble.
 CC        := clang      # We use clang to compile.
 CXX       := clang++    # We may use C++ for something later. (Would only ever really be a "C with classes" anyway.)
-LD        := ld.lld -flavor gnu --verbose
+LD        := ld.lld -flavor gnu
 
 INCLUDES  := inc
 
-CFLAGS := -std=c11 -ffreestanding -nostdlib -Wall -Wextra -mno-red-zone -c -v -mno-mmx -mno-sse -msoft-float -fno-vectorize -O2 -Wstrict-prototypes -fstack-protector-all -Wvla -Wmissing-prototypes -mcmodel=large
+CFLAGS := -std=c99 -ffreestanding -nostdlib -Wall -Wextra -mno-red-zone -c -mno-mmx -mno-sse -msoft-float -fno-vectorize -O2 -Wstrict-prototypes -fstack-protector-all -Wvla -Wmissing-prototypes -mcmodel=large
 
 # Comment for release. This will be changed to be based upon an environment variable later.
 CFLAGS += -g3 -DKERN_DEBUG -DDEBUG

@@ -5,8 +5,8 @@ MULTIBOOT_MAGIC EQU 0xE85250D6
 MULTIBOOT_ARCH_ EQU 0x00000000
 MULTIBOOT_SIZE_ EQU (header_end - header_start)
 
-; 0xFFFFFF8000000000, which is the full P4, P3, but entry 0 for P2.
-KERN_VIRT_OFFSET EQU 0xFFFFFF8000000000
+; FFFFFFFFC0000000, which is the full P4, P3, but entry 0 for P2.
+KERN_VIRT_OFFSET EQU 0xFFFFFFFFC0000000
 
 header_start:
 
@@ -51,10 +51,21 @@ boot_panic_invalid_arch:
 	jmp $
 	
 
+section .earlydata
+gdt_64:
+	dq 0	; The zero entry, which is needed for the GDT.
+
+.code: equ $ - gdt_64
+	dq (1 << 40) | (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53) ; The GDT needs to be done like this.
+
+.gdtpointer:
+	dw $ - gdt_64 - 1
+	dq gdt_64	; The pointer that the GDT wants.
+
 section .earlytext
 global _start
 _start:
-	mov esp, early_stack_top
+	mov esp, stack_top - KERN_VIRT_OFFSET
 
 	; Check for multiboot 2 compliance.
 	; This number is the multiboot2 magic number: if this is present, then the kernel was booted correctly.
@@ -172,7 +183,7 @@ enable_paging:
 ; Let's start...
 create_gdt:
 	
-	lgdt [gdt_64.gdtpointer - KERN_VIRT_OFFSET]
+	lgdt [gdt_64.gdtpointer]
 	; Hold up just a second here. We need to pass to kern_start the multiboot header before it runs off into KiSystemStartup.
 	; kern_start is multiboot-only.
 	; Get around to that later.
@@ -193,16 +204,6 @@ create_gdt:
 	retf
 
 	jmp $
-	
-	
-section .earlybss
-; Before we jump to 64-bit mode,
-; we need a BSS section for the early initialization.
-; This is just a temporary stack, and we don't really
-; need it for all that long.
-early_stack_bottom:
-	resb 4096	; Teeny little 4K stack.
-early_stack_top:
 
 
 SECTION .text
@@ -218,7 +219,7 @@ kern_start:
 	mov fs, ax
 	mov gs, ax
 	
-	mov rdi, [multiboot_value - KERN_VIRT_OFFSET]			; Give us the multiboot info we want.
+	mov edi, [multiboot_value - KERN_VIRT_OFFSET]			; Give us the multiboot info we want.
 	mov rsp, qword (stack_top)
 	and rsp, -16	; Guarantee that we're in fact, aligned correctly.	
 
@@ -231,64 +232,6 @@ kern_start:
 	call rax
 	hlt
 	jmp $
-
-global cpuid_vendor_func
-
-cpuid_vendor_func:
-; In order: RDI, RSI, RDX.
-push rbp		; Don't think this is necessary, but let's do it anyway.
-push rdx		; Necessary later.
-mov rax, 0		; We want the vendor name.
-cpuid			; The CPUID instruction we're in assembler for.
-mov rax, rdx		; Move into RAX the value of RDX. Necessary later.
-mov [edi], ebx		; Put into the first chunk of CPUID EBX.
-mov [esi], eax		; Move into location of argument 2 (ESI) the value of EDX.
-pop rdx			; RDX is one of our pointers, but is overriden by CPUID.
-mov [edx], ecx		; This is the last chunk of text we need for CPUID vendor.
-pop rbp			; Return the original base pointer.
-mov rax, 0		; Return 0 always.
-ret
-
-global cpuid_brand_name
-
-cpuid_brand_name:
-; In order: RDI, RSI, RDX, RCX
-push rbp
-mov rax, [rdi]	; What part of the 3 calls we're doing do we do?
-
-
-; ok, we're going to be bad and trash the r* registers real fast.
-
-push rdx
-push rcx
-
-cpuid		; CPUID.
-
-mov [edi], eax	; Put into the first argument the value in EAX.
-mov [esi], ebx	; Put into the second argument the value in EBX.
-
-pop rax
-pop rbx
-
-mov [ebx], ecx
-mov [eax], edx
-
-pop rbp
-ret
-
-global cpuid_family_number
-
-cpuid_family_number:
-push rbx
-push rcx
-push rdx
-mov rax, 1
-cpuid
-pop rdx
-pop rcx
-pop rbx
-ret
-
 
 global get_initial_p4_table
 global get_initial_p3_table
@@ -306,21 +249,6 @@ get_initial_p2_table:
 	mov rax, p2_table
 	ret
 
-section .rodata
-
-; Store our multiboot pointer.
-multiboot_value resd 0
-
-gdt_64:
-	dq 0	; The zero entry, which is needed for the GDT.
-
-.code: equ $ - gdt_64
-	dq (1 << 40) | (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53) ; The GDT needs to be done like this.
-
-.gdtpointer:
-	dw $ - gdt_64 - 1
-	dq gdt_64	; The pointer that the GDT wants.
-
 section .bss
 bss_start:
 
@@ -334,17 +262,20 @@ stack_top:
 bss_end:
 
 section .data
+; Store our multiboot pointer.
+multiboot_value dd 0
+
 ALIGN 4096
 p4_table:
 	dq (p3_table - KERN_VIRT_OFFSET) + 3
-	resq 510
+	times 510 dq 0
 	dq (p3_table - KERN_VIRT_OFFSET) + 3
 	
 p3_table:
 	dq (p2_table - KERN_VIRT_OFFSET) + 3
-	resq 510
+	times 510 dq 0
 	dq (p2_table - KERN_VIRT_OFFSET) + 3
 
 p2_table:
-	resq 512
+	times 512 dq 0	; Declare 512 entries.
 	
