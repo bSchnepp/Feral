@@ -27,6 +27,7 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
+#include <mm/heap.h>
 #include <mm/mmcommon.h>
 
 #ifndef _FERAL_KERN_MM_H_
@@ -85,6 +86,16 @@ typedef struct MmCreateInfo
 	
 }MmCreateInfo;
 
+typedef struct AllocatorState
+{
+	MmStructureType sType;
+	void *pNext;
+	
+	UINT64 NumArenas;
+	Arena *Arenas;
+}AllocatorState;
+
+
 //(Obviously, these are TODO.)
 
 FERALSTATUS KiInitializeMemMgr(IN MmCreateInfo *info);	//TODO!!!
@@ -93,5 +104,11 @@ FERALSTATUS GetMemoryAlreadyInUse(IN UINT_PTR Location, OUT BOOL *Status);
 FERALSTATUS SetMemoryAlreadyInUse(IN UINT_PTR Location, IN BOOL Status);
 
 FERALSTATUS ExtractAddressFromPageEntry(IN PageMapEntry *Entry, OUT UINT_PTR *Address);
+
+
+
+
+
+AllocatorState MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea);
 
 #endif
