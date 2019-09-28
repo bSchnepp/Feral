@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining  a copy of the software and accompanying documentation covered by 
@@ -63,9 +63,14 @@ extern "C" {
 #define TRUE 1
 #endif
 
-/* Yes, 'API' is not a typo, even though we're dealing with ABIs. This is because this is how the API would be called. Slightly confusing, yes, but I'm just following an established thing. */
+/* 
+	Yes, 'API' is not a typo, even though we're dealing with ABIs. 
+	This is because this is how the API would be called. Slightly confusing,
+	yes, but I'm just following an established thing. 
+*/
 
-#define FERALAPI __attribute__((cdecl))	/* Team Red's ABI. (the one basically everyone else uses). */
+/* Team Red's ABI. (the one basically everyone else uses). */
+#define FERALAPI __attribute__((cdecl))	
 
 #define  MSAPI __attribute__((ms_abi))
 #define WINAPI __attribute__((ms_abi))
@@ -75,7 +80,6 @@ extern "C" {
 #define CONST const
 #define INLINE inline
 #define VOID void
-#define PVOID void*
 
 typedef unsigned char BYTE;
 typedef BYTE BOOLEAN;
@@ -83,7 +87,11 @@ typedef char CCHAR;
 typedef char CHAR;
 
 #ifndef FERAL_NO_DEPRECATED
-/* One should avoid DWORD as a word size may differ on various platforms (8-bit word, 32-bit words, etc.) */
+/* 
+	One should avoid DWORD as a word size may differ on various platforms 
+	(8-bit word, 32-bit words, etc.)
+ */
+#define PVOID void*
 typedef uint32_t DWORD;
 typedef uint64_t DWORDLONG;
 #endif
@@ -114,7 +122,7 @@ typedef uint64_t UINT64;
 typedef int32_t LONG;
 typedef int64_t LONGLONG;
 
-// We're LP64.
+/* We're LP64. */
 #if defined(__x86_64__) || defined(__aarch64__)
 typedef int64_t INT_PTR;
 typedef uint64_t UINT_PTR;
@@ -135,20 +143,21 @@ typedef  int64_t  INTN;
 typedef uint32_t UINTN;
 typedef  int32_t  INTN;	
 #endif
-// 286 and earlier not supported. (16-bit x86 is *very* old and doesn't support paging).
+/* 
+	286 and earlier not supported. 
+	(16-bit x86 is *very* old and doesn't support paging).
+ */
 
 
-// Ensure we define wchar_t. This is important, as we *really* love Unicode.
+/* Ensure we define wchar_t. This is important, as we *really* love Unicode. */
 typedef unsigned short wchar_t;
 typedef wchar_t* WSTRING;
 typedef wchar_t WCHAR;
-// Also define WIDE CHAR and WIDE STRING.
+/* Also define WIDE CHAR and WIDE STRING. */
 
 typedef CHAR* STRING;
 
-typedef UINT32 COLORREF;	/* For when we eventually get to a desktop environment. */
-				/* We may need to bump this up to a higher bit count for better color stuff. */
-
+typedef UINT32 COLORREF;
 typedef int16_t	CSHORT;
 
 typedef UINT64 TIMEUNIT;
@@ -192,6 +201,10 @@ typedef struct GUID
 #define NULL ((void*)0)
 #endif
 
+#ifndef NULLPTR
+#define NULLPTR NULL
+#endif
+
 typedef void* POINTER;
 
 #if defined(__cplusplus)
@@ -201,6 +214,6 @@ typedef void* POINTER;
 #include <feral/feraluser.h>
 
 
-/* TEMPORARY */
+/* TEMPORARY FIXME*/
 UINT_PTR __stack_chk_guard;
 #endif

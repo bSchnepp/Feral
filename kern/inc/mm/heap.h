@@ -27,31 +27,68 @@ IN THE SOFTWARE.
 #ifndef _FERAL_HEAP_H_
 #define _FERAL_HEAP_H_
 
-/* 128 is a size just right where you're better off on stack if smaller */
-#define ALLOC_BLOCK_SIZE_MINIMUM (128)
- 
+#define ALLOC_BLOCK_SIZE (128)
+
+
+/* 
+	NOTE: This allocator is *horrible*, but is designed to
+	be tolerable on SMP systems. (our favorite Red CPUs come with
+	absurd numbers of cores, ranging from 2 on the low end to something
+	like 64 on HEDT/servers... with SMT (128 harts), and then dual socket,
+	so 256 harts. That's a lot to manage, and scale well.
+	
+	Some bad things are:
+		- Jump to worst case pretty commonly.
+		- Doesn't *actually* care about threads right now
+	
+	For that reason, ThreadIndex is UINT64, because one day someone is
+	going to build a supercomputer with 2^64-1 harts or
+	something just absurdly large. Allocator needs to scale well.)
+	That should NOT be conflated with user mode threads. "Threads"
+	in this context refers to SMT hardware threads.
+	
+	Important ideas here are:
+		- Each Arena is unique per thread.
+		- Having multiple arenas means there's less lock fighting.
+			(... until an Arena is full, at least.)
+		- Static allocation size of 128. No realloc (yet), but
+			that shouldn't be too crazy to do.
+		- Free should be easy!
+	
+	Dynamic memory is pretty important--I don't want to do silly things
+	with the IDT and GDT with some static buffer from the BSS.
+ */
+
+
+/* 
+	Adjacent nodes always point to adjacent memory areas. Flaw in this
+	allocator for now, but that can be fixed.
+ */ 
 typedef struct Node
 {
-	BOOL Dirty;
-	BOOL Used;
-	VOID *Area;
+	BOOL Used;	/* Already in use? */
+	BOOL Last;	/* Is this the last node? */
+	VOID *Area;	/* What area is it in? */
+	UINT64 NodeIndex;	/* In the Arena, what number is this? */
+	
+	struct Node *Previous;
+	struct Node *Next;
+	
+	/* How much space does it take up, as multiples of ALLOC_BLOCK_SIZE? */
+	UINT64 ChunkIncrement;
 }Node;
+
 
 /* 
 	A thread holds an arena where memory could
 	be allocated or freed from.
-	
-	A lock is in place such that if n(thread) > n(cores),
-	then the portion of the kernel waiting on it can be halted
-	until the current operation is done.
  */
 typedef struct Arena
 {
-	UINT8 Lock;
-	UINT64 ThreadIndex;
-	UINT64 Size;
-	VOID *Area;
-	Node *Root;
+	UINT64 Size;		/* How much space is there? */
+	UINT64 ThreadIndex;	/* What hart owns this arena? */
+	Node *Root;		/* The start of the list. O(n) removal. */
+	Node *NextToAllocate;	/* O(1) indexing for malloc performance */
 }Arena;
 
 

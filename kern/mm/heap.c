@@ -29,25 +29,158 @@ IN THE SOFTWARE.
 #include <mm/heap.h>
 #include <mm/mm.h>
 
-AllocatorState MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea)
+/* Well, it works... */
+static AllocatorState CurrentState;
+
+/*  FIXME: Add poison values to prevent bad heap accesses. */
+
+/* Assume insertion is valid, and that caller handles Arena. */
+void InternalInitializeNode(Node *Current, Node *Previous, Node *Next, 
+	UINT64 Index)
+{
+	
+	/* Assume creation is valid. */
+	Current->Used = FALSE;
+	Current->Previous = Previous;
+	if (Previous != NULLPTR)
+	{
+		Previous->Next = Current;
+		Current->Area = (Previous->Area + 1);
+	}
+	
+	Current->Next = Next;
+	if (Next != NULLPTR)
+	{
+		Next->Previous = Current;
+	}
+	
+	Current->NodeIndex = Index;
+}
+
+/* NumArenas should be equal to SMT threads... but doesn't have to be. */
+AllocatorState *MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea, 
+	UINT_PTR HeapSize)
 {
 	AllocatorState State;
+	UINTN HeapAmount = ((UINT64)(HeapSize) / NumArenas);
 	
+	/* Each arena has an equal area of the heap. */
 	State.sType = MM_STRUCTURE_TYPE_HEAP_ALLOCATOR;
-	State.pNext = (void*)(0);
+	State.pNext = NULLPTR;
 	
 	Arena *ArenaStart = (Arena*)(HeapArea);
 	for (UINT64 Counter = 0; Counter < NumArenas; ++Counter)
 	{
 		/* Write to that area an Arena... */
 		Arena Current;
-		Current.Lock = 0;
-		Current.ThreadIndex = 0;
-		Current.Size = 0;
-		Current.Area = (void*)(0);
-		Current.Root = (void*)(0);
-		/* TODO: Properly setup */
+		Current.Size = (HeapAmount / NumArenas);
+		Current.ThreadIndex = Counter;	/* Counter is also thread num */
+
+		/* 
+			The first node needs to point to an area outside where 
+			nodes will ever be written to.
+		 */
+		UINT_PTR NodeChunkSize = HeapSize / (sizeof(Node));
+		UINT_PTR *ReinterpretHeap = (UINT_PTR*)(HeapArea);
+		Current.Root = (Node*)(ReinterpretHeap);
+		InternalInitializeNode(Current.Root, NULLPTR, NULLPTR, 0);
+		/* Root has no prev, so set area manually. */
+		Current.Root->Area = (VOID*)(ReinterpretHeap + NodeChunkSize);
+		/* Gets a place which should be empty. */
+		Current.NextToAllocate = ((Node*)(Current.Root) + 1);
+		KiSetMemoryBytes(*(Current.NextToAllocate), 0, sizeof(Node));
+		Current.NextToAllocate->Previous = Current.Root;
 		ArenaStart[Counter] = Current;
 	}
-	return State;
+	CurrentState = State;
+	return &CurrentState;
+}
+
+void *InternalMmWorstCaseMalloc(Arena *CurArena, UINT64 Size)
+{
+	UINT64 RequiredNodes = (Size / ALLOC_BLOCK_SIZE) + 1;
+	/* Go up one by one from root. */
+	for (Node **Indexer = &(CurArena->Root); (*Indexer)->Last != TRUE; 
+		Indexer = &((*Indexer)->Next))
+	{
+		if ((*Indexer)->Used)
+		{
+			continue;	
+		}
+		
+		/* Check if there's the needed adjacent nodes... */
+		UINT64 Count = 0;
+		BOOL Okay = TRUE;
+		for (Node **Subindexer = &(*Indexer); 
+			(((Count++) < RequiredNodes) && 
+			(*Subindexer)->Last != TRUE);
+			Subindexer = &((*Subindexer)->Next))
+		{
+			if ((*Subindexer)->Used)
+			{
+				Okay = FALSE;
+				break;
+			}
+		}
+		
+		if (Okay)
+		{
+			/* Set it up! */
+			Node *Current = *Indexer;
+			Node *Previous = (*Indexer)->Previous;
+			Node *Next = (*Indexer)->Next;
+			UINT64 Index = Previous->NodeIndex + 1;
+			InternalInitializeNode(Current, Previous, Next, Index);
+			
+			/* And reuse the subindexer code to mark as used. */
+			
+			for (Node **Subindexer = &(Current); 
+				(((Count++) < RequiredNodes) && 
+				(*Subindexer)->Last != TRUE);
+				Subindexer = &((*Subindexer)->Next))
+			{
+				(*Subindexer)->Used = TRUE;
+			}
+		}
+		
+	}
+}
+
+
+/* FIXME: The thread number is ignored. */
+void *MmKernelMalloc(UINT64 Size)
+{
+	/* Request a chunk of some size. */
+	UINT64 CurrentThread = 0;
+	Arena *ThreadArena = &(CurrentState.Arenas[CurrentThread]);
+	Node *Attempt = ThreadArena->NextToAllocate;
+	if (!Attempt->Last)
+	{
+		/* Allocate it! */
+		UINT64 BlockIncrement = (Size % ALLOC_BLOCK_SIZE) + 1;
+		/* Need to make sure we've got that much space left. */
+		Node **Indexer = &Attempt;
+		UINT64 Increment = 0;
+		while (*Indexer && ++Increment < BlockIncrement)
+		{
+			if ((*Indexer)->Used || (*Indexer)->Last)
+			{
+				/* 
+					Worst case malloc.
+					Not always _necessary_, but
+					this makes it easier to follow.
+				 */
+				return InternalMmWorstCaseMalloc(ThreadArena, 
+					Size);
+			} else {
+				((*Indexer)->Used) = TRUE;
+			}
+			Indexer = &((*Indexer)->Next);
+		}
+		Attempt->ChunkIncrement = BlockIncrement;
+		InternalInitializeNode(Attempt, Attempt->Previous, 
+			Attempt->Next, (Attempt->Previous->NodeIndex) + 1);
+		return Attempt->Area;
+	}
+	return NULLPTR;
 }

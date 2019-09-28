@@ -96,19 +96,25 @@ typedef struct AllocatorState
 }AllocatorState;
 
 
-//(Obviously, these are TODO.)
+/* (Obviously, these are TODO.) FIXME: Prefix with 'Mm'. */
 
-FERALSTATUS KiInitializeMemMgr(IN MmCreateInfo *info);	//TODO!!!
+FERALSTATUS KiInitializeMemMgr(IN MmCreateInfo *info);	/* TODO!!! */
 
 FERALSTATUS GetMemoryAlreadyInUse(IN UINT_PTR Location, OUT BOOL *Status);
 FERALSTATUS SetMemoryAlreadyInUse(IN UINT_PTR Location, IN BOOL Status);
 
-FERALSTATUS ExtractAddressFromPageEntry(IN PageMapEntry *Entry, OUT UINT_PTR *Address);
+FERALSTATUS ExtractAddressFromPageEntry(IN PageMapEntry *Entry, 
+	OUT UINT_PTR *Address);
 
 
 
 
 
-AllocatorState MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea);
+AllocatorState *MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea, 
+	UINT_PTR HeapSize);
+	
+void *MmKernelMalloc(UINT64 Size);
+
+void MmKernelFree(UINT_PTR Location);
 
 #endif
