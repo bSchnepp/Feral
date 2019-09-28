@@ -132,15 +132,21 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	BufferSize >>= ShiftAmt;
 	
 	/* Take our location from before, and use it accordingly. */
-	UINT8 *map = (UINT8*)(PmmLocation);
-	KiSetMemoryBytes(map, 0, BufferSize);
-	MmState.BitmaskUsedFrames = map;
+	UINT8 *PmmBitmap = (UINT8*)(PmmLocation + KERN_VIRT_OFFSET);
+	KiSetMemoryBytes(PmmBitmap, 0, BufferSize);
+	MmState.BitmaskUsedFrames = PmmBitmap;
 	
 	/* Mark everything as in use. */
 	for (UINT_PTR index = kern_start; index < PmmLocation + BufferSize; index += FrameSize)
 	{
 		VALIDATE_SUCCESS(SetMemoryAlreadyInUse(index, TRUE));
 	}
+	
+	/* Start the heap stuff up. No SMP support yet, so 1 hart. */
+	/* 128MB heap should be enough for now? */
+	const UINT64 HeapSize = (1024 * 1024 * 128);
+	MmCreateAllocatorState(1, 
+		(KERN_VIRT_OFFSET + PmmLocation + BufferSize + 1024), HeapSize);
 	return STATUS_SUCCESS;
 }
 

@@ -81,17 +81,21 @@ AllocatorState *MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea,
 			nodes will ever be written to.
 		 */
 		UINT_PTR NodeChunkSize = HeapSize / (sizeof(Node));
-		UINT_PTR *ReinterpretHeap = (UINT_PTR*)(HeapArea);
+		UINT_PTR *ReinterpretHeap = 
+			(UINT_PTR*)(&(ArenaStart[Counter]) + NumArenas);
+			
 		Current.Root = (Node*)(ReinterpretHeap);
 		InternalInitializeNode(Current.Root, NULLPTR, NULLPTR, 0);
 		/* Root has no prev, so set area manually. */
 		Current.Root->Area = (VOID*)(ReinterpretHeap + NodeChunkSize);
 		/* Gets a place which should be empty. */
-		Current.NextToAllocate = ((Node*)(Current.Root) + 1);
+		Current.NextToAllocate = ((Node*)(Current.Root)) + 1;
+		
 		KiSetMemoryBytes(*(Current.NextToAllocate), 0, sizeof(Node));
 		Current.NextToAllocate->Previous = Current.Root;
 		ArenaStart[Counter] = Current;
 	}
+	State.Arenas = ArenaStart;
 	CurrentState = State;
 	return &CurrentState;
 }
@@ -150,37 +154,28 @@ void *InternalMmWorstCaseMalloc(Arena *CurArena, UINT64 Size)
 /* FIXME: The thread number is ignored. */
 void *MmKernelMalloc(UINT64 Size)
 {
+	/* FIXME: Area isn't mapped. */
 	/* Request a chunk of some size. */
 	UINT64 CurrentThread = 0;
 	Arena *ThreadArena = &(CurrentState.Arenas[CurrentThread]);
 	Node *Attempt = ThreadArena->NextToAllocate;
-	if (!Attempt->Last)
+	if (Attempt && Attempt->Last)
 	{
-		/* Allocate it! */
-		UINT64 BlockIncrement = (Size % ALLOC_BLOCK_SIZE) + 1;
-		/* Need to make sure we've got that much space left. */
-		Node **Indexer = &Attempt;
-		UINT64 Increment = 0;
-		while (*Indexer && ++Increment < BlockIncrement)
-		{
-			if ((*Indexer)->Used || (*Indexer)->Last)
-			{
-				/* 
-					Worst case malloc.
-					Not always _necessary_, but
-					this makes it easier to follow.
-				 */
-				return InternalMmWorstCaseMalloc(ThreadArena, 
-					Size);
-			} else {
-				((*Indexer)->Used) = TRUE;
-			}
-			Indexer = &((*Indexer)->Next);
-		}
-		Attempt->ChunkIncrement = BlockIncrement;
-		InternalInitializeNode(Attempt, Attempt->Previous, 
-			Attempt->Next, (Attempt->Previous->NodeIndex) + 1);
-		return Attempt->Area;
+		return InternalMmWorstCaseMalloc(ThreadArena, Size);
 	}
-	return NULLPTR;
+	
+	/* Allocate it! */
+	UINT64 BlockIncrement = (Size % ALLOC_BLOCK_SIZE) + 1;
+	/* Need to make sure we've got that much space left. */
+	Node **Indexer = &Attempt;
+	UINT64 Increment = 0;
+	while (*Indexer && ++Increment < BlockIncrement)
+	{
+		((*Indexer)->Used) = TRUE;
+		Indexer = &((*Indexer)->Next);
+	}
+	Attempt->ChunkIncrement = BlockIncrement;
+	InternalInitializeNode(Attempt, Attempt->Previous, 
+		Attempt->Next, (Attempt->Previous->NodeIndex) + 1);
+	return Attempt->Area;
 }
