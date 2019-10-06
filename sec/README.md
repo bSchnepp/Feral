@@ -29,45 +29,47 @@ Nothing obscure, special, anything like that.
 
 
 ## What are we doing?
-We'll aim for what *could* be considered B3 in the Orange Book, (or better)
-but we're not bothering with any formal compliance or anything like that.
-(again, if you *really* want security, use OpenBSD or Linux with AppArmor/SELinux.)
+Security subsystem does all the security things.
+Where appropritate, try to look for old standards that happen
+to fit the same checkmarks to fit.
 
-Thus, we'll break rules when it's convenient to implementation, or when it doesn't
-make sense in the context of Feral, if those cases exist.
+The primary goal(s) are:
+	- Compromise of one part does not mean compromise everything
+	- Strong protection to ensure the kernel prefers self-termination over data leaks
+	- Role-based authentification
+	- Isolation of user processes
+	- Secure by default
+	- Harden against data exfiltration as much as possible
 
 ## Ideas?
 **there is no root user.**
+One primary way to achieve portions of this is to
+have no concept of a superuser. There might be special
+accounts which are allowed to do one specific thing unrestricted,
+but only that one specific thing. This way, taking over some GUI daemon
+in control of drawing to the screen doesn't get raw access to disks, and is
+essentially useless if you want to do something more than make the screen look
+bad, (or do some physical damage if you got into the video driver somehow.)
+Each of these superusers can only have one terminal: they cannot have
+two administrators using the same superuser account. This is to help
+harden against threats where an attacker has compromised an administrator's account,
+and then uses it undetected as it does not interrupt legitimate users. If this
+situation were to happen, it means "PULL THE PLUG RIGHT NOW".
 
-All actions in the kernel must be explicitly allowed
-by this security subsystem. By default, *everything is
-denied access to everything but a very specific subset of 
-possible system calls.*
+All actions which can be done in usermode are explicitly denied by default.
+The program must establish a context with the security daemon (either explicitly),
+or implicitly with it's environment runtime (ie, Linux emulation).
+For example, a program cannot write to files, link with dynamic libraries, connect
+to network locations, look at directories, do anything graphics related, put output
+to a console, or interact with the system other than communicate through a very
+specific channel to request these permissions. This may expand to in the future,
+terminating the process if the stack needs to grow, just to ensure there is no
+way to overrun the stack.
 
-The kernel enforces this via port rights, this security system, and hash values.
-Depending on kernel configuration, we go up to
-3 layers of in-memory encryption for kernel objects,
-and up to 3 copies of each item, with checksums taken
-on each item to ensure correctness and prevent buffer
-overflow attacks in case they *somehow* go through
-kernel protection.
-
-We use several layers of encryption because unless there's
-mathematical proof showing it's correct and unbreakable
-*with the current hardware and software implementation*,
-we should assume it's possible to break, or possible to
-make easier to break into via something like a side-channel
-attack. We can't use one-time pads because we can't
-guarantee *true randomness*. (Nor could we really use
-one time pads for filesystems anyway without requiring enormous
-encryption keys... do you really want a key that's 5TB long?)
-
-We should also provide each object with 3 different kinds of
-checksums to be provided with it, depending on how
-important the object in question is: this makes duplicating
-a given object and replacing it's contents much harder, as it
-now has to go through 3 different algorithms and find a common
-flaw in all 3 to ensure it isn't detected by the kernel and thwarted.
+There's some other things that can be added too, like encrypting all
+critical kernel data structures with a randomly generated key at boot time,
+per-core isolation, disabling simultaneous multithreading, and just do
+anything else that might maybe make it harder to break into a Feral system.
 
 Since we're monolithic, our job is *lots* harder since we can't jettison code
 into user mode (performance!!! even L4 variants still have signifigant issues
@@ -77,10 +79,15 @@ very specific systems (ie, some scientific robots or some sort of embedded contr
 system))
 
 Each user needs to be specifically identified:
-we do not allow anonymous users.
+we do not allow anonymous users. Never allow anonymous logins.
+Administrator, if they really want this, needs to create a guest account
+shared by every anonymous user. (You shouldn't do this.)
 **THERE IS NO ROOT USER**
 
-Logs should be kept on objects by default.
+Logs should be kept on objects by default. Be verbose, but also
+consise. Anything that could be attributed to some security violation
+or breach needs to be logged. Do not allow deletion of logs, except by
+a very specific superuser, who can only delete logs.
 
 There must be several levels behind every specific type of
 role: levels 1 - 7, for example, with graphics permissions,
@@ -167,8 +174,15 @@ private keys, browser cookies, simply take your hardware, or do something "for t
 No matter the case, security should always be a high priority, especially when you don't have
 complete control of every possible interaction a given machine might make.
 
+What's worse is that said device might later connect to a network which has each of it's
+devices trusted. Malware can infiltrate these networks over removable media like
+USB sticks. If every node on this trusted network trusts each other, but one of them
+is compromised, then these other nodes may not expect an attack from inside
+the network, and be less capable of mitigating those threats.
+
 There's a lot of dangerous things out there, and since we're the OS, it's our job to
-deal with it as best we can.
+deal with it as best we can. Attacking the OS kernel needs to be the path of most
+resistance, since actually getting into the kernel would lead to very bad things.
 
 
 ## Additional things?

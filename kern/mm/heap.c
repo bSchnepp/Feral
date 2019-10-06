@@ -69,6 +69,8 @@ AllocatorState *MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea,
 	State.pNext = NULLPTR;
 	
 	Arena *ArenaStart = (Arena*)(HeapArea);
+	/* Space to reserve for nodes. */
+	UINT64 NodeSize = (HeapAmount / (NumArenas * sizeof(Node)));
 	for (UINT64 Counter = 0; Counter < NumArenas; ++Counter)
 	{
 		/* Write to that area an Arena... */
@@ -87,7 +89,7 @@ AllocatorState *MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea,
 		Current.Root = (Node*)(ReinterpretHeap);
 		InternalInitializeNode(Current.Root, NULLPTR, NULLPTR, 0);
 		/* Root has no prev, so set area manually. */
-		Current.Root->Area = (VOID*)(ReinterpretHeap + NodeChunkSize);
+		Current.Root->Area = (VOID*)(ReinterpretHeap + NodeSize + 1);
 		/* Gets a place which should be empty. */
 		Current.NextToAllocate = ((Node*)(Current.Root)) + 1;
 		
