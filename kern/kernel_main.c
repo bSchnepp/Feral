@@ -66,101 +66,46 @@ static UINT64 FreeMemCount;
 /* Support up to 8 regions. Hack for now until we get a real malloc. */
 static UINT_PTR FreeMemLocs[16];
 
-/* FERAL initialization follows a few basic steps: */
-	/*
-		[we'll need to rewrite this, since a lot of this is reworked into the 'master control process'.]
-		The first process is always "Subsystem manager". (SSMGR.PRO), this handles dynamic linking and is essential for all non-native programs.
-			(all userspace programs, unless they ship with the rest of the OS, should be a "non-native" (link with a libos) program.
-			(all non-native programs inherit from this one, ala *NIX. This does the primary job of "init".)
-
-		The second is always WAYLOGON.PRO, which should handle user authentification in all cases, even if it's for our sort-of-SMB-slash-NFS stuff.
-			(this establishes a user object in the kernel and gets out some unique identifier so as to associate users with actions)
-
-		The third is always SESSMGR.PRO, which should handle actual user sessions (created by waylogon), and handle environment variables, initialize the DCL-like shell,
-		do some important stuff with devices (kind of the same as how *NIX create device files like /dev/sda, /dev/hda, /dev/disk0s1, etc.),
-			We borrow DOS convention of the names (rather than *NIX-style) The names are not *exact*, only similar. 
-			Note the underlying philosophy is "everything is a resource, not necessarilly a file".
-			ie, \\.\Devices/CON1
-			    \\.\Devices/CON2
-			    \\.\Devices/CON3
-			    \\.\Devices/NULL
-			    \\.\Devices/COM1
-			    \\.\Devices/VGA1		(even if it's actually HDMI or DP or whatever, we refer to it as a 'VGA device')
-			    \\.\Devices/AUX
-			    \\.\Devices/IDLE
-			    \\.\Devices/KEYB1
-			    \\.\Devices/MOUSE1
-				(etc)
-				
-			Network resources would be accessed via:
-			\\.\0x93252290D23F0B5E84B58AC3F8C4CD62D630C525B91FB962B14C7B63E5DFD2CDBD273C09886A51AE4EA6F806C8A3AE55FB5C60553D7121A6CBC304C3B22916BDD63F5AF36688728A1458F7763320B2FB96972A33644A401431E0A6024370FC/index.html
-			for example, where without specifying 'ipv4::', 'ipv6::', '9p::', etc. before the address, we assume RENEGADE.
-			We'll need to consider alternative encoding, like base64.
-			Obviously we'll implement a domain service so that mass of numbers isn't required. (Do you really want to memorize that mess for *every single website*?)
-
-			It also assigns drive letters (the system default 'A', secondary drives get some way of assigning a letter to them, 
-			(usually in alphabetical order (A:/,, B:/, ...,  AB:/, ...,  AZ:/, AAA:/, AAB:/, and so on)
-			I already implemented that algorithm some time ago, just need to go find my implementation in one of my archive servers' folders somewhere...
-	 */
-
-
-/* TODO: Remove the "enormous ego" out of this.
-
-	(after all, one of the reasons why I want to make Feral after all is all the little things that just add up with everything else out there,
-	always missing one thing, or just could be done better, or could exist. Also because I really like building everything from the ground up.
-	Really bad not-invented-here I guess.)
-*/
-
 /* 
 	Things to do in order:
-	Memory management subsystems, RAMFS filesystem
-	Simple filesystem (ext2 is enough, 8.3 FAT would be OK to also support (possibly even needed).)
-	Create libc, get C++/Rust stuff working on Waypoint. (We would like to make it very easy to create GUI apps for Waypoint, after all.)
-	Get a stable userspace up and running. Essentially the syscall table should be similar-ish to Linux, so most assembly programs can be ported over fine.	
-		Consider modifying architecture to figure out a way to have syscall tables be built by the libos...? (ie, NIX subsystem pretends to be Linux with a few Mach-isms, WINE-on-Feral pretends to be NTOS 10.0)
-			(TODO: If we do this, figure out ways to deal with particularly annoying software that intentionally uses bugs or implementation details in order to work correctly...? This is easier to deal with for a Linux subsystem, but RedmondOS isn't just in 
-			some git repo anyone can just clone.)
-	Port LLVM/Clang, consider GCC/GAS port, we'd like native ports to the toolchain we really need, but it's fine if we don't (we're going to write a Linux emulation subsystem anyway.)
-	Port LLD, YASM, and the rest of the toolchain. Possibly port a command-line text editor, or just write one from scratch. No GUI, so FreedomEdit isn't possible.
-	Consider porting Python, golang, and for fun, get COBOL running on Feral.
-
+	Keyboard input
+	In-memory filesystem
+	On-disk filesystem (ext2 is enough, 8.3 FAT would be OK to also support)
+	Working libc
+	System call mechanism. Write a "native" driver (program under env,
+	the kernel passes off to the appropriate function for the driver. Kernel
+	itself only throws syscall work at drivers to do.)
+	We'll eventually need Linux emulation for a "port" of LLVM/Clang, NASM,
+	etc., without actually modifying the binary. (Should be unmodified.)
+	We'll also want to port a JVM, golang, Python (either 2 or 3), and
+	some other stuff too, just for fun.
+	
 	Work on being self-hosting: Feral needs to compile on Feral.
-	Create a generic, VESA-compatible desktop environment. Assume legacy GPUs don't exist, and we're eventually going to need to support EFI stuff.
-	Network driver for whatever NIC I happen to have lying around. Look for supporting whatever wifi chip is in my laptop too. (Hopefully an easy one.) Most of mine are Chipzilla (or clones), but not all of them.
-	Create a vega10 GPU driver, get Vulkan-based desktop ready. (we also care about vega11 and vega12, but not vega20: vega11/12 are low power Vegas with minimal changes, vega20 is a discrete card I don't have.)
-	(Also it would be nice to not worry about accidentally blowing up a $500 graphics card.)
-	We don't care about green GPUs at all. It's much too hard to support, overly complex, and no official reference drivers to peek at when lost at what to do.
-	Create an alternative to the LiveCD tools we need currently, create a bootloader that understands (U)EFI. We implement UEFI ourselves, because tangling with inconsistently applied BSD license 
-	is too much effort (not some easy shell script, and at that, I probably won't use bash on Waypoint, but maybe something more Virtual Memory System-y. We're aiming to not be *NIX anyway, so.).
-	Implement Multiboot 2 support, purge old bootloader.
-	New filesystem focused on getting as fast read times as possible on files (eliminate file fragmentation by not allowing fragmentation?, yes, more writes, but avoids non-sequential reads.)
-			(for hard drives, specifically being sequential might actually be a bad thing because of the spinning. I wouldn't know though.)
-	Add some random hypervisor capability just for fun or something (basically kvm).
-	Get a working Vulkan driver for the vega10 GPU (Do some magic to port AMDVLK (is this possible?) and/or RADV or something, then just modify them as needed?).
-	Port some open source games over, see if we can get it to outperform some other OSes just by running on Feral Waypoint. (specifically, everything we can from the 90s)
-	We probably can't outperform Linux, but we'd better outperform some other desktop operating systems...
-		(we're *always* 20-30 years late so we'd better catch up........). Linux tends to outperform RedmondOS (esp. CPU efficiency: TR4's 2990WX (allegedy, I don't actually have the hardware) nearly double performance in many workloads) anyway. 
-		(Otherwise we'll *never* be taken seriously, instead of just "probably won't be": it'd be nice to go beyond a little hobby project into something people actually use.)
-	???
-
-	Since we don't want to support anything older than the vega10 GPU, we should just cut out the unnecessary parts of whatever drivers we do adapt.
-	(Those are too old, and by the time this becomes usable as a serious OS, those would be *long* obsolete anyway.)
-	Migrate VCS server from ext4/btrfs/zfs to FeralFS. (again, dogfooding!!!!) Port FeralFS to BSD and Linux. The idea is that if it's bad, we'll fix it before bad things happen.
-		Better put,  "We don't like garbage, so when we use garbage, we make garbage not garbage because otherwise we'd be using garbage, and we don't like garbage."
+	We'll also want to create (or port) a nice desktop windowing protocol
+	like X, Wayland, or just make a nice one that's specific to Waypoint.
+	Likewise, we'll need to figure out how to get some NIC drivers onboard.
+	Get rid of multiboot 2 stuff, eventually our own EFI bootloader.
+	Write a new filesystem focusing on getting as good read speeds as
+	possible on modern SSDs. At this stage, we'll want support for AHCI,
+	SATA, and NVMe. Do not care about IDE/PATA.
+	Write a hypervisor, and embed it in the kernel! (This will be fun!)
+	Graphics drivers are pretty important to get working.
 	
-	Polaris seems to be having a very, *very* long life time. Maybe consider supporting it? (Should we even keep up with GCN, and instead focus on Arcturus, whenever those come out?)
-		
-	Get a web browser running: possibly fork Gecko, integrate it with V8 or ChakraCore? Look into building one from scratch? Just needs to be enough to *barely* comply with HTML5, sans the DRM stuff.
-	(at least pass the ACID2 test, and have at least HTML4 support.)
-	We don't *care* about Blink compatibility, we care about standards compatibility.
+	Nothing older than the vega10 should be supported. There's really no
+	need to: I don't have a lot of GPUs lying around, and since
+	I'm really only focusing on the hardware I've got, I don't really
+	have a reason to support older GPUs, especially from a different vendor.
+	(Though, getting Blue GPUs to work sounds fun.)
 	
-	Consider C# on Feral, port WinForms and all that whole stuff. (Mainly, porting Mono)
+	Getting version control on a Feral system would be great!
+	Dogfood, dogfood, and dogfood more. If you don't dogfood, then
+	you're not going to be as willing to fix it.
 	
-	Get a 5% performance improvement in any and all cirumstances where OS architecture matters over RedmondOS wherever we can get it. (ie, filesystems, memory allocation, especially the scheduler, etc.)
-	
-	__before any full 0.0.1 release, ensure and triple-check that we've removed __all__ trademarked phrases in the kernel. We don't want to put up with the legal nonsense.
- */
-
+	Get a web browser going. Write a LibHTML, possibly port an open
+	source ES6 engine like ChakraCore? Build one
+	from scratch? At least have HTML4 support, and pretend HTML5 + CSS.
+	Also, consider porting Mono.
+*/
 
 /* TODO */
 #if defined(__aarch64__)
@@ -173,7 +118,11 @@ FERALSTATUS KiPrintWarnLine()
 }
 #endif
 
-/* This is the kernel's *real* entry point. TODO: some mechanism for a Feral-specific bootloader to skip the multiboot stuff and just load this.*/
+/* 	
+	This is the kernel's *real* entry point. 
+	TODO: some mechanism for a Feral-specific bootloader to skip the 
+	multiboot stuff and just load this.
+*/
 VOID KiSystemStartup(VOID)
 {
 	/* First off, ensure we load all the drivers, so we know what's going on. */
@@ -267,7 +216,6 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 		info.sType = MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO;
 		info.pNext = (void*)(0);
 		info.pPhysicalAllocationInfo = &allocInfo;
-		/* TODO... */
 		return KiInitializeMemMgr(&info);
 	} else {
 	}
@@ -296,18 +244,10 @@ VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
 }
 
 /*
-	 We'll need to implement a proper driver for VGA later. For now, we have something to throw text at and not quickly run out of space.
+	 We'll need to implement a proper driver for VGA later. 
+	 For now, we have something to throw text at and not quickly run out 
+	 of space.
  */
-
-/*
-	For now, kern_init() is multiboot only while I migrate to UEFI. Everything should be EFI because UEFI is ok and not completely horrible. (80s style bios is headache-inducing when the A20 is sometimes on but sometimes not 
-	and then sometimes it does odd things with memory or just flat out DOES NOT DO what you expected. ughhh. Compound with speculative execution and out of order execution and it's more effort than it's worth to support a
-	dying "standard". That said, UEFI's security is about as solid as swiss cheese, whereas this just doesn't happen with BIOS because the firmware is so small there's not a lot to exploit.)
-	AND THE MOST IRRITATING THING OF ALL TIME IS WHEN SOMEONE HAS A BROKEN FIRMWARE IMPLEMENTATION WHERE THE ACPI TABLE IS LYING!!!!!!
-	(it's also bad when network cards do this, but we'll just rip the freebsd network stack out so it becomes freebsd's problem)
-*/
-
-/* AT LEAST THERE'S NO SECURE BOOT. */
 
 #ifndef FERAL_BUILD_STANDALONE_UEFI_
 VOID kern_init(UINT32 MBINFO)

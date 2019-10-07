@@ -145,8 +145,16 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	/* Start the heap stuff up. No SMP support yet, so 1 hart. */
 	/* 128MB heap should be enough for now? */
 	const UINT64 HeapSize = (1024 * 1024 * 128);
-	MmCreateAllocatorState(1, 
-		(KERN_VIRT_OFFSET + PmmLocation + BufferSize + 1024), HeapSize);
+	UINT_PTR HeapAddr = 
+		(KERN_VIRT_OFFSET + PmmLocation + BufferSize);
+	HeapAddr += MmState.pAllocInfo->FrameSize;
+	
+	MmCreateAllocatorState(1, HeapAddr, HeapSize);
+	for (UINT_PTR Addr = HeapAddr - KERN_VIRT_OFFSET; Addr < (HeapSize); 
+		Addr+=MmState.pAllocInfo->FrameSize)
+	{
+		VALIDATE_SUCCESS(SetMemoryAlreadyInUse(Addr, TRUE));
+	}
 	return STATUS_SUCCESS;
 }
 

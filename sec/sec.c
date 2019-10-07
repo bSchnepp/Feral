@@ -68,6 +68,8 @@ STRING KiGetErrorType(IN FERALSTATUS Status)
 		return "STATUS_INVALID_MEMORY_LOCATION";
 	} else if (Status == STATUS_OUT_OF_MEMORY) {
 		return "STATUS_OUT_OF_MEMORY";
+	} else if (Status == STATUS_INVALID_OPCODE) {
+		return "STATUS_INVALID_OPCODE";
 	} else {
 		return "OTHER_ERROR";
 	}
@@ -82,6 +84,7 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 	UINT64 d;
 	UINT64 sp;
 	UINT64 bp;
+	UINT64 cr3;
 	
 	/* Clang doesn't really like blue syntax. Oh well. */
 	__asm__ volatile (
@@ -91,7 +94,9 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 		"movq %%rdx, %3\n"
 		"movq %%rsp, %4\n"
 		"movq %%rbp, %5\n"
-		: "=r"(a), "=r"(b), "=r"(c), "=r"(d), "=r"(sp), "=r"(bp)
+		"movq %%cr3, %5\n"
+		: "=r"(a), "=r"(b), "=r"(c), "=r"(d), 
+		  "=r"(sp), "=r"(bp), "=r"(cr3)
 	);
 	
 	KiBlankVgaScreen(25, 80, VGA_BLUE);
@@ -110,6 +115,7 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 #if defined(__x86_64__)
 	KiPrintFmt("RAX: 0x%x\t RBX: 0x%x\t RCX: 0x%x\n", a, b, c);
 	KiPrintFmt("RDX: 0x%x\t RSP: 0x%x\t RBP: 0x%x\n", d, sp, bp);
+	KiPrintFmt("CR3: 0x%x\n", cr3);
 #endif
 	/* TODO: We haven't implemented these function quite just yet, so uncomment when we do. */
 	/* KiPrintFmt("Bug Check occured at epoch time %l\n", (KeGetCurrentTime())); */
