@@ -176,8 +176,8 @@ FERALSTATUS KeBootstrapSystem(VOID)
 VOID KiStartupMachineDependent(VOID)
 {
 #if defined(__x86_64__) || defined(__i386__)
-
 /* Be careful: '__riscv__' is deprecated. */
+	x86InitializeIDT();
 #elif defined(__riscv)
 
 #elif defined(__aarch64__)
@@ -217,6 +217,8 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 		info.pNext = (void*)(0);
 		info.pPhysicalAllocationInfo = &allocInfo;
 		return KiInitializeMemMgr(&info);
+	} else if (subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC) {
+		KiStartupMachineDependent();
 	} else {
 	}
 	return STATUS_SUCCESS;

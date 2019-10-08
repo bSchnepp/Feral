@@ -27,35 +27,46 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 
-#ifndef  _FERAL_X86_IDT_H_
+#ifndef _FERAL_X86_IDT_H_
 #define _FERAL_X86_IDT_H_
 
+/* 
+	In the future, if the part being
+	interrupted was a *user* process, we need
+	to defer the interrupt to it's appropriate runtime driver.
+ */
 #if defined(__x86_64__)
 typedef struct
 {
-	UINT16 Offset;	 // First 16 bits of the address (0 - 15)
+	UINT16 Offset;	 /* First 16 bits of the address (0 - 15) */
 	UINT16 Selector;
 	UINT8 IST;
 	UINT8 TypeAttr;
-	UINT16 Offset2;	 // Second 16 bits		(16 - 31)
-	UINT32 Offset3;	 // Last 4 bytes of the address	(32 - 61)
-	UINT32 RESERVED; // These are reserved.
+	UINT16 Offset2;	 /* Second 16 bits (16 - 31) */
+	UINT32 Offset3;	 /* Last 4 bytes of the address (32 - 61) */
+	UINT32 RESERVED; 	/* These are reserved. */
 }IDTDescriptor PACKED;
 #else
 typedef struct
 {
-	UINT16 Offset;	// First 16 bits of the address
+	UINT16 Offset;	/* First 16 bits of the address */
 	UINT16 Selector;
-	UINT8 IST;
+	UINT8 RESERVED;
 	UINT8 TypeAttr;
-	UINT16 Offset2;	// Second 16 bits
+	UINT16 Offset2;	/* Second 16 bits */
 }IDTDescriptor PACKED;
 #endif
 
 typedef struct
 {
 	UINT16 Limit;
-	UINTN  Location;
-}IDTLocation PACKED; 
+	UINT_PTR Location;
+}IDTLocation PACKED;
+
+
+void x86InitializeIDT(VOID);
+
+void x86IDTSetGate(IN UINT8 Number, IN UINT_PTR Base, 
+	IN UINT16 Selector, IN UINT8 Flags);
 
 #endif

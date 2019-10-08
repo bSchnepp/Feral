@@ -29,7 +29,39 @@ IN THE SOFTWARE.
 #include <arch/x86_64/idt/idt.h>
 
 
-static IDTDescriptor IDT[256];
+static IDTDescriptor *IDT;
 static IDTLocation IDTPTR;
 
+void x86InitializeIDT()
+{
+	IDT = (IDTDescriptor*)MmKernelMalloc((sizeof(IDTDescriptor) * 256));
+	/* Uhhhhh??? */
+	IDTPTR.Limit = 256;
+	IDTPTR.Location = (UINT_PTR)(IDT);
+}
 
+void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
+{
+	/* 0 - 255 happens to be valid, so no need for checking. */
+	IDTDescriptor Descriptor;
+	
+	Descriptor.Offset = (UINT16)(Base & 0xFFFF);
+	Descriptor.Offset2 = (UINT16)((Base >> 16) & 0xFFFF);
+	/* 
+		Reserved should stay reserved. (on 32-bit x86, 
+		these are different fields, but the function
+		is the same: don't do anything with it.
+	*/
+	Descriptor.RESERVED = 0;
+	
+	/* And the important bits. */
+	Descriptor.Selector = Selector;
+	Descriptor.TypeAttr = Flags;
+	
+#if defined(__x86_64__)
+	Descriptor.Offset3 = (UINT32)((Base >> 32) & 0xFFFFFFFF);
+	/* No TSS, so set to zero. */
+	Descriptor.IST = 0;
+#endif
+	IDT[Number] = Descriptor;	
+}

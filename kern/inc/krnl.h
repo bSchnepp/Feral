@@ -30,6 +30,7 @@ IN THE SOFTWARE.
 
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
+#include <mm/mm.h>
 
 
 #define VALIDATE_SUCCESS(x) if (x != STATUS_SUCCESS) { KiStopError(x); }
