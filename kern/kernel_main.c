@@ -136,11 +136,9 @@ VOID KiSystemStartup(VOID)
 	VgaTraceCharacters(1);
 	VgaMoveCursor(0, 24);
 #endif
-
-	KiPrintFmt("Using math magic, we can equate %u with -1\n", -1L);
-	
 	
 	KiStartupSystem(FERAL_SUBSYSTEM_MEMORY_MANAGEMENT);
+	KiStartupSystem(FERAL_SUBSYSTEM_ARCH_SPECIFIC);
 	
 	/* Only load drivers *after* base system initializtion. */
 	KiPrintFmt("Loading all drivers...\n");

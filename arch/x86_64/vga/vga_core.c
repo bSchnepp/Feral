@@ -100,6 +100,7 @@ UINT8 VgaPrepareEnvironment(VgaContext *context)
 	context->CurrentCol = 0;
 	
 	currentContext = context;
+	
 	return miscreg;
 }
 

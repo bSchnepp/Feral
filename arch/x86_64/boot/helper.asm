@@ -5,6 +5,9 @@ global cpuid_vendor_func
 global cpuid_brand_name
 global cpuid_family_number
 
+global x86_install_idt
+global x86_divide_by_zero
+
 cpuid_vendor_func:
 ; In order: RDI, RSI, RDX.
 push rbp		; Don't think this is necessary, but let's do it anyway.
@@ -55,5 +58,20 @@ cpuid
 pop rdx
 pop rcx
 pop rbx
+ret
+
+; RDI is the parameter.
+x86_install_idt:
+lidt [rdi]
+ret
+
+
+; We're free to taint rax and rcx.
+; This is done to test the IDT got set up right.
+x86_divide_by_zero:
+mov rax, 1
+mov rcx, 0
+mov rdx, 0
+div rcx
 ret
 

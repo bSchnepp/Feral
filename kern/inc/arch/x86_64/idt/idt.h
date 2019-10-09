@@ -45,7 +45,7 @@ typedef struct
 	UINT16 Offset2;	 /* Second 16 bits (16 - 31) */
 	UINT32 Offset3;	 /* Last 4 bytes of the address (32 - 61) */
 	UINT32 RESERVED; 	/* These are reserved. */
-}IDTDescriptor PACKED;
+}PACKED IDTDescriptor;
 #else
 typedef struct
 {
@@ -54,19 +54,21 @@ typedef struct
 	UINT8 RESERVED;
 	UINT8 TypeAttr;
 	UINT16 Offset2;	/* Second 16 bits */
-}IDTDescriptor PACKED;
+}PACKED IDTDescriptor;
 #endif
 
 typedef struct
 {
 	UINT16 Limit;
 	UINT_PTR Location;
-}IDTLocation PACKED;
+}PACKED IDTLocation;
 
 
 void x86InitializeIDT(VOID);
 
 void x86IDTSetGate(IN UINT8 Number, IN UINT_PTR Base, 
 	IN UINT16 Selector, IN UINT8 Flags);
+	
+/* A couple of macros we'll need for calling convention purposes. */
 
 #endif

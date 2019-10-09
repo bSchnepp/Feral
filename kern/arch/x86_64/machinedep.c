@@ -29,15 +29,22 @@ IN THE SOFTWARE.
 #include <arch/x86_64/idt/idt.h>
 
 
-static IDTDescriptor *IDT;
+static IDTDescriptor IDT[256];
 static IDTLocation IDTPTR;
+
+extern void x86_install_idt(IDTLocation *Pointer);
+extern void x86_divide_by_zero(VOID);
 
 void x86InitializeIDT()
 {
-	IDT = (IDTDescriptor*)MmKernelMalloc((sizeof(IDTDescriptor) * 256));
-	/* Uhhhhh??? */
-	IDTPTR.Limit = 256;
-	IDTPTR.Location = (UINT_PTR)(IDT);
+	IDTPTR.Limit = ((sizeof(IDTDescriptor)) * 256) - 1;
+	UINT_PTR Location = (&IDT);
+	IDTPTR.Location = Location;
+	KiSetMemoryBytes(IDT, 0, (sizeof(IDTDescriptor)) * 256);
+	x86_install_idt(&IDTPTR);
+	/* TODO: Install routines needed. */
+	KiPrintFmt("IDT Ready to work...\n");
+	/* x86_divide_by_zero(); */	/* Expect page fault */
 }
 
 void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)

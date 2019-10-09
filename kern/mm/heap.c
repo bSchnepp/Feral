@@ -61,6 +61,8 @@ void InternalInitializeNode(Node *Current, Node *Previous, Node *Next,
 AllocatorState *MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea, 
 	UINT_PTR HeapSize)
 {
+	/* Zero out the entire heap first thing. */
+	KiSetMemoryBytes(HeapArea, 0, HeapSize);
 	AllocatorState State;
 	UINTN HeapAmount = ((UINT64)(HeapSize) / NumArenas);
 	

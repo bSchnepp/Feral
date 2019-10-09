@@ -76,7 +76,6 @@ extern "C" {
 #define WINAPI __attribute__((ms_abi))
 #define EFIAPI __attribute__((ms_abi))
 
-
 #define CONST const
 #define INLINE inline
 #define VOID void
