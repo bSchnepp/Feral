@@ -84,7 +84,7 @@ static UINT_PTR FreeMemLocs[16];
 	We'll also want to create (or port) a nice desktop windowing protocol
 	like X, Wayland, or just make a nice one that's specific to Waypoint.
 	Likewise, we'll need to figure out how to get some NIC drivers onboard.
-	Get rid of multiboot 2 stuff, eventually our own EFI bootloader.
+	Get rid of multiboot 2 stuff, eventually make our own EFI bootloader.
 	Write a new filesystem focusing on getting as good read speeds as
 	possible on modern SSDs. At this stage, we'll want support for AHCI,
 	SATA, and NVMe. Do not care about IDE/PATA.

@@ -27,6 +27,7 @@ IN THE SOFTWARE.
  
 #include <feral/stdtypes.h>
 #include <arch/x86_64/idt/idt.h>
+#include <arch/x86_64/cpufuncs.h>
 
 
 static IDTDescriptor IDT[256];
@@ -34,6 +35,11 @@ static IDTLocation IDTPTR;
 
 extern void x86_install_idt(IDTLocation *Pointer);
 extern void x86_divide_by_zero(VOID);
+
+void x86SetupIDTEntries();
+INTERRUPT void DivideByZero(x86InterruptFrame *Frame);
+
+
 
 void x86InitializeIDT()
 {
@@ -44,7 +50,8 @@ void x86InitializeIDT()
 	x86_install_idt(&IDTPTR);
 	/* TODO: Install routines needed. */
 	KiPrintFmt("IDT Ready to work...\n");
-	/* x86_divide_by_zero(); */	/* Expect page fault */
+	x86SetupIDTEntries();
+	/* x86_divide_by_zero();	/* Expect page fault */
 }
 
 void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
@@ -71,4 +78,16 @@ void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
 	Descriptor.IST = 0;
 #endif
 	IDT[Number] = Descriptor;	
+}
+
+
+INTERRUPT void DivideByZero(x86InterruptFrame *Frame)
+{
+	KiPrintFmt("DIVIDING BY ZERO!!!\n");
+}
+
+
+void x86SetupIDTEntries()
+{
+	x86IDTSetGate(0, (UINTN)(DivideByZero), 0x08, 0x8E);
 }
