@@ -49,16 +49,15 @@ FERALSTATUS KiPutChar(CHAR c)
 	return STATUS_SUCCESS;
 }
 
-#define PRINT_LINE_GENERIC()												\
-	UINT64 length;															\
-	FERALSTATUS feralStatusError = KiGetStringLength(string, &length);		\
-	if (!(feralStatusError == STATUS_SUCCESS))								\
-	{																		\
-		return feralStatusError;												\
+#define PRINT_LINE_GENERIC()						\
+	UINT64 length;							\
+	FERALSTATUS feralStatusError = KiGetStringLength(string, &length); \
+	if (!(feralStatusError == STATUS_SUCCESS))			\
+	{								\
+		return feralStatusError;				\
 	}
 
 
-// Start, end, size.
 FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
 {
 	if ((Source == NULL) || (Dest == NULL))
@@ -74,7 +73,6 @@ FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
 	return STATUS_SUCCESS;
 }
 
-//First, Second, Size, Equal
 FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount, OUT BOOL* Val)
 {
 	if ((Source == NULL) || (Dest == NULL))
@@ -83,15 +81,14 @@ FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount, OU
 	}
 	for (UINT64 i = 0; i < Amount; i++)
 	{
-		// Assume they are UINTN. This will probably need to be changed.
-		UINTN* Src = (Source + i);
-		UINTN* Dst = (Dest + i);
-		if (!(*Src == *Dst))
+		UINT_PTR *Src = (Source + i);
+		UINT_PTR *Dst = (Dest + i);
+		if (*Src != *Dst)
 		{
-			*(Val) = 0;
+			*(Val) = FALSE;
 			break;
 		}
-		*(Val) = 1;
+		*(Val) = TRUE;
 	}
 	return STATUS_SUCCESS;
 }
@@ -105,7 +102,7 @@ FERALSTATUS KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINTN);
 FERALSTATUS KiSetMemory(INOUT VOID*, IN UINTN, IN UINTN);
 #endif
 
-// Same as above, but with bytes.
+/* Same as above, but with bytes. */
 FERALSTATUS KiSetMemoryBytes(INOUT VOID* Dest, IN UINT8 Val, IN UINTN Amt)
 {
 	UINT8 *dest = (UINT8*)Dest;
@@ -113,23 +110,6 @@ FERALSTATUS KiSetMemoryBytes(INOUT VOID* Dest, IN UINT8 Val, IN UINTN Amt)
 	{
 		dest[amt] = Val;
 	}
-	return STATUS_SUCCESS;
-}
-
-
-
-FERALSTATUS KiGetStringLength(IN STRING String, OUT UINT64* Length)
-{
-	if (String == NULL)
-	{
-		return STATUS_INVALID_MEMORY_LOCATION;
-	}
-	UINT64 Len = 0;
-	while (String[Len])	// false is just 0, so when we dereference and find equal to 0, we terminate.
-	{
-		Len++;
-	}
-	*Length = Len;
 	return STATUS_SUCCESS;
 }
 
@@ -143,7 +123,7 @@ FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT* UINTN);
 FERALSTATUS KiPrintLine(IN STRING string)
 {
 	PRINT_LINE_GENERIC();
-	// Ok, we call VgaPrintln and use a black on white color set.
+	/* Ok, we call VgaPrintln and use a black on white color set. */
 	VgaPrintln(VGA_WHITE, VGA_BLACK, string, length);
 	return STATUS_SUCCESS;
 }
@@ -173,6 +153,17 @@ FERALSTATUS KiPrint(STRING string)
 	return STATUS_SUCCESS;
 }
 
+#else
+
+/* TODO */
+#define KiPrintWarnLine(a)
+#define KiPrintGreyLine(a)
+#define KiPrintLine(a)
+#define KiPutChar(c)
+#define KiPrint(a)
+
+#endif
+/* TODO: implement for other platforms. */
 
 
 /* Internal function: suppress warning (for now) */
@@ -198,8 +189,7 @@ VOID internalItoaBaseChange(UINT64 val, STRING buf, UINT8 radix)
 		if (rem <= 9 && rem >= 0)
 		{
 			buf[len++]  =  rem + '0';
-		} else if (rem < 35)
-		{
+		} else if (rem < 35) {
 			buf[len++]  =  (rem - 10) + 'a';
 		} else {
 			buf[len++]  =  (rem - 36) + 'A';
@@ -368,40 +358,3 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 	va_end(args);
 	return STATUS_SUCCESS;
 }
-
-#else
-
-// TODO
-#define KiPrintWarnLine(a)
-#define KiPrintGreyLine(a)
-#define KiPrintLine(a)
-
-#endif
-// TODO: implement for other platforms.
-
-
-
-
-
-
-
-FERALSTATUS FrlCreateString(IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content)
-{
-	StringLocation->Length = Length;
-	StringLocation->Content = Content;
-	return STATUS_SUCCESS;
-}
-
-FERALSTATUS FrlDeleteString(IN FERALSTRING* String)
-{
-	//TODO
-	return STATUS_SUCCESS;
-}
-
-FERALSTATUS FrlCloneString(IN FERALSTRING* Source, IN FERALSTRING* OutLocation)
-{
-	//TODO
-	return STATUS_SUCCESS;
-}
-
-
