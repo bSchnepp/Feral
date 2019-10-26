@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -72,9 +72,7 @@ VOID KiRestoreInterrupts(BOOLEAN value)
 	if (value)
 	{
 		__asm__ __volatile__ ("sti");
-	}
-	else
-	{
+	} else {
 		__asm__ __volatile__ ("cli");
 	}
 }

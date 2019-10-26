@@ -27,6 +27,7 @@ IN THE SOFTWARE.
  
 #include <feral/stdtypes.h>
 #include <arch/x86_64/idt/idt.h>
+#include <arch/x86_64/cpuio.h>
 #include <arch/x86_64/cpufuncs.h>
 
 
@@ -39,6 +40,17 @@ extern void x86_divide_by_zero(VOID);
 void x86SetupIDTEntries();
 INTERRUPT void DivideByZero(x86InterruptFrame *Frame);
 
+void x86PICSendEOI(void);
+
+void x86PICSendEOI(void)
+{
+	/* 
+		PIC2 is A0, PIC1 is 0x20, and 0x20 is EOI signal.
+		Just send to both.
+	 */
+	x86outb(0xA0, 0x20);
+	x86outb(0x20, 0x20);
+}
 
 
 void x86InitializeIDT()
@@ -51,6 +63,7 @@ void x86InitializeIDT()
 	/* TODO: Install routines needed. */
 	KiPrintFmt("IDT Ready to work...\n");
 	x86SetupIDTEntries();
+	KiRestoreInterrupts(TRUE);
 	/* x86_divide_by_zero();	/* Expect page fault */
 }
 
@@ -84,10 +97,23 @@ void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
 INTERRUPT void DivideByZero(x86InterruptFrame *Frame)
 {
 	KiPrintFmt("DIVIDING BY ZERO!!!\n");
+	x86PICSendEOI();
+}
+
+INTERRUPT void GenericHandler(x86InterruptFrame *Frame)
+{
+	KiPrintFmt("Unhandled Interrupt!\n");
+	x86PICSendEOI();
 }
 
 
 void x86SetupIDTEntries()
 {
+	/* 0x08 is for kernel code segment offset */
+	/* 0x8E is for interrupt gate. */
+	for (UINTN i = 0; i < 255; ++i)
+	{
+		x86IDTSetGate(i, (UINTN)(GenericHandler), 0x08, 0x8E);
+	}
 	x86IDTSetGate(0, (UINTN)(DivideByZero), 0x08, 0x8E);
 }
