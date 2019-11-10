@@ -60,7 +60,9 @@ qemu-lldb:	iso
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -S -s -d int,cpu_reset -no-reboot&	
 	
 qemu-efi:
-	mkdir -p build/$(ARCH)/	
+	mkdir -p build/$(ARCH)/
+	mkdir -p build/EFI/Boot
+	mkdir -p build/EFI/Feral	
 	
 	cd arch && $(MAKE)
 #	cd proc && $(MAKE) 
@@ -71,12 +73,17 @@ qemu-efi:
 	cd sec && $(MAKE)
 	
 	# libmm.a libprocmgr.a 
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) -DFERAL_BUILD_STANDALONE_UEFI_ -o ./iofuncs.o
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) -DFERAL_BUILD_STANDALONE_UEFI_ ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) -DFERAL_BUILD_STANDALONE_UEFI_ $(VGA_FILES) -o ./*.o kern/kernel_main.o kern/krnlfuncs.o kern/krnlfuncs.o kern/krnl_private.o kern/objmgr.o
-	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o ./sec/*.o
+	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
 	
 	cp $(EFI_CODE) ./efi.bin
-	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G --enable-kvm  -pflash ./efi.bin
+	cd bootloader && $(MAKE) all && cp BOOTX64.EFI ../ && $(MAKE) clean && cd ..
+	mv BOOTX64.EFI build/EFI/Boot/BOOTX64.EFI
+	
+	# Instead of a normal ISO, we pretend the build directory is an ESP.
+	cp $(KERNEL) build/EFI/Feral/FERALKER.NEL
+	qemu-system-$(ARCH) $(CPU) -smp 2 -m 6G --enable-kvm -pflash ./efi.bin -hda fat:rw:build -net none
 	rm -rf ./efi.bin
 	
 
