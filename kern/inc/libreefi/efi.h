@@ -33,7 +33,6 @@ IN THE SOFTWARE.
 #define _FERAL_LIBRE_EFI_H_
 
 #include <feral/stdtypes.h>
-#include <bogus/fluff.h>
 
 #define FALSE 0
 #define TRUE 1

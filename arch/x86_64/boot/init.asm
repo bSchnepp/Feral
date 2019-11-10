@@ -17,7 +17,23 @@ header_start:
 	; Try to avoid negative numbers in general (they can cause compiler issues in rare, specific cases.)
 	dd 0x100000000 - (MULTIBOOT_MAGIC + MULTIBOOT_ARCH_ + MULTIBOOT_SIZE_)
 
-	; Optional Multiboot2 tags should show up here... we'll probably ignore them anyway.
+	; Optional Multiboot2 tags should show up here, like so.
+	
+	dw 4	; Console Flags tag
+	dw 0	; No flags
+	dd 12	; 12 byte size
+	dd 3	; Say we have both.
+	dw 0
+	dd 8
+	
+	dw 5	; Type 5
+	dw 0	; Flags? Not sure what for here.
+	dd 20	; Size of the structure
+	dd 80	; 80 chars
+	dd 25	; 25 chars
+	dd 0	; Ensure we're in text mode.
+	dw 0
+	dd 8
 
 	; This end structure is required by Multiboot.
 	dw 0

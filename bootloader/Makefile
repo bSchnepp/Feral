@@ -1,13 +1,14 @@
 CC = clang -target x86_64-pc-win32-coff
-CFLAGS = -I../inc/efi -fno-stack-protector -fshort-wchar -mno-red-zone -c -I../inc -nostdlib
+CFLAGS = -I../inc/efi -fno-stack-protector -fshort-wchar -mno-red-zone -c -I../inc -I../kern/inc -nostdlib
 
-LD = x86_64-w64-mingw32-ld
-LDFLAGS = -s -Bsymbolic -nostdlib -shared -e uefi_main --subsystem 10
+LD = ld.lld -flavor link
+LDFLAGS = -subsystem:efi_application -nodefaultlib
 
 
 all:
 	$(CC) $(CFLAGS) loader.c -o LOADER.o
-	$(LD) $(LDFLAGS) LOADER.o -o BOOTX64.EFI
+	# Illustrious hack to make lld work. Hence why llvm toolchain, not gnu.
+	$(LD) $(LDFLAGS) LOADER.o /entry:uefi_main /out:BOOTX64.EFI
 
 clean:
 	rm -rf LOADER.o BOOTX64.EFI

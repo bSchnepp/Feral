@@ -31,6 +31,13 @@ IN THE SOFTWARE.
 #include <arch/x86_64/cpufuncs.h>
 
 
+#define X86_PIC_1_COMMAND (0x20)
+#define X86_PIC_1_DATA (0x21)
+
+#define X86_PIC_2_COMMAND (0xA0)
+#define X86_PIC_2_DATA (0xA1)
+
+
 static IDTDescriptor IDT[256];
 static IDTLocation IDTPTR;
 
@@ -40,16 +47,10 @@ extern void x86_divide_by_zero(VOID);
 void x86SetupIDTEntries();
 INTERRUPT void DivideByZero(x86InterruptFrame *Frame);
 
-void x86PICSendEOI(void);
-
 void x86PICSendEOI(void)
 {
-	/* 
-		PIC2 is A0, PIC1 is 0x20, and 0x20 is EOI signal.
-		Just send to both.
-	 */
-	x86outb(0xA0, 0x20);
-	x86outb(0x20, 0x20);
+	//x86outb(0xA0, 0x20);
+	//x86outb(0x20, 0x20);
 }
 
 
