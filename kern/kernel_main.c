@@ -449,7 +449,7 @@ VOID kern_init(UINT32 MBINFO)
 		KiPrintLine("Unsupported PCH");
 	}
 
-	KrnlEnvironmentBlock EnvBlock;
+	KrnlEnvironmentBlock EnvBlock = {0};
 	/* Kernel initialization is done, move on to actual tasks. */
 	KiSystemStartup(&EnvBlock);
 }

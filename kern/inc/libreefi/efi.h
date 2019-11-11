@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -143,6 +143,7 @@ typedef enum
 #include <libreefi/efirt.h>
 #include <libreefi/efiapi.h>
 #include <libreefi/efibserv.h>
+#include <libreefi/efiprotocols.h>
 
 // stdtypes happens to define datatypes pretty much identical to the (U)EFI spec. Perfect!
 
