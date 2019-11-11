@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -24,55 +24,26 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#include <libreefi/efi.h>
+
 #include <feral/stdtypes.h>
+  
+#ifndef _FERAL_KRNL_BASE_H_
+#define _FErAL_KRNL_BASE_H_
 
-static EFI_HANDLE ImageHandle;
-static EFI_SYSTEM_TABLE* SystemTable;
+typedef struct KrnlEnvironmentBlock
+{	
+	/* Bootloader should help find free memory areas. */
+	UINT64 KernelPageSize;
+	UINT64 FreeMemCount;
+	UINT_PTR *FreeMemLocs;
+	
 
-EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE* mSystemTable)
-{
-	UINTN MapSize = 0;
-	UINTN MapKey = 0;
-	UINTN DescriptorSize = 0;
-	UINT32 DescriptorVersion = 0;
-	EFI_STATUS Result = EFI_SUCCESS;
-	EFI_MEMORY_DESCRIPTOR *MemoryMap = NULLPTR;
-	ImageHandle = mImageHandle;
-	SystemTable = mSystemTable;
-		
-	/* Get the UEFI memory stuff. */
-	Result = SystemTable->BootServices->GetMemoryMap(&MapSize, &MemoryMap,
-		NULL, &DescriptorSize, NULL); 
-		
-	if (Result == EFI_BUFFER_TOO_SMALL)
-	{
-		/* TODO... */
-	}
-	
-	/* Add some area to actually hold the info. */
-	MapSize += (DescriptorSize << 1);
-	Result = SystemTable->BootServices->AllocatePool(EfiLoaderData, MapSize,
-		(void**)(&MemoryMap)
-	);
-	if (Result != EFI_SUCCESS)
-	{
-		/* TODO... */
-	}
-	
-	Result = SystemTable->BootServices->GetMemoryMap(&MapSize, &MemoryMap, 
-		&MapKey, &DescriptorSize, &DescriptorVersion
-	);
-	
-	if (Result != EFI_SUCCESS)
-	{
-		/* TODO... */
-	}
-	
-	/* Terminate boot services (about to execute kernel) */
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L"Terminating firmware services...\r\n");
-	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
-	
-	return EFI_SUCCESS;
-}
+	/* Bootloader shouldn't fill these in. */
+	STRING KernelVendor;
+	UINT8 FeralVersionMajor;
+	UINT8 FeralVersionMinor;
+	UINT8 FeralVersionPatch;
+}KrnlEnvironmentBlock;
+
+
+#endif

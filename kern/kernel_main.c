@@ -38,8 +38,6 @@ IN THE SOFTWARE.
 #include <arch/x86_64/cpufuncs.h>
 #endif
 
-#include <kern_ver.h>
-
 #if defined(__x86_64__) || defined(__i386__)
 #ifndef FERAL_BUILD_STANDALONE_UEFI_
 #include "multiboot/multiboot2.h"
@@ -48,9 +46,10 @@ IN THE SOFTWARE.
 #endif
 
 #include <feral/kern/krnlfuncs.h>
+#include <feral/kern/krnlbase.h>
 
 #include <krnl.h>
-
+#include <kern_ver.h>
 
 #include <arch/processor.h>
 
@@ -123,15 +122,16 @@ FERALSTATUS KiPrintWarnLine()
 	TODO: some mechanism for a Feral-specific bootloader to skip the 
 	multiboot stuff and just load this.
 */
-VOID KiSystemStartup(VOID)
+VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 {
 	/* First off, ensure we load all the drivers, so we know what's going on. */
 	KiPrintLine("Copyright (c) 2018-2019, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
 	KiPrintFmt("%s\n", "Preparing execution environment...");
 	
-	
-#if defined(__x86_64__) || defined(__i386__)
+
+/* On modern PCs, GOP replaces VGA. We don't need VGA anymore. */
+#if defined(__x86_64__) || defined(__i386__) || !defined(FERAL_BUILD_STANDALONE_UEFI_)
 	VgaSetCursorEnabled(1);
 	VgaTraceCharacters(1);
 	VgaMoveCursor(0, 24);
@@ -440,17 +440,17 @@ VOID kern_init(UINT32 MBINFO)
 			X370, X470, X570, B350, B450, B550, B320, B420, and B520.
 			(oh and panther point and wellsburg or whatever for
 			the blue team if we care.)
+			
+			We'll need these for doing chipset-specific stuff
+			one day, like telling the x570 to do RAID, or
+			nicely asking about USB devices connected to it and
+			not the CPU directly. (over PCI, of course.)
 		 */
 		KiPrintLine("Unsupported PCH");
 	}
 
-	
+	KrnlEnvironmentBlock EnvBlock;
 	/* Kernel initialization is done, move on to actual tasks. */
-	KiSystemStartup();
-}
-#else
-kern_init(UINT32 MBINFO)
-{
-	/* TODO (uefi standalone). Bootloader directly calls KiSystemStartup. */
+	KiSystemStartup(&EnvBlock);
 }
 #endif

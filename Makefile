@@ -40,6 +40,7 @@ clean:
 	rm -rf ./*.o
 	rm -rf ./*.a
 	rm -rf bootloader/*.o bootloader/*.EFI
+	rm -rf efi.bin
 	
 	cd kern && $(MAKE) clean
 	cd sec && $(MAKE) clean
