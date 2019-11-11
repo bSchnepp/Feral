@@ -28,7 +28,7 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 
 static EFI_HANDLE ImageHandle;
-static EFI_SYSTEM_TABLE* SystemTable;
+static EFI_SYSTEM_TABLE *SystemTable;
 
 
 static EFI_GUID GuidEfiLoadedImageProtocol = EFI_LOADED_IMAGE_PROTOCOL_GUID;
@@ -37,7 +37,7 @@ static EFI_GUID GuidEfiFileInfoGuid = EFI_FILE_INFO_ID;
 
 /* TODO: Refactor into something nice. */
 
-EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE* mSystemTable)
+EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 {
 	UINTN MapSize = 0;
 	UINTN MapKey = 0;
@@ -52,14 +52,16 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE* mSystemTa
 	
 	EFI_LOADED_IMAGE_PROTOCOL *LoadedImageProtocol = NULLPTR;
 	EFI_SIMPLE_FILESYSTEM_PROTOCOL *FileSysProtocol = NULLPTR;
-	EFI_HANDLE_PROTOCOL HandleProtocol 
-		= SystemTable->BootServices->HandleProtocol;
 
 	ImageHandle = mImageHandle;
 	SystemTable = mSystemTable;
 	
+	
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		L"Starting Feralboot...\r\n");
+		
+	EFI_OPEN_PROTOCOL OpenProtocol 
+		= SystemTable->BootServices->OpenProtocol;
 
 	/* Get the UEFI memory stuff. */
 	Result = SystemTable->BootServices->GetMemoryMap(&MapSize, MemoryMap,
@@ -89,19 +91,30 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE* mSystemTa
 		/* TODO... */
 	}
 	
-	/* Check for protocols necessary to mess with filesystem. */
-	Result = HandleProtocol(ImageHandle, &GuidEfiSimpleFSProtocol,
-		(void**)(&LoadedImageProtocol));
-	if (Result != EFI_SUCCESS)
+	if (OpenProtocol == NULLPTR)
 	{
-		/* TODO... */
+		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			L"OpenProtocol is nullptr.\r\n");	
 	}
 	
-	Result = HandleProtocol(ImageHandle, &GuidEfiLoadedImageProtocol,
-		(void**)(&FileSysProtocol));
+		
+	/* Check for protocols necessary to mess with filesystem. */
+	Result = OpenProtocol(ImageHandle, &GuidEfiSimpleFSProtocol,
+		(void**)(&LoadedImageProtocol), ImageHandle, NULL, 
+		EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
 	if (Result != EFI_SUCCESS)
 	{
-		/* TODO... */
+		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			L"OpenProtocol had error (simple FS)..\r\n");
+	}
+	
+	Result = OpenProtocol(ImageHandle, &GuidEfiLoadedImageProtocol,
+		(void**)(&FileSysProtocol), ImageHandle, NULL, 
+		EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+	if (Result != EFI_SUCCESS)
+	{
+		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			L"OpenProtocol had error (loaded image)..\r\n");
 	}
 
 		
