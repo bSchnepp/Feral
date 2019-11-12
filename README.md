@@ -2,23 +2,34 @@
 
 ## What is Feral?
 Feral is an experimental monolithic kernel, which is intended for use by my Waypoint operating system. It's primary goals
-are flexibility, compatibility, performance, and security.
+are flexibility, compatibility, security, and performance, roughly in that order.
 
 Feral currently runs on x86-64 personal computers belonging to Family 17h ("Zen") under virtualization with KVM, 
 but may work for other systems that are still PC-compatible (ie, not Liverpool or Scorpio APU). Feral is also 
 known to work on an 6000-series x86-64 CPUs from a different CPU vendor, but this is not tested as often.
+Specifically, the machine in question has a Braswell N3700 CPU from said different vendor.
 
 Feral will probably also work on systems based upon future revisions of the Zen architecture, but this is not tested.
 (Limited to Zen 1, Zen+ and Zen 2 are untested.)
 
-Feral for now, if on a PC, assumes your hardware has an APIC, storage devices are usually ATA or SCSI/SAS, and is booted
-from Multiboot 2. An experimental bootloader to boot directly from EFI firmware is in progress, but is at a low priority.
+Feral, for now, assumes your machine has something compatible with the two 8259A PICs present in many PC-compatibles.
+On modern microcomputers, your southbridge probably has something compatible. In the future, Feral will probably
+require the prescence of an APIC for SMP support. Feral also conflates "x86", "x86-64" and "PC compatible". For those wishing
+to port Feral to a non PC-compatible x86 machine, you may encounter difficulties for now. In the future, Feral should have
+some code restructured to no longer have this requirement, and potentially be ported to run on, for example, 
+the Liverpool or Scorpio CPUs,  should some bootloader be present and capable of loading the kernel.
 
-In the future, Feral is intended to run on MIPS, Aarch64, POWER9, and RV64GC hardware.
+Feral is in the process of a rewrite to some core initialization functions, partly to allow porting to devices
+which are truely headless, partly to allow for early setup of video output protocols, and to deprecate Multiboot 2 support.
+
+In the future, Feral is intended to run on Aarch64 (BCM2711), POWER (Sforza uarch), and RV64GC (U540 SoC) hardware,
+with ports written somewhere in that order.
 
 Feral, when complete, may find use in gaming consoles, handheld devices, or as intended, personal computers.
 Our goals are intended to be achieved by careful construction and design of the kernel, such that the kernel
-naturally allows for various things to help usermode applications improve performance.
+naturally allows for maximum flexibility, and to ensure a clean, consistent, and coherent architecture to attract
+developers to this new platform. Feral's philosophy regarding this can be summarized as 
+"don't port your program, port the environment it runs on instead."
 
 Feral is best described as being designed with a client-server model in mind for every task. Each component is
 built in layers and groups, and to communicate between them naturally requires interacting with an object manager
@@ -27,7 +38,7 @@ returns. This design allows portions of the kernel to be ripped out without fear
 the rest of the system, as well-written drivers will simply error out or find an alternative if a given module is
 missing from the kernel. This may also allow easier construction of unikernels based on Feral, as unneeded components
 can simply be removed. This potentially could have a use in single-tasking embedded systems in a single-user mode,
-such that we can strip away much of the kernel while retaining satisfactory functionality. 
+such that we can strip away much of the kernel while retaining satisfactory functionality.
 
 Feral will introduce the idea of a command queue, in which certain system calls are queue-based, allowing for a page of memory to
 be written with a number of commands, and the kernel executes them sequentially without being interrupted to return to usermode
@@ -37,6 +48,10 @@ The idea is that if we enqueue a variety of instructions, preferably on a common
 more context switches than absolutely necessary and thus games can use more of the precious 16~17ms they have to render a frame
 on more useful things, like loading assets, doing more draw commands, networking, AI, etc. This is similar to an GL call like
 glBindBuffer(). The operating system's job is to *get out of the way of user mode apps (where security is left intact)*.
+
+One of the primary advantages to this architecture is to collapse and simplify the given code sent to the kernel
+in this manner into small, heavilly optimized routines using just-in-time compilation to minimize wasted time
+doing unnecessary error checking or finding the appropriate context for a given operation.
 
 Feral also does not support "legacy" hardware, such as IA-32. This is primarilly because this is really just a hobby project of mine,
 on top of the fact that I don't really have any 32-bit PCs lying around. Also, IA-32 is over 30 years old without any new hardware releases
@@ -50,17 +65,21 @@ virtual executable or writable memory. When we are not using a shared object (ie
 any circumstances should any memory be both writable and executable at the same time. In the future, we'll need to support boot-time relinking,
 and especially incorporate address space layout randomization, to make it much more difficult to execute ROP chains in ring 0.
 
-At it's heart, Feral is a hobby project. It mostly exists to give me a prime, "real world" example for applying low-level programming concepts,
-getting rid of all the bloat of modern operating systems (various virtual machines shouting "write once, run anywhere!" come to mind), and to
-create a real, working project as a demonstration of what I can do. It's also for one day being able to use software that I personally wrote on a daily
-basis (dogfooding), and to have a nice little playground where I can focus on all the little details of the hardware without worrying about alienating
-people because it's "obscure code". For the OS, we *do need to care* about the TLB and cache efficiency and all sorts of low level details, and calling strlen()
-over and over again is not acceptable. Most importantly: have fun, write good code, and get apps to run at least 5% faster than a competing commercial desktop operating system.
-There's also the "if we totally redesign the OS, can get get apps to run faster?" too.
+At it's heart, Feral is a hobby project with very large ambition. It's primary purpose for existing is to experiment with low level programming concepts,
+resolve ("the hard way") some issues I have with other operating systems, and to explore the feasibility of certain ideas which are implemented. It's also
+a nice project to demonstrate what I can do in systems programming in general, and to hopefully be a serious alternative to many desktop operating systems
+in common use today, such that one day Feral can itself be developed on a machine running Feral, and then have kernel patches applied to itself without
+any annoying reboots. It's also one of these areas where we *do* care about every little bit of performance that can be gained: we *do* care about the TLB,
+we *do* care about the cache hierarchy, and we most certainly *do* care about how the compiler optimizes the code. Calling `strlen` on the same string
+over and over is absolutely not acceptable, for what should hopefully be obvious reasons. There's also the "if we totally redesign the OS, can get get apps to run faster?" too.
+Ideally, we'd get very good code quality in pursuit of all of these ideas and putting them together into a cohesive whole.
+
+Most importantly: have fun, write good code, and get apps to run at least 5% faster than a competing commercial desktop operating system.
 
 Feral is also partially the result of a dissatisfaction with the security model of many current operating systems, being insufficient to guarantee being secure out-of-the-box,
 or outright preventing hardening of core infrastructure (ie, preventing the ability to disable any sort of data collection) and/or outright discouraging such practice. To me,
-this seems totally unsatisfactory, wastes precious network bandwidth, and interrupts me when I do *not* want to be interrupted.
+this seems totally unsatisfactory, wastes precious network bandwidth, and interrupts me when I do *not* want to be interrupted. What's particularly annoying is the removal of
+an application, and either through some filesystem bug, an intentional design flaw, some kind of marketing scheme, or some combination of all 3, the application keeps returning.
 
 Feral, in the future, will support SVM virtualization extensions ("Pacifica"), 
 
@@ -125,7 +144,7 @@ Feral expects a VGA-compatible display adapter to be present for a PC. As such,
 you'll need some form of video adapter capable of running in VGA mode. Most
 consumer-class CPUs and GPUs implement this.
 
-Feral is tested on a 1950X processor, and is only *supported* running on version
+Feral is tested on a 1950X processor through KVM, and is only *supported* running on version
 1 of the Zen microarchitecture. Issues due to a lack of instruction set support,
 misrepresented FMA4 support, etc. from another uarch may not be patched immediately.
 
