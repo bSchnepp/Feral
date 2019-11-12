@@ -46,7 +46,6 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	EFI_STATUS Result = EFI_SUCCESS;
 	EFI_MEMORY_DESCRIPTOR *MemoryMap = NULLPTR;
 
-	EFI_FILE_PROTOCOL *Root = NULLPTR;
 	EFI_FILE_PROTOCOL *KernelImage = NULLPTR;
 	EFI_FILE_PROTOCOL *ESPRoot = NULLPTR;
 	
@@ -56,7 +55,8 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	ImageHandle = mImageHandle;
 	SystemTable = mSystemTable;
 	
-	
+	/* Clear the display. */
+	SystemTable->ConOut->ClearScreen(SystemTable->ConOut);
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		L"Starting Feralboot...\r\n");
 		
@@ -90,32 +90,37 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	{
 		/* TODO... */
 	}
-	
-	if (OpenProtocol == NULLPTR)
-	{
-		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			L"OpenProtocol is nullptr.\r\n");	
-	}
-	
-		
-	/* Check for protocols necessary to mess with filesystem. */
-	Result = OpenProtocol(ImageHandle, &GuidEfiSimpleFSProtocol,
+
+	Result = OpenProtocol(ImageHandle, &GuidEfiLoadedImageProtocol,
 		(void**)(&LoadedImageProtocol), ImageHandle, NULL, 
 		EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
 	if (Result != EFI_SUCCESS)
 	{
 		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			L"OpenProtocol had error (simple FS)..\r\n");
+			L"OpenProtocol had error (loaded image)..\r\n");
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			EfiErrorToString(Result));
+		SystemTable->BootServices->Stall(12500000);
+		return Result;
 	}
-	
-	Result = OpenProtocol(ImageHandle, &GuidEfiLoadedImageProtocol,
-		(void**)(&FileSysProtocol), ImageHandle, NULL, 
-		EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+		
+	/* Check for protocols necessary to mess with filesystem. */
+	Result = OpenProtocol(LoadedImageProtocol->DeviceHandle, 
+		&GuidEfiSimpleFSProtocol, (void**)(&FileSysProtocol), 
+		ImageHandle, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL
+	);
+
 	if (Result != EFI_SUCCESS)
 	{
 		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			L"OpenProtocol had error (loaded image)..\r\n");
+			L"OpenProtocol had error (simple FS)..\r\n");
+
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			EfiErrorToString(Result));
+		SystemTable->BootServices->Stall(12500000);
+		return Result;
 	}
+
 
 		
 	/* Load /EFI/Feral/FERALKER.NEL to do things! */
@@ -126,13 +131,16 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	{
 		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 			L"ESP could not be initialized...\r\n");
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			EfiErrorToString(Result));
+		SystemTable->BootServices->Stall(12500000);
 		return Result;
 	}
 
 
 	
 	Result = ESPRoot->Open(ESPRoot, &KernelImage, 
-		L"/EFI/Feral/FERALKER.NEL", EFI_FILE_MODE_READ, 
+		L"\\EFI\\Feral\\FERALKER.NEL", EFI_FILE_MODE_READ, 
 		EFI_FILE_READ_ONLY
 	);
 	
@@ -140,6 +148,9 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	{
 		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 			L"Kernel could not be initialized...\r\n");
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			EfiErrorToString(Result));
+		SystemTable->BootServices->Stall(12500000);
 		return Result;
 	}
 		
@@ -150,9 +161,11 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 
 	
 	/* Start loading of the kernel. (setup and call KiSystemStartup) */
-
-
 	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
 	
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L"Kernel has exited.\r\n");
+	SystemTable->BootServices->Stall(12500000);
+
 	return EFI_SUCCESS;
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -27,50 +27,167 @@ IN THE SOFTWARE.
 #ifndef _FERAL_LIBRE_EFI_STATUS_H_
 #define _FERAL_LIBRE_EFI_STATUS_H_
 
-typedef INTN EFI_STATUS;
+typedef UINTN EFI_STATUS;
 
 #define EFI_FALSE	0
 #define EFI_TRUE	1
 
-// EFI_STATUS definitions...
+/* EFI_STATUS definitions... */
 #define EFI_SUCCESS 0
-#define EFI_LOAD_ERROR 1
 
-#define EFI_INVALID_PARAMETER 2
-#define EFI_UNSUPPORTED 3
-#define EFI_BAD_BUFFER_SIZE 4
-#define EFI_BUFFER_TOO_SMALL 5
-#define EFI_NOT_READY 6
-#define EFI_DEVICE_ERROR 7
-#define EFI_WRITE_PROTECTED 8
-#define EFI_OUT_OF_RESOURCES 9
-#define EFI_VOLUME_CORRUPTED 10
-#define EFI_VOLUME_FULL 11
-#define EFI_NO_MEDIA 12
-#define EFI_MEDIA_CHANGED 13
-#define EFI_NOT_FOUND 14
-#define EFI_ACCESS_DENIED 15
-#define EFI_NO_RESPONSE 16
-#define EFI_NO_MAPPING 17
-#define EFI_TIMEOUT 18
-#define EFI_NOT_STARTED 19
-#define EFI_ALREADY_STARTED 20
-#define EFI_ABORTED 21
-#define EFI_ICMP_ERROR 22
-#define EFI_TFTP_ERROR 23
-#define EFI_PROTOCOL_ERROR 24
-#define EFI_INCOMPATIBLE_VERSION 25
-#define EFI_SECURITY_VIOLATION 26
-#define EFI_CRC_ERROR 27
-#define EFI_END_OF_MEDIA 28
+#if defined(__x86_64__) || defined(__aarch64__) 
+#define EFI_WARN(x) (0x0000000000000000 | x)
+#define EFI_ERROR(x) (0x8000000000000000 | x)
+#else
+/* Place different values if on some other CPU. */
+#define EFI_WARN(x) (0x00000000 | x)
+#define EFI_ERROR(x) (0x80000000 | x)
+#endif
 
-// Yes, there is a jump here.
-// http://wiki.phoenix.com/wiki/index.php/EFI_STATUS
+#define EFI_LOAD_ERROR EFI_ERROR(1)
+#define EFI_INVALID_PARAMETER EFI_ERROR(2)
+#define EFI_UNSUPPORTED EFI_ERROR(3)
+#define EFI_BAD_BUFFER_SIZE EFI_ERROR(4)
+#define EFI_BUFFER_TOO_SMALL EFI_ERROR(5)
+#define EFI_NOT_READY EFI_ERROR(6)
+#define EFI_DEVICE_ERROR EFI_ERROR(7)
+#define EFI_WRITE_PROTECTED EFI_ERROR(8)
+#define EFI_OUT_OF_RESOURCES EFI_ERROR(9)
+#define EFI_VOLUME_CORRUPTED EFI_ERROR(10)
+#define EFI_VOLUME_FULL EFI_ERROR(11)
+#define EFI_NO_MEDIA EFI_ERROR(12)
+#define EFI_MEDIA_CHANGED EFI_ERROR(13)
+#define EFI_NOT_FOUND EFI_ERROR(14)
+#define EFI_ACCESS_DENIED EFI_ERROR(15)
+#define EFI_NO_RESPONSE EFI_ERROR(16)
+#define EFI_NO_MAPPING EFI_ERROR(17)
+#define EFI_TIMEOUT EFI_ERROR(18)
+#define EFI_NOT_STARTED EFI_ERROR(19)
+#define EFI_ALREADY_STARTED EFI_ERROR(20)
+#define EFI_ABORTED EFI_ERROR(21)
+#define EFI_ICMP_ERROR EFI_ERROR(22)
+#define EFI_TFTP_ERROR EFI_ERROR(23)
+#define EFI_PROTOCOL_ERROR EFI_ERROR(24)
+#define EFI_INCOMPATIBLE_VERSION EFI_ERROR(25)
+#define EFI_SECURITY_VIOLATION EFI_ERROR(26)
+#define EFI_CRC_ERROR EFI_ERROR(27)
+#define EFI_END_OF_MEDIA EFI_ERROR(28)
+#define EFI_END_OF_FILE EFI_ERROR(31)
+#define EFI_INVALID_LANGUAGE EFI_ERROR(32)
+#define EFI_COMPROMISED_DATA EFI_ERROR(33)
+#define EFI_IP_ADDRESS_CONFLICT EFI_ERROR(34)
+#define EFI_HTTP_ERROR EFI_ERROR(35)
 
-#define EFI_END_OF_FILE 31
+/* Yes, there is a jump here. */
+/* http://wiki.phoenix.com/wiki/index.php/EFI_STATUS */
 
-// Warnings
-#define EFI_WARN_UNKNOWN_GLYPH 1 
-#define EFI_WARN_DELETE_FAILURE 2 
-#define EFI_WARN_WRITE_FAILURE 3 
+#define EFI_END_OF_FILE EFI_ERROR(31)
+
+/* Warnings */
+#define EFI_WARN_UNKNOWN_GLYPH EFI_WARN(1) 
+#define EFI_WARN_DELETE_FAILURE EFI_WARN(2) 
+#define EFI_WARN_WRITE_FAILURE EFI_WARN(3) 
+#define EFI_WARN_BUFFER_TOO_SMALL EFI_WARN(4)
+#define EFI_WARN_STALE_DATA EFI_WARN(5)
+#define EFI_WARN_FILE_SYSTEM EFI_WARN(6)
+#define EFI_WARN_RESET_REQUIRED EFI_WARN(7)
+
+
+
+inline WSTRING EfiErrorToString(EFI_STATUS Status)
+{
+	switch (Status)
+	{
+		case EFI_SUCCESS:
+			return L"EFI_SUCCESS";
+
+		case EFI_LOAD_ERROR:
+			return L"EFI_LOAD_ERROR";
+
+		case EFI_INVALID_PARAMETER:
+			return L"EFI_INVALID_PARAMETER";
+		case EFI_UNSUPPORTED:
+			return L"EFI_UNSUPPORTED";
+		case EFI_BAD_BUFFER_SIZE:
+			return L"EFI_BAD_BUFFER_SIZE";
+		case EFI_BUFFER_TOO_SMALL:
+			return L"EFI_BAD_BUFFER_SIZE";
+		case EFI_NOT_READY:
+			return L"EFI_NOT_READY";
+		case EFI_DEVICE_ERROR:
+			return L"EFI_DEVICE_ERROR";
+		case EFI_WRITE_PROTECTED:
+			return L"EFI_WRITE_PROTECTED";
+		case EFI_OUT_OF_RESOURCES:
+			return L"EFI_OUT_OF_RESOURCES";
+		case EFI_VOLUME_CORRUPTED:
+			return L"EFI_VOLUME_CORRUPTED";
+		case EFI_VOLUME_FULL:
+			return L"EFI_VOLUME_FULL";
+		case EFI_NO_MEDIA:
+			return L"EFI_NO_MEDIA";
+		case EFI_MEDIA_CHANGED:
+			return L"EFI_MEDIA_CHANGED";
+		case EFI_NOT_FOUND:
+			return L"EFI_NOT_FOUND";
+		case EFI_ACCESS_DENIED:
+			return L"EFI_ACCESS_DENIED";
+		case EFI_NO_RESPONSE:
+			return L"EFI_NO_RESPONSE";
+		case EFI_NO_MAPPING:
+			return L"EFI_NO_MAPPING";
+		case EFI_TIMEOUT:
+			return L"EFI_TIMEOUT";
+		case EFI_NOT_STARTED:
+			return L"EFI_NOT_STARTED";
+		case EFI_ALREADY_STARTED:
+			return L"EFI_ALREADY_STARTED";
+		case EFI_ABORTED:
+			return L"EFI_ABORTED";
+		case EFI_ICMP_ERROR:
+			return L"EFI_ICMP_ERROR";
+		case EFI_TFTP_ERROR:
+			return L"EFI_TFTP_ERROR";
+		case EFI_PROTOCOL_ERROR:
+			return L"EFI_PROTOCOL_ERROR";
+		case EFI_INCOMPATIBLE_VERSION:
+			return L"EFI_INCOMPATIBLE_VERSION";
+		case EFI_SECURITY_VIOLATION:
+			return L"EFI_SECURITY_VIOLATION";
+		case EFI_CRC_ERROR:
+			return L"EFI_CRC_ERROR";
+		case EFI_END_OF_MEDIA:
+			return L"EFI_END_OF_MEDIA";
+		case EFI_END_OF_FILE:
+			return L"EFI_END_OF_FILE";
+		case EFI_INVALID_LANGUAGE:
+			return L"EFI_INVALID_LANGUAGE";
+		case EFI_COMPROMISED_DATA:
+			return L"EFI_COMPROMISED_DATA";
+		case EFI_IP_ADDRESS_CONFLICT:
+			return L"EFI_IP_ADDRESS_CONFLICT";
+		case EFI_HTTP_ERROR:
+			return L"EFI_HTTP_ERROR";
+
+
+		case EFI_WARN_UNKNOWN_GLYPH:
+			return L"EFI_WARN_UNKNOWN_GLYPH";
+		case EFI_WARN_DELETE_FAILURE:
+			return L"EFI_WARN_DELETE_FAILURE";
+		case EFI_WARN_WRITE_FAILURE:
+			return L"EFI_WARN_WRITE_FAILURE";
+		case EFI_WARN_BUFFER_TOO_SMALL:
+			return L"EFI_WARN_BUFFER_TOO_SMALL";
+		case EFI_WARN_STALE_DATA:
+			return L"EFI_WARN_STALE_DATA";
+		case EFI_WARN_FILE_SYSTEM:
+			return L"EFI_WARN_FILE_SYSTEM";
+		case EFI_WARN_RESET_REQUIRED:
+			return L"EFI_WARN_RESET_REQUIRED";
+		default:
+			return L"Unknown EFI status?";
+	}
+}
+
+
 #endif
