@@ -28,7 +28,7 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
   
 #ifndef _FERAL_KRNL_BASE_H_
-#define _FErAL_KRNL_BASE_H_
+#define _FERAL_KRNL_BASE_H_
 
 typedef struct KrnlEnvironmentBlock
 {	

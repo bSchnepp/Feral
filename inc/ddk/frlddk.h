@@ -65,6 +65,9 @@ typedef struct DRIVER_OBJECT
 	VOID* ObjectPointer;	/* Pointer to the object in question. */
 }DRIVER_OBJECT;
 
+/* Compatibility */
+typedef DRIVER_OBJECT DriverObject;
+
 typedef struct
 {
 	DRIVER_OBJECT Object;
@@ -73,10 +76,12 @@ typedef struct
 typedef struct FERAL_DRIVER
 {
 	/* 
-		Please use 'Boost', 'GPLv2', 'GPLv3', 'MPLv2', 'MIT', 'BSD 4-clause', 'BSD 3-clause', 
-		"Proprietary", etc., and use 'DUAL:[<LICENSE1>,<LICENSE2>]' for dual-licenses.
-		We don't actually _do anything_ with that, it's just so that when loaded, you can see what is non-free
-	 	and whatever if you care about that sort of stuff.
+		Please use 'Boost', 'GPLv2', 'GPLv3', 'MPLv2', 'MIT', 
+		'BSD 4-clause', 'BSD 3-clause', "Proprietary", etc., and use 
+		'DUAL:[<LICENSE1>,<LICENSE2>]' for dual-licenses. We don't 
+		actually _do anything_ with that, it's just so that when loaded,
+		you can see what is non-free and whatever if you care about that
+		sort of stuff.
 	 */
 	STRING LicenceName;
 
@@ -106,34 +111,46 @@ typedef struct FERAL_DRIVER
 	FERALSTATUS (*DriverExit)(VOID);
 
 	/* Arbitrary input (can be anything!!!) */
-	FERALSTATUS (*DriverDispatch)(UINT64 NumArgs, VOID** Stuff);
+	FERALSTATUS (*DriverDispatch)(UINT64 NumArgs, VOID **Stuff);
 
 	
-	UINT64 DriverFlags;	// TODO: Define.
+	UINT64 DriverFlags;	/* TODO: Define. */
 
-	UINT8 DriverPriority;	// Value between 0 and 255 in which the device gets priority.
-				// (This is so we can have a VGA driver as '1' to support all graphics devices, 
-				// a VESA driver as '2', and a specific driver for a specific GPU of a specific make as '255'.	
+	UINT8 DriverPriority;	/* Value between 0 and 255 in which the device gets priority. */
+				/* (This is so we can have a VGA driver as '1' to support all graphics devices, */
+				/* a VESA driver as '2', and a specific driver for a specific GPU of a specific make as '255'.	*/
 }FERAL_DRIVER, FeralDriver;
 
-typedef struct DriverQueue
+typedef enum DriverType
 {
-	STRING DeviceTypeName;
-	FERAL_DRIVER* Driver;
-	struct DriverQueue* Next;
-}DriverQueue;
+	FERAL_DRIVER_TYPE_ROOT = 0, /* Root protocol. There can be only one */
+	FERAL_DRIVER_TYPE_GRAPHICS, /* A graphics driver (EFI GOP, VGA, etc.) */
+	FERAL_DRIVER_TYPE_NETWORK, /* Network driver (ie, E1000)*/
+	FERAL_DRIVER_TYPE_DISK, /* Disk protocol (SAS, SCSI, SATA, etc.) */
+	FERAL_DRIVER_TYPE_COPROCESSOR, /* A common coprocessor (ie, FPGA) */
+	FERAL_DRIVER_TYPE_ASIC, /* Specialized ASIC (ie, hashing asics) */
+	FERAL_DRIVER_TYPE_PERIPHERAL, /* Special peripherals (ie, USB mice) */
+	FERAL_DRIVER_TYPE_SUBSYSTEM, /* Execution subsystem (ie, Linux compat)*/
+	FERAL_DRIVER_TYPE_OTHER
+}DriverType;
 
-/* temporary, we'll clean this out later. */
-static DriverQueue DriverQueueRoot;
+typedef struct DriverTree
+{
+	DriverType Type;
+	FeralDriver *Current;
+	struct DriverTree *RestSiblings; /* Siblings to the *right*. */
+	struct DriverTree *Next;
+}DriverTree;
+
 
 FERALSTATUS KeCreateDriver(INOUT FERAL_DRIVER* Target, 
 	FERALSTATUS (*DriverInit)(IN FERALOBJECT* Object, IN WSTRING RmsPath),
 	FERALSTATUS (*DriverExit)(VOID),
 	FERALSTATUS (*DriverDispatch)(UINT64 NumArgs, VOID** Stuff));
 
-FERALSTATUS KeModifyDriverPriority(INOUT FERAL_DRIVER* Target, UINT8 NewPriority);
-
 FERALSTATUS KeAddDriverToQueue(IN STRING DeviceType, IN FERAL_DRIVER* Driver);
+
+FERALSTATUS KeGetDriverRoot(OUT *DriverTree);
 
 #if defined(__cplusplus)
 }
