@@ -44,18 +44,59 @@ static IDTLocation IDTPTR;
 extern void x86_install_idt(IDTLocation *Pointer);
 extern void x86_divide_by_zero(VOID);
 
-void x86SetupIDTEntries();
+void x86SetupIDTEntries(VOID);
+void x86DisablePIC(VOID);
 INTERRUPT void DivideByZero(x86InterruptFrame *Frame);
 
-void x86PICSendEOI(void)
+void x86PICSendEOIPIC1(void);
+void x86PICSendEOIPIC2(void);
+
+void x86PICSendEOIPIC1(void)
 {
-	//x86outb(0xA0, 0x20);
-	//x86outb(0x20, 0x20);
+	x86outb(0x20, 0x20);
 }
 
+void x86PICSendEOIPIC2(void)
+{
+	x86outb(0xA0, 0x20);
+	x86outb(0x20, 0x20);
+}
+
+void x86DisablePIC(VOID)
+{
+	
+}
 
 void x86InitializeIDT()
 {
+	/* Want to remap nicely. */
+	UINT8 InPIC1;
+	UINT8 InPIC2;
+	/* Initialize the PICs. */
+	x86outb(X86_PIC_1_COMMAND, 0x11);
+	x86outb(X86_PIC_2_COMMAND, 0x11);
+	x86_io_stall();
+	
+	/* Do the remap! */
+	x86outb(X86_PIC_1_DATA, 0x20);	/* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x28);	/* Last 8 interrupts */
+	x86_io_stall();
+	
+	/* Handle the cascades. */
+	x86outb(X86_PIC_1_DATA, 0x00);	/* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x00);	/* Last 8 interrupts */
+	x86_io_stall();
+	
+	/* Environment info... */
+	x86outb(X86_PIC_1_DATA, 0x01);	/* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x01);	/* Last 8 interrupts */
+	x86_io_stall();
+	
+	/* All interrupts are valid! */
+	x86outb(X86_PIC_1_DATA, 0xFF);	/* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0xFF);	/* Last 8 interrupts */
+	x86_io_stall();
+	
 	IDTPTR.Limit = ((sizeof(IDTDescriptor)) * 256) - 1;
 	UINT_PTR Location = (&IDT);
 	IDTPTR.Location = Location;
@@ -65,7 +106,6 @@ void x86InitializeIDT()
 	KiPrintFmt("IDT Ready to work...\n");
 	x86SetupIDTEntries();
 	KiRestoreInterrupts(TRUE);
-	/* x86_divide_by_zero();	/* Expect page fault */
 }
 
 void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
@@ -98,13 +138,23 @@ void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
 INTERRUPT void DivideByZero(x86InterruptFrame *Frame)
 {
 	KiPrintFmt("DIVIDING BY ZERO!!!\n");
-	x86PICSendEOI();
 }
 
 INTERRUPT void GenericHandler(x86InterruptFrame *Frame)
 {
 	KiPrintFmt("Unhandled Interrupt!\n");
-	x86PICSendEOI();
+}
+
+INTERRUPT void GenericHandlerPIC1(x86InterruptFrame *Frame)
+{
+	KiPrintFmt("Unhandled Interrupt! (PIC1) \n");
+	x86PICSendEOIPIC1();
+}
+
+INTERRUPT void GenericHandlerPIC2(x86InterruptFrame *Frame)
+{
+	KiPrintFmt("Unhandled Interrupt! (PIC1) \n");
+	x86PICSendEOIPIC2();
 }
 
 
@@ -117,4 +167,12 @@ void x86SetupIDTEntries()
 		x86IDTSetGate(i, (UINTN)(GenericHandler), 0x08, 0x8E);
 	}
 	x86IDTSetGate(0, (UINTN)(DivideByZero), 0x08, 0x8E);
+	for (UINTN i = 0x20; i < 0x28; ++i)
+	{
+		x86IDTSetGate(i, (UINTN)(GenericHandlerPIC1), 0x08, 0x8E);
+	}
+	for (UINTN i = 0x28; i < 0x30; ++i)
+	{
+		x86IDTSetGate(i, (UINTN)(GenericHandlerPIC2), 0x08, 0x8E);
+	}
 }
