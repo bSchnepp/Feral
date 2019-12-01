@@ -246,8 +246,10 @@ kern_start:
 	extern kern_init
 	mov rax, kern_init
 	call rax
+endloop:
+	sti ; Force enable interrupts, or else bad things happen!
 	hlt
-	jmp $
+	jmp endloop
 
 global get_initial_p4_table
 global get_initial_p3_table

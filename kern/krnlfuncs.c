@@ -153,9 +153,18 @@ FERALSTATUS KiPrint(STRING string)
 	return STATUS_SUCCESS;
 }
 
+FERALSTATUS KiMoveCurrentPosition(UINT16 X, UINT16 Y)
+{
+	return STATUS_UNSUPPORTED_OPERATION;
+}
+
 #else
 
 /* TODO */
+FERALSTATUS KiMoveCurrentPosition(UINT16 X, UINT16 Y)
+{
+	return STATUS_UNSUPPORTED_OPERATION;
+}
 #define KiPrintWarnLine(a)
 #define KiPrintGreyLine(a)
 #define KiPrintLine(a)

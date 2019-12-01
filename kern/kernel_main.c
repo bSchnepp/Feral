@@ -146,7 +146,7 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	
 	/* These are macroed away at release builds.  They're eliminated at build time.*/
 	KiDebugPrint("INIT Reached here.");
-	
+	VgaSetCurrentPosition(0, 24);
 	/* 
 		TODO: Call up KiStartupProcessor for each processor listed in APIC.
 		Each processor should have it's x87 enabled, so we can do SSE stuff
@@ -250,9 +250,9 @@ VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
  */
 
 #ifndef FERAL_BUILD_STANDALONE_UEFI_
+static VgaContext graphicsContext = {0};
 VOID kern_init(UINT32 MBINFO)
-{	
-	VgaContext graphicsContext = {0};
+{
 	UINT8 misc = VgaPrepareEnvironment(&graphicsContext);
 	KiBlankVgaScreen(25, 80, VGA_BLACK);
 	KiPrintLine("Feral kernel booting...");

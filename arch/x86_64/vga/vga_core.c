@@ -182,8 +182,13 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 			VgaEntry(color, color, (CHAR)('\0'), w, h);
 		}
 	}
-	currentContext->CurrentRow = 0;
-	currentContext->CurrentCol = 0;
+	VgaSetCurrentPosition(0, 0);
+}
+
+VOID VgaSetCurrentPosition(UINT16 X, UINT16 Y)
+{
+	currentContext->CurrentRow = Y;
+	currentContext->CurrentCol = X;
 }
 
 /**
@@ -209,6 +214,10 @@ VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR lette
 	/* Now in safe-to-write state. */
 	VgaEntry(foreground, background, letter, currentContext->CurrentCol, currentContext->CurrentRow);
 	currentContext->CurrentCol++;
+	if (currentContext->FollowingInput)
+	{
+		VgaMoveCursor(currentContext->CurrentCol, currentContext->CurrentRow);
+	}
 }
 
 /**

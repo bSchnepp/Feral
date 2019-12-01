@@ -66,7 +66,7 @@ typedef struct
 
 void x86InitializeIDT(VOID);
 
-void x86IDTSetGate(IN UINT8 Number, IN UINT_PTR Base, 
+volatile void x86IDTSetGate(IN UINT8 Number, IN UINT_PTR Base, 
 	IN UINT16 Selector, IN UINT8 Flags);
 	
 /* A couple of macros we'll need for calling convention purposes. */

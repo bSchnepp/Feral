@@ -128,6 +128,8 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string
 
 VOID VgaMoveCursor(DWORD PosX, DWORD PosY);
 
+VOID VgaSetCurrentPosition(UINT16 X, UINT16 Y);
+
 /* Whenever we set a character, set the position of the cursor to it + 1. */
 VOID VgaTraceCharacters(BOOL value);
 

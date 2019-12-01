@@ -26,6 +26,7 @@ IN THE SOFTWARE.
  
  
 #include <feral/stdtypes.h>
+#include <feral/kern/krnlfuncs.h>
 #include <arch/x86_64/idt/idt.h>
 #include <arch/x86_64/cpuio.h>
 #include <arch/x86_64/cpufuncs.h>
@@ -43,38 +44,69 @@ static IDTLocation IDTPTR;
 
 extern void x86_install_idt(IDTLocation *Pointer);
 extern void x86_divide_by_zero(VOID);
+extern void x86_interrupt_3(VOID);
+extern void x86_interrupt_14(VOID);
+extern void x86_interrupt_33(VOID);
 
-void x86SetupIDTEntries(VOID);
+volatile void x86SetupIDTEntries(VOID);
 void x86DisablePIC(VOID);
 INTERRUPT void DivideByZero(x86InterruptFrame *Frame);
+INTERRUPT void GenericHandler(x86InterruptFrame *Frame);
+INTERRUPT void GenericHandlerPIC1(x86InterruptFrame *Frame);
+INTERRUPT void GenericHandlerPIC2(x86InterruptFrame *Frame);
+INTERRUPT void DoubleFaultHandler(x86InterruptFrame *Frame);
+INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame);
 
 void x86PICSendEOIPIC1(void);
 void x86PICSendEOIPIC2(void);
 
 void x86PICSendEOIPIC1(void)
 {
-	x86outb(0x20, 0x20);
+	x86outb(X86_PIC_1_COMMAND, 0x20);
 }
 
 void x86PICSendEOIPIC2(void)
 {
-	x86outb(0xA0, 0x20);
-	x86outb(0x20, 0x20);
+	x86outb(X86_PIC_2_COMMAND, 0x20);
+	x86outb(X86_PIC_1_COMMAND, 0x20);
 }
 
 void x86DisablePIC(VOID)
 {
-	
+	x86outb(X86_PIC_1_DATA, 0xFF);
+	x86outb(X86_PIC_2_DATA, 0xFF);
 }
 
 void x86InitializeIDT()
 {
-	/* Want to remap nicely. */
-	UINT8 InPIC1;
-	UINT8 InPIC2;
-	/* Initialize the PICs. */
-	x86outb(X86_PIC_1_COMMAND, 0x11);
-	x86outb(X86_PIC_2_COMMAND, 0x11);
+	/* Occasionally, some Zen cores *really* like reclocking themselves
+	 * to 400MHz until you reboot. To err on the side of safety, assume 
+	 * we'll need io_stall to put up with these chips. 
+	 *
+	 * (On that note, I'd like to blame laptop manufacturers for not using
+	 * the CPU right... this has *never* happened on my desktops.)
+	 *
+	 * This is particularly the case on my 17z. So, we'll have to see if
+	 * I can clean up the mess the BIOS devs did in ring 0, or if I can
+	 * set the kernel up in a way to do that APIC remap trick to escalate to
+	 * ring -2 access and fix it the harder way for specific devices and
+	 * play with writing to pmem in certain places. Will need to do some
+	 * dumping of RAM, probably see if this is even possible, and then
+	 * fight all day with the BIOS to do what I want it to.
+	 * 
+	 * It's not a security vulnerability! It's a feature!
+	 */
+
+	/* Make the PIT happy. */
+	INT32 Divisor = 1193180;
+	x86outb(0x43, 0x36);	/* Tell the PIT to accept it. */
+	x86outb(0x40, (Divisor >> 0) & 0xFF);
+	x86outb(0x40, (Divisor >> 8) & 0xFF);
+	
+	/* Initialize the PICs. 0x10 for INIT, and 0x01 for disabling stuff. */
+	KiSetMemoryBytes(IDT, 0, (sizeof(IDTDescriptor)) * 256); 
+	x86outb(X86_PIC_1_COMMAND, (0x10 | 0x01));
+	x86outb(X86_PIC_2_COMMAND, (0x10 | 0x01));
 	x86_io_stall();
 	
 	/* Do the remap! */
@@ -83,8 +115,8 @@ void x86InitializeIDT()
 	x86_io_stall();
 	
 	/* Handle the cascades. */
-	x86outb(X86_PIC_1_DATA, 0x00);	/* First 7 interrupts */
-	x86outb(X86_PIC_2_DATA, 0x00);	/* Last 8 interrupts */
+	x86outb(X86_PIC_1_DATA, 0x04);	/* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x02);	/* Last 8 interrupts */
 	x86_io_stall();
 	
 	/* Environment info... */
@@ -93,25 +125,36 @@ void x86InitializeIDT()
 	x86_io_stall();
 	
 	/* All interrupts are valid! */
-	x86outb(X86_PIC_1_DATA, 0xFF);	/* First 7 interrupts */
-	x86outb(X86_PIC_2_DATA, 0xFF);	/* Last 8 interrupts */
+	x86outb(X86_PIC_1_DATA, 0x01);	/* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x01);	/* Last 8 interrupts */
 	x86_io_stall();
 	
+	for (UINTN i = 0; i < 255; ++i)
+	{
+		x86IDTSetGate(i, (UINT_PTR)(GenericHandler), 0x08, 0x8E);
+	}
+	for (UINTN i = 0x20; i < 0x28; ++i)
+	{
+		x86IDTSetGate(i, (UINT_PTR)(GenericHandlerPIC1), 0x08, 0x8E);
+	}
+	for (UINTN i = 0x28; i < 0x30; ++i)
+	{
+		x86IDTSetGate(i, (UINT_PTR)(GenericHandlerPIC2), 0x08, 0x8E);
+	}
 	IDTPTR.Limit = ((sizeof(IDTDescriptor)) * 256) - 1;
 	UINT_PTR Location = (&IDT);
 	IDTPTR.Location = Location;
-	KiSetMemoryBytes(IDT, 0, (sizeof(IDTDescriptor)) * 256);
-	x86_install_idt(&IDTPTR);
-	/* TODO: Install routines needed. */
-	KiPrintFmt("IDT Ready to work...\n");
 	x86SetupIDTEntries();
+	
+	KiPrintFmt("IDT Ready to work...\n");
+	x86_install_idt(&IDTPTR);
 	KiRestoreInterrupts(TRUE);
 }
 
-void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
+volatile void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
 {
 	/* 0 - 255 happens to be valid, so no need for checking. */
-	IDTDescriptor Descriptor;
+	IDTDescriptor Descriptor = {0};
 	
 	Descriptor.Offset = (UINT16)(Base & 0xFFFF);
 	Descriptor.Offset2 = (UINT16)((Base >> 16) & 0xFFFF);
@@ -125,7 +168,8 @@ void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
 	/* And the important bits. */
 	Descriptor.Selector = Selector;
 	Descriptor.TypeAttr = Flags;
-	
+
+/* Handful of embedded x86s out there. May want to support one day. */
 #if defined(__x86_64__)
 	Descriptor.Offset3 = (UINT32)((Base >> 32) & 0xFFFFFFFF);
 	/* No TSS, so set to zero. */
@@ -153,26 +197,59 @@ INTERRUPT void GenericHandlerPIC1(x86InterruptFrame *Frame)
 
 INTERRUPT void GenericHandlerPIC2(x86InterruptFrame *Frame)
 {
-	KiPrintFmt("Unhandled Interrupt! (PIC1) \n");
+	KiPrintFmt("Unhandled Interrupt! (PIC2) \n");
 	x86PICSendEOIPIC2();
 }
 
+INTERRUPT void DoubleFaultHandler(x86InterruptFrame *Frame)
+{
+	/* Very helpful. I know. */
+	KiStopError(STATUS_ERROR);
+}
 
-void x86SetupIDTEntries()
+INTERRUPT void PITHandler(x86InterruptFrame *Frame)
+{
+	KiPrintFmt("PIT called!\n");
+	x86PICSendEOIPIC1();
+}
+
+CHAR InternalConvertPS2KeyToASCII(CHAR In)
+{
+	if (In == 0x1E)
+	{
+		return 'a';
+	}
+	return 0;
+}
+
+INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
+{
+	UINT8 Status;
+	CHAR Keycode;
+	Status = x86inb(0x64); /* Status port is 0x64. */
+	if (Status & 0x01)
+	{
+		Keycode = x86inb(0x60); /* Data is 0x60. */
+		if (Keycode > 127 || Keycode == 0)
+		{
+			return;
+		}
+		CHAR Letter = InternalConvertPS2KeyToASCII(Keycode);
+		KiPrint(Letter);
+	}
+	x86PICSendEOIPIC1();
+}
+
+
+volatile void x86SetupIDTEntries()
 {
 	/* 0x08 is for kernel code segment offset */
 	/* 0x8E is for interrupt gate. */
-	for (UINTN i = 0; i < 255; ++i)
-	{
-		x86IDTSetGate(i, (UINTN)(GenericHandler), 0x08, 0x8E);
-	}
-	x86IDTSetGate(0, (UINTN)(DivideByZero), 0x08, 0x8E);
-	for (UINTN i = 0x20; i < 0x28; ++i)
-	{
-		x86IDTSetGate(i, (UINTN)(GenericHandlerPIC1), 0x08, 0x8E);
-	}
-	for (UINTN i = 0x28; i < 0x30; ++i)
-	{
-		x86IDTSetGate(i, (UINTN)(GenericHandlerPIC2), 0x08, 0x8E);
-	}
+
+	/* On number 14 (page fault), install custom handler. */
+	x86IDTSetGate(0x00, (UINT_PTR)(DivideByZero), 0x08, 0x8E);
+	x86IDTSetGate(0x08, (UINT_PTR)(DoubleFaultHandler), 0x08, 0x8E);
+	x86IDTSetGate(0x14, (UINT_PTR)(DoubleFaultHandler), 0x08, 0x8E);
+	x86IDTSetGate(0x20, (UINT_PTR)(PITHandler), 0x08, 0x8E);
+	x86IDTSetGate(0x21, (UINT_PTR)(PS2KeyboardHandler), 0x08, 0x8E);
 }
