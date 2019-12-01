@@ -235,7 +235,12 @@ INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
 			return;
 		}
 		CHAR Letter = InternalConvertPS2KeyToASCII(Keycode);
-		KiPrint(Letter);
+		CHAR Buffer[2] = {0};
+		Buffer[0] = Letter;
+		if (Letter == 'a')
+		{
+			KiPrint(Buffer);
+		}
 	}
 	x86PICSendEOIPIC1();
 }

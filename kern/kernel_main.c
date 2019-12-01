@@ -146,7 +146,9 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	
 	/* These are macroed away at release builds.  They're eliminated at build time.*/
 	KiDebugPrint("INIT Reached here.");
+#if defined(__x86_64__) || defined(__i386__) || !defined(FERAL_BUILD_STANDALONE_UEFI_)
 	VgaSetCurrentPosition(0, 24);
+#endif
 	/* 
 		TODO: Call up KiStartupProcessor for each processor listed in APIC.
 		Each processor should have it's x87 enabled, so we can do SSE stuff
