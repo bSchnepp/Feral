@@ -213,15 +213,112 @@ INTERRUPT void PITHandler(x86InterruptFrame *Frame)
 	x86PICSendEOIPIC1();
 }
 
-CHAR InternalConvertPS2KeyToASCII(CHAR In)
+
+static UINT8 ShiftModifier = 0;
+static UINT8 ControlModifier = 0;
+static UINT8 AltModifier = 0;
+
+char ApplyShiftIfNeeded(CHAR In);
+
+char ApplyShiftIfNeeded(CHAR In)
 {
-	if (In == 0x1E)
+	if (In < 'A' || In > 'z')
 	{
-		return 'a';
+		return In;
 	}
-	return 0;
+	
+	if (ShiftModifier)
+	{
+		return (In | 0x20);
+	} else {
+		return (In & ~0x20);
+	}
 }
 
+
+
+void CheckStatusCode(CHAR In)
+{
+	if (In == 0x2A || In == 0x26)
+	{
+		ShiftModifier = 1;
+	} else if (In == 0xAA || In == 0xB6) {
+		ShiftModifier = 0;
+	}
+	
+	if (In == 0xF0)
+	{
+		KiPrintFmt("HHHDJHJ\n");
+	}
+}
+
+CHAR InternalConvertPS2KeyToASCII(CHAR In)
+{
+	/* TODO: convert this to a lookup table... */
+	CHAR ProperLetter = '\0';
+	if (In == 0x1E)
+	{
+		ProperLetter = 'a';
+	} else if (In == 0x30) {
+		ProperLetter = 'b';
+	} else if (In == 0x2E) {
+		ProperLetter = 'c';
+	} else if (In == 0x20) {
+		ProperLetter = 'd';
+	} else if (In == 0x12) {
+		ProperLetter = 'e';
+	} else if (In == 0x21) {
+		ProperLetter = 'f';
+	} else if (In == 0x22) {
+		ProperLetter = 'g';
+	} else if (In == 0x23) {
+		ProperLetter = 'h';
+	} else if (In == 0x17) {
+		ProperLetter = 'i';
+	} else if (In == 0x24) {
+		ProperLetter = 'j';
+	} else if (In == 0x25) {
+		ProperLetter = 'k';
+	} else if (In == 0x26) {
+		ProperLetter = 'l';
+	} else if (In == 0x32) {
+		ProperLetter = 'm';
+	} else if (In == 0x31) {
+		ProperLetter = 'n';
+	} else if (In == 0x18) {
+		ProperLetter = 'o';
+	} else if (In == 0x19) {
+		ProperLetter = 'p';
+	} else if (In == 0x10) {
+		ProperLetter = 'q';
+	} else if (In == 0x13) {
+		ProperLetter = 'r';
+	} else if (In == 0x1F) {
+		ProperLetter = 's';
+	} else if (In == 0x14) {
+		ProperLetter = 't';
+	} else if (In == 0x16) {
+		ProperLetter = 'u';
+	} else if (In == 0x2F) {
+		ProperLetter = 'v';
+	} else if (In == 0x11) {
+		ProperLetter = 'w';
+	} else if (In == 0x2D) {
+		ProperLetter = 'x';
+	} else if (In == 0x15) {
+		ProperLetter = 'y';
+	} else if (In == 0x2C) {
+		ProperLetter = 'z';
+	} else if (In == 0x1C || In == 0x5A) {
+		ProperLetter = '\n';
+	} else if (In == 0x39 || In == 0x29) {
+		ProperLetter = ' ';
+	}
+	return ApplyShiftIfNeeded(ProperLetter);
+}
+
+
+/* We'll need to pull this out into a proper driver later. */
 INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
 {
 	UINT8 Status;
@@ -230,16 +327,13 @@ INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
 	if (Status & 0x01)
 	{
 		Keycode = x86inb(0x60); /* Data is 0x60. */
-		if (Keycode > 127 || Keycode == 0)
-		{
-			return;
-		}
+		CheckStatusCode(Keycode);
 		CHAR Letter = InternalConvertPS2KeyToASCII(Keycode);
 		CHAR Buffer[2] = {0};
 		Buffer[0] = Letter;
-		if (Letter == 'a')
+		if (Letter)
 		{
-			KiPrint(Buffer);
+			KiPrintFmt(Buffer);
 		}
 	}
 	x86PICSendEOIPIC1();
@@ -257,4 +351,5 @@ volatile void x86SetupIDTEntries()
 	x86IDTSetGate(0x14, (UINT_PTR)(DoubleFaultHandler), 0x08, 0x8E);
 	x86IDTSetGate(0x20, (UINT_PTR)(PITHandler), 0x08, 0x8E);
 	x86IDTSetGate(0x21, (UINT_PTR)(PS2KeyboardHandler), 0x08, 0x8E);
+	/*x86IDTSetGate(0x2C, (UINT_PTR)(PS2KeyboardHandler), 0x08, 0x8E);*/
 }
