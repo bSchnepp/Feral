@@ -214,9 +214,14 @@ INTERRUPT void PITHandler(x86InterruptFrame *Frame)
 }
 
 
-static UINT8 ShiftModifier = 0;
-static UINT8 ControlModifier = 0;
-static UINT8 AltModifier = 0;
+typedef struct PS2KeyboardContext
+{
+	UINT8 ShiftModifier;
+	UINT8 ControlModifier;
+	UINT8 AltModifier;
+}PS2KeyboardContext;
+
+static PS2KeyboardContext KeyboardContext = { 0 };
 
 char ApplyShiftIfNeeded(CHAR In);
 
@@ -227,28 +232,23 @@ char ApplyShiftIfNeeded(CHAR In)
 		return In;
 	}
 	
-	if (ShiftModifier)
+	if (KeyboardContext.ShiftModifier)
 	{
-		return (In | 0x20);
-	} else {
 		return (In & ~0x20);
+	} else {
+		return (In | 0x20);
 	}
 }
 
 
 
-void CheckStatusCode(CHAR In)
+void CheckStatusCode(UINT8 In)
 {
 	if (In == 0x2A || In == 0x26)
 	{
-		ShiftModifier = 1;
+		KeyboardContext.ShiftModifier = 1;
 	} else if (In == 0xAA || In == 0xB6) {
-		ShiftModifier = 0;
-	}
-	
-	if (In == 0xF0)
-	{
-		KiPrintFmt("HHHDJHJ\n");
+		KeyboardContext.ShiftModifier = 0;
 	}
 }
 
@@ -323,18 +323,14 @@ INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
 {
 	UINT8 Status;
 	CHAR Keycode;
-	Status = x86inb(0x64); /* Status port is 0x64. */
-	if (Status & 0x01)
+	Keycode = x86inb(0x60); /* Data is 0x60. */
+	CheckStatusCode(Keycode);
+	CHAR Letter = InternalConvertPS2KeyToASCII(Keycode);
+	CHAR Buffer[2] = {0};
+	Buffer[0] = Letter;
+	if (Letter)
 	{
-		Keycode = x86inb(0x60); /* Data is 0x60. */
-		CheckStatusCode(Keycode);
-		CHAR Letter = InternalConvertPS2KeyToASCII(Keycode);
-		CHAR Buffer[2] = {0};
-		Buffer[0] = Letter;
-		if (Letter)
-		{
-			KiPrintFmt(Buffer);
-		}
+		KiPrintFmt(Buffer);
 	}
 	x86PICSendEOIPIC1();
 }
@@ -351,5 +347,5 @@ volatile void x86SetupIDTEntries()
 	x86IDTSetGate(0x14, (UINT_PTR)(DoubleFaultHandler), 0x08, 0x8E);
 	x86IDTSetGate(0x20, (UINT_PTR)(PITHandler), 0x08, 0x8E);
 	x86IDTSetGate(0x21, (UINT_PTR)(PS2KeyboardHandler), 0x08, 0x8E);
-	/*x86IDTSetGate(0x2C, (UINT_PTR)(PS2KeyboardHandler), 0x08, 0x8E);*/
+	x86IDTSetGate(0x2C, (UINT_PTR)(PS2KeyboardHandler), 0x08, 0x8E);
 }
