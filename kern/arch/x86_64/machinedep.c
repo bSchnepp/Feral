@@ -77,6 +77,55 @@ void x86DisablePIC(VOID)
 	x86outb(X86_PIC_2_DATA, 0xFF);
 }
 
+
+INTERRUPT void GenericHandlerPIC1_IRQ0(x86InterruptFrame *Frame)
+{
+	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ0) \n");
+	x86PICSendEOIPIC1();
+}
+
+INTERRUPT void GenericHandlerPIC1_IRQ1(x86InterruptFrame *Frame)
+{
+	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ1) \n");
+	x86PICSendEOIPIC1();
+}
+
+INTERRUPT void GenericHandlerPIC1_IRQ2(x86InterruptFrame *Frame)
+{
+	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ2) \n");
+	x86PICSendEOIPIC1();
+}
+
+INTERRUPT void GenericHandlerPIC1_IRQ3(x86InterruptFrame *Frame)
+{
+	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ3) \n");
+	x86PICSendEOIPIC1();
+}
+
+INTERRUPT void GenericHandlerPIC1_IRQ4(x86InterruptFrame *Frame)
+{
+	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ4) \n");
+	x86PICSendEOIPIC1();
+}
+
+INTERRUPT void GenericHandlerPIC1_IRQ5(x86InterruptFrame *Frame)
+{
+	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ5) \n");
+	x86PICSendEOIPIC1();
+}
+
+INTERRUPT void GenericHandlerPIC1_IRQ6(x86InterruptFrame *Frame)
+{
+	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ6) \n");
+	x86PICSendEOIPIC1();
+}
+
+INTERRUPT void GenericHandlerPIC1_IRQ7(x86InterruptFrame *Frame)
+{
+	/* Ignore number 7. */
+	x86PICSendEOIPIC1();
+}
+
 void x86InitializeIDT()
 {
 	/* Occasionally, some Zen cores *really* like reclocking themselves
@@ -124,19 +173,26 @@ void x86InitializeIDT()
 	x86outb(X86_PIC_2_DATA, 0x01);	/* Last 8 interrupts */
 	x86_io_stall();
 	
-	/* All interrupts are valid! */
+	/* Leave this alone for now... */
 	x86outb(X86_PIC_1_DATA, 0x01);	/* First 7 interrupts */
 	x86outb(X86_PIC_2_DATA, 0x01);	/* Last 8 interrupts */
 	x86_io_stall();
+	
+	x86outb(X86_PIC_1_DATA, 0xFD); /* Only allow IRQ 1. For now. */
+	x86outb(X86_PIC_2_DATA, 0x80); /* Allow all the PIC 2 IRQs..? */
 	
 	for (UINTN i = 0; i < 255; ++i)
 	{
 		x86IDTSetGate(i, (UINT_PTR)(GenericHandler), 0x08, 0x8E);
 	}
-	for (UINTN i = 0x20; i < 0x28; ++i)
-	{
-		x86IDTSetGate(i, (UINT_PTR)(GenericHandlerPIC1), 0x08, 0x8E);
-	}
+	x86IDTSetGate(0x20, (UINT_PTR)(GenericHandlerPIC1_IRQ0), 0x08, 0x8E);
+	x86IDTSetGate(0x21, (UINT_PTR)(GenericHandlerPIC1_IRQ1), 0x08, 0x8E);
+	x86IDTSetGate(0x22, (UINT_PTR)(GenericHandlerPIC1_IRQ2), 0x08, 0x8E);
+	x86IDTSetGate(0x23, (UINT_PTR)(GenericHandlerPIC1_IRQ3), 0x08, 0x8E);
+	x86IDTSetGate(0x24, (UINT_PTR)(GenericHandlerPIC1_IRQ4), 0x08, 0x8E);
+	x86IDTSetGate(0x25, (UINT_PTR)(GenericHandlerPIC1_IRQ5), 0x08, 0x8E);
+	x86IDTSetGate(0x26, (UINT_PTR)(GenericHandlerPIC1_IRQ6), 0x08, 0x8E);
+	x86IDTSetGate(0x27, (UINT_PTR)(GenericHandlerPIC1_IRQ7), 0x08, 0x8E);
 	for (UINTN i = 0x28; i < 0x30; ++i)
 	{
 		x86IDTSetGate(i, (UINT_PTR)(GenericHandlerPIC2), 0x08, 0x8E);
