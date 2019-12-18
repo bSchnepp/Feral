@@ -61,7 +61,7 @@ IN THE SOFTWARE.
 #define X86_PRESENT_PAGE_NO_EXEC (X86_PAGE_FLAG_PRESENT | X86_PAGE_NO_EXECUTE)
 
 #define X86_PRESENT_WRITABLE_PAGE_USER 	( X86_PRESENT_WRITABLE_PAGE | (X86_PAGE_FLAG_USER_READ) )
-#define X86_PRESENT_PAGE_NO_EXEC 	( X86_PRESENT_PAGE_NO_EXEC | (X86_PAGE_FLAG_USER_READ) )
+/* #define X86_PRESENT_PAGE_NO_EXEC 	( X86_PRESENT_PAGE_NO_EXEC | (X86_PAGE_FLAG_USER_READ) ) */
 
 /* Reimplemented for each arch. */
 typedef struct PageMapEntry
@@ -82,6 +82,6 @@ typedef struct PageMapEntry
 	UINT_PTR Address : 51;
 #endif
 	UINT8 NoExecuteFlag : 1;
-}PageMapEntry PACKED;
+}PACKED PageMapEntry;
 
 #endif

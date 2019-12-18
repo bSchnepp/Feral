@@ -150,7 +150,7 @@ FERALSTATUS KeCreateDriver(INOUT FERAL_DRIVER* Target,
 
 FERALSTATUS KeAddDriverToQueue(IN STRING DeviceType, IN FERAL_DRIVER* Driver);
 
-FERALSTATUS KeGetDriverRoot(OUT *DriverTree);
+FERALSTATUS KeGetDriverRoot(OUT DriverTree *Root);
 
 #if defined(__cplusplus)
 }

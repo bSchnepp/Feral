@@ -32,6 +32,12 @@ IN THE SOFTWARE.
 /* Well, it works... */
 static AllocatorState CurrentState;
 
+void InternalInitializeNode(Node *Current, Node *Previous, Node *Next, 
+	UINT64 Index);
+	
+void *InternalMmWorstCaseMalloc(Arena *CurArena, UINT64 Size);
+
+
 /*  FIXME: Add poison values to prevent bad heap accesses. */
 
 /* Assume insertion is valid, and that caller handles Arena. */
@@ -108,6 +114,7 @@ void *InternalMmWorstCaseMalloc(Arena *CurArena, UINT64 Size)
 {
 	UINT64 RequiredNodes = (Size / ALLOC_BLOCK_SIZE) + 1;
 	/* Go up one by one from root. */
+	
 	for (Node **Indexer = &(CurArena->Root); (*Indexer)->Last != TRUE; 
 		Indexer = &((*Indexer)->Next))
 	{
@@ -149,9 +156,10 @@ void *InternalMmWorstCaseMalloc(Arena *CurArena, UINT64 Size)
 			{
 				(*Subindexer)->Used = TRUE;
 			}
+			return Current->Area;
 		}
-		
 	}
+	return (void*)(0);
 }
 
 

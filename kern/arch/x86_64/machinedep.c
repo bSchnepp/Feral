@@ -26,6 +26,7 @@ IN THE SOFTWARE.
  
  
 #include <feral/stdtypes.h>
+#include <feral/kern/frlos.h>
 #include <feral/kern/krnlfuncs.h>
 #include <arch/x86_64/idt/idt.h>
 #include <arch/x86_64/cpuio.h>
@@ -56,6 +57,15 @@ INTERRUPT void GenericHandlerPIC1(x86InterruptFrame *Frame);
 INTERRUPT void GenericHandlerPIC2(x86InterruptFrame *Frame);
 INTERRUPT void DoubleFaultHandler(x86InterruptFrame *Frame);
 INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame);
+
+INTERRUPT void GenericHandlerPIC1_IRQ0(x86InterruptFrame *Frame);
+INTERRUPT void GenericHandlerPIC1_IRQ1(x86InterruptFrame *Frame);
+INTERRUPT void GenericHandlerPIC1_IRQ2(x86InterruptFrame *Frame);
+INTERRUPT void GenericHandlerPIC1_IRQ3(x86InterruptFrame *Frame);
+INTERRUPT void GenericHandlerPIC1_IRQ4(x86InterruptFrame *Frame);
+INTERRUPT void GenericHandlerPIC1_IRQ5(x86InterruptFrame *Frame);
+INTERRUPT void GenericHandlerPIC1_IRQ6(x86InterruptFrame *Frame);
+INTERRUPT void GenericHandlerPIC1_IRQ7(x86InterruptFrame *Frame);
 
 void x86PICSendEOIPIC1(void);
 void x86PICSendEOIPIC2(void);

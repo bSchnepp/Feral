@@ -24,8 +24,10 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
  
-#include <feral/feralstatus.h>
+
 #include <feral/stdtypes.h>
+#include <feral/feralstatus.h>
+#include <feral/kern/frlos.h>
 
 #include <krnl.h>
 
