@@ -1,6 +1,6 @@
 MAKE       = bmake
 
-GDB        = lldb # Use LLVM debugger when we can, if we make a makerule for this in the future. (I just happen to be a little more familiar with lldb, that's all)
+GDB        = gdb # Ideally use lldb, but it doesn't hook as nice as gdb...
 
 # Change to aarch64 to target those devices.
 #ARCH       = ${ARCH}

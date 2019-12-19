@@ -25,7 +25,7 @@ kernel:
 	
 	# libmm.a libprocmgr.a 
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) ./io/*.c -o ./iofuncs.o
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES) -o ./*.o kern/kernel_main.o kern/krnlfuncs.o kern/krnlfuncs.o kern/krnl_private.o kern/objmgr.o
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES)
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
 
 iso:	kernel

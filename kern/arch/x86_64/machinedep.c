@@ -310,7 +310,12 @@ char ApplyShiftIfNeeded(CHAR In)
 
 void CheckStatusCode(UINT8 In)
 {
-	if (In == 0x2A || In == 0x26)
+	if (In == 0xBA)
+	{
+		KeyboardContext.ShiftModifier = !(KeyboardContext.ShiftModifier);
+	}
+	
+	if (In == 0x2A || In == 0x36)
 	{
 		KeyboardContext.ShiftModifier = 1;
 	} else if (In == 0xAA || In == 0xB6) {
