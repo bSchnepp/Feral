@@ -16,14 +16,10 @@ kernel:
 	mkdir -p build/$(ARCH)/	
 	
 	cd arch && $(MAKE)
-#	cd proc && $(MAKE) 
-#	cd mm && $(MAKE) 
 	cd io && $(MAKE) 
 	cd drivers && $(MAKE)
 	cd kern && $(MAKE)
-#	cd sec && $(MAKE)
-	
-	# libmm.a libprocmgr.a 
+	 
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES)
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
@@ -45,8 +41,6 @@ clean:
 	
 	cd kern && $(MAKE) clean
 	cd sec && $(MAKE) clean
-#	cd proc && $(MAKE)  clean && cd ../mm && $(MAKE) clean
-	## TODO: clean up object files too.
 
 qemu:	iso
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G --enable-kvm  -d int,cpu_reset -no-reboot -no-shutdown # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
@@ -66,17 +60,14 @@ qemu-efi:
 	mkdir -p build/EFI/Boot
 	mkdir -p build/EFI/Feral	
 	
-	cd arch && $(MAKE)
-#	cd proc && $(MAKE) 
-#	cd mm && $(MAKE) 
+	cd arch && $(MAKE) 
 	cd io && $(MAKE) 
 	cd drivers && $(MAKE)
 	cd kern && $(MAKE)
 	cd sec && $(MAKE)
 	
-	# libmm.a libprocmgr.a 
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) -DFERAL_BUILD_STANDALONE_UEFI_ ./io/*.c -o ./iofuncs.o
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) -DFERAL_BUILD_STANDALONE_UEFI_ $(VGA_FILES) -o ./*.o kern/kernel_main.o kern/krnlfuncs.o kern/krnlfuncs.o kern/krnl_private.o kern/objmgr.o
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) -DFERAL_BUILD_STANDALONE_UEFI_ $(VGA_FILES)
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
 	
 	cp $(EFI_CODE) ./efi.bin

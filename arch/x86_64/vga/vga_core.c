@@ -165,6 +165,7 @@ VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, D
 	ColorValue color = ((background << 4) | (foreground)) << 8;
 	UINT16 offset = posx + (posy * currentContext->ScreenWidth);
 	currentContext->Framebuffer[offset] = ((UINT16)(letter) | color);
+	currentContext->CurrentCol = posx;
 }
 
 /**
@@ -214,10 +215,6 @@ VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR lette
 	/* Now in safe-to-write state. */
 	VgaEntry(foreground, background, letter, currentContext->CurrentCol, currentContext->CurrentRow);
 	currentContext->CurrentCol++;
-	if (currentContext->FollowingInput)
-	{
-		VgaMoveCursor(currentContext->CurrentCol, currentContext->CurrentRow);
-	}
 }
 
 /**
@@ -226,26 +223,44 @@ VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR lette
  */
 VOID VgaPutChar(CHAR letter)
 {
-	VgaAutoEntry(currentContext->Foreground, currentContext->Background, letter);
+	VgaAutoEntry(currentContext->Foreground, currentContext->Background, 
+		letter
+	);
+	if (currentContext->FollowingInput)
+	{
+		if (currentContext->CurrentCol >= currentContext->ScreenWidth)
+		{
+			currentContext->CurrentCol = 0;
+			currentContext->CurrentRow++;
+		}
+		
+		if (currentContext->CurrentRow >= currentContext->ScreenHeight)
+		{	
+			currentContext->CurrentRow 
+				= currentContext->ScreenHeight - 1;
+			internalVgaPushUp();
+		}
+		VgaMoveCursor(currentContext->CurrentCol, 
+			currentContext->CurrentRow
+		);
+	}
 }
 
 VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy)
 {
 	UINT64 index = 0;
-	UINT16 true_x = posx;
-	UINT16 true_y = posy;
 	
 	for (CHAR c = *string; index < length; c = string[++index])
 	{
-		if (true_x >= currentContext->ScreenWidth)
+		if (posx >= currentContext->ScreenWidth)
 		{
-			true_x = 0;
-			currentContext->CurrentRow = ++true_y;
+			posx = 0;
+			currentContext->CurrentRow = ++posy;
 		}
 		
-		if (true_y >= currentContext->ScreenHeight)
+		if (posy >= currentContext->ScreenHeight)
 		{	
-			true_y = currentContext->ScreenHeight - 1;
+			posy = currentContext->ScreenHeight - 1;
 			internalVgaPushUp();
 		}
 
@@ -256,29 +271,28 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* st
 			{
 				VgaPutChar(' ');
 			}
-			true_x += 8;
 		} else if (c == '\n') {
 			/* Now, reset the last row's state. */
 			currentContext->CurrentCol = 0;
 			currentContext->CurrentRow++;
-			internalVgaPushUp();
 		} else if (c == '\0') {
-			return;
+			break;
 		} else {
-			VgaEntry(foreground, background, c, true_x++, true_y);
+			VgaEntry(foreground, background, c, posx++, posy);
 		}
 	}
 }
 
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length)
 {
+	VgaStringEntry(foreground, background, string, length, currentContext->CurrentCol, currentContext->CurrentRow);
+	currentContext->CurrentRow++;
+	currentContext->CurrentCol = 0;
+	
 	if (currentContext->CurrentRow >= currentContext->ScreenHeight)
 	{
 		currentContext->CurrentRow = currentContext->ScreenHeight - 1;
 		internalVgaPushUp();
 	}
-
-	VgaStringEntry(foreground, background, string, length, currentContext->CurrentCol, currentContext->CurrentRow);
-	currentContext->CurrentRow++;
-	currentContext->CurrentCol = 0;
+	VgaMoveCursor(currentContext->CurrentCol, currentContext->CurrentRow);
 }

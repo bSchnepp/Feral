@@ -70,6 +70,7 @@ static UINT_PTR FreeMemLocs[16];
 	Keyboard input
 	In-memory filesystem
 	On-disk filesystem (ext2 is enough, 8.3 FAT would be OK to also support)
+	Get user mode working!
 	Working libc
 	System call mechanism. Write a "native" driver (program under env,
 	the kernel passes off to the appropriate function for the driver. Kernel
@@ -124,18 +125,13 @@ FERALSTATUS KiPrintWarnLine()
 */
 VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 {
-	/* First off, ensure we load all the drivers, so we know what's going on. */
+	/* First off, ensure we load all the drivers, 
+	 * so we know what's going on. Use a couple prints to check for
+	 * any regressions. 
+	 */
 	KiPrintLine("Copyright (c) 2018-2019, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
 	KiPrintFmt("%s\n", "Preparing execution environment...");
-	
-
-/* On modern PCs, GOP replaces VGA. We don't need VGA anymore. */
-#if defined(__x86_64__) || defined(__i386__) || !defined(FERAL_BUILD_STANDALONE_UEFI_)
-	VgaSetCursorEnabled(1);
-	VgaTraceCharacters(1);
-	VgaMoveCursor(0, 24);
-#endif
 	
 	KiStartupSystem(FERAL_SUBSYSTEM_MEMORY_MANAGEMENT);
 	KiStartupSystem(FERAL_SUBSYSTEM_ARCH_SPECIFIC);
@@ -144,20 +140,18 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	KiPrintFmt("Loading all drivers...\n");
 	FERALSTATUS KiLoadAllDrivers(VOID);
 	
-	/* These are macroed away at release builds.  They're eliminated at build time.*/
+	/* These are macroed away at release builds.  
+	 * They're eliminated at build time.
+	 */
 	KiDebugPrint("INIT Reached here.");
-#if defined(__x86_64__) || defined(__i386__) || !defined(FERAL_BUILD_STANDALONE_UEFI_)
-	VgaSetCurrentPosition(0, 24);
-#endif
 	/* 
-		TODO: Call up KiStartupProcessor for each processor listed in APIC.
-		Each processor should have it's x87 enabled, so we can do SSE stuff
-		in usermode. 
+		TODO: Call up KiStartupProcessor for each processor.
+		Each processor should have it's x87 enabled, so we can do SSE 
+		stuff in usermode. 
 	 */
 }
 
-//UINT64 because one day someone is going to do something _crazy_ like have an absurd amount of processors (manycore), but be 32-bit and only 4GB addressable.
-//RAM is reasonably cheap (less cheap than before) in 2018, so we don't mind using an unneccessary 7 bytes more than we really need to. It's not the 90s where we have to care about a massive 16MB of RAM requirement.
+/* UINT64 just in case there's some crazy 6 billion core server one day. */
 VOID KiStartupProcessor(UINT64 ProcessorNumber)
 {
 	/*  Create a new stack for this core. */
@@ -172,7 +166,12 @@ FERALSTATUS KeBootstrapSystem(VOID)
 }
 
 
-/* Separate in case needed to implement soft "reboot", ie, just reset OS and RAM contents in memory. */
+
+/*
+ * Some things aren't set up by the firmware for us, or known
+ * to be.
+ * So, deal with that.
+ */
 VOID KiStartupMachineDependent(VOID)
 {
 #if defined(__x86_64__) || defined(__i386__)
@@ -182,8 +181,6 @@ VOID KiStartupMachineDependent(VOID)
 
 #elif defined(__aarch64__)
 
-#else
-#error Unsupported platform
 #endif
 }
 
@@ -220,6 +217,7 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 	} else if (subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC) {
 		KiStartupMachineDependent();
 	} else {
+		/*  Placeholder for more stuff later on. (disks, network...) */
 	}
 	return STATUS_SUCCESS;
 }
@@ -263,7 +261,12 @@ VOID kern_init(UINT32 MBINFO)
 	FeralVersionMinor = FERAL_VERSION_MINOR;
 	FeralVersionPatch = FERAL_VERSION_PATCH;
 
-	KiPrintFmt("Starting Feral Kernel Version %01u.%01u.%01u %s\n\n", FERAL_VERSION_MAJOR, FERAL_VERSION_MINOR, FERAL_VERSION_PATCH, FERAL_VERSION_SHORT);
+	KiPrintFmt("Starting Feral Kernel Version %01u.%01u.%01u %s\n\n", 
+		FERAL_VERSION_MAJOR, 
+		FERAL_VERSION_MINOR, 
+		FERAL_VERSION_PATCH, 
+		FERAL_VERSION_SHORT
+	);
 	
 	/* First, request the info from the multiboot header. */
 	if (MBINFO & 0x07)
@@ -272,33 +275,52 @@ VOID kern_init(UINT32 MBINFO)
 		KiStopError(STATUS_ERROR);
 	}
 	
-	/* We need to do some kludgy pointer magic to get this to work. We interpret a pointer as an integer when booting, now need to reinterpret cast to a proper type. */
-	/* (We need to treat as an integer initially so that we can check the validity of it: it _must_ be aligned properly. */
-	for (multiboot_tag *MultibootInfo = (multiboot_tag*)((UINT64)(MBINFO + 8)); MultibootInfo->type != MULTIBOOT_TAG_TYPE_END; 
-	MultibootInfo = (multiboot_tag*)((UINT8*)(MultibootInfo) + ((MultibootInfo->size + 7) & ~0x07)))
+	/* Some necessary pointer magic is needed to make this work.
+	 * Multiboot is a little difficult to parse in a clear and easy way,
+	 * so this is needed to make it work well.
+	 *
+	 * First, force cast the argument to multiboot info. Then,
+	 * some info needs to get queried from it, like each of it's tags.
+	 * To check the tags, the real pointer magic begins by taking
+	 * an offset by adding the size of the items which are in the way
+	 * to the base pointer, force casing this, and looping until the
+	 * end tag is reached.
+	 *
+	 * Each of these tags is then processed based on the ID of it.
+	 */
+	for (multiboot_tag 
+		*MultibootInfo = (multiboot_tag*)((UINT_PTR)(MBINFO+8)); 
+		MultibootInfo->type != MULTIBOOT_TAG_TYPE_END; 
+		MultibootInfo = (multiboot_tag*)((UINT8*)(MultibootInfo) 
+				 + ((MultibootInfo->size + 7) & ~0x07)))
 	{
-		UINT16 type = MultibootInfo->type;
-		if (type == MULTIBOOT_TAG_TYPE_CMD_LINE)
+		UINT16 Type = MultibootInfo->type;
+		if (Type == MULTIBOOT_TAG_TYPE_CMD_LINE)
 		{
-			multiboot_tag_string *mb_as_string = (multiboot_tag_string*)(MultibootInfo);
+			multiboot_tag_string *mb_as_string 
+				= (multiboot_tag_string*)(MultibootInfo);
 			STRING str = mb_as_string->string;
 			UINT64 len = 0;
 			if (KiGetStringLength(str, &len) == STATUS_SUCCESS)
 			{
 				if (len != 0)
 				{
-					KiPrintFmt("Got command line: %s\n", mb_as_string->string);
+					KiPrintFmt("Got command line: %s\n", 
+						mb_as_string->string);
 				}
 			}
 			
-		} else if (type == MULTIBOOT_TAG_TYPE_BOOT_LOADER) {
-			multiboot_tag_string *mb_as_string = (multiboot_tag_string*)(MultibootInfo);
+		} else if (Type == MULTIBOOT_TAG_TYPE_BOOT_LOADER) {
+			multiboot_tag_string *mb_as_string 
+				= (multiboot_tag_string*)(MultibootInfo);
 			KiPrint("Detected bootloader: ");
 			KiPrintLine(mb_as_string->string);
-		} else if (type == MULTIBOOT_TAG_TYPE_BOOT_DEVICE) {
-			multiboot_tag_bootdev *mb_as_boot_dev = (multiboot_tag_bootdev*)(MultibootInfo);
-			KiPrintFmt("Booted from device %i, slice %i, and partition %i.\nThis will be designated as root (A:/)\n",  mb_as_boot_dev->biosdev, mb_as_boot_dev->slice, mb_as_boot_dev->part);
-		} else if (type == MULTIBOOT_TAG_TYPE_MEM_MAP) {
+		} else if (Type == MULTIBOOT_TAG_TYPE_BOOT_DEVICE) {
+			multiboot_tag_bootdev *mb_as_boot_dev 
+				= (multiboot_tag_bootdev*)(MultibootInfo);
+			KiPrintFmt("Booted from device %i, slice %i, and partition %i\n",mb_as_boot_dev->biosdev, mb_as_boot_dev->slice, mb_as_boot_dev->part);
+			KiPrintFmt("This will be designated as root (A:/)\n");
+		} else if (Type == MULTIBOOT_TAG_TYPE_MEM_MAP) {
 			/* Memory map detected... MB2's kludgy mess here makes this a little painful, but we'll go through this step-by-step.*/
 			multiboot_tag_mmap *mb_as_mmap_items = (multiboot_tag_mmap*)(MultibootInfo);
 			multiboot_mmap_entry currentEntry = {0};
@@ -313,7 +335,7 @@ VOID kern_init(UINT32 MBINFO)
 
 			for (currentEntry = mb_as_mmap_items->entries[0]; index < maxIters; currentEntry = mb_as_mmap_items->entries[++index])
 			{
-				/* Check the type first. */
+				/* Check the Type first. */
 				if (currentEntry.type == E820_MEMORY_TYPE_FREE)
 				{
 					/* Write 1: Start pointer */
@@ -333,7 +355,7 @@ VOID kern_init(UINT32 MBINFO)
 			}
 			FreeMemCount = FreeAreasWritten >> 1;
 			
-		} else if (type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS) {
+		} else if (Type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS) {
 			/* For now, we'll just use the ELF sections tag. */
 			multiboot_tag_elf_sections *mb_as_elf = (multiboot_tag_elf_sections*)(MultibootInfo);
 			 
@@ -404,30 +426,33 @@ VOID kern_init(UINT32 MBINFO)
 	if ((actualFamily != CPU_x86_64_FAMILY_ZEN))
 	{
 		/* 
-			Trim down the error messages. TODO: Inspect model number.
-			If the model number *is* Zen, but not *first generation 
-			Zen*, then also complain about unsupported CPU.
+			Trim down the error messages. TODO: Inspect model 
+			number. If the model number *is* Zen, but not *first 
+			generation Zen*, then also complain about unsupported 
+			CPU.
 			
 			We identify this based on the presence of "1", as in
 			1950X, 1700X, 1800X, etc. We must *also* check for "2"
-			and "3", since 2000-series are all either Zen+ (supported for sure)
-			or zen (also supported for sure.) We have these tight checks
-			because inevitably I will make a mistake somewhere and use
-			FMA3/RDRAND/etc in a Zen-specific way at some point probably, and won't
-			get around to fixing it for a while. Also because the way
+			and "3", since 2000-series are all either Zen+ 
+			(supported for sure) or zen (also supported for sure.) 
+			We have these tight checks because inevitably I will 
+			make a mistake somewhere and use FMA3/RDRAND/etc in a 
+			Zen-specific way at some point probably, and won't get 
+			around to fixing it for a while. Also because the way
 			the scheduler is going to be built is *specifically* for
 			Zen's chiplet, really-big-cache design. It'll *probably*
-			be fine for Zen 2, but I dont have the hardware so I can't
-			prove it, even anecdotally. The scheduler is to be built
-			with the latency between chiplets in mind, and trying our
-			hardest to avoid shuffling between cores, and especially
-			between CCXs.
+			be fine for Zen 2, but I dont have the hardware so I 
+			can't prove it, even anecdotally. The scheduler is to be
+			built with the latency between chiplets in mind, and 
+			trying our hardest to avoid shuffling between cores, and
+			especially between CCXs.
 			
-			Do note that some APUs ("3000-series") are actually Zen+,
-			not Zen 2. These are identified with the suffix "GE" and "G".
+			Do note that some APUs ("3000-series") are actually 
+			Zen+, not Zen 2. These are identified with the suffix 
+			"GE" and "G".
 			
-			Then we have to deal with the embedded CPUs. (V, R-series).
-			Both of these are Zen 1.
+			Then we have to deal with the embedded CPUs. 
+			(V, R-series). Both of these are Zen 1.
 		*/
 		KiPrintLine("Unsupported CPU");
 	} 
@@ -435,13 +460,14 @@ VOID kern_init(UINT32 MBINFO)
 	{
 		/* 
 			Put this here until we get B350, X370, etc. drivers.
-			Feral (for now) doesn't support _any_ platform controller
-			hub, so this message is pretty much meaningless.
+			Feral (for now) doesn't support _any_ platform 
+			controller hub, so this message is pretty much 
+			meaningless.
 			
 			We need to actually write code to identify between
-			X370, X470, X570, B350, B450, B550, B320, B420, and B520.
-			(oh and panther point and wellsburg or whatever for
-			the blue team if we care.)
+			X370, X470, X570, B350, B450, B550, B320, B420, and 
+			B520. (oh and panther point and wellsburg or whatever 
+			for the blue team if we care.)
 			
 			We'll need these for doing chipset-specific stuff
 			one day, like telling the x570 to do RAID, or
@@ -452,6 +478,9 @@ VOID kern_init(UINT32 MBINFO)
 	}
 
 	KrnlEnvironmentBlock EnvBlock = {0};
+	VgaSetCursorEnabled(TRUE);
+	VgaTraceCharacters(TRUE);
+	VgaMoveCursor(0, 24);
 	/* Kernel initialization is done, move on to actual tasks. */
 	KiSystemStartup(&EnvBlock);
 }

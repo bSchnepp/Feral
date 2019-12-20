@@ -247,34 +247,40 @@ volatile void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 
 
 INTERRUPT void DivideByZero(x86InterruptFrame *Frame)
 {
+	Frame = Frame; /* Silence warning */
 	KiPrintFmt("DIVIDING BY ZERO!!!\n");
 }
 
 INTERRUPT void GenericHandler(x86InterruptFrame *Frame)
 {
+	Frame = Frame; /* Silence warning */
 	KiPrintFmt("Unhandled Interrupt!\n");
 }
 
 INTERRUPT void GenericHandlerPIC1(x86InterruptFrame *Frame)
 {
+	Frame = Frame; /* Silence warning */
 	KiPrintFmt("Unhandled Interrupt! (PIC1) \n");
 	x86PICSendEOIPIC1();
 }
 
 INTERRUPT void GenericHandlerPIC2(x86InterruptFrame *Frame)
 {
+	Frame = Frame; /* Silence warning */
 	KiPrintFmt("Unhandled Interrupt! (PIC2) \n");
 	x86PICSendEOIPIC2();
 }
 
 INTERRUPT void DoubleFaultHandler(x86InterruptFrame *Frame)
 {
+	Frame = Frame; /* Silence warning */
 	/* Very helpful. I know. */
 	KiStopError(STATUS_ERROR);
 }
 
 INTERRUPT void PITHandler(x86InterruptFrame *Frame)
 {
+	Frame = Frame; /* Silence warning */
 	KiPrintFmt("PIT called!\n");
 	x86PICSendEOIPIC1();
 }
@@ -293,6 +299,7 @@ char ApplyShiftIfNeeded(CHAR In);
 
 char ApplyShiftIfNeeded(CHAR In)
 {
+	/* There's some symbols like < and ; we have to worry about later. */
 	if (In < 'A' || In > 'z')
 	{
 		return In;
