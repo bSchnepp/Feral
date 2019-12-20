@@ -48,12 +48,12 @@ VOID internalSetItem(UINT16 row, UINT16 col, UINT16 content);
 
 UINT16 internalGetItem(UINT16 row, UINT16 col)
 {
-	return currentContext->Framebuffer[(row * currentContext->ScreenWidth) + col];
+	return currentContext->SwappedBuffer[(row * currentContext->ScreenWidth) + col];
 }
 
 VOID internalSetItem(UINT16 row, UINT16 col, UINT16 content)
 {
-	currentContext->Framebuffer[(row * currentContext->ScreenWidth) + col] = content;
+	currentContext->SwappedBuffer[(row * currentContext->ScreenWidth) + col] = content;
 }
 
 VOID internalVgaPushUp(VOID)
@@ -122,6 +122,20 @@ VOID VgaMoveCursor(DWORD PosX, DWORD PosY)
 	VgaEntry(currentContext->Highlight, currentContext->Background, '\0', PosX, PosY);
 }
 
+VOID VgaSwapBuffers(VOID)
+{
+	for (UINT64 Offset = 0; 
+		Offset < ((currentContext->ScreenWidth 
+		* currentContext->ScreenHeight) >> 2);
+		++Offset)
+	{
+		UINT64 *FramebufferAsSixtyFour = (UINT64*)(currentContext->Framebuffer);
+		UINT64 *SwapBufferAsSixtyFour = (UINT64*)(currentContext->SwappedBuffer);
+		
+		FramebufferAsSixtyFour[Offset] = SwapBufferAsSixtyFour[Offset];
+	}
+}
+
 /**
 	Sets the state of the VGA cursor.
  */
@@ -131,14 +145,16 @@ VOID VgaSetCursorEnabled(BOOL value)
 	{
 		x86outb(VGA_FB_COMMAND_PORT, 0x0A);
 		x86outb(VGA_FB_DATA_PORT, (x86inb(VGA_FB_DATA_PORT) & 0xC0) | 0x00);	/* Read in a spot, and write a specific value so that we get a nice cursor. */
-
+		x86_io_stall();
 		x86outb(VGA_FB_COMMAND_PORT, 0x0B);
 		x86outb(VGA_FB_DATA_PORT, (x86inb(0x3E0) & 0xE0) | 0x0F);
+		x86_io_stall();
 	}
 	else
 	{
 		x86outb(VGA_FB_COMMAND_PORT, 0x0A);
 		x86outb(VGA_FB_DATA_PORT, 0x20);
+		x86_io_stall();
 	}
 	currentContext->CursorEnabled = value;
 }
@@ -164,7 +180,7 @@ VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, D
 	}
 	ColorValue color = ((background << 4) | (foreground)) << 8;
 	UINT16 offset = posx + (posy * currentContext->ScreenWidth);
-	currentContext->Framebuffer[offset] = ((UINT16)(letter) | color);
+	currentContext->SwappedBuffer[offset] = ((UINT16)(letter) | color);
 	currentContext->CurrentCol = posx;
 }
 

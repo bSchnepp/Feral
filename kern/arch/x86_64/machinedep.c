@@ -49,6 +49,8 @@ extern void x86_interrupt_3(VOID);
 extern void x86_interrupt_14(VOID);
 extern void x86_interrupt_33(VOID);
 
+extern VOID VgaSwapBuffers(VOID);
+
 volatile void x86SetupIDTEntries(VOID);
 void x86DisablePIC(VOID);
 INTERRUPT void DivideByZero(x86InterruptFrame *Frame);
@@ -188,7 +190,7 @@ void x86InitializeIDT()
 	x86outb(X86_PIC_2_DATA, 0x01);	/* Last 8 interrupts */
 	x86_io_stall();
 	
-	x86outb(X86_PIC_1_DATA, 0xFD); /* Only allow IRQ 1. For now. */
+	x86outb(X86_PIC_1_DATA, 0xFC); /* Only allow a few IRQs. For now. */
 	x86outb(X86_PIC_2_DATA, 0x80); /* Allow all the PIC 2 IRQs..? */
 	
 	for (UINTN i = 0; i < 255; ++i)
@@ -247,41 +249,42 @@ volatile void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 
 
 INTERRUPT void DivideByZero(x86InterruptFrame *Frame)
 {
-	Frame = Frame; /* Silence warning */
 	KiPrintFmt("DIVIDING BY ZERO!!!\n");
 }
 
 INTERRUPT void GenericHandler(x86InterruptFrame *Frame)
 {
-	Frame = Frame; /* Silence warning */
 	KiPrintFmt("Unhandled Interrupt!\n");
 }
 
 INTERRUPT void GenericHandlerPIC1(x86InterruptFrame *Frame)
 {
-	Frame = Frame; /* Silence warning */
 	KiPrintFmt("Unhandled Interrupt! (PIC1) \n");
 	x86PICSendEOIPIC1();
 }
 
 INTERRUPT void GenericHandlerPIC2(x86InterruptFrame *Frame)
 {
-	Frame = Frame; /* Silence warning */
 	KiPrintFmt("Unhandled Interrupt! (PIC2) \n");
 	x86PICSendEOIPIC2();
 }
 
 INTERRUPT void DoubleFaultHandler(x86InterruptFrame *Frame)
 {
-	Frame = Frame; /* Silence warning */
-	/* Very helpful. I know. */
 	KiStopError(STATUS_ERROR);
 }
 
+static UINT8 ScreenTimer = 0;
+
 INTERRUPT void PITHandler(x86InterruptFrame *Frame)
 {
-	Frame = Frame; /* Silence warning */
-	KiPrintFmt("PIT called!\n");
+	/* Invoke switching of process or something. */
+	if (++ScreenTimer == 16)
+	{
+		/* Switch banks on the framebuffer... */
+		ScreenTimer = 0;
+		VgaSwapBuffers();
+	}
 	x86PICSendEOIPIC1();
 }
 
@@ -330,6 +333,7 @@ void CheckStatusCode(UINT8 In)
 	}
 }
 
+/* TODO: Support new keymaps... */
 CHAR InternalConvertPS2KeyToASCII(CHAR In)
 {
 	/* TODO: convert this to a lookup table... */

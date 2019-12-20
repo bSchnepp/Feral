@@ -94,6 +94,8 @@ typedef struct
 {
 	UINT16 *Framebuffer;
 	
+	UINT16 *SwappedBuffer;
+	
 	UINT16 ScreenWidth;
 	UINT16 ScreenHeight;
 	
@@ -134,6 +136,8 @@ VOID VgaSetCurrentPosition(UINT16 X, UINT16 Y);
 VOID VgaTraceCharacters(BOOL value);
 
 VOID VgaSetCursorEnabled(BOOL value);
+
+VOID VgaSwapBuffers(VOID);
 
 UINT8 VgaPrepareEnvironment(VgaContext *context);
 

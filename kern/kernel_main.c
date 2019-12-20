@@ -251,9 +251,11 @@ VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
 
 #ifndef FERAL_BUILD_STANDALONE_UEFI_
 static VgaContext graphicsContext = {0};
+static UINT16 OtherBuffer[80 * 25];
 VOID kern_init(UINT32 MBINFO)
 {
 	UINT8 misc = VgaPrepareEnvironment(&graphicsContext);
+	graphicsContext.SwappedBuffer = OtherBuffer;
 	KiBlankVgaScreen(25, 80, VGA_BLACK);
 	KiPrintLine("Feral kernel booting...");
 	
