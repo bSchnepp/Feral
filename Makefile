@@ -23,6 +23,24 @@ kernel:
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES)
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
+	
+kernel-efi:
+	mkdir -p build/$(ARCH)/	
+	
+	cd arch && $(MAKE)
+	cd io && $(MAKE) 
+	cd drivers && $(MAKE)
+	cd kern && $(MAKE)
+	 
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) ./io/*.c -o ./iofuncs.o
+	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES)
+	$(LD) -T $(LINKIN_EFI) -o $(KERNEL) ./*.o ./kern/*.o
+	
+img-efi: kernel-efi
+	strip $(KERNEL)
+	mkdir -p build/EFI/Feral
+	cp $(KERNEL) build/EFI/Feral/FERALKER.NEL
+	
 
 iso:	kernel
 	mkdir -p build/isofiles/boot/grub
@@ -55,7 +73,7 @@ qemu-nokvm-unsupportedcpu:	iso
 qemu-lldb:	iso
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -S -s -d int,cpu_reset -no-reboot&	
 	
-qemu-efi:
+qemu-efi: 	img-efi
 	mkdir -p build/$(ARCH)/
 	mkdir -p build/EFI/Boot
 	mkdir -p build/EFI/Feral	

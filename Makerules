@@ -8,6 +8,7 @@ KERNEL    := build/$(ARCH)/FERALKER.NEL
 ISO       := build/WAYPOINT.ISO
 
 LINKIN    := arch/$(ARCH)/linkin.lld
+LINKIN_EFI    := arch/$(ARCH)/linkin-efi.lld
 GRUB_CFG  := arch/$(ARCH)/grub.cfg
 
 TARGET     = -target $(ARCH)-pc-none-gnu

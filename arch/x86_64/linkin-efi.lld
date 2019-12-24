@@ -1,0 +1,52 @@
+ENTRY(KiSystemStartup)
+
+SECTIONS
+{
+	. = 1M;
+	kern_start = .;
+	KERN_VIRT_OFFSET = 0xFFFFFFFFC0000000;
+	
+	.earlytext :
+	{
+		*(.earlytext)
+	}
+
+	.earlybss :
+	{
+		*(.earlybss)
+	}
+	
+	.earlydata :
+	{
+		*(.earlydata)
+	}
+	
+	
+	/* Assume bootloader prepares memory map for us. */
+	
+	. += KERN_VIRT_OFFSET;
+	kern_virt_start = .;
+
+	.text : AT(ADDR(.text) - KERN_VIRT_OFFSET)
+	{
+		*(.text*)
+	}
+
+	.rodata : AT(ADDR(.rodata) - KERN_VIRT_OFFSET)
+	{
+		*(.rodata*)
+	}
+
+	.bss : AT(ADDR(.bss) - KERN_VIRT_OFFSET)
+	{
+		*(.bss)
+	}
+	
+	.data : AT(ADDR(.data) - KERN_VIRT_OFFSET)
+	{
+		*(.data)
+	}
+	
+	kern_end = . - KERN_VIRT_OFFSET;
+	kern_virt_end = .;
+}

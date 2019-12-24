@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -27,6 +27,12 @@ IN THE SOFTWARE.
 #include <libreefi/efi.h>
 #include <feral/stdtypes.h>
 
+#ifndef _FRLBOOT_NO_SUPPORT_ELF64_
+#include <drivers/proc/elf/elf.h>
+#else
+#error "Unsupported compile mode..."
+#endif
+
 static EFI_HANDLE ImageHandle;
 static EFI_SYSTEM_TABLE *SystemTable;
 
@@ -36,6 +42,11 @@ static EFI_GUID GuidEfiSimpleFSProtocol = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
 static EFI_GUID GuidEfiFileInfoGuid = EFI_FILE_INFO_ID;
 
 /* TODO: Refactor into something nice. */
+
+EFI_STATUS EFIAPI LdrReadBootInit(EFI_FILE_PROTOCOL *BootIni)
+{
+	return EFI_SUCCESS;
+}
 
 EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 {
@@ -54,6 +65,7 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 
 	ImageHandle = mImageHandle;
 	SystemTable = mSystemTable;
+	
 	
 	/* Clear the display. */
 	SystemTable->ConOut->ClearScreen(SystemTable->ConOut);
@@ -158,7 +170,9 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	/* Terminate boot services (about to execute kernel) */
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		L"Terminating firmware services...\r\n");
-
+		
+	/* Terminate the watchdog timer. */
+	SystemTable->BootServices->SetWatchdogTimer(0, 0, 0, NULL);
 	
 	/* Start loading of the kernel. (setup and call KiSystemStartup) */
 	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);

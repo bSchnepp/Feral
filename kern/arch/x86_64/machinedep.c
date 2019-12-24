@@ -159,7 +159,7 @@ void x86InitializeIDT()
 	 */
 
 	/* Make the PIT happy. */
-	INT32 Divisor = 1193180;
+	INT32 Divisor = 11931840;
 	x86outb(0x43, 0x36);	/* Tell the PIT to accept it. */
 	x86outb(0x40, (Divisor >> 0) & 0xFF);
 	x86outb(0x40, (Divisor >> 8) & 0xFF);
