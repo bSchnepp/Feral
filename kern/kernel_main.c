@@ -136,15 +136,17 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	FeralVersionMinor = FERAL_VERSION_MINOR;
 	FeralVersionPatch = FERAL_VERSION_PATCH;
 
-	KiPrintFmt("\nStarting Feral Kernel Version %01u.%01u.%01u %s\n", 
+	KiPrintFmt("\nStarting Feral Kernel \"%s\" Version %01u.%01u.%01u\n", 
+		FERAL_VERSION_SHORT,
 		FERAL_VERSION_MAJOR, 
 		FERAL_VERSION_MINOR, 
-		FERAL_VERSION_PATCH, 
-		FERAL_VERSION_SHORT
+		FERAL_VERSION_PATCH 
 	);
 	
 	KiPrintLine("Copyright (c) 2018-2019, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
+	KiPrintFmt("Booted using %s\n", 
+		EnvBlock->FunctionTable->GetFirmwareName());
 	KiPrintFmt("%s\n", "Preparing execution environment...");
 	
 	KiStartupSystem(FERAL_SUBSYSTEM_ARCH_SPECIFIC);
@@ -272,10 +274,17 @@ static KrnlFirmwareFunctions FirmwareFuncs = {0};
 static KrnlCharMap CharMap = {0};
 
 STRING GetBiosFirmwareClaim();
+VOID InternalVgaPrintln(STRING Str, UINT64 Len);
 
 STRING GetBiosFirmwareClaim()
 {
 	return "PC Compatible BIOS";
+}
+
+
+VOID InternalVgaPrintln(STRING Str, UINT64 Len)
+{
+	VgaPrintln(VGA_WHITE, VGA_BLACK, Str, Len);	
 }
 
 VOID kern_init(UINT32 MBINFO)
@@ -524,6 +533,7 @@ VOID kern_init(UINT32 MBINFO)
 	VgaMoveCursor(0, 24);
 	
 	FirmwareFuncs.PutChar = VgaPutChar;
+	FirmwareFuncs.Println = InternalVgaPrintln;
 	FirmwareFuncs.GetFirmwareName = GetBiosFirmwareClaim;
 	EnvBlock.FunctionTable = &FirmwareFuncs;
 	EnvBlock.CharMap = &CharMap;

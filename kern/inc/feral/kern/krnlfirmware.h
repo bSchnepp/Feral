@@ -30,7 +30,11 @@ IN THE SOFTWARE.
 #ifndef _FERAL_KRNL_FIRMWARE_H_
 #define _FERAL_KRNL_FIRMWARE_H_
 
+/* Single character */
 typedef void (*PutCharFunc)(CHAR);
+/* String, length */
+typedef void (*PrintlnFunc)(STRING, UINT64);
+/* The name of the underlying firmware (EFI, BIOS, etc.) */
 typedef STRING (*GetFirmwareNameFunc)();
 
 typedef struct KrnlCharMap
@@ -48,6 +52,7 @@ typedef struct KrnlFirmwareFunctions
 {
 	GetFirmwareNameFunc GetFirmwareName;
 	PutCharFunc PutChar;
+	PrintlnFunc Println;
 	/* Add more functions as needed. */
 }KrnlFirmwareFunctions;
 

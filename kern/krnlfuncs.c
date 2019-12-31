@@ -55,18 +55,6 @@ FERALSTATUS KiPutChar(CHAR c)
 	return STATUS_SUCCESS;
 }
 
-#if defined(__x86_64__)
-#include <arch/x86_64/vga/vga.h>
-
-#define PRINT_LINE_GENERIC()						\
-	UINT64 length;							\
-	FERALSTATUS FeralStatusError = KiGetStringLength(string, &length); \
-	if (FeralStatusError != STATUS_SUCCESS)			\
-	{								\
-		return FeralStatusError;				\
-	}
-
-
 FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
 {
 	if ((Source == NULL) || (Dest == NULL))
@@ -128,15 +116,43 @@ FERALSTATUS KiSetMemoryBytes(INOUT VOID* Dest, IN UINT8 Val, IN UINTN Amt)
 FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT* UINTN);
 */
 
-/* Todo: aarch64 version(s). This breaks aarch64 port.*/
+#define PRINT_LINE_GENERIC()						\
+	UINT64 length;							\
+	FERALSTATUS FeralStatusError = KiGetStringLength(string, &length); \
+	if (FeralStatusError != STATUS_SUCCESS)			\
+	{								\
+		return FeralStatusError;				\
+	}
 
 FERALSTATUS KiPrintLine(IN STRING string)
 {
 	PRINT_LINE_GENERIC();
-	/* Ok, we call VgaPrintln and use a black on white color set. */
-	VgaPrintln(VGA_WHITE, VGA_BLACK, string, length);
+	/* Ok, we call Println and use a black on white color set. */
+	BackingFunctions->Println(string, length);
 	return STATUS_SUCCESS;
 }
+
+FERALSTATUS KiPrint(STRING string)
+{
+	PRINT_LINE_GENERIC();
+	for (UINT64 i = 0; i < length; ++i)
+	{
+		CHAR let = string[i];
+		KiPutChar(let);
+	}
+	return STATUS_SUCCESS;
+}
+
+
+FERALSTATUS KiMoveCurrentPosition(UINT16 X, UINT16 Y)
+{
+	return STATUS_UNSUPPORTED_OPERATION;
+}
+
+#if defined(__x86_64__)
+#include <arch/x86_64/vga/vga.h>
+
+/* Todo: aarch64 version(s). This breaks aarch64 port.*/
 
 FERALSTATUS KiPrintGreyLine(STRING string)
 {
@@ -152,34 +168,10 @@ FERALSTATUS KiPrintWarnLine(STRING string)
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS KiPrint(STRING string)
-{
-	PRINT_LINE_GENERIC();
-	for (UINT64 i = 0; i < length; ++i)
-	{
-		CHAR let = string[i];
-		KiPutChar(let);
-	}
-	return STATUS_SUCCESS;
-}
-
-FERALSTATUS KiMoveCurrentPosition(UINT16 X, UINT16 Y)
-{
-	return STATUS_UNSUPPORTED_OPERATION;
-}
-
 #else
 
-/* TODO */
-FERALSTATUS KiMoveCurrentPosition(UINT16 X, UINT16 Y)
-{
-	return STATUS_UNSUPPORTED_OPERATION;
-}
 #define KiPrintWarnLine(a)
 #define KiPrintGreyLine(a)
-#define KiPrintLine(a)
-#define KiPutChar(c)
-#define KiPrint(a)
 
 #endif
 /* TODO: implement for other platforms. */
@@ -368,8 +360,8 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 			}
 			/* What do you mean %llu is a thing? */
 			upState = FALSE;
-		} else if (cur >= ' ') {	/* bandage away bug for now. */
-			VgaPutChar(cur);
+		} else if (cur >= ' ') {
+			KiPutChar(cur);
 		} else if (cur == '\n') {
 			KiPrintLine("");
 		} else if (cur == '\t') {
