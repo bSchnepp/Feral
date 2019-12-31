@@ -26,17 +26,18 @@ IN THE SOFTWARE.
 
 #include <stdint.h>
 
-#include <feral/feralstatus.h>
-#include <feral/stdtypes.h>
-#include <feral/handle.h>
-#include <feral/kern/frlos.h>
-#include <mm/mm.h>
-
 #if defined(__x86_64__)
 #include <arch/x86_64/vga/vga.h>
 #include <arch/x86_64/cpuio.h>
 #include <arch/x86_64/cpufuncs.h>
 #endif
+
+
+#include <feral/feralstatus.h>
+#include <feral/stdtypes.h>
+#include <feral/handle.h>
+#include <feral/kern/frlos.h>
+#include <mm/mm.h>
 
 #if defined(__x86_64__) || defined(__i386__)
 #ifndef FERAL_BUILD_STANDALONE_UEFI_
@@ -67,7 +68,7 @@ static UINT_PTR FreeMemLocs[16];
 
 /* 
 	Things to do in order:
-	Keyboard input
+	Keyboard input [on this, getting close to working..?]
 	In-memory filesystem
 	On-disk filesystem (ext2 is enough, 8.3 FAT would be OK to also support)
 	Get user mode working!
@@ -129,12 +130,25 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	 * so we know what's going on. Use a couple prints to check for
 	 * any regressions. 
 	 */
+	KiUpdateFirmwareFunctions(EnvBlock->FunctionTable, EnvBlock->CharMap);
+	
+	FeralVersionMajor = FERAL_VERSION_MAJOR;
+	FeralVersionMinor = FERAL_VERSION_MINOR;
+	FeralVersionPatch = FERAL_VERSION_PATCH;
+
+	KiPrintFmt("\nStarting Feral Kernel Version %01u.%01u.%01u %s\n", 
+		FERAL_VERSION_MAJOR, 
+		FERAL_VERSION_MINOR, 
+		FERAL_VERSION_PATCH, 
+		FERAL_VERSION_SHORT
+	);
+	
 	KiPrintLine("Copyright (c) 2018-2019, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
 	KiPrintFmt("%s\n", "Preparing execution environment...");
 	
-	KiStartupSystem(FERAL_SUBSYSTEM_MEMORY_MANAGEMENT);
 	KiStartupSystem(FERAL_SUBSYSTEM_ARCH_SPECIFIC);
+	KiStartupSystem(FERAL_SUBSYSTEM_MEMORY_MANAGEMENT);
 	
 	/* Only load drivers *after* base system initializtion. */
 	KiPrintFmt("Loading all drivers...\n");
@@ -223,26 +237,6 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 }
 
 
-/* temporary, turn into clean later. */
-VOID InternalPrintRegister(UINT32 reg)
-{
-	for (int i = 0; i < 4; i++)
-	{
-		CHAR charToAdd = ((CHAR)(reg >> (i * 8)) & 0xFF);
-		KiPutChar(charToAdd);
-	}
-}
-
-/* ugly hack, refactor sometime later. */
-VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
-{
-	KiPrintFmt(cpu_vendor_msg);
-	InternalPrintRegister(part1);
-	InternalPrintRegister(part2);
-	InternalPrintRegister(part3);
-	KiPrintLine("");
-}
-
 /*
 	 We'll need to implement a proper driver for VGA later. 
 	 For now, we have something to throw text at and not quickly run out 
@@ -250,33 +244,53 @@ VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
  */
 
 #ifndef FERAL_BUILD_STANDALONE_UEFI_
+
+/* temporary, turn into clean later. */
+VOID InternalPrintRegister(UINT32 reg)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		CHAR charToAdd = ((CHAR)(reg >> (i * 8)) & 0xFF);
+		VgaAutoEntry(VGA_GREEN, VGA_BLACK, charToAdd);
+	}
+}
+
+/* ugly hack, refactor sometime later. */
+VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
+{
+	VgaAutoPrint(VGA_GREEN, VGA_BLACK, cpu_vendor_msg);
+	InternalPrintRegister(part1);
+	InternalPrintRegister(part2);
+	InternalPrintRegister(part3);
+	VgaAutoPrintln(VGA_WHITE, VGA_BLACK, "");
+}
+
+
 static VgaContext graphicsContext = {0};
 static UINT16 OtherBuffer[80 * 25];
+static KrnlFirmwareFunctions FirmwareFuncs = {0};
+static KrnlCharMap CharMap = {0};
+
+STRING GetBiosFirmwareClaim();
+
+STRING GetBiosFirmwareClaim()
+{
+	return "PC Compatible BIOS";
+}
+
 VOID kern_init(UINT32 MBINFO)
 {
 	UINT8 misc = VgaPrepareEnvironment(&graphicsContext);
 	graphicsContext.SwappedBuffer = OtherBuffer;
 	KiBlankVgaScreen(25, 80, VGA_BLACK);
-	KiPrintLine("Feral kernel booting...");
-	
-	FeralVersionMajor = FERAL_VERSION_MAJOR;
-	FeralVersionMinor = FERAL_VERSION_MINOR;
-	FeralVersionPatch = FERAL_VERSION_PATCH;
-
-	KiPrintFmt("Starting Feral Kernel Version %01u.%01u.%01u %s\n\n", 
-		FERAL_VERSION_MAJOR, 
-		FERAL_VERSION_MINOR, 
-		FERAL_VERSION_PATCH, 
-		FERAL_VERSION_SHORT
-	);
-	
+	VgaAutoPrintln(VGA_WHITE, VGA_BLACK, 
+		"Starting initial kernel setup...");
 	/* First, request the info from the multiboot header. */
 	if (MBINFO & 0x07)
 	{
 		/* Unaligned, go panic: todo, clarify it's a multiboot issue. */
 		KiStopError(STATUS_ERROR);
 	}
-	
 	/* Some necessary pointer magic is needed to make this work.
 	 * Multiboot is a little difficult to parse in a clear and easy way,
 	 * so this is needed to make it work well.
@@ -307,7 +321,9 @@ VOID kern_init(UINT32 MBINFO)
 			{
 				if (len != 0)
 				{
-					KiPrintFmt("Got command line: %s\n", 
+					VgaAutoPrint(VGA_WHITE, VGA_BLACK, 
+						"Got command line: "); 
+					VgaAutoPrintln(VGA_RED, VGA_BLACK, 
 						mb_as_string->string);
 				}
 			}
@@ -315,13 +331,12 @@ VOID kern_init(UINT32 MBINFO)
 		} else if (Type == MULTIBOOT_TAG_TYPE_BOOT_LOADER) {
 			multiboot_tag_string *mb_as_string 
 				= (multiboot_tag_string*)(MultibootInfo);
-			KiPrint("Detected bootloader: ");
-			KiPrintLine(mb_as_string->string);
+			VgaAutoPrint(VGA_WHITE, VGA_BLACK, "Detected bootloader: ");
+			VgaAutoPrintln(VGA_LIGHT_BROWN, VGA_BLACK, mb_as_string->string);
 		} else if (Type == MULTIBOOT_TAG_TYPE_BOOT_DEVICE) {
 			multiboot_tag_bootdev *mb_as_boot_dev 
 				= (multiboot_tag_bootdev*)(MultibootInfo);
-			KiPrintFmt("Booted from device %i, slice %i, and partition %i\n",mb_as_boot_dev->biosdev, mb_as_boot_dev->slice, mb_as_boot_dev->part);
-			KiPrintFmt("This will be designated as root (A:/)\n");
+			/* Care about this stuff later... */
 		} else if (Type == MULTIBOOT_TAG_TYPE_MEM_MAP) {
 			/* Memory map detected... MB2's kludgy mess here makes this a little painful, but we'll go through this step-by-step.*/
 			multiboot_tag_mmap *mb_as_mmap_items = (multiboot_tag_mmap*)(MultibootInfo);
@@ -346,11 +361,35 @@ VOID kern_init(UINT32 MBINFO)
 					FreeMemLocs[FreeAreasWritten+1] = (UINT_PTR)currentEntry.addr + (UINT_PTR)currentEntry.len;
 					FreeAreasWritten += 2;
 				} else if (currentEntry.type == E820_MEMORY_TYPE_ACPI) {
-					KiPrintFmt("ACPI memory at: 0x%x, up to 0x%x\n", currentEntry.addr, currentEntry.addr + currentEntry.len); 
+					/* 16 chars will fit the whole address*/
+					CHAR BufBeginAddr[17];
+					CHAR BufEndAddr[17];
+					internalItoaBaseChange(currentEntry.addr, BufBeginAddr, 16);
+					internalItoaBaseChange(currentEntry.addr + currentEntry.len, BufBeginAddr, 16);
+					VgaAutoPrint(VGA_WHITE, VGA_BLACK, "ACPI memory at: 0x");
+					VgaAutoPrint(VGA_GREEN, VGA_BLACK, BufBeginAddr);
+					VgaAutoPrint(VGA_WHITE, VGA_BLACK, ", up to 0x");
+					VgaAutoPrintln(VGA_RED, VGA_BLACK, BufEndAddr); 
 				} else if (currentEntry.type == E820_MEMORY_TYPE_NVS) {
-					KiPrintFmt("Reserved hardware memory at: 0x%x, up to 0x%x\n", currentEntry.addr, currentEntry.addr + currentEntry.len); 
+					/* 16 chars will fit the whole address*/
+					CHAR BufBeginAddr[17];
+					CHAR BufEndAddr[17];
+					internalItoaBaseChange(currentEntry.addr, BufBeginAddr, 16);
+					internalItoaBaseChange(currentEntry.addr + currentEntry.len, BufBeginAddr, 16);
+					VgaAutoPrint(VGA_WHITE, VGA_BLACK, "Reserved hardware memory at: 0x");
+					VgaAutoPrint(VGA_GREEN, VGA_BLACK, BufBeginAddr);
+					VgaAutoPrint(VGA_WHITE, VGA_BLACK, ", up to 0x");
+					VgaAutoPrintln(VGA_RED, VGA_BLACK, BufEndAddr); 
 				} else if (currentEntry.type == E820_MEMORY_TYPE_BADMEM) {
-					KiPrintFmt("DEFECTIVE MEMORY AT: 0x%x, up to 0x%x\n", currentEntry.addr, currentEntry.addr + currentEntry.len);
+					/* 16 chars will fit the whole address*/
+					CHAR BufBeginAddr[17];
+					CHAR BufEndAddr[17];
+					internalItoaBaseChange(currentEntry.addr, BufBeginAddr, 16);
+					internalItoaBaseChange(currentEntry.addr + currentEntry.len, BufBeginAddr, 16);
+					VgaAutoPrint(VGA_WHITE, VGA_BLACK, "BAD MEMORY at: 0x");
+					VgaAutoPrint(VGA_GREEN, VGA_BLACK, BufBeginAddr);
+					VgaAutoPrint(VGA_WHITE, VGA_BLACK, ", up to 0x");
+					VgaAutoPrintln(VGA_RED, VGA_BLACK, BufEndAddr);
 				}
 				
 				/* E820_MEMORY_TYPE_RESERVED, E820_MEMORY_TYPE_DISABLED, E820_MEMORY_TYPE_INV ignored. */
@@ -365,7 +404,7 @@ VOID kern_init(UINT32 MBINFO)
 			UINT64 maxIters = (mb_as_elf->size - 20) / (mb_as_elf->entsize);
 			UINT64 index = 0;
 			
-			KiPrintFmt("Found %u ELF entries\n", maxIters);
+			/* Don't care here... */
 			
 			for (UINT64 i = 0; i < maxIters; i++)
 			{
@@ -380,7 +419,7 @@ VOID kern_init(UINT32 MBINFO)
 	// Eventually, supporting a boot-time flag (and somehow emulating some useful CPU features
 	// in-software if not available on the real thing???) would be great.
 	// We'll probably use the crypto coprocessor (SHA, etc.) to our advantage with A:/Devices/Hash or something.
-
+	
 	/* This will represent the 4 core registers we need for CPU-specific stuff. */
 	UINT32 part1 = 0;
 	UINT32 part2 = 0;
@@ -405,7 +444,7 @@ VOID kern_init(UINT32 MBINFO)
 		InternalPrintRegister(part3);
 		InternalPrintRegister(part4);
 	}
-	KiPrintLine("");	/* Flush to newline. */
+	VgaAutoPrintln(VGA_WHITE, VGA_BLACK, "");	/* Flush to newline. */
 
 	UINT32 familyStuff = cpuid_family_number();
 	UINT32 actualFamily = (familyStuff >> 8) & 15;
@@ -456,7 +495,7 @@ VOID kern_init(UINT32 MBINFO)
 			Then we have to deal with the embedded CPUs. 
 			(V, R-series). Both of these are Zen 1.
 		*/
-		KiPrintLine("Unsupported CPU");
+		VgaAutoPrintln(VGA_RED, VGA_BLACK, "Unsupported CPU");
 	} 
 	if (TRUE)
 	{
@@ -476,13 +515,18 @@ VOID kern_init(UINT32 MBINFO)
 			nicely asking about USB devices connected to it and
 			not the CPU directly. (over PCI, of course.)
 		 */
-		KiPrintLine("Unsupported PCH");
+		VgaAutoPrintln(VGA_RED, VGA_BLACK, "Unsupported PCH");
 	}
 
 	KrnlEnvironmentBlock EnvBlock = {0};
 	VgaSetCursorEnabled(TRUE);
 	VgaTraceCharacters(TRUE);
 	VgaMoveCursor(0, 24);
+	
+	FirmwareFuncs.PutChar = VgaPutChar;
+	FirmwareFuncs.GetFirmwareName = GetBiosFirmwareClaim;
+	EnvBlock.FunctionTable = &FirmwareFuncs;
+	EnvBlock.CharMap = &CharMap;
 	/* Kernel initialization is done, move on to actual tasks. */
 	KiSystemStartup(&EnvBlock);
 }

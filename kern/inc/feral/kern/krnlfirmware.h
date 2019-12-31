@@ -26,27 +26,34 @@ IN THE SOFTWARE.
 
 
 #include <feral/stdtypes.h>
-#include <feral/kern/krnlfirmware.h>
 
-#ifndef _FERAL_KRNL_BASE_H_
-#define _FERAL_KRNL_BASE_H_
+#ifndef _FERAL_KRNL_FIRMWARE_H_
+#define _FERAL_KRNL_FIRMWARE_H_
 
-typedef struct KrnlEnvironmentBlock
-{	
-	/* Bootloader should help find free memory areas. */
-	UINT64 KernelPageSize;
-	UINT64 FreeMemCount;
-	UINT_PTR *FreeMemLocs;
-	
-	KrnlFirmwareFunctions *FunctionTable;
-	KrnlCharMap *CharMap;
+typedef void (*PutCharFunc)(CHAR);
+typedef STRING (*GetFirmwareNameFunc)();
 
-	/* Bootloader shouldn't fill these in. */
-	STRING KernelVendor;
-	UINT8 FeralVersionMajor;
-	UINT8 FeralVersionMinor;
-	UINT8 FeralVersionPatch;
-}KrnlEnvironmentBlock;
+typedef struct KrnlCharMap
+{
+	UINT16 CharMapWidth;
+	UINT16 CharMapHeight;
+	UINT16 NumNumerals;
+	UINT16 NumLowerCase;
+	UINT16 NumUpperCase;
+	/* Should be numerals, lowercase, uppercase. In order. */
+	UINT8  *CharMap; /* Bytemap for now. */
+}KrnlCharMap;
+
+typedef struct KrnlFirmwareFunctions
+{
+	GetFirmwareNameFunc GetFirmwareName;
+	PutCharFunc PutChar;
+	/* Add more functions as needed. */
+}KrnlFirmwareFunctions;
+
+FERALSTATUS KiUpdateFirmwareFunctions(KrnlFirmwareFunctions *Table, 
+	KrnlCharMap *CharMap);
+
 
 
 #endif

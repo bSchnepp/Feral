@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -28,6 +28,7 @@ IN THE SOFTWARE.
 
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
+#include <feral/kern/frlos.h>
 
 #include <arch/x86_64/vga/vga.h>
 #include <arch/x86_64/vga/vgaregs.h>
@@ -310,5 +311,23 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string
 		currentContext->CurrentRow = currentContext->ScreenHeight - 1;
 		internalVgaPushUp();
 	}
+	VgaMoveCursor(currentContext->CurrentCol, currentContext->CurrentRow);
+}
+
+VOID VgaAutoPrintln(VgaColorValue Foreground, VgaColorValue Background, CHAR *String)
+{
+	UINT64 Length = 0;
+	KiGetStringLength(String, &Length);
+	VgaPrintln(Foreground, Background, String, Length);
+}
+
+VOID VgaAutoPrint(VgaColorValue Foreground, VgaColorValue Background, CHAR *String)
+{
+	UINT64 Length = 0;
+	KiGetStringLength(String, &Length);
+	
+	VgaStringEntry(Foreground, Background, String, Length, 
+		currentContext->CurrentCol, currentContext->CurrentRow);
+	currentContext->CurrentCol++;
 	VgaMoveCursor(currentContext->CurrentCol, currentContext->CurrentRow);
 }

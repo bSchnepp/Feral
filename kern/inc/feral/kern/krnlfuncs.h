@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining  a copy of the software and accompanying documentation covered by 
@@ -28,29 +28,28 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
-
 /* Utility stuff... */
 
-// Start, end, size.
+/* Start, end, size. */
 FERALSTATUS KiCopyMemory(IN VOID*, IN VOID*, IN UINTN);
 
-//First, Second, Size, Equal
+/* First, Second, Size, Equal */
 FERALSTATUS KiCompareMemory(IN VOID*, IN VOID*, IN UINTN, OUT BOOL*);
 
-//Start, New location, size
+/* Start, New location, size */
 FERALSTATUS KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINTN);
 
-//Where, with what, and how many UINTNs to set.
+/* Where, with what, and how many UINTNs to set. */
 FERALSTATUS KiSetMemory(INOUT VOID*, IN UINTN, IN UINTN);
 
-// Same as above, but with bytes.
+/* Same as above, but with bytes. */
 FERALSTATUS KiSetMemoryBytes(INOUT VOID*, IN UINT8, IN UINTN);
 
-//TODO: Replace bad temp strlen with this
-// String, length of it.
+/* TODO: Replace bad temp strlen with this
+   String, length of it. */
 FERALSTATUS KiGetStringLength(IN STRING, OUT UINT64*);
 
-//Same as above but with a wide string.
+/* Same as above but with a wide string. */
 FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT UINTN*);
 
 
@@ -62,5 +61,6 @@ FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT UINTN*);
 
 
 
-// Equivalent to a kernel panic. In goes in the current system status which triggers the panic.
+/* Equivalent to a kernel panic. In goes in the current system status which 
+   triggers the panic. */
 FERALSTATUS KiStopError(IN FERALSTATUS);

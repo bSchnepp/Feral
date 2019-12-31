@@ -24,37 +24,46 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-
-// Define internal kernel functions here. (hence 'krnlfun'.)
+#include <stdarg.h>
 
 #include <feral/string.h>
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 #include <feral/kern/krnlfuncs.h>
+#include <feral/kern/krnlfirmware.h>
 #include <feral/kern/frlos.h>
 
 /* 
 	Define internal kernel functions here. (hence 'krnlfun'.) 
  */
 
-#include <stdarg.h>
+
+static KrnlCharMap *CurrentCharMap = NULLPTR;
+static KrnlFirmwareFunctions *BackingFunctions = NULLPTR;
+
+
+FERALSTATUS KiUpdateFirmwareFunctions(KrnlFirmwareFunctions *Table, 
+	KrnlCharMap *CharMap)
+{
+	CurrentCharMap = CharMap;
+	BackingFunctions = Table;
+}
+
+FERALSTATUS KiPutChar(CHAR c)
+{
+	BackingFunctions->PutChar(c);
+	return STATUS_SUCCESS;
+}
 
 #if defined(__x86_64__)
 #include <arch/x86_64/vga/vga.h>
 
-
-FERALSTATUS KiPutChar(CHAR c)
-{
-	VgaPutChar(c);
-	return STATUS_SUCCESS;
-}
-
 #define PRINT_LINE_GENERIC()						\
 	UINT64 length;							\
-	FERALSTATUS feralStatusError = KiGetStringLength(string, &length); \
-	if (!(feralStatusError == STATUS_SUCCESS))			\
+	FERALSTATUS FeralStatusError = KiGetStringLength(string, &length); \
+	if (FeralStatusError != STATUS_SUCCESS)			\
 	{								\
-		return feralStatusError;				\
+		return FeralStatusError;				\
 	}
 
 
@@ -73,7 +82,8 @@ FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount, OUT BOOL* Val)
+FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount, 
+	OUT BOOL* Val)
 {
 	if ((Source == NULL) || (Dest == NULL))
 	{
@@ -184,27 +194,32 @@ VOID internalItoaBaseChange(UINT64 val, STRING buf, UINT8 radix);
 VOID internalItoaBaseChange(UINT64 val, STRING buf, UINT8 radix)
 {
 	UINT64 len = 0;
-
+	/* No point in continuing if it's zero. Just give '0' back. */
 	if (val == 0)
 	{
 		*buf = '0';
 		*(buf + 1) = '\0';
 		return;
 	}
-	
+	/* Weird behavior if you exceed 10 + 26 + 26 as radix. */
 	for (UINT64 valCopy = val; valCopy != 0; valCopy /= radix)
 	{
+		/* We need the remainder to see how to encode. */
 		CHAR rem = valCopy % radix;
 		if (rem <= 9 && rem >= 0)
 		{
+			/* It's already a number. Just encode in ASCII. */
 			buf[len++]  =  rem + '0';
 		} else if (rem < 35) {
+			/* Encode the number as a lowercase letter. */
 			buf[len++]  =  (rem - 10) + 'a';
 		} else {
+			/* Encode as uppercase. */
 			buf[len++]  =  (rem - 36) + 'A';
 		}
 	}
 	
+	/* It's written BACKWARDS. So flip the order of the string. */
 	for (UINT64 i = 0; i < len / 2; ++i)
 	{
 		CHAR tmp = buf[i];
@@ -245,16 +260,19 @@ VOID internalSignedItoa(INT64 val, STRING buf)
 		return internalItoa(val, buf);
 	}
 	
-	/* We can assume we're negative: now we can avoid doing / or % on a negative value. */
+	/* We can assume we're negative: now we can avoid doing / or % 
+	 * on a negative value. 
+	 */
 	for (INT64 overzero = 0 - val; overzero != 0; overzero /= base)
 	{
 		CHAR rem = overzero % base;
 		buf[len++]  =  rem + '0';
 	}
 	
-	/* Append the -. */
+	/* Append the -. Put it at the END since it'll be flipped soon. */
 	buf[len++] = '-';
 	
+	/* Flip the string around. */
 	for (UINT64 i = 0; i < len / 2; ++i)
 	{
 		CHAR tmp = buf[i];

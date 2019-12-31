@@ -128,6 +128,10 @@ VOID VgaPrint(VgaColorValue foreground, VgaColorValue background, CHAR* string, 
 
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length); 
 
+VOID VgaAutoPrintln(VgaColorValue Foreground, VgaColorValue Background, CHAR *String);
+
+VOID VgaAutoPrint(VgaColorValue Foreground, VgaColorValue Background, CHAR *String);
+
 VOID VgaMoveCursor(DWORD PosX, DWORD PosY);
 
 VOID VgaSetCurrentPosition(UINT16 X, UINT16 Y);
