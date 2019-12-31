@@ -144,6 +144,7 @@ typedef enum
 #include <libreefi/efiapi.h>
 #include <libreefi/efibserv.h>
 #include <libreefi/efiprotocols.h>
+#include <libreefi/efivid.h>
 
 // stdtypes happens to define datatypes pretty much identical to the (U)EFI spec. Perfect!
 
