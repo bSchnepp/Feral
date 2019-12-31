@@ -41,6 +41,11 @@ static EFI_GUID GuidEfiLoadedImageProtocol = EFI_LOADED_IMAGE_PROTOCOL_GUID;
 static EFI_GUID GuidEfiSimpleFSProtocol = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
 static EFI_GUID GuidEfiFileInfoGuid = EFI_FILE_INFO_ID;
 
+/* TODO: Wrap in a struct marked static so kernel knows to protect it. */
+static EFI_GUID GuidEfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+
+
+
 /* TODO: Refactor into something nice. */
 
 EFI_STATUS EFIAPI LdrReadBootInit(EFI_FILE_PROTOCOL *BootIni)
@@ -48,12 +53,65 @@ EFI_STATUS EFIAPI LdrReadBootInit(EFI_FILE_PROTOCOL *BootIni)
 	return EFI_SUCCESS;
 }
 
+/* Borrowed from krnlfuncs... */
+VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix)
+{
+	UINT64 Len = 0;
+	UINT64 ValCopy = 0;
+	UINT64 ReverseIndex = 0;
+	
+	/* No point in continuing if it's zero. Just give '0' back. */
+	if (Val == 0)
+	{
+		*Buf = L'0';
+		*(Buf + 1) = L'\0';
+		return;
+	}
+	/* Weird behavior if you exceed 10 + 26 + 26 as radix. */
+	for (ValCopy = Val; ValCopy != 0; ValCopy /= Radix)
+	{
+		/* We need the remainder to see how to encode. */
+		CHAR16 Rem = ValCopy % Radix;
+		if (Rem <= 9 && Rem >= 0)
+		{
+			/* It's already a number. Just encode in UTF16. */
+			Buf[Len++]  =  Rem + L'0';
+		} else if (Rem < 35) {
+			/* Encode the number as a lowercase letter. */
+			Buf[Len++]  =  (Rem - 10) + L'a';
+		} else {
+			/* Encode as uppercase. */
+			Buf[Len++]  =  (Rem - 36) + L'A';
+		}
+	}
+	
+	/* It's written BACKWARDS. So flip the order of the string. */
+	for (ReverseIndex = 0; ReverseIndex < Len / 2; ++ReverseIndex)
+	{
+		CHAR16 Tmp = Buf[ReverseIndex];
+		Buf[ReverseIndex] = Buf[Len - ReverseIndex  - 1];
+		Buf[Len - ReverseIndex  - 1] = Tmp;
+	}
+	
+	/* Terminate the string. */
+	Buf[Len] =  '\0';
+}
+
+
 EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 {
 	UINTN MapSize = 0;
 	UINTN MapKey = 0;
 	UINTN DescriptorSize = 0;
 	UINT32 DescriptorVersion = 0;
+	UINTN NumDisplays = 0;
+	UINTN Iterator = 0;
+	UINT32 CurrentWidth = 0;
+	UINT32 CurrentHeight = 0;
+	
+	/* Extra space, just to be safe. */
+	CHAR16 ItoaBuf[32];
+	
 	EFI_STATUS Result = EFI_SUCCESS;
 	EFI_MEMORY_DESCRIPTOR *MemoryMap = NULLPTR;
 
@@ -62,18 +120,73 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	
 	EFI_LOADED_IMAGE_PROTOCOL *LoadedImageProtocol = NULLPTR;
 	EFI_SIMPLE_FILESYSTEM_PROTOCOL *FileSysProtocol = NULLPTR;
+	EFI_GRAPHICS_OUTPUT_PROTOCOL *GraphicsProtocol = NULLPTR;
+	
+	EFI_HANDLE *VideoBuffers = NULLPTR;
+	
+	EFI_OPEN_PROTOCOL OpenProtocol;
+
 
 	ImageHandle = mImageHandle;
 	SystemTable = mSystemTable;
 	
+	/* Get all the GOPs... */
+	Result = SystemTable->BootServices->LocateHandleBuffer(ByProtocol,
+		&GuidEfiGraphicsOutputProtocol, NULL, &NumDisplays, &VideoBuffers);
+		
+	if (Result != EFI_SUCCESS)
+	{
+		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			L"Unable to get displays...\r\n");
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			EfiErrorToString(Result));
+		SystemTable->BootServices->Stall(12500000);
+		return Result;
+	}
 	
 	/* Clear the display. */
 	SystemTable->ConOut->ClearScreen(SystemTable->ConOut);
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		L"Starting Feralboot...\r\n");
 		
-	EFI_OPEN_PROTOCOL OpenProtocol 
-		= SystemTable->BootServices->OpenProtocol;
+	OpenProtocol = SystemTable->BootServices->OpenProtocol;
+
+	for (Iterator = 0; Iterator < NumDisplays; ++Iterator)
+	{
+		/* Get the current GOP. */
+		Result = OpenProtocol(VideoBuffers[Iterator], 
+			&GuidEfiGraphicsOutputProtocol, (VOID**)&GraphicsProtocol,
+			ImageHandle, NULL,
+			EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+			
+		if (Result != EFI_SUCCESS)
+		{
+			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+				L"Failed to query display...\r\n");
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
+				EfiErrorToString(Result));
+			SystemTable->BootServices->Stall(12500000);
+			return Result;
+		}
+		
+		/* Update the current width and height, then display. */
+		CurrentWidth = GraphicsProtocol->Mode->Info->HorizontalResolution;
+		CurrentHeight = GraphicsProtocol->Mode->Info->VerticalResolution;
+		
+		/* And tell the user that we found it! */
+		InternalItoaBaseChange(CurrentWidth, ItoaBuf, 10);
+		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+				L"Got display of width: ");
+		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+				ItoaBuf);
+		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+				L" and height of ");
+		InternalItoaBaseChange(CurrentHeight, ItoaBuf, 10);
+		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+				ItoaBuf);
+		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+				L"\r\n");
+	}
 
 	/* Get the UEFI memory stuff. */
 	Result = SystemTable->BootServices->GetMemoryMap(&MapSize, MemoryMap,
@@ -106,10 +219,11 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	Result = OpenProtocol(ImageHandle, &GuidEfiLoadedImageProtocol,
 		(void**)(&LoadedImageProtocol), ImageHandle, NULL, 
 		EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+		
 	if (Result != EFI_SUCCESS)
 	{
 		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			L"OpenProtocol had error (loaded image)..\r\n");
+			L"OpenProtocol had error (loaded image)...\r\n");
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			EfiErrorToString(Result));
 		SystemTable->BootServices->Stall(12500000);
