@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining  a copy of the software and accompanying documentation covered by 
@@ -25,8 +25,10 @@ IN THE SOFTWARE.
  */
 
 
-// We try to hide things behind a simple typedef in case the API changes.
-// Thus, we maintain comatibility, even between any releases, and avoid compatibility hacks.
+/* We try to hide things behind a simple typedef in case the API changes.
+   Thus, we maintain comatibility, even between any releases, and avoid 
+   compatibility hacks.
+ */
 
 #ifndef _FERAL_HANDLE_H_
 #define _FERAL_HANDLE_H_
@@ -36,27 +38,27 @@ IN THE SOFTWARE.
 
 typedef enum HANDLETYPE
 {
-	HANDLE_TO_HANDLE,		// HHANDLE
-	HANDLE_TO_INSTANCE,		// HINSTANCE
-	HANDLE_TO_RMS_KEY,		// HKEY
-	HANDLE_TO_FILE,			// HFILE
-	HANDLE_TO_RESOURCE,		// HRESOURCE
-	HANDLE_TO_TASK,			// HTASK
-	HANDLE_TO_PROCESS,		// HPROCESS
-	HANDLE_TO_THREAD,		// HTHREAD
-	HANDLE_TO_ACCESS_RIGHTS,	// HACL
-	HANDLE_TO_EVENT,		// HEVENT
-	HANDLE_TO_SEMAPHORE,		// HSEMAPHORE
-	HANDLE_TO_MUTEX,		// HMUTEX
-	HANDLE_TO_TIMER,		// HTIMER
-	HANDLE_TO_DESKTOP,		// HDESKTOP
-	HANDLE_TO_FRAME,		// HFRAME (equal to "HWND" for someone else)
-	HANDLE_TO_LIBRARY,		// HLIBRARY
-	HANDLE_TO_LINK,			// HLINK (symbolic link)
+	HANDLE_TO_HANDLE,		
+	HANDLE_TO_INSTANCE,		
+	HANDLE_TO_RMS_KEY,		
+	HANDLE_TO_FILE,		
+	HANDLE_TO_RESOURCE,		
+	HANDLE_TO_TASK,		
+	HANDLE_TO_PROCESS,		
+	HANDLE_TO_THREAD,		
+	HANDLE_TO_ACCESS_RIGHTS,	
+	HANDLE_TO_EVENT,		
+	HANDLE_TO_SEMAPHORE,		
+	HANDLE_TO_MUTEX,		
+	HANDLE_TO_TIMER,		
+	HANDLE_TO_DESKTOP,		
+	HANDLE_TO_FRAME,		
+	HANDLE_TO_LIBRARY,		
+	HANDLE_TO_LINK,		
 }HANDLETYPE;
 
 
-// All handles just subclass this.
+/* All handles just subclass this. */
 typedef struct HANDLE
 {
 	HANDLETYPE Type;

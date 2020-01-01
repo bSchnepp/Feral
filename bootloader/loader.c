@@ -48,6 +48,10 @@ static EFI_GUID GuidEfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUI
 
 /* TODO: Refactor into something nice. */
 
+#ifndef _FRLBOOT_NO_SUPPORT_ELF64_
+EFI_STATUS EFIAPI ElfLoadSegment
+#endif
+
 EFI_STATUS EFIAPI LdrReadBootInit(EFI_FILE_PROTOCOL *BootIni)
 {
 	return EFI_SUCCESS;

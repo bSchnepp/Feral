@@ -31,15 +31,26 @@ IN THE SOFTWARE.
 #ifndef _FERAL_KRNL_BASE_H_
 #define _FERAL_KRNL_BASE_H_
 
+typedef struct KrnlPhysicalDisplay
+{
+	UINT32 ResolutionX;
+	UINT32 ResolutionY;
+	VOID *Framebuffer;
+}KrnlPhysicalDisplay;
+
 typedef struct KrnlEnvironmentBlock
 {	
 	/* Bootloader should help find free memory areas. */
 	UINT64 KernelPageSize;
 	UINT64 FreeMemCount;
 	UINT_PTR *FreeMemLocs;
-	
+
 	KrnlFirmwareFunctions *FunctionTable;
 	KrnlCharMap *CharMap;
+	
+	UINT32 PrimaryDisplayIndex;
+	UINT32 NumDisplays;
+	KrnlPhysicalDisplay *Displays;
 
 	/* Bootloader shouldn't fill these in. */
 	STRING KernelVendor;
