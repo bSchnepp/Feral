@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2018, 2019, 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -49,7 +49,11 @@ static EFI_GUID GuidEfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUI
 /* TODO: Refactor into something nice. */
 
 #ifndef _FRLBOOT_NO_SUPPORT_ELF64_
-EFI_STATUS EFIAPI ElfLoadSegment
+EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
+{
+	/* TODO */
+	return EFI_SUCCESS;
+}
 #endif
 
 EFI_STATUS EFIAPI LdrReadBootInit(EFI_FILE_PROTOCOL *BootIni)
@@ -144,8 +148,7 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 			L"Unable to get displays...\r\n");
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			EfiErrorToString(Result));
-		SystemTable->BootServices->Stall(12500000);
-		return Result;
+		/* Still allow headless boot... */
 	}
 	
 	/* Clear the display. */

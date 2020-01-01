@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019, Brian Schnepp
+Copyright (c) 2019, 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -33,8 +33,13 @@ IN THE SOFTWARE.
 
 typedef struct KrnlPhysicalDisplay
 {
+	UINT8 BitsPerRed;
+	UINT8 BitsPerGreen;
+	UINT8 BitsPerBlue;
+
 	UINT32 ResolutionX;
 	UINT32 ResolutionY;
+	
 	VOID *Framebuffer;
 }KrnlPhysicalDisplay;
 
