@@ -26,12 +26,16 @@ IN THE SOFTWARE.
 
 #include <libreefi/efi.h>
 #include <feral/stdtypes.h>
+#include <feral/feralstatus.h>
+#include <feral/kern/krnlbase.h>
 
 #ifndef _FRLBOOT_NO_SUPPORT_ELF64_
 #include <drivers/proc/elf/elf.h>
 #else
 #error "Unsupported compile mode..."
 #endif
+
+#define FERAL_VIRT_OFFSET (0xFFFFFFFFC0000000)
 
 static EFI_HANDLE ImageHandle;
 static EFI_SYSTEM_TABLE *SystemTable;
@@ -44,6 +48,73 @@ static EFI_GUID GuidEfiFileInfoGuid = EFI_FILE_INFO_ID;
 /* TODO: Wrap in a struct marked static so kernel knows to protect it. */
 static EFI_GUID GuidEfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
+
+
+EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID);
+
+//	mov ecx, cr3
+//	mov cr3, ecx
+
+#if defined(__x86_64__)
+static UINT_PTR InitialP4Table[512];
+static UINT_PTR InitialP3Table[512];
+static UINT_PTR InitialP2Table[512];
+
+VOID FlushCR3(VOID);
+VOID InstallPagingMap(UINT_PTR VirtAddrP4);
+
+VOID FlushCR3(VOID)
+{
+	__asm__ __volatile__(
+		"movq %%cr3, %%rax\n\t"
+		"movq %%rax, %%cr3\n\t"
+		:
+		:
+		: "rax");
+}
+
+VOID InstallPagingMap(UINT_PTR PhysAddrP4)
+{
+	__asm__ __volatile__("movq %0, %%cr3\r\n"
+		:
+		: "b"(PhysAddrP4));
+	FlushCR3();
+}
+
+EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
+{
+	UINT16 LoopIndex = 0;
+	
+	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
+	{
+		if (LoopIndex == 0 || LoopIndex == 511)
+		{
+			InitialP4Table[LoopIndex] =
+				(InitialP3Table - FERAL_VIRT_OFFSET) + 3;
+		} else {
+			InitialP4Table[LoopIndex] = 0;
+		}
+	}
+	
+	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
+	{
+		if (LoopIndex == 0 || LoopIndex == 511)
+		{
+			InitialP3Table[LoopIndex] =
+				(InitialP2Table - FERAL_VIRT_OFFSET) + 3;
+		} else {
+			InitialP3Table[LoopIndex] = 0;
+		}
+	}
+	
+	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
+	{
+		InitialP2Table[LoopIndex] = 0;
+	}
+	InstallPagingMap(InitialP4Table - FERAL_VIRT_OFFSET);
+	return EFI_SUCCESS;
+}
+#endif
 
 
 /* TODO: Refactor into something nice. */
@@ -133,6 +204,8 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	EFI_HANDLE *VideoBuffers = NULLPTR;
 	
 	EFI_OPEN_PROTOCOL OpenProtocol;
+	
+	VOID (*KiSystemStartup)(KrnlEnvironmentBlock*) = NULLPTR;
 
 
 	ImageHandle = mImageHandle;
@@ -298,9 +371,16 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	/* Start loading of the kernel. (setup and call KiSystemStartup) */
 	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
 	
+	/* TODO: Keep EFI stuff in memory while this all happens... */
+	/* FeralBootProtocolRemap(); */
+	ElfLoadFile(KernelImage, &KiSystemStartup);
+	//KiSystemStartup(NULLPTR);
+	
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		L"Kernel has exited.\r\n");
-	SystemTable->BootServices->Stall(12500000);
+	SystemTable->BootServices->Stall(125000);
+	SystemTable->RuntimeServices->ResetSystem(EfiResetShutdown,
+		EFI_SUCCESS, 0, NULLPTR);
 
 	return EFI_SUCCESS;
 }
