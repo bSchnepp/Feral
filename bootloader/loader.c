@@ -44,6 +44,7 @@ IN THE SOFTWARE.
 
 #define EFI_PAGE_SIZE (4096)
 #define EFI_PAGE_SHIFT (12)
+#define EFI_PAGE_MAP (~(EFI_PAGE_SIZE - 1))
 #define FERAL_VIRT_OFFSET (0xFFFFFFFFC0000000)
 
 static EFI_HANDLE ImageHandle;
@@ -62,7 +63,7 @@ VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix);
 
 UINT64 BytesToEfiPages(UINT64 Bytes)
 {
-	UINT64 RetVal = Bytes >>= EFI_PAGE_SHIFT;
+	UINT64 RetVal = Bytes /= EFI_PAGE_SIZE;
 	if (Bytes % EFI_PAGE_SIZE)
 	{
 		++RetVal;
@@ -238,7 +239,7 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 		
 		if (ProgramHeader.p_type == PT_LOAD)
 		{
-			PAddress = ProgramHeader.p_paddr;
+			PAddress = ProgramHeader.p_paddr & EFI_PAGE_MAP;
 			Status = SystemTable->BootServices->AllocatePages(
 				AllocateAddress, EfiReservedMemoryType,
 				BytesToEfiPages(ProgramHeader.p_memsz),
@@ -472,6 +473,9 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 		SystemTable->RuntimeServices->ResetSystem(EfiResetShutdown,
 			EFI_SUCCESS, 0, NULLPTR);
 	}
+	
+	/* Close the file...  */
+	KernelImage->Close(KernelImage);
 	
 	/* Terminate boot services (about to execute kernel) */
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 

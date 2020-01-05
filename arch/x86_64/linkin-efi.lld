@@ -46,7 +46,7 @@ SECTIONS
 	{
 		*(.data)
 	}
-	
-	kern_end = . - KERN_VIRT_OFFSET;
+
 	kern_virt_end = .;
+	kern_end = . - KERN_VIRT_OFFSET;
 }

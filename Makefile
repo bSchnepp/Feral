@@ -25,21 +25,25 @@ kernel:
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
 	
 kernel-efi:
-	mkdir -p build/$(ARCH)/	
+	mkdir -p build/$(ARCH)/
+	mkdir -p build/EFI/Boot
+	mkdir -p build/EFI/Feral
 	
 	cd arch && $(MAKE)
 	cd io && $(MAKE) 
 	cd drivers && $(MAKE)
 	cd kern && $(MAKE)
 	 
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) ./io/*.c -o ./iofuncs.o
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES)
+	$(CC) $(TARGET) -I$(INCLUDES) -DFERAL_BUILD_STANDALONE_UEFI_ $(CFLAGS) ./io/*.c -o ./iofuncs.o
+	$(CC) $(TARGET) -I$(INCLUDES) -DFERAL_BUILD_STANDALONE_UEFI_ $(CFLAGS) $(VGA_FILES)
 	$(LD) -T $(LINKIN_EFI) -o $(KERNEL) ./*.o ./kern/*.o
-	
-img-efi: kernel-efi
 	strip $(KERNEL)
+	
+img-efi: 	kernel-efi
 	mkdir -p build/EFI/Feral
 	cp $(KERNEL) build/EFI/Feral/FERALKER.NEL
+	cd bootloader && $(MAKE) all && cp BOOTX64.EFI ../ && $(MAKE) clean && cd ..
+	mv BOOTX64.EFI build/EFI/Boot/BOOTX64.EFI
 	
 
 iso:	kernel
@@ -74,26 +78,9 @@ qemu-lldb:	iso
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -S -s -d int,cpu_reset -no-reboot&	
 	
 qemu-efi: 	img-efi
-	mkdir -p build/$(ARCH)/
-	mkdir -p build/EFI/Boot
-	mkdir -p build/EFI/Feral	
-	
-	cd arch && $(MAKE) 
-	cd io && $(MAKE) 
-	cd drivers && $(MAKE)
-	cd kern && $(MAKE)
-	cd sec && $(MAKE)
-	
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) -DFERAL_BUILD_STANDALONE_UEFI_ ./io/*.c -o ./iofuncs.o
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) -DFERAL_BUILD_STANDALONE_UEFI_ $(VGA_FILES)
-	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
-	
 	cp $(EFI_CODE) ./efi.bin
-	cd bootloader && $(MAKE) all && cp BOOTX64.EFI ../ && $(MAKE) clean && cd ..
-	mv BOOTX64.EFI build/EFI/Boot/BOOTX64.EFI
 	
 	# Instead of a normal ISO, we pretend the build directory is an ESP.
-	cp $(KERNEL) build/EFI/Feral/FERALKER.NEL
 	qemu-system-$(ARCH) $(CPU) -smp 2 -m 6G --enable-kvm -pflash ./efi.bin -hda fat:rw:build -net none
 	rm -rf ./efi.bin
 	
