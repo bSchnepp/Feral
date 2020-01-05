@@ -31,15 +31,23 @@ IN THE SOFTWARE.
 
 #ifndef _FRLBOOT_NO_SUPPORT_ELF64_
 #include <drivers/proc/elf/elf.h>
+
+#if defined(__x86_64__)
+#define CUR_ARCH_ELF MACHINE_ID_X86_64
+#endif
+
+
 #else
 #error "Unsupported compile mode..."
 #endif
 
+
+#define EFI_PAGE_SIZE (4096)
+#define EFI_PAGE_SHIFT (12)
 #define FERAL_VIRT_OFFSET (0xFFFFFFFFC0000000)
 
 static EFI_HANDLE ImageHandle;
 static EFI_SYSTEM_TABLE *SystemTable;
-
 
 static EFI_GUID GuidEfiLoadedImageProtocol = EFI_LOADED_IMAGE_PROTOCOL_GUID;
 static EFI_GUID GuidEfiSimpleFSProtocol = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
@@ -48,8 +56,19 @@ static EFI_GUID GuidEfiFileInfoGuid = EFI_FILE_INFO_ID;
 /* TODO: Wrap in a struct marked static so kernel knows to protect it. */
 static EFI_GUID GuidEfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
+UINT64 BytesToEfiPages(UINT64 Bytes);
+VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix);
 
 
+UINT64 BytesToEfiPages(UINT64 Bytes)
+{
+	UINT64 RetVal = Bytes >>= EFI_PAGE_SHIFT;
+	if (Bytes % EFI_PAGE_SIZE)
+	{
+		++RetVal;
+	}
+	return RetVal;
+}
 EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID);
 
 //	mov ecx, cr3
@@ -117,21 +136,6 @@ EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 #endif
 
 
-/* TODO: Refactor into something nice. */
-
-#ifndef _FRLBOOT_NO_SUPPORT_ELF64_
-EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
-{
-	/* TODO */
-	return EFI_SUCCESS;
-}
-#endif
-
-EFI_STATUS EFIAPI LdrReadBootInit(EFI_FILE_PROTOCOL *BootIni)
-{
-	return EFI_SUCCESS;
-}
-
 /* Borrowed from krnlfuncs... */
 VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix)
 {
@@ -174,6 +178,99 @@ VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix)
 	
 	/* Terminate the string. */
 	Buf[Len] =  '\0';
+}
+
+#ifndef _FRLBOOT_NO_SUPPORT_ELF64_
+EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
+{
+	/* TODO */
+	ElfHeader64 InitialHeader;
+	ElfProgramHeader64 ProgramHeader;
+
+	EFI_PHYSICAL_ADDRESS PAddress;
+	EFI_STATUS Status;
+
+	UINT8 Index;
+	UINT64 Size = sizeof(ElfHeader64);
+	UINT64 PHdrSize = sizeof(ElfProgramHeader64);
+	
+	/* Extra space, just to be safe. */
+	CHAR16 ItoaBuf[32];
+	
+	Status = File->Read(File, &Size, &InitialHeader);
+	if (Status != EFI_SUCCESS)
+	{
+		return Status;
+	}
+	
+	/* Check the header... */
+	CHAR Match[4] = {0x7F, 'E', 'L', 'F'};
+	for (Index = 0; Index < 4; ++Index)
+	{
+		if (InitialHeader.magic[Index] != Match[Index])
+		{
+			return EFI_LOAD_ERROR;
+		}
+	}
+	
+	if (InitialHeader.e_machine != MACHINE_ID_NONE 
+		&& InitialHeader.e_machine != CUR_ARCH_ELF)
+	{
+		return EFI_LOAD_ERROR;
+	}
+	
+	if (InitialHeader.e_phnum == 0)
+	{
+		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			L"Not an executable: missing program headers... \r\n");
+		return EFI_LOAD_ERROR;
+	}
+	
+	/* Change the position to the area currently cared about. */
+	for (Index = 0; Index < InitialHeader.e_phoff; ++Index)
+	{
+		/* Read the program data in... */
+		File->SetPosition(File, InitialHeader.e_phoff 
+			+ InitialHeader.e_phentsize * Index);
+		
+		/* Read it in... */
+		File->Read(File, &PHdrSize, &ProgramHeader);
+		
+		if (ProgramHeader.p_type == PT_LOAD)
+		{
+			PAddress = ProgramHeader.p_paddr;
+			Status = SystemTable->BootServices->AllocatePages(
+				AllocateAddress, EfiReservedMemoryType,
+				BytesToEfiPages(ProgramHeader.p_memsz),
+				&PAddress
+			);
+			
+			if (Status != EFI_SUCCESS)
+			{
+				SystemTable->ConOut->OutputString(
+					SystemTable->ConOut, 
+					L"Trying to get address: ");
+					
+				InternalItoaBaseChange(PAddress, 
+					ItoaBuf, 16);
+				SystemTable->ConOut->OutputString(
+					SystemTable->ConOut, 
+					ItoaBuf);
+				return Status;
+			}
+			
+			
+		}
+		
+	}
+	
+	return EFI_SUCCESS;
+}
+#endif
+
+EFI_STATUS EFIAPI LdrReadBootInit(EFI_FILE_PROTOCOL *BootIni)
+{
+	return EFI_SUCCESS;
 }
 
 
@@ -360,21 +457,29 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 		return Result;
 	}
 		
+	/* Terminate the watchdog timer. */
+	SystemTable->BootServices->SetWatchdogTimer(0, 0, 0, NULL);
+	
+	Result = ElfLoadFile(KernelImage, &KiSystemStartup);
+	
+	/* TODO: Keep EFI stuff in memory while this all happens... */
+	
+	if (Result != EFI_SUCCESS)
+	{
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			EfiErrorToString(Result));
+		SystemTable->BootServices->Stall(125000);
+		SystemTable->RuntimeServices->ResetSystem(EfiResetShutdown,
+			EFI_SUCCESS, 0, NULLPTR);
+	}
 	
 	/* Terminate boot services (about to execute kernel) */
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		L"Terminating firmware services...\r\n");
-		
-	/* Terminate the watchdog timer. */
-	SystemTable->BootServices->SetWatchdogTimer(0, 0, 0, NULL);
-	
 	/* Start loading of the kernel. (setup and call KiSystemStartup) */
 	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
-	
-	/* TODO: Keep EFI stuff in memory while this all happens... */
 	/* FeralBootProtocolRemap(); */
-	ElfLoadFile(KernelImage, &KiSystemStartup);
-	//KiSystemStartup(NULLPTR);
+	/* KiSystemStartup(NULLPTR); */
 	
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		L"Kernel has exited.\r\n");

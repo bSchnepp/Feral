@@ -81,6 +81,19 @@ IN THE SOFTWARE.
 #define SHF_ORDERED				(0x40000000)
 #define SHF_EXCLUDE				(0x80000000)
 
+#define MACHINE_ID_NONE 			(0x0000)
+#define MACHINE_ID_SPARC 			(0x0002)
+#define MACHINE_ID_X86 			(0x0003)
+#define MACHINE_ID_MIPS 			(0x0008)
+#define MACHINE_ID_POWER 			(0x0014)
+#define MACHINE_ID_S390 			(0x0016)
+#define MACHINE_ID_AARCH32 			(0x0028)
+#define MACHINE_ID_JCORE 			(0x002A)
+#define MACHINE_ID_IA64 			(0x0032)
+#define MACHINE_ID_X86_64 			(0x003E)
+#define MACHINE_ID_AARCH64 			(0x00B7)
+#define MACHINE_ID_RISCV 			(0x00F3)
+
 typedef enum
 {
 	ELF_RELOCATABLE = 0,
@@ -93,7 +106,7 @@ typedef enum
 
 typedef struct ElfHeader64
 {
-	UINT32 magic;	//ELF magic number...
+	CHAR magic[4];
 	UINT8  cpu_bitsz;
 	UINT8  cpu_endian;
 	UINT8  elf_version;
@@ -110,11 +123,11 @@ typedef struct ElfHeader64
 	UINT16 e_phentsize;
 	UINT16 e_phnum;
 	UINT16 e_shentsize;
-}ElfHeader64;
+}PACKED ElfHeader64;
 
 typedef struct ElfHeader32
 {
-	UINT32 magic;	//ELF magic number...
+	CHAR magic[4];
 	UINT8  cpu_bitsz;
 	UINT8  cpu_endian;
 	UINT8  elf_version;
@@ -131,7 +144,7 @@ typedef struct ElfHeader32
 	UINT16 e_phentsize;
 	UINT16 e_phnum;
 	UINT16 e_shentsize;
-}ElfHeader32;
+}PACKED ElfHeader32;
 
 typedef struct ElfProgramHeader64
 {
@@ -143,7 +156,7 @@ typedef struct ElfProgramHeader64
 	UINT64 p_filesz;
 	UINT64 p_memsz;
 	UINT64 p_align;
-}ElfProgramHeader64;
+}PACKED ElfProgramHeader64;
 
 typedef struct ElfSectionHeader64
 {
@@ -161,7 +174,7 @@ typedef struct ElfSectionHeader64
 	
 	UINT64 sh_addralign;
 	UINT64 sh_entsize;
-}ElfSectionHeader64;
+}PACKED ElfSectionHeader64;
 
 typedef struct ElfProgramHeader32
 {
@@ -173,7 +186,7 @@ typedef struct ElfProgramHeader32
 	UINT32 p_memsz;
 	UINT32 p_flags;
 	UINT32 p_align;
-}ElfProgramHeader32;
+}PACKED ElfProgramHeader32;
 
 typedef struct ElfSectionHeader32
 {
@@ -191,6 +204,6 @@ typedef struct ElfSectionHeader32
 	
 	UINT32 sh_addralign;
 	UINT32 sh_entsize;
-}ElfSectionHeader32;
+}PACKED ElfSectionHeader32;
 
 #endif
