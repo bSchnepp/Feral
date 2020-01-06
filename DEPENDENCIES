@@ -1,21 +1,14 @@
 GNU xorriso
 BSD Make (installed as 'bmake'.) This is NOT compatible with GNU Make.
 LLVM/Clang
-YASM
-Rust Cargo-xbuild
-Nightly Rust compiler
+NASM
 
 For testing
 _______________
 QEMU (KVM optional, use qemu-nokvm instead if not on Linux)
-
+OVMF (For UEFI port, and for testing only in QEMU.)
 
 ___
 Getting Started:
 
-pacman -S rustup
-pacman -S clang
-pacman -S lld
-pacman -S xorriso
-
-cargo install cargo-xbuild
+pacman -S clang lld xorriso llvm nasm bmake
