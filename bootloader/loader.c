@@ -47,6 +47,36 @@ IN THE SOFTWARE.
 #define EFI_PAGE_MAP (~(EFI_PAGE_SIZE - 1))
 #define FERAL_VIRT_OFFSET (0xFFFFFFFFC0000000)
 
+
+#if 0
+For reference:
+
+Reserved memory (don't touch it):
+EfiReservedMemoryType
+EfiRuntimeServicesCode
+EfiRuntimeServicesData
+EfiMemoryMappedIO
+EfiMemoryMappedIOPortSpace
+EfiPalCode
+
+Bad memory:
+EfiUnusableMemory
+
+ACPI Reclaim:
+EfiACPIReclaimMemory
+
+Usable ("free"):
+EfiLoaderCode
+EfiLoaderData
+EfiBootServicesCode
+EfiBootServicesData
+EfiConventionalMemory
+
+ACPI NVM:
+EfiACPIMemoryNVS
+
+#endif
+
 static EFI_HANDLE ImageHandle;
 static EFI_SYSTEM_TABLE *SystemTable;
 
@@ -62,6 +92,10 @@ static KrnlEnvironmentBlock EnvBlock = {0};
 static KrnlFirmwareFunctions FirmwareFuncs = {0};
 static KrnlCharMap CharMap = {0};
 
+static UINT64 VirtMemAreaFree = 0;
+static EFI_RUNTIME_SERVICES *VirtRuntimeTable = NULLPTR;
+
+EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID);
 UINT64 BytesToEfiPages(UINT64 Bytes);
 VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix);
 
@@ -69,17 +103,13 @@ VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix);
 UINT64 BytesToEfiPages(UINT64 Bytes)
 {
 	/* Lazy implementation for debugging... */
-	UINT64 RetVal = 0;
-	while ((RetVal * 4096) < Bytes)
+	UINT64 RetVal = Bytes >> EFI_PAGE_SHIFT;
+	if (RetVal % EFI_PAGE_SIZE)
 	{
-		RetVal++;
+		++RetVal;
 	}
 	return RetVal;
 }
-EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID);
-
-//	mov ecx, cr3
-//	mov cr3, ecx
 
 #if defined(__x86_64__)
 static UINT_PTR InitialP4Table[512];
@@ -135,8 +165,20 @@ EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 	
 	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
 	{
-		InitialP2Table[LoopIndex] = 0;
+		InitialP2Table[LoopIndex] = (0x200000 * LoopIndex) | 0b10000011;
 	}
+	
+#if 0
+	; Use huge pages (2MB), map at 2MB * ecx.
+	mov eax, 0x200000
+	mul ecx
+	or eax, 10000011b	; Present, writable, and huge.
+	mov [(p2_table - KERN_VIRT_OFFSET) + ecx * 8], eax	; And now write it to the table.
+
+	inc ecx	; Increment it...
+	cmp ecx, 512	; P2 needs 512 entries. (one gigabyte of identity mapping.)
+	jne .map_page_tables
+#endif
 	InstallPagingMap(InitialP4Table - FERAL_VIRT_OFFSET);
 	return EFI_SUCCESS;
 }
@@ -286,6 +328,12 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 			File->Read(File, ProgramHeader.p_filesz, (VOID*)(PAddress));
 		}
 	}
+	/* Update this so that uefi_main is happy. */
+	VirtMemAreaFree = PAddress + ProgramHeader.p_filesz + 4096;
+	VirtMemAreaFree += FERAL_VIRT_OFFSET;
+	/* align to 4k */
+	VirtMemAreaFree = VirtMemAreaFree & EFI_PAGE_MAP;
+	 
 	*Entry = InitialHeader.e_entry;
 	return EFI_SUCCESS;
 }
@@ -513,8 +561,32 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	/* Terminate boot services (about to execute kernel) */
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		L"Terminating firmware services...\r\n");
+
 	/* Start loading of the kernel. (setup and call KiSystemStartup) */
 	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
+	
+	/* Iterate through the memory map one more time. */
+	for (Iterator = 0; Iterator < MapSize / DescriptorSize; ++Iterator)
+	{
+		/* FIXME: Incompatible with C89 */
+		EFI_MEMORY_DESCRIPTOR *Current = &(MemoryMap[Iterator]);
+		UINTN Size = EFI_PAGE_SIZE * (Current->NumberOfPages);
+		
+		UINTN Begin = Current->PhysicalStart;
+		UINTN End = Current->PhysicalStart + Size;
+		
+		if (Current->Type == EfiRuntimeServicesCode
+			|| Current->Type ==  EfiRuntimeServicesData)
+		{
+			/* FIXME: remap the stuff. Do this, use 
+			   SetVirtualAddressMap, then ChangePointer on
+			   the table, and then we're good to mess
+			   with cr3. */
+		}
+	}
+	/* Put the table at the end. */
+	VirtRuntimeTable = (EFI_RUNTIME_SERVICES*)(VirtMemAreaFree);
+	
 	//FeralBootProtocolRemap();
 	//KiSystemStartup(&EnvBlock);
 	

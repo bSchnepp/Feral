@@ -84,4 +84,23 @@ typedef struct PageMapEntry
 	UINT8 NoExecuteFlag : 1;
 }PACKED PageMapEntry;
 
+
+inline 
+FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels)
+{
+	/* Split into 9 bit chunks. Only 4 levels to worry about. */
+	UINT64 Remainder = Address;
+	UINT16 Current = 0;
+	UINT8 Index = 0;
+	while (Index < 3)
+	{
+		/* Each entry is 9 bits long. */
+		Current = Remainder & 0x1FF;
+		Remainder >>= 9;
+		Levels[Index] = Current;
+		Index++;
+	}
+	return STATUS_SUCCESS;
+}
+
 #endif
