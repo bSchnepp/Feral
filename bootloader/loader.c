@@ -57,16 +57,22 @@ static EFI_GUID GuidEfiFileInfoGuid = EFI_FILE_INFO_ID;
 /* TODO: Wrap in a struct marked static so kernel knows to protect it. */
 static EFI_GUID GuidEfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
+
+static KrnlEnvironmentBlock EnvBlock = {0};
+static KrnlFirmwareFunctions FirmwareFuncs = {0};
+static KrnlCharMap CharMap = {0};
+
 UINT64 BytesToEfiPages(UINT64 Bytes);
 VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix);
 
 
 UINT64 BytesToEfiPages(UINT64 Bytes)
 {
-	UINT64 RetVal = Bytes /= EFI_PAGE_SIZE;
-	if (Bytes % EFI_PAGE_SIZE)
+	/* Lazy implementation for debugging... */
+	UINT64 RetVal = 0;
+	while ((RetVal * 4096) < Bytes)
 	{
-		++RetVal;
+		RetVal++;
 	}
 	return RetVal;
 }
@@ -191,7 +197,8 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 	EFI_PHYSICAL_ADDRESS PAddress;
 	EFI_STATUS Status;
 
-	UINT8 Index;
+	UINT64 Index;
+	UINT64 Subindex;
 	UINT64 Size = sizeof(ElfHeader64);
 	UINT64 PHdrSize = sizeof(ElfProgramHeader64);
 	
@@ -239,32 +246,47 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 		
 		if (ProgramHeader.p_type == PT_LOAD)
 		{
-			PAddress = ProgramHeader.p_paddr & EFI_PAGE_MAP;
+			PAddress = ProgramHeader.p_paddr;
+		
 			Status = SystemTable->BootServices->AllocatePages(
-				AllocateAddress, EfiReservedMemoryType,
+				AllocateAddress, EfiLoaderData,
 				BytesToEfiPages(ProgramHeader.p_memsz),
 				&PAddress
 			);
 			
-			if (Status != EFI_SUCCESS)
+			/* Ignore EFI not doing it's job. (EFI_NOT_FOUND) */
+			if (Status != EFI_SUCCESS && Status != EFI_NOT_FOUND)
 			{
-				SystemTable->ConOut->OutputString(
-					SystemTable->ConOut, 
-					L"Trying to get address: ");
-					
-				InternalItoaBaseChange(PAddress, 
-					ItoaBuf, 16);
-				SystemTable->ConOut->OutputString(
-					SystemTable->ConOut, 
+				SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					L"Failed to get address: ");
+				InternalItoaBaseChange(PAddress, ItoaBuf, 16);
+				SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 					ItoaBuf);
+				SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					L"\r\n");	
 				return Status;
 			}
 			
+			/* Zero it all out first... */
+			for (Subindex = 0; Subindex < ProgramHeader.p_memsz;
+				++Subindex)
+			{
+				((CHAR *)(PAddress))[Subindex] = '\0';
+			}
+			/* Read all the data in. */
+			Status = File->SetPosition(File, ProgramHeader.p_offset);
 			
+			if (Status != EFI_SUCCESS)
+			{
+				SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					L"Failed to load program section.\r\n");
+				return Status;
+			}
+			
+			File->Read(File, ProgramHeader.p_filesz, (VOID*)(PAddress));
 		}
-		
 	}
-	
+	*Entry = InitialHeader.e_entry;
 	return EFI_SUCCESS;
 }
 #endif
@@ -273,6 +295,17 @@ EFI_STATUS EFIAPI LdrReadBootInit(EFI_FILE_PROTOCOL *BootIni)
 {
 	return EFI_SUCCESS;
 }
+
+
+/* Kernel environment block stuff... */
+
+STRING GetEfiFirmwareClaim();
+
+STRING GetEfiFirmwareClaim()
+{
+	return "UEFI 2.8 compatible firmware";
+}
+
 
 
 EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
@@ -482,8 +515,8 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 		L"Terminating firmware services...\r\n");
 	/* Start loading of the kernel. (setup and call KiSystemStartup) */
 	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
-	/* FeralBootProtocolRemap(); */
-	/* KiSystemStartup(NULLPTR); */
+	//FeralBootProtocolRemap();
+	//KiSystemStartup(&EnvBlock);
 	
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		L"Kernel has exited.\r\n");

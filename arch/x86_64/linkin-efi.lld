@@ -6,20 +6,11 @@ SECTIONS
 	kern_start = .;
 	KERN_VIRT_OFFSET = 0xFFFFFFFFC0000000;
 	
-	.earlytext :
-	{
-		*(.earlytext)
-	}
+	.earlytext : {}
 
-	.earlybss :
-	{
-		*(.earlybss)
-	}
+	.earlybss : {}
 	
-	.earlydata :
-	{
-		*(.earlydata)
-	}
+	.earlydata : {}
 	
 	
 	/* Assume bootloader prepares memory map for us. */

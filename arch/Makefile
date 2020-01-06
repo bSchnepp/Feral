@@ -1,4 +1,4 @@
 include ../Makerules
 
 all:
-	cd $(ARCH) && $(MAKE)
+	cd $(ARCH) && $(MAKE) 

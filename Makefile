@@ -15,6 +15,8 @@ all:	kernel
 kernel:
 	mkdir -p build/$(ARCH)/	
 	
+	# Hack to support mb2
+	cd arch/x86_64 && make mb2-extra
 	cd arch && $(MAKE)
 	cd io && $(MAKE) 
 	cd drivers && $(MAKE)
