@@ -30,7 +30,7 @@ kernel-efi:
 	cd arch && $(MAKE)
 	cd io && $(MAKE) 
 	cd drivers && $(MAKE)
-	cd kern && $(MAKE)
+	cd kern && $(MAKE) all-efi
 	 
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES)

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019, Brian Schnepp
+Copyright (c) 2020 Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -24,46 +24,75 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-
 #include <feral/stdtypes.h>
+#include <stdint.h>
 
-#ifndef _FERAL_KRNL_FIRMWARE_H_
-#define _FERAL_KRNL_FIRMWARE_H_
+#if defined(__x86_64__)
+#include <arch/x86_64/cpuio.h>
+#include <arch/x86_64/cpufuncs.h>
+#endif
 
-/* Single character */
-typedef VOID (*PutCharFunc)(CHAR);
-/* String, length */
-typedef VOID (*PrintlnFunc)(STRING, UINT64);
-/* The name of the underlying firmware (EFI, BIOS, etc.) */
-typedef STRING (*GetFirmwareNameFunc)(VOID);
 
-/* TODO */
-typedef VOID* (*GetNativeFirmwareMemoryMapFunc)(VOID);
+#include <feral/feralstatus.h>
+#include <feral/stdtypes.h>
+#include <feral/handle.h>
+#include <feral/kern/frlos.h>
+#include <mm/mm.h>
 
-typedef struct KrnlCharMap
+#include <feral/kern/krnlfuncs.h>
+#include <feral/kern/krnlbase.h>
+
+#include <krnl.h>
+#include <kern_ver.h>
+
+#include <arch/processor.h>
+
+
+#if defined(FERAL_BUILD_STANDALONE_UEFI_)
+
+#include <libreefi/efi.h>
+
+static KrnlFirmwareFunctions FirmwareFuncs = {0};
+static KrnlCharMap CharMap = {0};
+static 	KrnlEnvironmentBlock EnvBlock = {0};
+
+#include "charmap_default.inl"
+
+
+FERALSTATUS KiStartupSystem(KiSubsystemIdentifier Subsystem)
 {
-	UINT16 CharMapWidth;
-	UINT16 CharMapHeight;
+	if (Subsystem == FERAL_SUBSYSTEM_MEMORY_MANAGEMENT)
+	{
 
-	UINT16 NumNumerals;
-	UINT16 NumLowerCase;
-	UINT16 NumUpperCase;
+	} else if (Subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC) {
 
-	/* Should be numerals, lowercase, uppercase. In order. */
-	UINT8  **CharMap; /* Bytemap for now. */
-}KrnlCharMap;
+	} else {
+		/*  Placeholder for more stuff later on. (disks, network...) */
+	}
+}
 
-typedef struct KrnlFirmwareFunctions
+STRING GetEfiFirmwareClaim()
 {
-	GetFirmwareNameFunc GetFirmwareName;
-	PutCharFunc PutChar;
-	PrintlnFunc Println;
-	GetNativeFirmwareMemoryMapFunc GetNativeFirmwareMemoryMap;
-	/* Add more functions as needed. */
-}KrnlFirmwareFunctions;
+	return "UEFI 2.8 compatible firmware";
+}
 
-FERALSTATUS KiUpdateFirmwareFunctions(KrnlFirmwareFunctions *Table, 
-	KrnlCharMap *CharMap);
+
+VOID kern_init(VOID *UNUSED)
+{
+
+	/* Set up the character map. */
+	CharMap.CharMapWidth = 8;
+	CharMap.CharMapHeight = 8;
+
+	CharMap.NumNumerals = 10;
+	CharMap.NumLowerCase = 26;
+	CharMap.NumUpperCase = 26;
+	CharMap.CharMap = DefaultCharMap;
+
+	FirmwareFuncs.GetFirmwareName = GetEfiFirmwareClaim;
+
+
+}
 
 
 

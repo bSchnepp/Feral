@@ -93,6 +93,7 @@ static VgaContext graphicsContext = {0};
 static UINT16 OtherBuffer[80 * 25];
 static KrnlFirmwareFunctions FirmwareFuncs = {0};
 static KrnlCharMap CharMap = {0};
+static 	KrnlEnvironmentBlock EnvBlock = {0};
 
 STRING GetBiosFirmwareClaim();
 VOID InternalVgaPrintln(STRING Str, UINT64 Len);
@@ -348,7 +349,6 @@ VOID kern_init(UINT32 MBINFO)
 		VgaAutoPrintln(VGA_RED, VGA_BLACK, "Unsupported PCH");
 	}
 
-	KrnlEnvironmentBlock EnvBlock = {0};
 	VgaSetCursorEnabled(TRUE);
 	VgaTraceCharacters(TRUE);
 	VgaMoveCursor(0, 24);
@@ -361,7 +361,6 @@ VOID kern_init(UINT32 MBINFO)
 	/* Kernel initialization is done, move on to actual tasks. */
 	KiSystemStartup(&EnvBlock);
 }
-#endif
 
 /* FIXME: Genericize and move back out. */
 
@@ -402,3 +401,5 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 	}
 	return STATUS_SUCCESS;
 }
+
+#endif
