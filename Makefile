@@ -34,7 +34,7 @@ kernel-efi:
 	cd arch && $(MAKE)
 	cd io && $(MAKE) 
 	cd drivers && $(MAKE)
-	cd kern && $(MAKE)
+	cd kern && $(MAKE) all-efi
 	 
 	$(CC) $(TARGET) -I$(INCLUDES) -DFERAL_BUILD_STANDALONE_UEFI_ $(CFLAGS) ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) -DFERAL_BUILD_STANDALONE_UEFI_ $(CFLAGS) $(VGA_FILES)

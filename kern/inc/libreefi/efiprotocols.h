@@ -351,7 +351,7 @@ typedef struct _EFI_FILE_SYSTEM_INFO
 
 typedef struct _EFI_FILE_SYSTEM_VOLUME_LABEL
 {
-	CHAR VolumeLabel[];
+	CHAR *VolumeLabel;
 }EFI_FILE_SYSTEM_VOLUME_LABEL;
 
 

@@ -31,6 +31,7 @@ IN THE SOFTWARE.
 #ifndef _FERAL_KRNL_BASE_H_
 #define _FERAL_KRNL_BASE_H_
 
+/* Should complain whenever it's not some multiple of 8 bits. */
 typedef struct KrnlPhysicalDisplay
 {
 	UINT8 BitsPerRed;
