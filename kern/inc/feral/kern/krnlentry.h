@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020 Brian Schnepp
+Copyright (c) 2019, 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -24,77 +24,28 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+
 #include <feral/stdtypes.h>
-#include <stdint.h>
-
-#if defined(__x86_64__)
-#include <arch/x86_64/cpuio.h>
-#include <arch/x86_64/cpufuncs.h>
-#endif
-
-
-#include <feral/feralstatus.h>
-#include <feral/stdtypes.h>
-#include <feral/handle.h>
-#include <feral/kern/frlos.h>
-#include <mm/mm.h>
-
-#include <feral/kern/krnlfuncs.h>
 #include <feral/kern/krnlbase.h>
+#include <feral/kern/krnlfirmware.h>
 
-#include <krnl.h>
-#include <kern_ver.h>
+#ifndef _FERAL_KRNL_ENTRY_H_
+#define _FERAL_KRNL_ENTRY_H_
 
-#include <arch/processor.h>
-
-
-#if defined(FERAL_BUILD_STANDALONE_UEFI_)
-
-#include <libreefi/efi.h>
-#include <feral/kern/krnlentry.h>
-
-static KrnlFirmwareFunctions FirmwareFuncs = {0};
-static KrnlCharMap CharMap = {0};
-static 	KrnlEnvironmentBlock EnvBlock = {0};
-
-#include "charmap_default.inl"
-
-
-FERALSTATUS KiStartupSystem(KiSubsystemIdentifier Subsystem)
+typedef struct EfiMemoryRange
 {
-	if (Subsystem == FERAL_SUBSYSTEM_MEMORY_MANAGEMENT)
-	{
+	BOOL Usable;
+	UINT_PTR Start;
+	UINT_PTR End;
+}EfiMemoryRange;
 
-	} else if (Subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC) {
-
-	} else {
-		/*  Placeholder for more stuff later on. (disks, network...) */
-	}
-}
-
-STRING GetEfiFirmwareClaim()
+typedef struct EfiBootInfo
 {
-	return "UEFI 2.8 compatible firmware";
-}
-
-
-VOID kern_init(EfiBootInfo *BootInfo)
-{
-
-	/* Set up the character map. */
-	CharMap.CharMapWidth = 8;
-	CharMap.CharMapHeight = 8;
-
-	CharMap.NumNumerals = 10;
-	CharMap.NumLowerCase = 26;
-	CharMap.NumUpperCase = 26;
-	CharMap.CharMap = DefaultCharMap;
-
-	FirmwareFuncs.GetFirmwareName = GetEfiFirmwareClaim;
-
-
-}
-
-
+	UINT64 NumDisplays;
+	UINT_PTR *FramebufferPAddrs;
+	
+	UINT64 MemoryRegions;
+	EfiMemoryRange *MemoryRanges;
+}EfiBootInfo;
 
 #endif

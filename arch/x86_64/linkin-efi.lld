@@ -1,4 +1,4 @@
-ENTRY(KiSystemStartup)
+ENTRY(kern_init)
 
 SECTIONS
 {

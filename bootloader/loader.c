@@ -587,8 +587,8 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	/* Put the table at the end. */
 	VirtRuntimeTable = (EFI_RUNTIME_SERVICES*)(VirtMemAreaFree);
 	
-	//FeralBootProtocolRemap();
-	//KiSystemStartup(&EnvBlock);
+	/* FeralBootProtocolRemap(); */
+	/* KiSystemStartup(&EnvBlock); */
 	
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		L"Kernel has exited.\r\n");
