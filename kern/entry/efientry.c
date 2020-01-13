@@ -81,6 +81,12 @@ STRING GetEfiFirmwareClaim()
 VOID kern_init(EfiBootInfo *BootInfo)
 {
 
+	UINT32 *FramebufferTemp = (UINT32*)(BootInfo->FramebufferPAddrs[2] + 0xFFFFFFFFC0000000);
+	
+	FramebufferTemp[0] = 0xFFFF0000;
+	FramebufferTemp[1] = 0x00FFFF00;
+	FramebufferTemp[2] = 0x0000FFFF;
+	FramebufferTemp[3] = 0xFF0000FF;
 	/* Set up the character map. */
 	CharMap.CharMapWidth = 8;
 	CharMap.CharMapHeight = 8;

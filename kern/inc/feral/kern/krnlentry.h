@@ -44,7 +44,7 @@ typedef struct EfiBootInfo
 	UINT64 NumDisplays;
 	UINT_PTR *FramebufferPAddrs;
 	
-	UINT64 MemoryRegions;
+	UINT64 NumMemoryRanges;
 	EfiMemoryRange *MemoryRanges;
 }EfiBootInfo;
 

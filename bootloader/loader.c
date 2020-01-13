@@ -28,6 +28,7 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 #include <feral/kern/krnlbase.h>
+#include <feral/kern/krnlentry.h>
 
 #ifndef _FRLBOOT_NO_SUPPORT_ELF64_
 #include <drivers/proc/elf/elf.h>
@@ -88,7 +89,7 @@ static EFI_GUID GuidEfiFileInfoGuid = EFI_FILE_INFO_ID;
 static EFI_GUID GuidEfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
 
-static KrnlEnvironmentBlock EnvBlock = {0};
+static EfiBootInfo EnvBlock = {0};
 static KrnlFirmwareFunctions FirmwareFuncs = {0};
 static KrnlCharMap CharMap = {0};
 
@@ -334,6 +335,7 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 	/* align to 4k */
 	VirtMemAreaFree = VirtMemAreaFree & EFI_PAGE_MAP;
 	 
+	/* Entry is already in vaddr. */
 	*Entry = InitialHeader.e_entry;
 	return EFI_SUCCESS;
 }
@@ -345,13 +347,24 @@ EFI_STATUS EFIAPI LdrReadBootInit(EFI_FILE_PROTOCOL *BootIni)
 }
 
 
-/* Kernel environment block stuff... */
-
-STRING GetEfiFirmwareClaim();
-
-STRING GetEfiFirmwareClaim()
+BOOL GetEfiMemoryMapToFreeOrNot(EFI_MEMORY_DESCRIPTOR *Place)
 {
-	return "UEFI 2.8 compatible firmware";
+	switch (Place->Type)
+	{
+		case EfiLoaderCode:
+		case EfiLoaderData:
+		case EfiBootServicesCode:
+		case EfiBootServicesData:
+		case EfiConventionalMemory:
+		{
+			return TRUE;
+		}
+		
+		default:
+		{
+			return FALSE;
+		}
+	}
 }
 
 
@@ -384,7 +397,7 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	
 	EFI_OPEN_PROTOCOL OpenProtocol;
 	
-	VOID (*KiSystemStartup)(KrnlEnvironmentBlock*) = NULLPTR;
+	VOID (*kern_init)(EfiBootInfo*) = NULLPTR;
 
 
 	ImageHandle = mImageHandle;
@@ -410,6 +423,12 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 		
 	OpenProtocol = SystemTable->BootServices->OpenProtocol;
 
+	/* cleanup later... */
+	UINT_PTR *DisplayBuffers = NULLPTR;
+	SystemTable->BootServices->AllocatePool(AllocateAnyPages, 
+		(sizeof(UINT_PTR) * NumDisplays * 3), 
+		&DisplayBuffers);
+		
 	for (Iterator = 0; Iterator < NumDisplays; ++Iterator)
 	{
 		/* Get the current GOP. */
@@ -445,6 +464,11 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 				ItoaBuf);
 		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 				L"\r\n");
+				
+		/* HACK: first and second are sizes.*/
+		DisplayBuffers[Iterator+0] = CurrentWidth;
+		DisplayBuffers[Iterator+1] = CurrentHeight;
+		DisplayBuffers[Iterator+2] = GraphicsProtocol->Mode->FrameBufferBase;
 	}
 
 	/* Get the UEFI memory stuff. */
@@ -542,7 +566,7 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	/* Terminate the watchdog timer. */
 	SystemTable->BootServices->SetWatchdogTimer(0, 0, 0, NULL);
 	
-	Result = ElfLoadFile(KernelImage, &KiSystemStartup);
+	Result = ElfLoadFile(KernelImage, &kern_init);
 	
 	/* TODO: Keep EFI stuff in memory while this all happens... */
 	
@@ -562,11 +586,18 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		L"Terminating firmware services...\r\n");
 
+	/* ehhhhh */
+	UINT64 NumMemoryRanges = MapSize / DescriptorSize;
+	EfiMemoryRange *MemoryRanges = NULLPTR;
+	SystemTable->BootServices->AllocatePool(AllocateAnyPages, 
+		(sizeof(EfiMemoryRange) * NumMemoryRanges), 
+		&MemoryRanges);
+
 	/* Start loading of the kernel. (setup and call KiSystemStartup) */
 	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
 	
 	/* Iterate through the memory map one more time. */
-	for (Iterator = 0; Iterator < MapSize / DescriptorSize; ++Iterator)
+	for (Iterator = 0; Iterator < NumMemoryRanges; ++Iterator)
 	{
 		/* FIXME: Incompatible with C89 */
 		EFI_MEMORY_DESCRIPTOR *Current = &(MemoryMap[Iterator]);
@@ -583,18 +614,23 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 			   the table, and then we're good to mess
 			   with cr3. */
 		}
+		
+		MemoryRanges[Iterator].Usable = GetEfiMemoryMapToFreeOrNot(Current);
+		MemoryRanges[Iterator].Start = Begin;
+		MemoryRanges[Iterator].End = End;
 	}
 	/* Put the table at the end. */
 	VirtRuntimeTable = (EFI_RUNTIME_SERVICES*)(VirtMemAreaFree);
 	
-	/* FeralBootProtocolRemap(); */
-	/* KiSystemStartup(&EnvBlock); */
+	FeralBootProtocolRemap();
+	EnvBlock.NumDisplays = NumDisplays;
+	EnvBlock.FramebufferPAddrs = DisplayBuffers;
 	
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L"Kernel has exited.\r\n");
-	SystemTable->BootServices->Stall(125000);
-	SystemTable->RuntimeServices->ResetSystem(EfiResetShutdown,
-		EFI_SUCCESS, 0, NULLPTR);
+	EnvBlock.NumMemoryRanges = NumMemoryRanges;
+	EnvBlock.FramebufferPAddrs = MemoryRanges;
+	
+	kern_init(&EnvBlock);
+	for (;;) {}
 
 	return EFI_SUCCESS;
 }
