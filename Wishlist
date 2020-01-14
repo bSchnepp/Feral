@@ -1,9 +1,6 @@
 	- Cluster support
 		(This is to allow the OS to control GPUs on systems over LAN, to accelerate game performance. We do not care about data accuracy (do not do redundant stuff), only raw data throughput. In essence, we want to throw as many GPUs at games as humanly possible, and hope developers find *some* purpose for whatever they can access.) Again, everything should be designed with the intent of being useful for games to use. CPU cycles are very precious
 things, and we should avoid doing any rendering while a game is running so it can get as much of the GPU's power as possible.
-
-	- Load games in kernel mode through some sort of kernel-mode loader.
-		(Avoid context switching, improve performance, maybe even allow games to directly program the hardware. For security purposes, ensure SYSTEM must be the one elevating the program, and the program doesn't know if it's actually in kernel-mode or not. Obviously warn the user doing this is potentially dangerous but might be helpful in cases where a game is not performing ideally, and an additional ~2-5 FPS makes it playable. (*can* we do this, given how complex things are? We'll need to call GL or VK or whatever in kernel mode, but also tons of otherwise user mode libraries in what's essentially a flat memory model. This seems *very* hard to achieve.)
 		
 	- Get a kernel-level hypervisor going (something like KVM).
 
@@ -27,12 +24,12 @@ TODO to port:
 	- We want clang, llvm, yasm, etc. as soon as possible. We should aim to be self-hosting as soon as we can.
 	- We should also port python, and maybe get some version of Firefox up. At least links for a web browser.	
 	- Mesa would be nice to have.
-	- Port some 90s game over! (so we can slay some demons or something)
+	- Port some 90s game over!
 
 User facing stuff:
 	- Animated wallpapers are an absolute must. We don't use potatos for CPUs anymore. (also so we can brag we have something that RedmondOS doesn't have natively)
 
-	- We *really* like the colors black and gold (they're great together), and the occasional red highlight isn't bad, but shouldn't be used too much.
+	- We *really* like the colors black and gold (they're great together on my display. Either that or black and green.), and the occasional red highlight isn't bad, but shouldn't be used too much.
 	
 	- As many user-facing features as possible should be customizable, but we should *insist* on the hexagon thing.
 	

@@ -428,8 +428,9 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	SystemTable->BootServices->AllocatePool(AllocateAnyPages, 
 		(sizeof(UINT_PTR) * NumDisplays * 3), 
 		&DisplayBuffers);
-		
-	for (Iterator = 0; Iterator < NumDisplays; ++Iterator)
+	
+	/* Seems like it's 1 more than supposed to */	
+	for (Iterator = 0; Iterator < NumDisplays - 1; ++Iterator)
 	{
 		/* Get the current GOP. */
 		Result = OpenProtocol(VideoBuffers[Iterator], 
@@ -446,6 +447,17 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 			SystemTable->BootServices->Stall(12500000);
 			return Result;
 		}
+		
+		Result = GraphicsProtocol->SetMode(GraphicsProtocol, PixelRedGreenBlueReserved8BitPerColor);
+		if (Result != EFI_SUCCESS)
+		{
+			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+				L"Display does not use 32-bit RGB mode...\r\n");
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
+				EfiErrorToString(Result));
+			SystemTable->BootServices->Stall(12500000);
+			return Result;
+		}		
 		
 		/* Update the current width and height, then display. */
 		CurrentWidth = GraphicsProtocol->Mode->Info->HorizontalResolution;
@@ -470,6 +482,7 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 		DisplayBuffers[Iterator+1] = CurrentHeight;
 		DisplayBuffers[Iterator+2] = GraphicsProtocol->Mode->FrameBufferBase;
 	}
+	
 
 	/* Get the UEFI memory stuff. */
 	Result = SystemTable->BootServices->GetMemoryMap(&MapSize, MemoryMap,
@@ -594,7 +607,7 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 		&MemoryRanges);
 
 	/* Start loading of the kernel. (setup and call KiSystemStartup) */
-	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
+	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);	
 	
 	/* Iterate through the memory map one more time. */
 	for (Iterator = 0; Iterator < NumMemoryRanges; ++Iterator)
@@ -621,6 +634,14 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	}
 	/* Put the table at the end. */
 	VirtRuntimeTable = (EFI_RUNTIME_SERVICES*)(VirtMemAreaFree);
+	
+	/* Remap breaks all of this */
+	((UINT32*)(DisplayBuffers[2]))[0] = 0xFFFFFF00;
+	((UINT32*)(DisplayBuffers[2]))[1] = 0xCFFFFF00;
+	((UINT32*)(DisplayBuffers[2]))[2] = 0xAFFFFF00;
+	((UINT32*)(DisplayBuffers[2]))[3] = 0x8FFFFF00;
+	((UINT32*)(DisplayBuffers[2]))[4] = 0x4FFFFF00;
+	((UINT32*)(DisplayBuffers[2]))[5] = 0x0FFFFF00;
 	
 	FeralBootProtocolRemap();
 	EnvBlock.NumDisplays = NumDisplays;
