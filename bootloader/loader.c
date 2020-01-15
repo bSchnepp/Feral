@@ -105,7 +105,7 @@ UINT64 BytesToEfiPages(UINT64 Bytes)
 {
 	/* Lazy implementation for debugging... */
 	UINT64 RetVal = Bytes >> EFI_PAGE_SHIFT;
-	if (RetVal % EFI_PAGE_SIZE)
+	if (RetVal % EFI_PAGE_SIZE || RetVal == 0)
 	{
 		++RetVal;
 	}
@@ -113,41 +113,36 @@ UINT64 BytesToEfiPages(UINT64 Bytes)
 }
 
 #if defined(__x86_64__)
-static UINT_PTR InitialP4Table[512];
-static UINT_PTR InitialP3Table[512];
-static UINT_PTR InitialP2Table[512];
+static UINT64 InitialP4Table[512];
+static UINT64 InitialP3Table[512];
+static UINT64 InitialP2Table[512];
 
-VOID FlushCR3(VOID);
 VOID InstallPagingMap(UINT_PTR VirtAddrP4);
 
-VOID FlushCR3(VOID)
-{
-	__asm__ __volatile__(
-		"movq %%cr3, %%rax\n\t"
-		"movq %%rax, %%cr3\n\t"
-		:
-		:
-		: "rax");
-}
-
+/* Install and flush right away. */
 VOID InstallPagingMap(UINT_PTR PhysAddrP4)
 {
-	__asm__ __volatile__("movq %0, %%cr3\r\n"
+	__asm__ __volatile__(
+		"movq %0, %%cr3\r\n\t"
+		"movq %%cr3, %%rax\r\n\t"
+		"movq %%rax, %%cr3\r\n\t"
 		:
-		: "b"(PhysAddrP4));
-	FlushCR3();
+		: "r"(PhysAddrP4)
+		: "rax");
 }
 
 EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 {
 	UINT16 LoopIndex = 0;
-	
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L"Building page tables...\r\n");
+
 	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
 	{
 		if (LoopIndex == 0 || LoopIndex == 511)
 		{
 			InitialP4Table[LoopIndex] =
-				(InitialP3Table - FERAL_VIRT_OFFSET) + 3;
+				(((UINT64)InitialP3Table) - FERAL_VIRT_OFFSET) | 0x03;
 		} else {
 			InitialP4Table[LoopIndex] = 0;
 		}
@@ -158,7 +153,7 @@ EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 		if (LoopIndex == 0 || LoopIndex == 511)
 		{
 			InitialP3Table[LoopIndex] =
-				(InitialP2Table - FERAL_VIRT_OFFSET) + 3;
+				(((UINT64)(InitialP2Table)) - FERAL_VIRT_OFFSET) | 0x03;
 		} else {
 			InitialP3Table[LoopIndex] = 0;
 		}
@@ -180,7 +175,9 @@ EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 	cmp ecx, 512	; P2 needs 512 entries. (one gigabyte of identity mapping.)
 	jne .map_page_tables
 #endif
-	InstallPagingMap(InitialP4Table - FERAL_VIRT_OFFSET);
+	/* Reinterpret cast for debugging... */
+	UINT_PTR P4AsInteger = *(UINT_PTR*)(&InitialP4Table);
+	InstallPagingMap(P4AsInteger - FERAL_VIRT_OFFSET);
 	return EFI_SUCCESS;
 }
 #endif
@@ -289,25 +286,46 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 		
 		if (ProgramHeader.p_type == PT_LOAD)
 		{
-			PAddress = ProgramHeader.p_paddr;
+			/* PAddr is in multiples of 4096. */
+			PAddress = ProgramHeader.p_paddr << 12;
 		
 			Status = SystemTable->BootServices->AllocatePages(
 				AllocateAddress, EfiLoaderData,
 				BytesToEfiPages(ProgramHeader.p_memsz),
 				&PAddress
 			);
-			
-			/* Ignore EFI not doing it's job. (EFI_NOT_FOUND) */
-			if (Status != EFI_SUCCESS && Status != EFI_NOT_FOUND)
-			{
-				SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					L"Failed to get address: ");
-				InternalItoaBaseChange(PAddress, ItoaBuf, 16);
-				SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			InternalItoaBaseChange(BytesToEfiPages(ProgramHeader.p_memsz), ItoaBuf, 10);
+			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					L"Attempting to allocate: ");
+			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 					ItoaBuf);
-				SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					L"\r\n");	
-				return Status;
+			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					L" pages at location 0x");
+			/* Correct wrong address */
+			InternalItoaBaseChange(BytesToEfiPages(ProgramHeader.p_paddr << 12), ItoaBuf, 16);
+			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					ItoaBuf);
+			/* */						
+
+			/* Ignore EFI not doing it's job. (EFI_NOT_FOUND) */
+			if (Status != EFI_SUCCESS)
+			{
+				if (Status == EFI_NOT_FOUND)
+				{
+					/* warn the user that bios is buggy */
+					SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+						L"\r\n[WARNING]: BIOS bug being suppressed with brute force.\r\n"); 
+					SystemTable->ConOut->OutputString(SystemTable->ConOut, L"Ask manufacturer for fix.\r\n");				
+				} else {
+					SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+						L"Failed to get address: ");
+					InternalItoaBaseChange(PAddress, ItoaBuf, 16);
+					SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+						ItoaBuf);
+					SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+						L"\r\n");	
+					return Status;
+				}
 			}
 			
 			/* Zero it all out first... */
@@ -631,6 +649,22 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 		MemoryRanges[Iterator].Usable = GetEfiMemoryMapToFreeOrNot(Current);
 		MemoryRanges[Iterator].Start = Begin;
 		MemoryRanges[Iterator].End = End;
+
+		InternalItoaBaseChange(Begin, ItoaBuf, 16);
+		if (GetEfiMemoryMapToFreeOrNot(Current))
+		{
+			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					L"Got free area starting with 0x");
+			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					ItoaBuf);
+			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					L" and going up to 0x");
+			InternalItoaBaseChange(End, ItoaBuf, 16);
+			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					ItoaBuf);
+			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					L"\r\n");
+		}
 	}
 	/* Put the table at the end. */
 	VirtRuntimeTable = (EFI_RUNTIME_SERVICES*)(VirtMemAreaFree);
@@ -642,7 +676,7 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	((UINT32*)(DisplayBuffers[2]))[3] = 0x8FFFFF00;
 	((UINT32*)(DisplayBuffers[2]))[4] = 0x4FFFFF00;
 	((UINT32*)(DisplayBuffers[2]))[5] = 0x0FFFFF00;
-	
+
 	FeralBootProtocolRemap();
 	EnvBlock.NumDisplays = NumDisplays;
 	EnvBlock.FramebufferPAddrs = DisplayBuffers;
@@ -651,7 +685,7 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	EnvBlock.FramebufferPAddrs = MemoryRanges;
 	
 	kern_init(&EnvBlock);
-	for (;;) {}
+	for (;;){}
 
 	return EFI_SUCCESS;
 }

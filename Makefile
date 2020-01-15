@@ -87,7 +87,13 @@ qemu-efi: 	img-efi
 	rm -rf ./efi.bin
 	
 
-qemu-nokvm-efi:	iso
+qemu-nokvm-efi:	img-efi
 	cp $(EFI_CODE) ./efi.bin
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -pflash  ./efi.bin
+	rm -rf ./efi.bin
+
+
+qemu-nokvm-unsupportedcpu-efi:	img-efi
+	cp $(EFI_CODE) ./efi.bin
+	qemu-system-$(ARCH) -cpu KnightsMill -smp 2 -m 6G -pflash ./efi.bin -hda fat:rw:build -net none
 	rm -rf ./efi.bin

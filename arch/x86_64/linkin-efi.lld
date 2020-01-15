@@ -2,42 +2,45 @@ ENTRY(kern_init)
 
 SECTIONS
 {
-	. = 1M;
+	/* . += 4096; is for padding, to always ensure no two sections are in same 4k page. */
+
+	. = 2M;
 	kern_start = .;
 	KERN_VIRT_OFFSET = 0xFFFFFFFFC0000000;
 	
+	. += 4096;
 	.earlytext : {}
-
+	. += 4096;
 	.earlybss : {}
-	
+	. += 4096;
 	.earlydata : {}
 	
 	
 	/* Assume bootloader prepares memory map for us. */
-	
+	. += 4096;
 	. += KERN_VIRT_OFFSET;
 	kern_virt_start = .;
-
+	. += 4096;
 	.text : AT(ADDR(.text) - KERN_VIRT_OFFSET)
 	{
 		*(.text*)
 	}
-
+	. += 4096;
 	.rodata : AT(ADDR(.rodata) - KERN_VIRT_OFFSET)
 	{
 		*(.rodata*)
 	}
-
+	. += 4096;
 	.bss : AT(ADDR(.bss) - KERN_VIRT_OFFSET)
 	{
 		*(.bss)
 	}
-	
+	. += 4096;	
 	.data : AT(ADDR(.data) - KERN_VIRT_OFFSET)
 	{
 		*(.data)
 	}
-
+	. += 4096;
 	kern_virt_end = .;
 	kern_end = . - KERN_VIRT_OFFSET;
 }

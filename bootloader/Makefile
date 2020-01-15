@@ -6,7 +6,7 @@ LDFLAGS = -subsystem:efi_application --nostdlib
 
 
 all:
-	$(CC) $(CFLAGS) loader.c -o LOADER.o
+	$(CC) $(CFLAGS) -g3 loader.c -o LOADER.o
 	# Illustrious hack to make lld work. Hence why llvm toolchain, not gnu.
 	$(LD) $(LDFLAGS) LOADER.o /entry:uefi_main /out:BOOTX64.EFI
 
