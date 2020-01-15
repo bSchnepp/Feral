@@ -87,6 +87,7 @@ VOID kern_init(EfiBootInfo *BootInfo)
 	FramebufferTemp[1] = 0x00FFFF00;
 	FramebufferTemp[2] = 0x0000FFFF;
 	FramebufferTemp[3] = 0xFF0000FF;
+
 	/* Set up the character map. */
 	CharMap.CharMapWidth = 8;
 	CharMap.CharMapHeight = 8;
