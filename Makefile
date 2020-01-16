@@ -95,5 +95,10 @@ qemu-nokvm-efi:	img-efi
 
 qemu-nokvm-unsupportedcpu-efi:	img-efi
 	cp $(EFI_CODE) ./efi.bin
-	qemu-system-$(ARCH) -cpu KnightsMill -smp 2 -m 6G -pflash ./efi.bin -hda fat:rw:build -net none
+	qemu-system-$(ARCH) -cpu KnightsMill -smp 2 -m 6G -pflash ./efi.bin -hda fat:rw:build -net none -d int,cpu_reset -no-reboot -no-shutdown
+	rm -rf ./efi.bin
+	
+qemu-nokvm-unsupportedcpu-efi-lldb:	img-efi
+	cp $(EFI_CODE) ./efi.bin
+	qemu-system-$(ARCH) -cpu KnightsMill -smp 2 -m 6G -pflash ./efi.bin -hda fat:rw:build -net none -S -s -d int,cpu_reset -no-reboot -no-shutdown
 	rm -rf ./efi.bin

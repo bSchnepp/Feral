@@ -113,9 +113,11 @@ UINT64 BytesToEfiPages(UINT64 Bytes)
 }
 
 #if defined(__x86_64__)
-static UINT64 InitialP4Table[512];
-static UINT64 InitialP3Table[512];
-static UINT64 InitialP2Table[512];
+
+static UINT64 *InitialP4Table;
+static UINT64 *InitialP3Table;
+static UINT64 *InitialP2Table;
+static UINT64 *InitialP2Table_2;
 
 VOID InstallPagingMap(UINT_PTR VirtAddrP4);
 
@@ -124,25 +126,21 @@ VOID InstallPagingMap(UINT_PTR PhysAddrP4)
 {
 	__asm__ __volatile__(
 		"movq %0, %%cr3\r\n\t"
-		"movq %%cr3, %%rax\r\n\t"
-		"movq %%rax, %%cr3\r\n\t"
 		:
-		: "r"(PhysAddrP4)
-		: "rax");
+		: "r"(PhysAddrP4));
+	for (;;){}
 }
 
 EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 {
 	UINT16 LoopIndex = 0;
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L"Building page tables...\r\n");
 
 	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
 	{
 		if (LoopIndex == 0 || LoopIndex == 511)
 		{
 			InitialP4Table[LoopIndex] =
-				(((UINT64)InitialP3Table) - FERAL_VIRT_OFFSET) | 0x03;
+				(((UINT64)InitialP3Table)) | 0x03;
 		} else {
 			InitialP4Table[LoopIndex] = 0;
 		}
@@ -153,7 +151,7 @@ EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 		if (LoopIndex == 0 || LoopIndex == 511)
 		{
 			InitialP3Table[LoopIndex] =
-				(((UINT64)(InitialP2Table)) - FERAL_VIRT_OFFSET) | 0x03;
+				(((UINT64)(InitialP2Table)) | 0x03);
 		} else {
 			InitialP3Table[LoopIndex] = 0;
 		}
@@ -162,22 +160,12 @@ EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
 	{
 		InitialP2Table[LoopIndex] = (0x200000 * LoopIndex) | 0b10000011;
+		InitialP2Table_2[LoopIndex] = ((0x200000 * LoopIndex) + (1 * 0x40000000)) | 0b10000011;
 	}
 	
-#if 0
-	; Use huge pages (2MB), map at 2MB * ecx.
-	mov eax, 0x200000
-	mul ecx
-	or eax, 10000011b	; Present, writable, and huge.
-	mov [(p2_table - KERN_VIRT_OFFSET) + ecx * 8], eax	; And now write it to the table.
-
-	inc ecx	; Increment it...
-	cmp ecx, 512	; P2 needs 512 entries. (one gigabyte of identity mapping.)
-	jne .map_page_tables
-#endif
 	/* Reinterpret cast for debugging... */
-	UINT_PTR P4AsInteger = *(UINT_PTR*)(&InitialP4Table);
-	InstallPagingMap(P4AsInteger - FERAL_VIRT_OFFSET);
+	UINT_PTR *P4AsInteger = (UINT_PTR*)(&InitialP4Table);
+	InstallPagingMap(P4AsInteger);
 	return EFI_SUCCESS;
 }
 #endif
@@ -593,6 +581,22 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 		SystemTable->BootServices->Stall(12500000);
 		return Result;
 	}
+	
+	/* Use firmware to allocate page tables */
+	UINT64 PhysicalAddr;
+	Result = SystemTable->BootServices->AllocatePages(
+			AllocateAnyPages, EfiLoaderData,
+			BytesToEfiPages(8196),
+			&PhysicalAddr
+		);
+	if (Result != EFI_SUCCESS)
+	{
+		return Result;
+	}
+	InitialP4Table = (UINT64*)(PhysicalAddr & EFI_PAGE_MAP);
+	InitialP3Table = InitialP4Table + 512;
+	InitialP2Table = InitialP3Table + 512;
+	InitialP2Table_2 = InitialP2Table + 512;
 		
 	/* Terminate the watchdog timer. */
 	SystemTable->BootServices->SetWatchdogTimer(0, 0, 0, NULL);
@@ -623,9 +627,6 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	SystemTable->BootServices->AllocatePool(AllocateAnyPages, 
 		(sizeof(EfiMemoryRange) * NumMemoryRanges), 
 		&MemoryRanges);
-
-	/* Start loading of the kernel. (setup and call KiSystemStartup) */
-	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);	
 	
 	/* Iterate through the memory map one more time. */
 	for (Iterator = 0; Iterator < NumMemoryRanges; ++Iterator)
@@ -649,23 +650,11 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 		MemoryRanges[Iterator].Usable = GetEfiMemoryMapToFreeOrNot(Current);
 		MemoryRanges[Iterator].Start = Begin;
 		MemoryRanges[Iterator].End = End;
-
-		InternalItoaBaseChange(Begin, ItoaBuf, 16);
-		if (GetEfiMemoryMapToFreeOrNot(Current))
-		{
-			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					L"Got free area starting with 0x");
-			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					ItoaBuf);
-			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					L" and going up to 0x");
-			InternalItoaBaseChange(End, ItoaBuf, 16);
-			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					ItoaBuf);
-			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					L"\r\n");
-		}
 	}
+	
+	/* Start loading of the kernel. (setup and call KiSystemStartup) */
+	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);	
+	
 	/* Put the table at the end. */
 	VirtRuntimeTable = (EFI_RUNTIME_SERVICES*)(VirtMemAreaFree);
 	
