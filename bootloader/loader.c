@@ -116,8 +116,8 @@ UINT64 BytesToEfiPages(UINT64 Bytes)
 
 static UINT64 *InitialP4Table;
 static UINT64 *InitialP3Table;
+
 static UINT64 *InitialP2Table;
-static UINT64 *InitialP2Table_2;
 
 VOID InstallPagingMap(UINT_PTR *VirtAddrP4);
 
@@ -128,18 +128,19 @@ VOID InstallPagingMap(UINT_PTR *PhysAddrP4)
 		"mov %0, %%cr3\r\n\t"
 		:
 		: "r"(PhysAddrP4));
-	for (;;){}
 }
 
 EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 {
 	UINT16 LoopIndex = 0;
+	UINT16 IndexTwo = 0;
 
 	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
 	{
 		if (LoopIndex == 0)
 		{
-			InitialP4Table[LoopIndex] = (UINT64)((InitialP3Table)) | 0x03;
+			UINT64 Addr = (UINT64)(InitialP3Table);
+			InitialP4Table[LoopIndex] = Addr | 0x03;
 		} else {
 			InitialP4Table[LoopIndex] = 0;
 		}
@@ -147,20 +148,26 @@ EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 	
 	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
 	{
-		if (LoopIndex == 0)
+		if (LoopIndex <= 15)
 		{
-			InitialP3Table[LoopIndex] = (UINT64)((InitialP2Table)) | 0x03;
+			UINT64 Offset = LoopIndex * 512;
+			UINT64 *CurrentTable = (InitialP2Table + LoopIndex);
+			UINT64 Addr = (UINT64)(CurrentTable);
+			InitialP3Table[LoopIndex] = (Addr) | 0x03;
 		} else {
 			InitialP3Table[LoopIndex] = 0;
 		}
 	}
 	
-	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
+	for (IndexTwo = 0; IndexTwo < 16; ++IndexTwo)
 	{
-		InitialP2Table[LoopIndex] = (0x200000 * LoopIndex) | 0b10000011;
-		//InitialP2Table_2[LoopIndex] = ((0x200000 * LoopIndex) + (1 * 0x40000000)) | 0b10000011;
+		UINT64 *CurrentTable = (InitialP2Table + (IndexTwo * 512));
+		for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
+		{
+			UINT64 Addr = (0x200000 * LoopIndex);
+			CurrentTable[LoopIndex] =  Addr | 0b10000011;
+		}
 	}
-	
 
 	CHAR16 ItoaBuf[32];
 
@@ -173,6 +180,44 @@ EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		ItoaBuf);
 	InternalItoaBaseChange(InitialP4Table[0], ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L" and entry 0 is ");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		ItoaBuf);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L"\r\n");
+	InternalItoaBaseChange(InitialP3Table, ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L"PML3 will be at ");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		ItoaBuf);
+	InternalItoaBaseChange(InitialP3Table[0], ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L" and entry 0 is ");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		ItoaBuf);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L"\r\n");
+	InternalItoaBaseChange(InitialP3Table[4], ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L" and entry 4 is ");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		ItoaBuf);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L"\r\n");
+	InternalItoaBaseChange(((UINT64*)InitialP3Table[4])[0], ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L" and entry 4-0 is ");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		ItoaBuf);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L"\r\n");
+	InternalItoaBaseChange(InitialP2Table, ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L"PD will be at ");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		ItoaBuf);
+	InternalItoaBaseChange(InitialP2Table[0], ItoaBuf, 16);
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 		L" and entry 0 is ");
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
@@ -600,7 +645,7 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	UINT64 PhysicalAddr;
 	Result = SystemTable->BootServices->AllocatePages(
 			AllocateAnyPages, EfiLoaderData,
-			16,
+			32, /* 128k of space is probably plenty */
 			&PhysicalAddr
 		);
 	if (Result != EFI_SUCCESS)
@@ -610,7 +655,6 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	InitialP4Table = (UINT64*)(PhysicalAddr & ~(0xFFF));
 	InitialP3Table = InitialP4Table + 512;
 	InitialP2Table = InitialP3Table + 512;
-	InitialP2Table_2 = InitialP2Table + 512;
 		
 	/* Terminate the watchdog timer. */
 	SystemTable->BootServices->SetWatchdogTimer(0, 0, 0, NULL);
