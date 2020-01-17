@@ -119,13 +119,13 @@ static UINT64 *InitialP3Table;
 static UINT64 *InitialP2Table;
 static UINT64 *InitialP2Table_2;
 
-VOID InstallPagingMap(UINT_PTR VirtAddrP4);
+VOID InstallPagingMap(UINT_PTR *VirtAddrP4);
 
 /* Install and flush right away. */
-VOID InstallPagingMap(UINT_PTR PhysAddrP4)
+VOID InstallPagingMap(UINT_PTR *PhysAddrP4)
 {
 	__asm__ __volatile__(
-		"movq %0, %%cr3\r\n\t"
+		"mov %0, %%cr3\r\n\t"
 		:
 		: "r"(PhysAddrP4));
 	for (;;){}
@@ -137,10 +137,9 @@ EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 
 	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
 	{
-		if (LoopIndex == 0 || LoopIndex == 511)
+		if (LoopIndex == 0)
 		{
-			InitialP4Table[LoopIndex] =
-				(((UINT64)InitialP3Table)) | 0x03;
+			InitialP4Table[LoopIndex] = (UINT64)((InitialP3Table)) | 0x03;
 		} else {
 			InitialP4Table[LoopIndex] = 0;
 		}
@@ -148,10 +147,9 @@ EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 	
 	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
 	{
-		if (LoopIndex == 0 || LoopIndex == 511)
+		if (LoopIndex == 0)
 		{
-			InitialP3Table[LoopIndex] =
-				(((UINT64)(InitialP2Table)) | 0x03);
+			InitialP3Table[LoopIndex] = (UINT64)((InitialP2Table)) | 0x03;
 		} else {
 			InitialP3Table[LoopIndex] = 0;
 		}
@@ -160,11 +158,27 @@ EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
 	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
 	{
 		InitialP2Table[LoopIndex] = (0x200000 * LoopIndex) | 0b10000011;
-		InitialP2Table_2[LoopIndex] = ((0x200000 * LoopIndex) + (1 * 0x40000000)) | 0b10000011;
+		//InitialP2Table_2[LoopIndex] = ((0x200000 * LoopIndex) + (1 * 0x40000000)) | 0b10000011;
 	}
 	
+
+	CHAR16 ItoaBuf[32];
+
 	/* Reinterpret cast for debugging... */
-	UINT_PTR *P4AsInteger = (UINT_PTR*)(&InitialP4Table);
+	UINT_PTR *P4AsInteger = (UINT_PTR*)(InitialP4Table);
+
+	InternalItoaBaseChange(InitialP4Table, ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L"PML4 will be at ");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		ItoaBuf);
+	InternalItoaBaseChange(InitialP4Table[0], ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L" and entry 0 is ");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		ItoaBuf);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L"\r\n");
 	InstallPagingMap(P4AsInteger);
 	return EFI_SUCCESS;
 }
@@ -586,14 +600,14 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	UINT64 PhysicalAddr;
 	Result = SystemTable->BootServices->AllocatePages(
 			AllocateAnyPages, EfiLoaderData,
-			BytesToEfiPages(8196),
+			16,
 			&PhysicalAddr
 		);
 	if (Result != EFI_SUCCESS)
 	{
 		return Result;
 	}
-	InitialP4Table = (UINT64*)(PhysicalAddr & EFI_PAGE_MAP);
+	InitialP4Table = (UINT64*)(PhysicalAddr & ~(0xFFF));
 	InitialP3Table = InitialP4Table + 512;
 	InitialP2Table = InitialP3Table + 512;
 	InitialP2Table_2 = InitialP2Table + 512;
