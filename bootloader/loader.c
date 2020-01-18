@@ -112,124 +112,6 @@ UINT64 BytesToEfiPages(UINT64 Bytes)
 	return RetVal;
 }
 
-#if defined(__x86_64__)
-
-static UINT64 *InitialP4Table;
-static UINT64 *InitialP3Table;
-
-static UINT64 *InitialP2Table;
-
-VOID InstallPagingMap(UINT_PTR *VirtAddrP4);
-
-/* Install and flush right away. */
-VOID InstallPagingMap(UINT_PTR *PhysAddrP4)
-{
-	__asm__ __volatile__(
-		"mov %0, %%cr3\r\n\t"
-		:
-		: "r"(PhysAddrP4));
-}
-
-EFI_STATUS EFIAPI FeralBootProtocolRemap(VOID)
-{
-	UINT16 LoopIndex = 0;
-	UINT16 IndexTwo = 0;
-
-	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
-	{
-		if (LoopIndex == 0)
-		{
-			UINT64 Addr = (UINT64)(InitialP3Table);
-			InitialP4Table[LoopIndex] = Addr | 0x03;
-		} else {
-			InitialP4Table[LoopIndex] = 0;
-		}
-	}
-	
-	for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
-	{
-		if (LoopIndex <= 15)
-		{
-			UINT64 Offset = LoopIndex * 512;
-			UINT64 *CurrentTable = (InitialP2Table + LoopIndex);
-			UINT64 Addr = (UINT64)(CurrentTable);
-			InitialP3Table[LoopIndex] = (Addr) | 0x03;
-		} else {
-			InitialP3Table[LoopIndex] = 0;
-		}
-	}
-	
-	for (IndexTwo = 0; IndexTwo < 16; ++IndexTwo)
-	{
-		UINT64 *CurrentTable = (InitialP2Table + (IndexTwo * 512));
-		for (LoopIndex = 0; LoopIndex < 512; ++LoopIndex)
-		{
-			UINT64 Addr = (0x200000 * LoopIndex);
-			CurrentTable[LoopIndex] =  Addr | 0b10000011;
-		}
-	}
-
-	CHAR16 ItoaBuf[32];
-
-	/* Reinterpret cast for debugging... */
-	UINT_PTR *P4AsInteger = (UINT_PTR*)(InitialP4Table);
-
-	InternalItoaBaseChange(InitialP4Table, ItoaBuf, 16);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L"PML4 will be at ");
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		ItoaBuf);
-	InternalItoaBaseChange(InitialP4Table[0], ItoaBuf, 16);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L" and entry 0 is ");
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		ItoaBuf);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L"\r\n");
-	InternalItoaBaseChange(InitialP3Table, ItoaBuf, 16);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L"PML3 will be at ");
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		ItoaBuf);
-	InternalItoaBaseChange(InitialP3Table[0], ItoaBuf, 16);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L" and entry 0 is ");
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		ItoaBuf);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L"\r\n");
-	InternalItoaBaseChange(InitialP3Table[4], ItoaBuf, 16);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L" and entry 4 is ");
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		ItoaBuf);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L"\r\n");
-	InternalItoaBaseChange(((UINT64*)InitialP3Table[4])[0], ItoaBuf, 16);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L" and entry 4-0 is ");
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		ItoaBuf);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L"\r\n");
-	InternalItoaBaseChange(InitialP2Table, ItoaBuf, 16);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L"PD will be at ");
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		ItoaBuf);
-	InternalItoaBaseChange(InitialP2Table[0], ItoaBuf, 16);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L" and entry 0 is ");
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		ItoaBuf);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L"\r\n");
-	InstallPagingMap(P4AsInteger);
-	return EFI_SUCCESS;
-}
-#endif
-
-
 /* Borrowed from krnlfuncs... */
 VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix)
 {
@@ -640,21 +522,6 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 		SystemTable->BootServices->Stall(12500000);
 		return Result;
 	}
-	
-	/* Use firmware to allocate page tables */
-	UINT64 PhysicalAddr;
-	Result = SystemTable->BootServices->AllocatePages(
-			AllocateAnyPages, EfiLoaderData,
-			32, /* 128k of space is probably plenty */
-			&PhysicalAddr
-		);
-	if (Result != EFI_SUCCESS)
-	{
-		return Result;
-	}
-	InitialP4Table = (UINT64*)(PhysicalAddr & ~(0xFFF));
-	InitialP3Table = InitialP4Table + 512;
-	InitialP2Table = InitialP3Table + 512;
 		
 	/* Terminate the watchdog timer. */
 	SystemTable->BootServices->SetWatchdogTimer(0, 0, 0, NULL);
@@ -724,7 +591,6 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	((UINT32*)(DisplayBuffers[2]))[4] = 0x4FFFFF00;
 	((UINT32*)(DisplayBuffers[2]))[5] = 0x0FFFFF00;
 
-	FeralBootProtocolRemap();
 	EnvBlock.NumDisplays = NumDisplays;
 	EnvBlock.FramebufferPAddrs = DisplayBuffers;
 	

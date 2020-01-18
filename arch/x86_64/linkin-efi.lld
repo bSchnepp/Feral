@@ -1,4 +1,4 @@
-ENTRY(kern_init)
+ENTRY(_efi_start)
 
 SECTIONS
 {
