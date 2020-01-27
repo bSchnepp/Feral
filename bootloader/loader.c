@@ -89,9 +89,7 @@ static EFI_GUID GuidEfiFileInfoGuid = EFI_FILE_INFO_ID;
 static EFI_GUID GuidEfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
 
-static EfiBootInfo EnvBlock = {0};
-static KrnlFirmwareFunctions FirmwareFuncs = {0};
-static KrnlCharMap CharMap = {0};
+static EfiBootInfo *EnvBlock = NULLPTR;
 
 static UINT64 VirtMemAreaFree = 0;
 static EFI_RUNTIME_SERVICES *VirtRuntimeTable = NULLPTR;
@@ -216,7 +214,7 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 		if (ProgramHeader.p_type == PT_LOAD)
 		{
 			/* PAddr is in multiples of 4096. */
-			PAddress = ProgramHeader.p_paddr << 12;
+			PAddress = ProgramHeader.p_paddr;
 		
 			Status = SystemTable->BootServices->AllocatePages(
 				AllocateAddress, EfiLoaderData,
@@ -234,7 +232,8 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 			InternalItoaBaseChange(BytesToEfiPages(ProgramHeader.p_paddr << 12), ItoaBuf, 16);
 			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
 					ItoaBuf);
-			/* */						
+			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					L"\r\n");						
 
 			/* Ignore EFI not doing it's job. (EFI_NOT_FOUND) */
 			if (Status != EFI_SUCCESS)
@@ -243,7 +242,7 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 				{
 					/* warn the user that bios is buggy */
 					SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-						L"\r\n[WARNING]: BIOS bug being suppressed with brute force.\r\n"); 
+						L"[WARNING]: BIOS bug being suppressed with brute force.\r\n"); 
 					SystemTable->ConOut->OutputString(SystemTable->ConOut, L"Ask manufacturer for fix.\r\n");				
 				} else {
 					SystemTable->ConOut->OutputString(SystemTable->ConOut, 
@@ -269,11 +268,17 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 			if (Status != EFI_SUCCESS)
 			{
 				SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					L"Failed to load program section.\r\n");
+					L"Failed to setup kernel (file seek).\r\n");
 				return Status;
 			}
-			
-			File->Read(File, ProgramHeader.p_filesz, (VOID*)(PAddress));
+			UINTN PFilesz = ProgramHeader.p_filesz;
+
+			Status = File->Read(File, &(PFilesz), (VOID*)(PAddress));
+			if (Status != EFI_SUCCESS || *(CHAR*)(PAddress) == 0)
+			{
+				SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					L"Failed to load program section.\r\n");
+			}
 		}
 	}
 	/* Update this so that uefi_main is happy. */
@@ -344,7 +349,7 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	
 	EFI_OPEN_PROTOCOL OpenProtocol;
 	
-	VOID (*kern_init)(EfiBootInfo*) = NULLPTR;
+	VOID (FERALAPI *kern_init)(EfiBootInfo*) = NULLPTR;
 
 
 	ImageHandle = mImageHandle;
@@ -372,7 +377,7 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 
 	/* cleanup later... */
 	UINT_PTR *DisplayBuffers = NULLPTR;
-	SystemTable->BootServices->AllocatePool(AllocateAnyPages, 
+	SystemTable->BootServices->AllocatePool(EfiRuntimeServicesData, 
 		(sizeof(UINT_PTR) * NumDisplays * 3), 
 		&DisplayBuffers);
 	
@@ -527,6 +532,23 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	SystemTable->BootServices->SetWatchdogTimer(0, 0, 0, NULL);
 	
 	Result = ElfLoadFile(KernelImage, &kern_init);
+	InternalItoaBaseChange(kern_init, ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			L"Got entry point: 0x");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			ItoaBuf);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			L"\r\n");
+			
+	InternalItoaBaseChange(DisplayBuffers[2], ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			L"Framebuffer: 0x");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			ItoaBuf);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			L"\r\n");
+			
+
 	
 	/* TODO: Keep EFI stuff in memory while this all happens... */
 	
@@ -541,17 +563,25 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	
 	/* Close the file...  */
 	KernelImage->Close(KernelImage);
-	
-	/* Terminate boot services (about to execute kernel) */
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-		L"Terminating firmware services...\r\n");
 
 	/* ehhhhh */
 	UINT64 NumMemoryRanges = MapSize / DescriptorSize;
 	EfiMemoryRange *MemoryRanges = NULLPTR;
-	SystemTable->BootServices->AllocatePool(AllocateAnyPages, 
+	SystemTable->BootServices->AllocatePool(EfiRuntimeServicesData, 
 		(sizeof(EfiMemoryRange) * NumMemoryRanges), 
-		&MemoryRanges);
+		(void**)&MemoryRanges);
+		
+	SystemTable->BootServices->AllocatePool(EfiRuntimeServicesData, 
+		(sizeof(EfiBootInfo)), 
+		(void**)&EnvBlock);
+		
+	InternalItoaBaseChange(EnvBlock, ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			L"EnvBlock: 0x");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			ItoaBuf);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			L"\r\n");
 	
 	/* Iterate through the memory map one more time. */
 	for (Iterator = 0; Iterator < NumMemoryRanges; ++Iterator)
@@ -577,28 +607,33 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 		MemoryRanges[Iterator].End = End;
 	}
 	
+	/* Terminate boot services (about to execute kernel) */
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L"Terminating firmware services...\r\n");
 	/* Start loading of the kernel. (setup and call KiSystemStartup) */
 	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);	
 	
 	/* Put the table at the end. */
 	VirtRuntimeTable = (EFI_RUNTIME_SERVICES*)(VirtMemAreaFree);
-	
-	/* Remap breaks all of this */
-	((UINT32*)(DisplayBuffers[2]))[0] = 0xFFFFFF00;
-	((UINT32*)(DisplayBuffers[2]))[1] = 0xCFFFFF00;
-	((UINT32*)(DisplayBuffers[2]))[2] = 0xAFFFFF00;
-	((UINT32*)(DisplayBuffers[2]))[3] = 0x8FFFFF00;
-	((UINT32*)(DisplayBuffers[2]))[4] = 0x4FFFFF00;
-	((UINT32*)(DisplayBuffers[2]))[5] = 0x0FFFFF00;
 
-	EnvBlock.NumDisplays = NumDisplays;
-	EnvBlock.FramebufferPAddrs = DisplayBuffers;
+	EnvBlock->NumDisplays = NumDisplays;
+	EnvBlock->FramebufferPAddrs = DisplayBuffers;
 	
-	EnvBlock.NumMemoryRanges = NumMemoryRanges;
-	EnvBlock.FramebufferPAddrs = MemoryRanges;
+	EnvBlock->NumMemoryRanges = NumMemoryRanges;
+	EnvBlock->MemoryRanges = MemoryRanges;
 	
-	kern_init(&EnvBlock);
-	for (;;){}
+	for (int k = 0; k < EnvBlock->FramebufferPAddrs[0]; ++k)
+	{
+		for (int z = 0; z < EnvBlock->FramebufferPAddrs[1]; ++z)
+		{
+			((UINT32*)(EnvBlock->FramebufferPAddrs[2]))[k] = 0x00FFFF00;
+		}
+	}
+	kern_init(EnvBlock);
+	for (int k = 0; k < EnvBlock->FramebufferPAddrs[0]; ++k)
+	{
+		((UINT32*)(EnvBlock->FramebufferPAddrs[2]))[k] = 0x00FF0000;
+	}
 
 	return EFI_SUCCESS;
 }

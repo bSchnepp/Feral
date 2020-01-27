@@ -34,6 +34,21 @@ header_start:
 	dd 0	; Ensure we're in text mode.
 	dw 0
 	dd 8
+	
+	
+	; In the case of UEFI-MB2, we want to use a wrapper to call
+	; what we were going to do anyway.
+	
+	; Boot services tag (we have a multiboot2-->bare uefi trampoline)
+	dw 7
+	dw 0
+	dd 8
+	
+	; The location for the entry point for uefi
+	dw 9
+	dw 0
+	dd 16
+	dd uefi_trampoline
 
 	; This end structure is required by Multiboot.
 	dw 0
@@ -79,6 +94,11 @@ gdt_64:
 	dq gdt_64	; The pointer that the GDT wants.
 
 section .earlytext
+
+extern mb2_uefi_main
+uefi_trampoline:
+	
+
 global _start
 _start:
 	mov esp, stack_top - KERN_VIRT_OFFSET
@@ -282,6 +302,10 @@ bss_end:
 section .data
 ; Store our multiboot pointer.
 multiboot_value dd 0
+
+; For if loaded in multiboot 2 efi.
+efi_image dq 0
+efi_systab dq 0
 
 ALIGN 4096
 p4_table:

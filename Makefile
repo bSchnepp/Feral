@@ -86,6 +86,10 @@ qemu-efi: 	img-efi
 	qemu-system-$(ARCH) $(CPU) -smp 2 -m 6G --enable-kvm -pflash ./efi.bin -hda fat:rw:build -net none
 	rm -rf ./efi.bin
 	
+qemu-efi-lldb:	img-efi
+	cp $(EFI_CODE) ./efi.bin
+	qemu-system-$(ARCH) --enable-kvm -smp 2 -m 6G -pflash ./efi.bin -hda fat:rw:build -net none -S -s -d int,cpu_reset -no-reboot -no-shutdown
+	rm -rf ./efi.bin
 
 qemu-nokvm-efi:	img-efi
 	cp $(EFI_CODE) ./efi.bin

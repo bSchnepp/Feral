@@ -80,13 +80,16 @@ STRING GetEfiFirmwareClaim()
 
 VOID kern_init(EfiBootInfo *BootInfo)
 {
-
-	UINT32 *FramebufferTemp = (UINT32*)(BootInfo->FramebufferPAddrs[2] + 0xFFFFFFFFC0000000);
-	
-	FramebufferTemp[0] = 0xFFFF0000;
-	FramebufferTemp[1] = 0x00FFFF00;
-	FramebufferTemp[2] = 0x0000FFFF;
-	FramebufferTemp[3] = 0xFF0000FF;
+	UINT32 *FramebufferTemp = (UINT32*)(BootInfo->FramebufferPAddrs[2]);
+	for (int i = 0; i < (UINT32*)(BootInfo->FramebufferPAddrs[0]); ++i)
+	{
+		for (int k = 0; k < (UINT32*)(BootInfo->FramebufferPAddrs[1]);
+			++k)
+		{
+			UINT32 FBVal = 0xFFFFFFFF;
+			FramebufferTemp[i] = FBVal;
+		}
+	}
 
 	/* Set up the character map. */
 	CharMap.CharMapWidth = 8;
@@ -98,8 +101,6 @@ VOID kern_init(EfiBootInfo *BootInfo)
 	CharMap.CharMap = DefaultCharMap;
 
 	FirmwareFuncs.GetFirmwareName = GetEfiFirmwareClaim;
-
-
 }
 
 

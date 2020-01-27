@@ -3,6 +3,7 @@ KERN_VIRT_OFFSET EQU 0xFFFFFFFFC0000000
 
 GLOBAL _efi_start
 BITS 64
+ALIGN 4096
 
 section .earlydata
 gdt_64:
@@ -18,10 +19,12 @@ gdt_64:
 section .earlytext
 global _efi_start
 _efi_start:
-	mov esp, stack_top - KERN_VIRT_OFFSET
-	
+	; UEFI really wants to enforce it's calling convention.
+	; So, we ignore it after this, but have to put up with it being
+	; in rcx for some weird reason instead of rdi.
+	mov [efi_boot_info - KERN_VIRT_OFFSET], rcx
+	mov rsp, stack_top - KERN_VIRT_OFFSET
 	; Take the argument we got
-	mov [efi_boot_info - KERN_VIRT_OFFSET], rdi
 	
 	; Before moving on, make sure the whole BSS section
 	; is zeroed out.
@@ -48,6 +51,18 @@ create_page_tables:
 	mul ecx
 	or eax, 10000011b	; Present, writable, and huge.
 	mov [(p2_table - KERN_VIRT_OFFSET) + ecx * 8], eax	; And now write it to the table.
+	add eax, 0x40000000
+	mov [(p2_table_1 - KERN_VIRT_OFFSET) + (ecx * 8)], eax	; And now write it to the table.
+	add eax, 0x40000000
+	mov [(p2_table_2 - KERN_VIRT_OFFSET) + (ecx * 8)], eax	; And now write it to the table.
+	add eax, 0x40000000
+	mov [(p2_table_3 - KERN_VIRT_OFFSET) + (ecx * 8)], eax	; And now write it to the table.
+	add eax, 0x40000000
+	mov [(p2_table_4 - KERN_VIRT_OFFSET) + (ecx * 8)], eax	; And now write it to the table.
+	add eax, 0x40000000
+	mov [(p2_table_5 - KERN_VIRT_OFFSET) + (ecx * 8)], eax	; And now write it to the table.
+	add eax, 0x40000000
+	mov [(p2_table_6 - KERN_VIRT_OFFSET) + (ecx * 8)], eax	; And now write it to the table.
 
 	inc ecx	; Increment it...
 	cmp ecx, 512	; P2 needs 512 entries. (one gigabyte of identity mapping.)
@@ -79,51 +94,27 @@ enable_paging:
 	or rax, 1
 	mov cr0, rax		; And write to CR0.
 
-; In the future, we need to refactor the
-; above code to call into these nice small utility
-; functions.
-
 
 ; We still need to create a GDT so we can run 64-bit code.
 ; Let's start...
 create_gdt:
 	
 	lgdt [gdt_64.gdtpointer]
-	; Hold up just a second here. We need to pass to kern_start the multiboot header before it runs off into KiSystemStartup.
-	; kern_start is multiboot-only.
-	; Get around to that later.
 
 	; Force TLB flush
 	mov rcx, cr3
 	mov cr3, rcx
 	
-	
-	
-	; invoke far return to go to 64-bit mode.
-	push 0x08
-	; do a short little dance to ensure we load the right address.
-	; We do a call in a sort of odd way: return is just a funny "pop %rip".
-	; at the end of the day, so take advantage of that.
-	mov rax, dword (kern_start - KERN_VIRT_OFFSET)
-	push rax
-	retf
-
-	jmp $
+	mov rax, kern_start
+	jmp rax
 
 
 SECTION .text
+ALIGN 4096
 	
 kern_start:
 	; For now, we need to terminate any other descriptors, as cs is the only one we care about.
-
-	mov ax, 0
-	mov ss, ax
-	mov ds, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
 	
-	mov rdi, [efi_boot_info - KERN_VIRT_OFFSET]			; Give us the multiboot info we want.
 	mov rsp, qword (stack_top)
 	and rsp, -16	; Guarantee that we're in fact, aligned correctly.	
 
@@ -131,6 +122,7 @@ kern_start:
 	mov rcx, cr3
 	mov cr3, rcx
 
+	mov rdi, [efi_boot_info - KERN_VIRT_OFFSET]			; Give us the multiboot info we want.
 	extern kern_init
 	mov rax, kern_init
 	call rax
@@ -175,9 +167,32 @@ p4_table:
 	
 p3_table:
 	dq (p2_table - KERN_VIRT_OFFSET) + 3
-	times 510 dq 0
+	dq (p2_table_1 - KERN_VIRT_OFFSET) + 3
+	dq (p2_table_2 - KERN_VIRT_OFFSET) + 3
+	dq (p2_table_3 - KERN_VIRT_OFFSET) + 3
+	dq (p2_table_4 - KERN_VIRT_OFFSET) + 3
+	dq (p2_table_5 - KERN_VIRT_OFFSET) + 3
+	dq (p2_table_6 - KERN_VIRT_OFFSET) + 3
+	times 504 dq 0
 	dq (p2_table - KERN_VIRT_OFFSET) + 3
 
 p2_table:
 	times 512 dq 0	; Declare 512 entries.
 	
+p2_table_1:
+	times 512 dq 0	; Declare 512 entries.
+
+p2_table_2:
+	times 512 dq 0	; Declare 512 entries.	
+
+p2_table_3:
+	times 512 dq 0	; Declare 512 entries.
+	
+p2_table_4:
+	times 512 dq 0	; Declare 512 entries.
+
+p2_table_5:
+	times 512 dq 0	; Declare 512 entries.
+	
+p2_table_6:
+	times 512 dq 0	; Declare 512 entries.
