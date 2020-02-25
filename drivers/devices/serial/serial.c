@@ -36,7 +36,7 @@ IN THE SOFTWARE.
 
 #include "serial.h"
 
-#define COM1_PORT 0x3FB
+#define COM1_PORT 0x3F8
 #define COM1_DATA (COM1_PORT)
 
 #define SERIAL_FIFO_COMMAND(port)  (port + 2)
@@ -50,16 +50,18 @@ IN THE SOFTWARE.
 VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
 {
 #if defined(__x86_64__) || defined(__i386__)
-	x86outb(SERIAL_LINE_COMMAND(Port), SERIAL_LINE_ENABLE_DLAB);
+	x86outb(SERIAL_LINE_COMMAND(Port), 0);
+#if 0
 	x86outb(Port, (Divisor >> 8) & 0x00FF);
 	x86outb(Port, (Divisor >> 0) & 0x00FF);
+#endif
 #endif
 }
 
 VOID SerialSetInterrupts(UINT16 Port, UINT8 Bitmask)
 {
 #if defined(__x86_64__) || defined(__i386__)
-	x86outb(Port + 1, Bitmask);
+	x86outb(SERIAL_FIFO_COMMAND(Port), Bitmask);
 #endif
 }
 
@@ -77,23 +79,58 @@ VOID SerialSetMode(UINT16 Port, UINT8 Data)
 VOID SerialTransmitCharacter(UINT16 Port, CHAR c)
 {
 #if defined(__x86_64__) || defined(__i386__)
-	while ((x86inb(SERIAL_LINE_STATUS(Port)) & (1 << 5)) == 0)
-	{
+	//while ((x86inb(SERIAL_LINE_STATUS(Port)) & (1 << 5)) == 0)
+	//{
 		x86outb(Port, c);
+	//}
+#endif
+}
+
+VOID SerialRecv(UINT16 Port, UINT64 Amt, BYTE *Buf)
+{
+#if defined(__x86_64__) || defined(__i386__)
+	UINT64 Index = 0;
+	while (Index++ < Amt)
+	{
+		Buf[Index] = x86inb(Port);
 	}
 #endif
 }
 
 FERALSTATUS InitSerialDevice(VOID *OutData)
 {
-	VgaPrintln(0xF, 0x0, "Initializing serial...\n");
+	KiPrintFmt("Initializing serial...\n");
+
+#if 0
+	/* ack the current state... */
+	CHAR Ignored = '\0';
+	SerialRecv(COM1_PORT+2, 1, &Ignored);
+	SerialRecv(COM1_PORT+0, 1, &Ignored);
+#endif	
+
 	SerialSetInterrupts(COM1_PORT, 0);
-	SerialConfigureBaudRate(COM1_PORT, 1);
-	SerialSetFlags(COM1_PORT, 3);
-	SerialSetMode(COM1_PORT, SERIAL_LINE_ENABLE_FIFO);
 #if defined(__x86_64__) || defined(__i386__)
-	x86outb(SERIAL_MODEM_COMMAND(COM1_PORT), 0x0B);
+	x86outb(SERIAL_LINE_COMMAND(COM1_PORT), SERIAL_LINE_ENABLE_DLAB);
 #endif
+
+	SerialConfigureBaudRate(COM1_PORT, 12);
+#if defined(__x86_64__) || defined(__i386__)
+	x86outb(COM1_PORT + 1, 0);
+#endif
+	SerialSetFlags(COM1_PORT, 3);
+#if defined(__x86_64__) || defined(__i386__)
+	x86outb(SERIAL_MODEM_COMMAND(COM1_PORT), 0);
+#endif
+	SerialSetInterrupts(COM1_PORT, 1);
+
+	BYTE Item;
+	SerialRecv(SERIAL_LINE_STATUS(COM1_PORT), 1, &Item);
+	if (Item == 0xFF)
+	{
+		KiPrintFmt("%s\n", "Unable to initialize serial! (no port)");
+		return STATUS_ERROR;
+	}
+
 	for (UINT8 Index = 0; Index < 100; ++Index)
 	{
 		SerialTransmitCharacter(COM1_PORT, 'a');

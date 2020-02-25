@@ -75,7 +75,7 @@ clean:
 	cd sec && $(MAKE) clean
 
 qemu:	iso
-	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G --enable-kvm  -d int,cpu_reset -no-reboot -no-shutdown # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G --enable-kvm -d int,cpu_reset -no-reboot -no-shutdown # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
 
 qemu-mb2-efi:	iso-mb2-efi
 	cp $(EFI_CODE) ./efi.bin

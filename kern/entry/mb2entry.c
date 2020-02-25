@@ -164,14 +164,6 @@ VOID kern_init(UINT32 MBINFO)
 						"Got command line: "); 
 					VgaAutoPrintln(VGA_RED, VGA_BLACK, 
 						mb_as_string->string);
-
-					/* TODO: Enable serial driver
-					 * iff use-serial=true, instead of
-					 * whenever there is the
-					 * command line...
-					 */
-					VOID *Databack = NULLPTR;
-					InitSerialDevice(Databack);
 				}
 			}
 			
@@ -412,6 +404,13 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 		return KiInitializeMemMgr(&info);
 	} else if (subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC) {
 		KiStartupMachineDependent();
+		/* TODO: Enable serial driver
+		 * iff use-serial=true, instead of
+		 * whenever there is the
+		 * command line...
+		 */
+		VOID *Databack = NULLPTR;
+		InitSerialDevice(Databack);
 	} else {
 		/*  Placeholder for more stuff later on. (disks, network...) */
 	}
