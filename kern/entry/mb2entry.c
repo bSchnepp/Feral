@@ -32,6 +32,10 @@ IN THE SOFTWARE.
 #include <arch/x86_64/cpufuncs.h>
 #endif
 
+/* Borrow a bunch from the Feralboot. */
+#ifndef _NO_UEFI_STUB_
+#include <libreefi/efi.h>
+#endif
 
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
@@ -46,6 +50,10 @@ IN THE SOFTWARE.
 #include <kern_ver.h>
 
 #include <arch/processor.h>
+
+
+/* hack: include the serial driver in a brute forcey way. */
+#include <drivers/devices/serial/serial.h>
 
 
 /* hack for now */
@@ -156,6 +164,14 @@ VOID kern_init(UINT32 MBINFO)
 						"Got command line: "); 
 					VgaAutoPrintln(VGA_RED, VGA_BLACK, 
 						mb_as_string->string);
+
+					/* TODO: Enable serial driver
+					 * iff use-serial=true, instead of
+					 * whenever there is the
+					 * command line...
+					 */
+					VOID *Databack = NULLPTR;
+					InitSerialDevice(Databack);
 				}
 			}
 			
@@ -401,5 +417,19 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 	}
 	return STATUS_SUCCESS;
 }
+
+#ifndef _NO_UEFI_STUB_
+static EFI_HANDLE ImageHandle;
+static EFI_SYSTEM_TABLE *SystemTable;
+
+EFI_STATUS EFIAPI mb2_uefi_main(EFI_HANDLE mImageHandle, 
+	EFI_SYSTEM_TABLE *mSystemTable)
+{
+	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		L"Hello, world!\r\n");
+	for (;;) {}
+	return STATUS_SUCCESS;
+}
+#endif
 
 #endif

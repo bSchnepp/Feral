@@ -19,12 +19,7 @@ header_start:
 
 	; Optional Multiboot2 tags should show up here, like so.
 	
-	dw 4	; Console Flags tag
-	dw 0	; No flags
-	dd 12	; 12 byte size
-	dd 3	; Say we have both.
-	dw 0
-	dd 8
+
 	
 	dw 5	; Type 5
 	dw 0	; Flags? Not sure what for here.
@@ -95,9 +90,17 @@ gdt_64:
 
 section .earlytext
 
+BITS 64
 extern mb2_uefi_main
 uefi_trampoline:
-	
+	; Play a little game to do a far return.
+	; Call is really 'push rax' (in a way), and
+	; we'll do that explicitly to do a far jump.
+	mov rax, (mb2_uefi_main + 0)
+	push rax
+	retf
+	jmp $
+BITS 32
 
 global _start
 _start:

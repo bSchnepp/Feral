@@ -56,6 +56,14 @@ iso:	kernel
 	grub-mkrescue --verbose --output=$(ISO) build/isofiles 2> /dev/null
 	rm -rf build/$(ARCH)
 
+iso-mb2-efi:	kernel
+	mkdir -p build/isofiles/boot/grub
+	strip $(KERNEL)
+	cp $(KERNEL) build/isofiles/boot
+	cp arch/$(ARCH)/grub.cfg build/isofiles/boot/grub
+	grub-mkrescue --verbose --output=$(ISO) build/isofiles 2> /dev/null
+	rm -rf build/$(ARCH)
+
 clean:
 	rm -rf build/
 	rm -rf ./*.o
@@ -68,6 +76,11 @@ clean:
 
 qemu:	iso
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G --enable-kvm  -d int,cpu_reset -no-reboot -no-shutdown # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
+
+qemu-mb2-efi:	iso-mb2-efi
+	cp $(EFI_CODE) ./efi.bin
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G --enable-kvm  -pflash ./efi.bin -d int,cpu_reset -no-reboot -no-shutdown # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.
+	rm -rf ./efi.bin
 
 qemu-nokvm:	iso
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -m 2G -d int,cpu_reset -no-reboot -no-shutdown

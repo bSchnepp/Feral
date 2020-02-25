@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining  a copy of the software and accompanying documentation covered by
@@ -33,6 +33,9 @@ IN THE SOFTWARE.
 #include <arch/x86_64/cpuio.h>
 #endif
 
+
+#include "serial.h"
+
 #define COM1_PORT 0x3FB
 #define COM1_DATA (COM1_PORT)
 
@@ -42,6 +45,7 @@ IN THE SOFTWARE.
 #define SERIAL_LINE_STATUS(port)   (port + 5)
 
 #define SERIAL_LINE_ENABLE_DLAB (0x80)
+#define SERIAL_LINE_ENABLE_FIFO (0xC7)
 
 VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
 {
@@ -52,19 +56,48 @@ VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
 #endif
 }
 
+VOID SerialSetInterrupts(UINT16 Port, UINT8 Bitmask)
+{
+#if defined(__x86_64__) || defined(__i386__)
+	x86outb(Port + 1, Bitmask);
+#endif
+}
+
+VOID SerialSetFlags(UINT16 Port, UINT8 Bitmask)
+{
+	x86outb(SERIAL_LINE_COMMAND(Port), Bitmask);
+}
+
+VOID SerialSetMode(UINT16 Port, UINT8 Data)
+{
+	x86outb(SERIAL_FIFO_COMMAND(Port), Data);
+}
+
 
 VOID SerialTransmitCharacter(UINT16 Port, CHAR c)
 {
 #if defined(__x86_64__) || defined(__i386__)
-	if ((x86inb(SERIAL_LINE_STATUS(Port)) & (1 << 5)) == 0)
+	while ((x86inb(SERIAL_LINE_STATUS(Port)) & (1 << 5)) == 0)
 	{
 		x86outb(Port, c);
 	}
 #endif
 }
 
-FERALSTATUS FrlDriverMain(VOID)
+FERALSTATUS InitSerialDevice(VOID *OutData)
 {
-	//FERAL_DRIVER SerialDriver = {0};
+	VgaPrintln(0xF, 0x0, "Initializing serial...\n");
+	SerialSetInterrupts(COM1_PORT, 0);
+	SerialConfigureBaudRate(COM1_PORT, 1);
+	SerialSetFlags(COM1_PORT, 3);
+	SerialSetMode(COM1_PORT, SERIAL_LINE_ENABLE_FIFO);
+#if defined(__x86_64__) || defined(__i386__)
+	x86outb(SERIAL_MODEM_COMMAND(COM1_PORT), 0x0B);
+#endif
+	for (UINT8 Index = 0; Index < 100; ++Index)
+	{
+		SerialTransmitCharacter(COM1_PORT, 'a');
+	}
+	
 	return STATUS_SUCCESS;
 }

@@ -1,6 +1,6 @@
 include ../../Makerules
 
-CFLAGS += -I./inc -I../inc -I../../inc -I../ -I.
+CFLAGS += -I./inc -I../inc -I../../inc -I../ -I. -I../../
 
 LOCAL_FILES != ls ./*.c
 LOCAL_ASM != ls arch/$(ARCH)/*.asm
