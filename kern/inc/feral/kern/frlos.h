@@ -63,9 +63,36 @@ typedef enum KiSubsystemIdentifier
 FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem);
 
 #ifdef KERN_DEBUG
+
+#ifndef _NO_SERIAL_DEBUG_PRINT_
+
+/* hack for serial */
+#ifndef COM1_PORT
+#define COM1_PORT 0x3F8
+#endif
+
+extern VOID SerialTransmitCharacter(UINT16 Port, CHAR c);
+
+#define SERIAL_PUTCHAR(x)  SerialTransmitCharacter(COM1_PORT, x)
+#else
+#define SERIAL_PUTCHAR(x) /* Nothing! */
+#endif
+
+inline VOID SerialPrint(const char *X)
+{
+	UINT64 Index = 0;
+	while (X[Index] != '\0')
+	{
+		SERIAL_PUTCHAR(X[Index]);
+		Index++;
+	}
+}
+
 static FERALSTATUS KiDebugPrint(STRING string)
 {
 	KiPrintWarnLine(string);
+	SerialPrint(string);
+	SerialPrint("\n");
 	return KiPrintFmt("\n");
 }
 #else

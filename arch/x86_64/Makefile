@@ -1,7 +1,7 @@
 include ../../Makerules
 
 FILES += vga/*.c
-CFLAGS += -I../inc
+CFLAGS += -I../inc -I../ -I../../ -I../../../
 
 all:
 	$(AS) -felf64 boot/helper.asm

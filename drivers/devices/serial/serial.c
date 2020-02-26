@@ -36,25 +36,12 @@ IN THE SOFTWARE.
 
 #include "serial.h"
 
-#define COM1_PORT 0x3F8
-#define COM1_DATA (COM1_PORT)
-
-#define SERIAL_FIFO_COMMAND(port)  (port + 2)
-#define SERIAL_LINE_COMMAND(port)  (port + 3)
-#define SERIAL_MODEM_COMMAND(port) (port + 4)
-#define SERIAL_LINE_STATUS(port)   (port + 5)
-
-#define SERIAL_LINE_ENABLE_DLAB (0x80)
-#define SERIAL_LINE_ENABLE_FIFO (0xC7)
-
 VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
 {
 #if defined(__x86_64__) || defined(__i386__)
 	x86outb(SERIAL_LINE_COMMAND(Port), 0);
-#if 0
 	x86outb(Port, (Divisor >> 8) & 0x00FF);
 	x86outb(Port, (Divisor >> 0) & 0x00FF);
-#endif
 #endif
 }
 
@@ -79,10 +66,10 @@ VOID SerialSetMode(UINT16 Port, UINT8 Data)
 VOID SerialTransmitCharacter(UINT16 Port, CHAR c)
 {
 #if defined(__x86_64__) || defined(__i386__)
-	//while ((x86inb(SERIAL_LINE_STATUS(Port)) & (1 << 5)) == 0)
-	//{
+	if ((x86inb(SERIAL_LINE_STATUS(Port)) & (1 << 5)))
+	{
 		x86outb(Port, c);
-	//}
+	}
 #endif
 }
 
@@ -129,11 +116,6 @@ FERALSTATUS InitSerialDevice(VOID *OutData)
 	{
 		KiPrintFmt("%s\n", "Unable to initialize serial! (no port)");
 		return STATUS_ERROR;
-	}
-
-	for (UINT8 Index = 0; Index < 100; ++Index)
-	{
-		SerialTransmitCharacter(COM1_PORT, 'a');
 	}
 	
 	return STATUS_SUCCESS;
