@@ -1,8 +1,8 @@
-Boost Software License
-Copyright (c) 2018 - 2020, Brian Schnepp
+/*
+Copyright (c) 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -22,3 +22,17 @@ THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE FOR ANY
 DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING 
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
+ */
+ 
+#include <arch/x86_64/mm/pageflags.h>
+
+
+BOOL CheckIfMapped(PageMapEntry *Entry)
+{
+	return (Entry->Present);
+}
+
+BOOL MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
+{
+	return FALSE;
+}

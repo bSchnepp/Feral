@@ -71,9 +71,9 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem);
 #define COM1_PORT 0x3F8
 #endif
 
-extern VOID SerialTransmitCharacter(UINT16 Port, CHAR c);
+extern VOID SerialSend(UINT16 Port, CHAR c);
 
-#define SERIAL_PUTCHAR(x)  SerialTransmitCharacter(COM1_PORT, x)
+#define SERIAL_PUTCHAR(x)  SerialSend(COM1_PORT, x)
 #else
 #define SERIAL_PUTCHAR(x) /* Nothing! */
 #endif

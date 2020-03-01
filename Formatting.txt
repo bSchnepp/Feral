@@ -1,3 +1,7 @@
+Unless stated otherwise below, all code should be written in an Allman-8 style
+("BSD style"), but with all variable names, structure names, etc, written in
+Pascal case. ("FooBar" instead of "foo_bar" or "fooBar").
+
 When the { or } is used, it should always be on a separate line, except in the case of an 'else' clause.
 For example:
 
@@ -121,7 +125,7 @@ All variables must be declared with an explicit type.
 
 
 All functions in the kernel must be called using the cdecl calling convention. When this is not possible,
-the function in question must have a driver function to call it using the cdecl calling convention. The exception
+the function in question should have a driver function to call it using the cdecl calling convention. The exception
 to this is in a libOS, where compatibility with other conventions is necessary to function as intended: however,
 deviations from cdecl should be documented. This is intended to make modules written is assembly language
 always consistently be able to assume how a function is set up before invoking a call or jump instruction.
@@ -180,14 +184,11 @@ if (a < 14)
 }
 
 
-This is part of the Zen optimization guide (page 37, note 5), and thus
-must be included as part of our style guide.
-
-
 
 
 Memory allocations ("kmalloc()" and associated functions) and their associated deallocations ("kfree()" and associated functions)
-should be done at the same level of scope.
+should be done at the same level of scope. One should avoid using static lifetimes.
+In general, this can be thought of as "whoever allocated it must also free it".
 
 Ie,
 
@@ -224,8 +225,6 @@ We do this because:
 		safely cast to that type, but this specific declaration expects SUB_GENERIC_THING at least.
 		
 		(This is in contrast to declaring/leaving it as a void*, in which case type safety goes out the window entirely.)
-		
-		(We do _not_ want C++ in the kernel because C++'s standard is way too complicated, is awkward ABI wise, and too messy to read in my opinion, on top of having name mangling.)
 		
 		
 

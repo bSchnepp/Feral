@@ -12,7 +12,10 @@ The important parts are:
 	- Given any driver for Feral, it should be binary compatible until the 
 	next major version, and source compatible for any future releases. This 
 	assumes the driver is using APIs as intended, and does not manipulate 
-	kernel data structures, other kernel code, etc.
+	kernel data structures, other kernel code, etc. Note that 'should' is
+	a recommendation, not a requirement. Driver developers should upstream
+	their drivers so as to ensure it can be maintained for future versions
+	of the kernel.
 	
 	- CPU support should remain the same between every major version. 
 	Support for older CPUs may be dropped at any major release.

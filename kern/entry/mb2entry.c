@@ -399,7 +399,7 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 		MmCreateInfo info;
 		
 		info.sType = MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO;
-		info.pNext = (void*)(0);
+		info.pNext = NULLPTR;
 		info.pPhysicalAllocationInfo = &allocInfo;
 		return KiInitializeMemMgr(&info);
 	} else if (subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC) {

@@ -39,7 +39,7 @@ IN THE SOFTWARE.
 #define SERIAL_LINE_ENABLE_FIFO (0xC7)
 
 FERALSTATUS InitSerialDevice(VOID *OutData);
-VOID SerialTransmitCharacter(UINT16 Port, CHAR c);
+VOID SerialSend(UINT16 Port, CHAR c);
 VOID SerialRecv(UINT16 Port, UINT64 Amt, BYTE *Buf);
 
 

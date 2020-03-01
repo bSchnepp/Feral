@@ -39,7 +39,7 @@ IN THE SOFTWARE.
 VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
 {
 #if defined(__x86_64__) || defined(__i386__)
-	x86outb(SERIAL_LINE_COMMAND(Port), 0);
+	x86outb(SERIAL_LINE_COMMAND(Port), SERIAL_LINE_ENABLE_DLAB);
 	x86outb(Port, (Divisor >> 8) & 0x00FF);
 	x86outb(Port, (Divisor >> 0) & 0x00FF);
 #endif
@@ -52,6 +52,13 @@ VOID SerialSetInterrupts(UINT16 Port, UINT8 Bitmask)
 #endif
 }
 
+/**
+ * Set up the serial port to have properties regarding
+ * parity bits, data length, and break control.
+ * @author Brian Schnepp
+ * @param Port The port to configure
+ * @param Bitmask The mask for how to configure the serial port.
+ */
 VOID SerialSetFlags(UINT16 Port, UINT8 Bitmask)
 {
 	x86outb(SERIAL_LINE_COMMAND(Port), Bitmask);
@@ -63,7 +70,7 @@ VOID SerialSetMode(UINT16 Port, UINT8 Data)
 }
 
 
-VOID SerialTransmitCharacter(UINT16 Port, CHAR c)
+VOID SerialSend(UINT16 Port, CHAR c)
 {
 #if defined(__x86_64__) || defined(__i386__)
 	if ((x86inb(SERIAL_LINE_STATUS(Port)) & (1 << 5)))

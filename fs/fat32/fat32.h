@@ -1,5 +1,5 @@
-Boost Software License
-Copyright (c) 2018 - 2020, Brian Schnepp
+/*
+Copyright (c) 2020 Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining  a copy of the software and accompanying documentation covered by 
@@ -22,3 +22,11 @@ THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE FOR ANY
 DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING 
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
+ */
+ 
+#ifndef _CORE_FS_FAT32_H_
+#define _CORE_FS_FAT32_H_
+
+
+
+#endif
