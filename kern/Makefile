@@ -4,7 +4,7 @@ include ../Makerules
 
 CFLAGS += -I./inc -I../inc -I../ -I.
 
-KERN_FILES != ls ./*.c mm/*.c arch/$(ARCH)/*.c ../sec/*.c
+KERN_FILES != ls ./*.c ./**/*.c mm/*.c arch/$(ARCH)/*.c ../sec/*.c
 
 KERN_ASM != ls arch/$(ARCH)/*.asm
 

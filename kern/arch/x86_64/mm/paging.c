@@ -32,7 +32,41 @@ BOOL CheckIfMapped(PageMapEntry *Entry)
 	return (Entry->Present);
 }
 
-BOOL MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
+UINT_PTR ConvertPageEntryToAddress(PageMapEntry *Entry)
 {
-	return FALSE;
+	UINT64 UnhandledAddress = (Entry->Address << 12);
+	if (UnhandledAddress >> 47)
+	{
+		/* Higher half address... mirror bit 48. */
+		UnhandledAddress |= 0xFFFF000000000000;
+	}
+	return (UINT_PTR)(UnhandledAddress);
+}
+
+FERALSTATUS MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
+{
+	UINT64 Addr = Physical >> 12;
+	UINT16 Bitmask = 0xFFF; /* For now, only do 4096 byte pages. */
+	
+	UINT16 PageLevels[4];
+	FERALSTATUS Err = x86FindPageLevels(Virtual, PageLevels);
+		
+	if (Err != STATUS_SUCCESS)
+	{
+		return Err;
+	}
+	
+	PageMapEntry* Level3Table = (PageMapEntry*)(PML4[PageLevels[3]);
+	PageMapEntry* Level2Table = (PageMapEntry*)(
+		ConvertPageEntryToAddress(Level3Table)[PageLevels[2]
+	);
+	PageMapEntry* Level1Table = (PageMapEntry*)(
+		ConvertPageEntryToAddress(Level2Table)[PageLevels[1]
+	);
+	
+	PageMapEntry *FinalLevel = (PageMapEntry*)(
+		ConvertPageEntryToAddress(Level1Table)[PageLevels0]
+	);
+	
+	return STATUS_SUCCESS;
 }

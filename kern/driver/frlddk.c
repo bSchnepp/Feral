@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2018, 2019, 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining  a copy of the software and accompanying documentation covered by 
@@ -39,12 +39,14 @@ static DriverTree DriverRoot =
 	NULLPTR,
 };
 
+/* Temporarilly disabled... */
+#if 0
 FERALSTATUS KeCreateDriver(INOUT FeralDriver *Target, 
 	FERALSTATUS (*DriverInit)(IN DriverObject* Object, IN WSTRING RmsPath),
 	FERALSTATUS (*DriverExit)(VOID),
 	FERALSTATUS (*DriverDispatch)(UINT64 NumArgs, VOID **Stuff))
 {
-	if (DriverInit == NULLPTR) || (DriverDispatch = NULLPTR))
+	if ((DriverInit == NULLPTR) || (DriverDispatch = NULLPTR))
 	{
 		return STATUS_ERROR;
 	}
@@ -54,13 +56,14 @@ FERALSTATUS KeCreateDriver(INOUT FeralDriver *Target,
 	Target->DriverDispatch = DriverDispatch;
 	return STATUS_SUCCESS;
 }
+#endif
 
 FERALSTATUS KeAddDriverToTree(IN STRING DeviceType, IN FERAL_DRIVER* Driver)
 {
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS KeGetDriverRoot(OUT *DriverTree)
+FERALSTATUS KeGetDriverRoot(OUT DriverTree *Root)
 {
 	if (DriverRoot.Next == NULLPTR && DriverRoot.RestSiblings == NULLPTR)
 	{
