@@ -23,14 +23,14 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
- #include <feral/stdtypes.h>
- 
- #ifndef _FERAL_MEMORY_H_
- #define _FERAL_MEMORY_H_
- 
- 
- /* 
+
+#include <feral/stdtypes.h>
+
+#ifndef _FERAL_MEMORY_H_
+#define _FERAL_MEMORY_H_
+
+
+/* 
  	TODO: Try to mitigate Rowhammer as best we can. 
  	All dynamic memory should *never* be contiguous in memory
  	as compared to it's normal memory model (ie, array > 1 page is
@@ -47,7 +47,7 @@ IN THE SOFTWARE.
  	Then, it's up to users to set up program permissions correctly, set up security policies,
  	and don't try to create a 'root' user.
  */
- 
- 
- 
- #endif
+
+
+
+#endif

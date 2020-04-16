@@ -23,13 +23,13 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
- #ifndef _INET_FERAL_IPv4_H_
- #define _INET_FERAL_IPv4_H_
- 
- #include <feral/stdtypes.h>
- 
- #define INET_4_VERSION 4
- #define INET_4_ADDRESS_SIZE UINT32
- 
- #endif
+
+#ifndef _INET_FERAL_IPv4_H_
+#define _INET_FERAL_IPv4_H_
+
+#include <feral/stdtypes.h>
+
+#define INET_4_VERSION 4
+#define INET_4_ADDRESS_SIZE UINT32
+
+#endif

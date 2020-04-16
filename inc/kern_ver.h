@@ -28,13 +28,14 @@ IN THE SOFTWARE.
 #define _FERAL_KERN_VER_H_
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
 
-// Increment whenever the kernel API changes signifigantly.
-// For now, since we're unstable, we're *always* changing, so only actually bother once we get to version 1.0.0
-// (we should increment to 0.0.2 when we have the _bare minimum_ features required to be "usable", ie, it can *a* user mode program.)
+	// Increment whenever the kernel API changes signifigantly.
+	// For now, since we're unstable, we're *always* changing, so only actually bother once we get to version 1.0.0
+	// (we should increment to 0.0.2 when we have the _bare minimum_ features required to be "usable", ie, it can *a* user mode program.)
 
 
 #define FERAL_VERSION_MAJOR (0000000)

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining  a copy of the software and accompanying documentation covered by 
@@ -28,4 +28,27 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
+/* TODO: Export to new header */
+VOID KeInitializeObjectManager();
+FERALSTATUS ObCreateA(IN STRING Type, OUT FERALOBJECT *Output);
+FERALSTATUS ObCreateW(IN WSTRING Type, OUT FERALOBJECT *Output);
+FERALSTATUS ObCreateF(IN FERALSTRING Type, OUT FERALOBJECT *Output);
 
+
+/* Also currently doesn't do anything! */
+FERALSTATUS ObCreateA(IN STRING Type, OUT FERALOBJECT *Output)
+{
+}
+
+FERALSTATUS ObCreateW(IN WSTRING Type, OUT FERALOBJECT *Output)
+{
+}
+
+FERALSTATUS ObCreateF(IN FERALSTRING Type, OUT FERALOBJECT *Output)
+{
+}
+
+VOID KeInitializeObjectManager()
+{
+	/* Currently, doesn't do anything! */
+}

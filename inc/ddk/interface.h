@@ -31,10 +31,11 @@ IN THE SOFTWARE.
 #define _FERAL_INTERFACE_H_
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
-#include <kern_ver.h>	// For kernel version (linked into the module, so we can find if it's an old driver or not)
+#include <kern_ver.h>// For kernel version (linked into the module, so we can find if it's an old driver or not)
 
 #define DRIVER_ENTRY(FunctionName)
 #define DRIVER_EXIT(FunctionName)

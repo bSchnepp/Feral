@@ -38,37 +38,37 @@ IN THE SOFTWARE.
 #if defined(__x86_64__)
 typedef struct
 {
-	UINT16 Offset;	 /* First 16 bits of the address (0 - 15) */
+	UINT16 Offset; /* First 16 bits of the address (0 - 15) */
 	UINT16 Selector;
 	UINT8 IST;
 	UINT8 TypeAttr;
-	UINT16 Offset2;	 /* Second 16 bits (16 - 31) */
-	UINT32 Offset3;	 /* Last 4 bytes of the address (32 - 61) */
-	UINT32 RESERVED; 	/* These are reserved. */
-}PACKED IDTDescriptor;
+	UINT16 Offset2; /* Second 16 bits (16 - 31) */
+	UINT32 Offset3; /* Last 4 bytes of the address (32 - 61) */
+	UINT32 RESERVED; /* These are reserved. */
+} PACKED IDTDescriptor;
 #else
 typedef struct
 {
-	UINT16 Offset;	/* First 16 bits of the address */
+	UINT16 Offset; /* First 16 bits of the address */
 	UINT16 Selector;
 	UINT8 RESERVED;
 	UINT8 TypeAttr;
-	UINT16 Offset2;	/* Second 16 bits */
-}PACKED IDTDescriptor;
+	UINT16 Offset2; /* Second 16 bits */
+} PACKED IDTDescriptor;
 #endif
 
 typedef struct
 {
 	UINT16 Limit;
 	UINT_PTR Location;
-}PACKED IDTLocation;
+} PACKED IDTLocation;
 
 
 void x86InitializeIDT(VOID);
 
-volatile void x86IDTSetGate(IN UINT8 Number, IN UINT_PTR Base, 
+volatile void x86IDTSetGate(IN UINT8 Number, IN UINT_PTR Base,
 	IN UINT16 Selector, IN UINT8 Flags);
-	
+
 /* A couple of macros we'll need for calling convention purposes. */
 
 #endif

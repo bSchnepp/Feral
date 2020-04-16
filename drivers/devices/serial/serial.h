@@ -30,10 +30,10 @@ IN THE SOFTWARE.
 #define COM1_PORT 0x3F8
 #define COM1_DATA (COM1_PORT)
 
-#define SERIAL_FIFO_COMMAND(port)  (port + 2)
-#define SERIAL_LINE_COMMAND(port)  (port + 3)
+#define SERIAL_FIFO_COMMAND(port) (port + 2)
+#define SERIAL_LINE_COMMAND(port) (port + 3)
 #define SERIAL_MODEM_COMMAND(port) (port + 4)
-#define SERIAL_LINE_STATUS(port)   (port + 5)
+#define SERIAL_LINE_STATUS(port) (port + 5)
 
 #define SERIAL_LINE_ENABLE_DLAB (0x80)
 #define SERIAL_LINE_ENABLE_FIFO (0xC7)

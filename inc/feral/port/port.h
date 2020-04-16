@@ -31,69 +31,70 @@ IN THE SOFTWARE.
 #define _FERAL_IPC_PORT_H_
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
-typedef struct FERALPORT 
-{
-	BOOL WriteLocked;		 // Only one user is allowed to write to a port at a time. It will be locked when another user claims write after flush.
-					 // (To prevent denial-of-service attacks, whoever opened the port is able to set a list of users to deny write to, as well as setting it to read only.)
+	typedef struct FERALPORT
+	{
+		BOOL WriteLocked;// Only one user is allowed to write to a port at a time. It will be locked when another user claims write after flush.
+			// (To prevent denial-of-service attacks, whoever opened the port is able to set a list of users to deny write to, as well as setting it to read only.)
 
-	UINT64 NumUsers;		 // How many users are connected to this port?
-	UINT64 MaxUsers;
-	UINT64 PortSpaceHigher;
-	UINT64 PortSpaceLower;
+		UINT64 NumUsers;// How many users are connected to this port?
+		UINT64 MaxUsers;
+		UINT64 PortSpaceHigher;
+		UINT64 PortSpaceLower;
 
-	char PortIdentifier[49];	 	// To ensure we don't send data to the wrong port, we can specify a 48-character identifier string (null terminated).
-	FERALPORT_USER_IDENTITIES* Users;	// Who are using this port (close it when this is zero after creation)
-	FERALPORT_USER_IDENTITIES Creator;	// What user opened this port?
-	
-	uint64_t PortBufferSize;
-	uint64_t PortMaxBufferSize;	 // When this equals PortBufferSize, it is forcefully flushed to all Users. It can be flushed earlier if needed.
-	VOID* Buffer;			 // The data in transit.
-}FERALPORT, *PFERALPORT;
+		char PortIdentifier[49];// To ensure we don't send data to the wrong port, we can specify a 48-character identifier string (null terminated).
+		FERALPORT_USER_IDENTITIES* Users;// Who are using this port (close it when this is zero after creation)
+		FERALPORT_USER_IDENTITIES Creator;// What user opened this port?
+
+		uint64_t PortBufferSize;
+		uint64_t PortMaxBufferSize;// When this equals PortBufferSize, it is forcefully flushed to all Users. It can be flushed earlier if needed.
+		VOID* Buffer;// The data in transit.
+	} FERALPORT, *PFERALPORT;
 
 
-// Ports are used for _everything_ in the Feral architecture.
-// We use ports to do things like write to files, normal IPC, connect over networks, etc...
-// Hence why the port space must be _very_ large.
-// _Everything_ is an object, and thus can be treated as a block of memory we can play with (which is typically a file).
+	// Ports are used for _everything_ in the Feral architecture.
+	// We use ports to do things like write to files, normal IPC, connect over networks, etc...
+	// Hence why the port space must be _very_ large.
+	// _Everything_ is an object, and thus can be treated as a block of memory we can play with (which is typically a file).
 
-/**
+	/**
 	Creates a port.
 	@return NULL if creation of the port was forbidden.
  */
-FERALPORT ObCreatePort(UINT64 UpperPortNumberspace, UINT64 LowerPortNumberspace, UINT64 MaxBufferSize, char* PortIdentifier, UINT64 MaxUsers);
+	FERALPORT ObCreatePort(UINT64 UpperPortNumberspace, UINT64 LowerPortNumberspace, UINT64 MaxBufferSize, char* PortIdentifier, UINT64 MaxUsers);
 
 
 
-typedef enum PORT_ACCESS_STATUS
-{
-	// Success
-	FERAL_PORT_ATTACH_SUCCESS = 0x00000000,	// Port connection was allowed.
-	FERAL_PORT_APPEND_ONLY,		// Not allowed to overwrite everything before flush (this is what happens when multiple users listen to the same port.)
-	FERAL_PORT_WRITE_BLOCKED,	// Port was opened, but refused to let you write for now.
-	FERAL_PORT_NO_EXECUTE,		// The port is opened OK, but just ADVISED to NEVER run anything in it as executable code.
-	FERAL_PORT_SYNC_ONLY,		// By default, everything in a port is async. This forces evrything to be flushed as soon as it's written in.
-	FERAL_PORT_ANONYMOUS_PORT,	// This is opened as an anonymous port. (ie, no name)
+	typedef enum PORT_ACCESS_STATUS
+	{
+		// Success
+		FERAL_PORT_ATTACH_SUCCESS = 0x00000000,// Port connection was allowed.
+		FERAL_PORT_APPEND_ONLY,// Not allowed to overwrite everything before flush (this is what happens when multiple users listen to the same port.)
+		FERAL_PORT_WRITE_BLOCKED,// Port was opened, but refused to let you write for now.
+		FERAL_PORT_NO_EXECUTE,// The port is opened OK, but just ADVISED to NEVER run anything in it as executable code.
+		FERAL_PORT_SYNC_ONLY,// By default, everything in a port is async. This forces evrything to be flushed as soon as it's written in.
+		FERAL_PORT_ANONYMOUS_PORT,// This is opened as an anonymous port. (ie, no name)
 
-	// "Minor" error (in the sense of you can do *something* with it)
-	FERAL_PORT_WRITE_DENIED = 0x40000000,	// Port refused to allow user to *ever* write. (read-only)
-	FERAL_PORT_ALARMED,		// A system alarm is set off now that you tried to do something with it. (ie, touching system files as normal user)
-	FERAL_PORT_CONNECTION_CLOSED,	// You were connected to it, and now the port closed (ie, transfer is done.)
-	FERAL_PORT_OTHER_WARNING,	// Some other thing
+		// "Minor" error (in the sense of you can do *something* with it)
+		FERAL_PORT_WRITE_DENIED = 0x40000000,// Port refused to allow user to *ever* write. (read-only)
+		FERAL_PORT_ALARMED,// A system alarm is set off now that you tried to do something with it. (ie, touching system files as normal user)
+		FERAL_PORT_CONNECTION_CLOSED,// You were connected to it, and now the port closed (ie, transfer is done.)
+		FERAL_PORT_OTHER_WARNING,// Some other thing
 
-	// "Critical" error
-	FERAL_PORT_READ_DENIED = 0x80000000,		// Port exists, but you must copy it's buffer (direct read denied)
-	FERAL_PORT_ACCESS_DENIED,	// Port exists, but you cannot use it.
-	FERAL_PORT_PRIVATE_PORT,	// Port is private. Same as ACCESS DENIED.
-	FERAL_PORT_CONNECTION_REFUSED,	// Port refused to open for you for some reason (ie, service exists, is on different port)	
-	FERAL_PORT_OTHER_FAILURE,	// Some other port error.
-	
-	FERAL_PORT_DOES_NOT_EXIST = 0xC0000000,	// Port does not exist.	(or wishes to remain as a hidden service.)
-	FERAL_PORT_TYPE_MISMATCH,	// Port exists, but it's not what you were expecting (ie, you're sending it invalid data)
-	
-}PORT_ACCESS_STATUS;
+		// "Critical" error
+		FERAL_PORT_READ_DENIED = 0x80000000,// Port exists, but you must copy it's buffer (direct read denied)
+		FERAL_PORT_ACCESS_DENIED,// Port exists, but you cannot use it.
+		FERAL_PORT_PRIVATE_PORT,// Port is private. Same as ACCESS DENIED.
+		FERAL_PORT_CONNECTION_REFUSED,// Port refused to open for you for some reason (ie, service exists, is on different port)
+		FERAL_PORT_OTHER_FAILURE,// Some other port error.
+
+		FERAL_PORT_DOES_NOT_EXIST = 0xC0000000,// Port does not exist.	(or wishes to remain as a hidden service.)
+		FERAL_PORT_TYPE_MISMATCH,// Port exists, but it's not what you were expecting (ie, you're sending it invalid data)
+
+	} PORT_ACCESS_STATUS;
 
 
 #if defined(__cplusplus)

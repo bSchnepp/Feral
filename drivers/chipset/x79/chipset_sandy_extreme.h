@@ -23,7 +23,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
+
 /* Specific things for x86 x79 chipset (mainly RAID, legacy PCI, etc.) */
 /* Specific CPUs we're looking for are all part of the "Bridge"
 micro-architecture (Sandy Bridge Ivy Bridge), and are the "Extreme"

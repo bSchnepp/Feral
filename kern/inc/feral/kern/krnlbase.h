@@ -40,12 +40,12 @@ typedef struct KrnlPhysicalDisplay
 
 	UINT32 ResolutionX;
 	UINT32 ResolutionY;
-	
+
 	VOID *Framebuffer;
-}KrnlPhysicalDisplay;
+} KrnlPhysicalDisplay;
 
 typedef struct KrnlEnvironmentBlock
-{	
+{
 	/* Bootloader should help find free memory areas. */
 	UINT64 KernelPageSize;
 	UINT64 FreeMemCount;
@@ -53,7 +53,7 @@ typedef struct KrnlEnvironmentBlock
 
 	KrnlFirmwareFunctions *FunctionTable;
 	KrnlCharMap *CharMap;
-	
+
 	UINT32 PrimaryDisplayIndex;
 	UINT32 NumDisplays;
 	KrnlPhysicalDisplay *Displays;
@@ -63,7 +63,7 @@ typedef struct KrnlEnvironmentBlock
 	UINT8 FeralVersionMajor;
 	UINT8 FeralVersionMinor;
 	UINT8 FeralVersionPatch;
-}KrnlEnvironmentBlock;
+} KrnlEnvironmentBlock;
 
 
 #endif

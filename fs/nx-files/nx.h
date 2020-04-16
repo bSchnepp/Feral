@@ -34,38 +34,37 @@ IN THE SOFTWARE.
 
 typedef enum NxFilesMountOptions
 {
-	NX_FILES_FS_READ = 		(1 << 0),
-	NX_FILES_FS_WRITE = 		(1 << 1),
-	NX_FILES_FS_DISK_QUOTA = 	(1 << 2),
-}NxFilesMountOptions;
+	NX_FILES_FS_READ = (1 << 0),
+	NX_FILES_FS_WRITE = (1 << 1),
+	NX_FILES_FS_DISK_QUOTA = (1 << 2),
+} NxFilesMountOptions;
 
 typedef enum NxFilesAttributeType
 {
-	NX_FILES_TYPE_STRING = 		(1 << 0),
-	NX_FILES_TYPE_BOOL8 = 		(1 << 1),	
-	NX_FILES_TYPE_UINT8 = 		(1 << 2),
-	NX_FILES_TYPE_UINT16 = 		(1 << 3),
-	NX_FILES_TYPE_UINT32 = 		(1 << 4),
-	NX_FILES_TYPE_UINT64 =		(1 << 5),
-	NX_FILES_TYPE_UINT128 = 	(1 << 6),
+	NX_FILES_TYPE_STRING = (1 << 0),
+	NX_FILES_TYPE_BOOL8 = (1 << 1),
+	NX_FILES_TYPE_UINT8 = (1 << 2),
+	NX_FILES_TYPE_UINT16 = (1 << 3),
+	NX_FILES_TYPE_UINT32 = (1 << 4),
+	NX_FILES_TYPE_UINT64 = (1 << 5),
+	NX_FILES_TYPE_UINT128 = (1 << 6),
 
 
 
-	NX_FILES_TYPE_FLOAT =		(1 << 30),	/* dangerous?? */
-	NX_FILES_TYPE_DOUBLE =		(1 << 31),	/* dangerous?? */
-}NxFilesAttributeType;
+	NX_FILES_TYPE_FLOAT = (1 << 30), /* dangerous?? */
+	NX_FILES_TYPE_DOUBLE = (1 << 31), /* dangerous?? */
+} NxFilesAttributeType;
 
 typedef struct NxFilesAttribute
 {
 	NxFilesAttributeType type;
-	union
-	{
+	union {
 		WSTRING string;
-		UINT64	intVal[2];
-		DOUBLE	numVal;
-		UINT8	boolVal;
+		UINT64 intVal[2];
+		DOUBLE numVal;
+		UINT8 boolVal;
 	};
-}NxFilesAttribute;
+} NxFilesAttribute;
 
 
 

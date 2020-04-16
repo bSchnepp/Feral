@@ -28,48 +28,49 @@ IN THE SOFTWARE.
 #define _FERAL_FERAL_USER_H_
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
 #include <feral/stdtypes.h>
 
-typedef enum
-{
-	PORT_TYPE_RECIEVE,
-	PORT_TYPE_SEND,
-	PORT_TYPE_SEND_ONCE,
-	PORT_TYPE_BIDIRECTIONAL,
-}PORT_PURPOSE;
+	typedef enum
+	{
+		PORT_TYPE_RECIEVE,
+		PORT_TYPE_SEND,
+		PORT_TYPE_SEND_ONCE,
+		PORT_TYPE_BIDIRECTIONAL,
+	} PORT_PURPOSE;
 
-typedef enum
-{
-	PORT_RIGHT_CREATE,
-	PORT_RIGHT_DELETE,
-	PORT_RIGHT_LINK,
-	PORT_RIGHT_CREATE_LINK,
-	PORT_RIGHT_DELETE_LINK,
-	PORT_RIGHT_ALL,
-}PORT_CREATION_RIGHT;
+	typedef enum
+	{
+		PORT_RIGHT_CREATE,
+		PORT_RIGHT_DELETE,
+		PORT_RIGHT_LINK,
+		PORT_RIGHT_CREATE_LINK,
+		PORT_RIGHT_DELETE_LINK,
+		PORT_RIGHT_ALL,
+	} PORT_CREATION_RIGHT;
 
-typedef struct FERALUSER
-{
-	WSTRING Name;
-	UINT64 UserID;		// Up to 2^64 user accounts. Should be plenty for the overwhelming majority of all use cases.
-	WSTRING Home;		// typically A:/Users/<NAME>, but could also be under a parent's home.
-	FERALTIME* CreationDate;
-	FERALTIME* ExpirationDate;	// If null, does not ever expire.
-	
-	BOOLEAN UsesPassword;
-	BOOLEAN SystemAccount;	// Is this account for a service? (ie, some daemon like a port of PulseAudio or something)
+	typedef struct FERALUSER
+	{
+		WSTRING Name;
+		UINT64 UserID;// Up to 2^64 user accounts. Should be plenty for the overwhelming majority of all use cases.
+		WSTRING Home;// typically A:/Users/<NAME>, but could also be under a parent's home.
+		FERALTIME* CreationDate;
+		FERALTIME* ExpirationDate;// If null, does not ever expire.
 
-	struct FERALUSER* Parent;
-}FERALUSER;
+		BOOLEAN UsesPassword;
+		BOOLEAN SystemAccount;// Is this account for a service? (ie, some daemon like a port of PulseAudio or something)
 
-typedef struct
-{
-	FERALUSER User;
-	PORT_PURPOSE Purpose;
-}FERALPORT_USER_IDENTITIES;
+		struct FERALUSER* Parent;
+	} FERALUSER;
+
+	typedef struct
+	{
+		FERALUSER User;
+		PORT_PURPOSE Purpose;
+	} FERALPORT_USER_IDENTITIES;
 
 #if defined(__cplusplus)
 }

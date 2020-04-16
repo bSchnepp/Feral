@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -24,4 +24,13 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-// Specific things for x86 x399 chipset (mainly RAID)
+#ifndef _FERAL_KERN_ARP_H_
+#define _FERAL_KERN_ARP_H_
+
+
+/* TODO: Implement this...  */
+FERALSTATUS NetResolveIPv4ToArp(IN UINT32 IP, OUT BYTE *ArpAddr);
+
+
+
+#endif

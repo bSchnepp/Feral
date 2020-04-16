@@ -40,79 +40,77 @@ typedef enum MmStructureType
 	MM_STRUCTURE_TYPE_PHYSICAL_ALLOCATION_INFO,
 	MM_STRUCTURE_TYPE_PHYSICAL_FRAME_ALLOCATOR,
 	MM_STRUCTURE_TYPE_PHYSICAL_FRAME_BLOCK,
-	
+
 	MM_STRUCTURE_TYPE_VIRTUAL_ALLOCATION_INFO,
 	MM_STRUCTURE_TYPE_VIRTUAL_FRAME_ALLOCATOR,
 	MM_STRUCTURE_TYPE_VIRTUAL_FRAME_BLOCK,
-	
+
 	MM_STRUCTURE_TYPE_HEAP_ALLOCATION_INFO,
 	MM_STRUCTURE_TYPE_HEAP_ALLOCATOR,
-	
+
 	MM_STRUCTURE_TYPE_FREE_AREA_RANGE,
-	
+
 	MM_STRUCTURE_TYPE_MAX = 0xFFFF
-}MmStructureType;
+} MmStructureType;
 
 typedef struct MmFreeAreaRange
 {
 	MmStructureType sType;
 	void *pNext;
-	
+
 	UINT_PTR Start;
 	UINT_PTR End;
-	UINT_PTR Size;	/* Not *actually* a pointer, but matches addr size. */
-}MmFreeAreaRange;
+	UINT_PTR Size; /* Not *actually* a pointer, but matches addr size. */
+} MmFreeAreaRange;
 
 
 typedef struct MmPhysicalAllocationInfo
 {
 	MmStructureType sType;
 	void *pNext;
-	
-	UINT64 FrameSize;	/*Expect 4096 for now. Possibly use 2MB pages?*/
+
+	UINT64 FrameSize; /*Expect 4096 for now. Possibly use 2MB pages?*/
 	UINT64 FreeAreaRangeCount;
 	MmFreeAreaRange *Ranges;
-}MmPhysicalAllocationInfo;
+} MmPhysicalAllocationInfo;
 
 
 typedef struct MmCreateInfo
 {
 	MmStructureType sType;
 	void *pNext;
-	
+
 	MmPhysicalAllocationInfo *pPhysicalAllocationInfo;
 	/* TODO on the rest of this. For now, it gets to be identity mapped! */
-	
-	
-}MmCreateInfo;
+
+
+} MmCreateInfo;
 
 typedef struct AllocatorState
 {
 	MmStructureType sType;
 	void *pNext;
-	
+
 	UINT64 NumArenas;
 	Arena *Arenas;
-}AllocatorState;
+} AllocatorState;
 
 
 /* (Obviously, these are TODO.) FIXME: Prefix with 'Mm'. */
 
-FERALSTATUS KiInitializeMemMgr(IN MmCreateInfo *info);	/* TODO!!! */
+FERALSTATUS KiInitializeMemMgr(IN MmCreateInfo *info); /* TODO!!! */
 
 FERALSTATUS GetMemoryAlreadyInUse(IN UINT_PTR Location, OUT BOOL *Status);
 FERALSTATUS SetMemoryAlreadyInUse(IN UINT_PTR Location, IN BOOL Status);
 
-FERALSTATUS ExtractAddressFromPageEntry(IN PageMapEntry *Entry, 
+FERALSTATUS ExtractAddressFromPageEntry(IN PageMapEntry *Entry,
 	OUT UINT_PTR *Address);
 
 
 
-
-
-AllocatorState *MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea, 
+AllocatorState *MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea,
 	UINT_PTR HeapSize);
-	
+
 void *MmKernelMalloc(UINT64 Size);
 
 void MmKernelFree(UINT_PTR Location);

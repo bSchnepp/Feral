@@ -115,31 +115,30 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	 * any regressions. 
 	 */
 	KiUpdateFirmwareFunctions(EnvBlock->FunctionTable, EnvBlock->CharMap);
-	
+
 	FeralVersionMajor = FERAL_VERSION_MAJOR;
 	FeralVersionMinor = FERAL_VERSION_MINOR;
 	FeralVersionPatch = FERAL_VERSION_PATCH;
 
-	KiPrintFmt("\nStarting Feral Kernel \"%s\" Version %01u.%01u.%01u\n", 
+	KiPrintFmt("\nStarting Feral Kernel \"%s\" Version %01u.%01u.%01u\n",
 		FERAL_VERSION_SHORT,
-		FERAL_VERSION_MAJOR, 
-		FERAL_VERSION_MINOR, 
-		FERAL_VERSION_PATCH 
-	);
-	
+		FERAL_VERSION_MAJOR,
+		FERAL_VERSION_MINOR,
+		FERAL_VERSION_PATCH);
+
 	KiPrintLine("Copyright (c) 2018-2019, Brian Schnepp");
 	KiPrintLine("Licensed under the Boost Software License.");
-	KiPrintFmt("Booted using %s\n", 
+	KiPrintFmt("Booted using %s\n",
 		EnvBlock->FunctionTable->GetFirmwareName());
 	KiPrintFmt("%s\n", "Preparing execution environment...");
-	
+
 	KiStartupSystem(FERAL_SUBSYSTEM_ARCH_SPECIFIC);
 	KiStartupSystem(FERAL_SUBSYSTEM_MEMORY_MANAGEMENT);
-	
+
 	/* Only load drivers *after* base system initializtion. */
 	KiPrintFmt("Loading all drivers...\n");
 	FERALSTATUS KiLoadAllDrivers(VOID);
-	
+
 	/* These are macroed away at release builds.  
 	 * They're eliminated at build time.
 	 */
@@ -175,7 +174,7 @@ FERALSTATUS KeBootstrapSystem(VOID)
 VOID KiStartupMachineDependent(VOID)
 {
 #if defined(__x86_64__) || defined(__i386__)
-/* Be careful: '__riscv__' is deprecated. */
+	/* Be careful: '__riscv__' is deprecated. */
 	x86InitializeIDT();
 #elif defined(__riscv)
 

@@ -29,13 +29,13 @@ IN THE SOFTWARE.
 
 typedef UINTN EFI_STATUS;
 
-#define EFI_FALSE	0
-#define EFI_TRUE	1
+#define EFI_FALSE 0
+#define EFI_TRUE 1
 
 /* EFI_STATUS definitions... */
 #define EFI_SUCCESS 0
 
-#if defined(__x86_64__) || defined(__aarch64__) 
+#if defined(__x86_64__) || defined(__aarch64__)
 #define EFI_WARN(x) (0x0000000000000000 | x)
 #define EFI_ERROR(x) (0x8000000000000000 | x)
 #else
@@ -84,9 +84,9 @@ typedef UINTN EFI_STATUS;
 #define EFI_END_OF_FILE EFI_ERROR(31)
 
 /* Warnings */
-#define EFI_WARN_UNKNOWN_GLYPH EFI_WARN(1) 
-#define EFI_WARN_DELETE_FAILURE EFI_WARN(2) 
-#define EFI_WARN_WRITE_FAILURE EFI_WARN(3) 
+#define EFI_WARN_UNKNOWN_GLYPH EFI_WARN(1)
+#define EFI_WARN_DELETE_FAILURE EFI_WARN(2)
+#define EFI_WARN_WRITE_FAILURE EFI_WARN(3)
 #define EFI_WARN_BUFFER_TOO_SMALL EFI_WARN(4)
 #define EFI_WARN_STALE_DATA EFI_WARN(5)
 #define EFI_WARN_FILE_SYSTEM EFI_WARN(6)

@@ -28,30 +28,29 @@ IN THE SOFTWARE.
 #define _WAYPOINT_FEATURES_H_
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
 #include <feral/stdtypes.h>
 
-#define FEATURE_VULKAN_RENDERING		\
-{											\
-	0xA99878C2,							\
-	0x0A0F,									\
-	0x430C,									\
-	0x0A0F,									\
-	0x805F,									\
-	{0xA9, 0x44, 0x15, 0x9D, 0x57, 0x45},		\
-}
+#define FEATURE_VULKAN_RENDERING \
+	{ \
+		0xA99878C2, \
+			0x0A0F, \
+			0x430C, \
+			0x0A0F, \
+			0x805F, \
+			{0xA9, 0x44, 0x15, 0x9D, 0x57, 0x45}, \
+	}
 
-// Add more as needed.
+	// Add more as needed.
 
 #if defined(__cplusplus)
 }
 #endif
 
 BOOL IsFeatureSupported(GUID guid);
-
-
 
 
 

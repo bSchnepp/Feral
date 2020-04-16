@@ -25,9 +25,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 
  */
- 
- #include <feral/stdtypes.h>
- 
+
+#include <feral/stdtypes.h>
+
 typedef enum SdPriorityLevel
 {
 	SCHED_PRIORITY_LEVEL_IDLE = 0x0,
@@ -36,10 +36,10 @@ typedef enum SdPriorityLevel
 	SCHED_PRIORITY_LEVEL_NORMAL = 0x0001,
 	SCHED_PRIORITY_LEVEL_ABOVE_NORMAL = 0x0001,
 	SCHED_PRIORITY_LEVEL_FAR_ABOVE_NORMAL = 0x0002,
-	
+
 	SCHED_PRIORITY_LEVEL_REALTIME = 0x7FFF,
-}SdPriorityLevel;
- 
+} SdPriorityLevel;
+
 /*Processor control region (various bits of info about this processor) */
 typedef struct PcProcessor
 {
@@ -54,8 +54,8 @@ typedef struct PcProcessor
 	const char *PartRevision;
 #endif
 
-	UINT64	ProcNumber;
-	UINT32	SMTThreads;
-	
+	UINT64 ProcNumber;
+	UINT32 SMTThreads;
+
 	//TODO
-}PcProcessor;
+} PcProcessor;

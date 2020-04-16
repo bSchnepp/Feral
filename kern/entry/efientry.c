@@ -55,7 +55,7 @@ IN THE SOFTWARE.
 
 static KrnlFirmwareFunctions FirmwareFuncs = {0};
 static KrnlCharMap CharMap = {0};
-static 	KrnlEnvironmentBlock EnvBlock = {0};
+static KrnlEnvironmentBlock EnvBlock = {0};
 
 #include "charmap_default.inl"
 
@@ -64,10 +64,12 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier Subsystem)
 {
 	if (Subsystem == FERAL_SUBSYSTEM_MEMORY_MANAGEMENT)
 	{
-
-	} else if (Subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC) {
-
-	} else {
+	}
+	else if (Subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC)
+	{
+	}
+	else
+	{
 		/*  Placeholder for more stuff later on. (disks, network...) */
 	}
 }
@@ -80,10 +82,10 @@ STRING GetEfiFirmwareClaim()
 
 VOID kern_init(EfiBootInfo *BootInfo)
 {
-	UINT32 *FramebufferTemp = (UINT32*)(BootInfo->FramebufferPAddrs[2]);
-	for (int i = 0; i < (UINT32*)(BootInfo->FramebufferPAddrs[0]); ++i)
+	UINT32 *FramebufferTemp = (UINT32 *)(BootInfo->FramebufferPAddrs[2]);
+	for (int i = 0; i < (UINT32 *)(BootInfo->FramebufferPAddrs[0]); ++i)
 	{
-		for (int k = 0; k < (UINT32*)(BootInfo->FramebufferPAddrs[1]);
+		for (int k = 0; k < (UINT32 *)(BootInfo->FramebufferPAddrs[1]);
 			++k)
 		{
 			UINT32 FBVal = 0xFFFFFFFF;

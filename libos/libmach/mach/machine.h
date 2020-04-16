@@ -39,11 +39,11 @@ struct machine_info
 	vm_size_t memory_size;
 };
 
-typedef struct machine_info* machine_info_t;	// Define the machine_info pointer type.
-typedef struct machine_info  machine_info_data_t;	// Some Mach stuff wants this.
+typedef struct machine_info* machine_info_t;// Define the machine_info pointer type.
+typedef struct machine_info machine_info_data_t;// Some Mach stuff wants this.
 
-#define	CPU_ARCH_MASK	0xFF000000		// Mask for architecture bits
-#define CPU_ARCH_ABI64	0x01000000		// For 64-bit ABI (necessary for compatibility)
+#define CPU_ARCH_MASK 0xFF000000// Mask for architecture bits
+#define CPU_ARCH_ABI64 0x01000000// For 64-bit ABI (necessary for compatibility)
 
 #define CPU_STATE_USER (0)
 #define CPU_STATE_SYSTEM (1)
@@ -61,31 +61,31 @@ struct machine_slot
 	cpu_subtype_t cpu_subtype;
 	integer_t running;
 	integer_t cpu_ticks[CPU_STATE_MAX];
-	integer_t clock_freq; 
+	integer_t clock_freq;
 };
 
-typedef struct machine_slot* machine_slot_t;	// Define the machine_info pointer type.
-typedef struct machine_slot  machine_slot_data_t;	// Some Mach stuff wants this.
+typedef struct machine_slot* machine_slot_t;// Define the machine_info pointer type.
+typedef struct machine_slot machine_slot_data_t;// Some Mach stuff wants this.
 
 #define CPU_TYPE_ANY ((cpu_type_t)-1)
-#define CPU_TYPE_VAX ((cpu-type_t)1)
+#define CPU_TYPE_VAX ((cpu - type_t)1)
 #define CPU_TYPE_ROMP (cpu_type_t)2)
 #define CPU_TYPE_MC68020 ((cpu_type_t)3)
 #define CPU_TYPE_NS32032 ((cpu_type_t)4)
 #define CPU_TYPE_NS32332 ((cpu_type_t)5)
 #define CPU_TYPE_MC680x0 ((cpu_type_t)6)
 #define CPU_TYPE_I386 ((cpu_type_t)7)
-	#define CPU_TYPE_X86 CPU_TYPE_I386
+#define CPU_TYPE_X86 CPU_TYPE_I386
 #define CPU_TYPE_X86_64 ((CPU_TYPE_I386) | (CPU_ARCH_ABI64))
 #define CPU_TYPE_MIPS ((cpu_type_t)8)
 #define CPU_TYPE_MC68030 ((cpu_type_t)9)
 #define CPU_TYPE_MC98000 ((cpu_type_t)10)
 #define CPU_TYPE_PA_RISC ((cpu_type_t)11)
-	#define CPU_TYPE_HPPA CPU_TYPE_PA_RISC
+#define CPU_TYPE_HPPA CPU_TYPE_PA_RISC
 #define CPU_TYPE_ARM ((cpu_type_t)12)
-	#define CPU_TYPE_AARCH32 CPU_TYPE_ARM
+#define CPU_TYPE_AARCH32 CPU_TYPE_ARM
 #define CPU_TYPE_ARM64 ((CPU_TYPE_ARM64) | (CPU_ARCH_ABI64))
-	#define CPU_TYPE_AARCH64 CPU_TYPE_ARM64
+#define CPU_TYPE_AARCH64 CPU_TYPE_ARM64
 #define CPU_TYPE_MC88000 ((cpu_type_t)13)
 #define CPU_TYPE_SPARC ((cpu_type_t)14)
 #define CPU_TYPE_I860 ((cpu_type_t)15)
@@ -93,7 +93,6 @@ typedef struct machine_slot  machine_slot_data_t;	// Some Mach stuff wants this.
 // No Mach fork defines this (17)
 #define CPU_TYPE_POWERPC ((cpu_type_t)18)
 #define CPU_TYPE_POWERPC64 ((CPU_TYPE_POWERPC) | (CPU_ARCH_ABI64))
-
 
 
 

@@ -23,7 +23,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
+
 #ifndef _FERAL_X86_64_PAGE_FLAGS_H_
 #define _FERAL_X86_64_PAGE_FLAGS_H_
 
@@ -32,23 +32,25 @@ IN THE SOFTWARE.
 #define KERN_PHYS_TO_VIRT(x) (x + KERN_VIRT_OFFSET)
 #define KERN_IS_VIRT ((x & KERN_VIRT_OFFSET) == KERN_VIRT_OFFSET)
 
-#define X86_PAGE_FLAG_PRESENT				(1 << 0)
-#define X86_PAGE_FLAG_WRITABLE				(1 << 1)
-#define X86_PAGE_FLAG_USER_READ				(1 << 2)
-#define X86_PAGE_FLAG_WRITE_PAST_CACHE			(1 << 3)
-#define X86_PAGE_FLAG_CACHE_DISABLED			(1 << 4)
+#define X86_PAGE_FLAG_PRESENT (1 << 0)
+#define X86_PAGE_FLAG_WRITABLE (1 << 1)
+#define X86_PAGE_FLAG_USER_READ (1 << 2)
+#define X86_PAGE_FLAG_WRITE_PAST_CACHE (1 << 3)
+#define X86_PAGE_FLAG_CACHE_DISABLED (1 << 4)
 
-#define X86_PAGE_ACCESSED_FLAG				(1 << 5)
-#define X86_PAGE_DIRTY					(1 << 6)
+#define X86_PAGE_ACCESSED_FLAG (1 << 5)
+#define X86_PAGE_DIRTY (1 << 6)
 
-#define X86_PAGE_HUGE					(1 << 7)
+#define X86_PAGE_HUGE (1 << 7)
 /* If PGE bit of CR4 is set, then we can use this for global pages. */
-#define X86_PAGE_GLOBAL					(1 << 8)
+#define X86_PAGE_GLOBAL (1 << 8)
 
+/* Each entry is 9 bits long. */
+#define X86_PAGE_LEVEL_BITMASK (0x1FF)
 
 /* We can use bits 9 through 11 for whatever we want? */
 
-#define X86_PAGE_NO_EXECUTE				(1 << 63)
+#define X86_PAGE_NO_EXECUTE (1 << 63)
 
 #if defined(__i386__)
 #define PAGE_ALIGN(x) (x & 0xFFFFF000)
@@ -60,7 +62,7 @@ IN THE SOFTWARE.
 #define X86_PRESENT_WRITABLE_PAGE (X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE)
 #define X86_PRESENT_PAGE_NO_EXEC (X86_PAGE_FLAG_PRESENT | X86_PAGE_NO_EXECUTE)
 
-#define X86_PRESENT_WRITABLE_PAGE_USER 	( X86_PRESENT_WRITABLE_PAGE | (X86_PAGE_FLAG_USER_READ) )
+#define X86_PRESENT_WRITABLE_PAGE_USER (X86_PRESENT_WRITABLE_PAGE | (X86_PAGE_FLAG_USER_READ))
 /* #define X86_PRESENT_PAGE_NO_EXEC 	( X86_PRESENT_PAGE_NO_EXEC | (X86_PAGE_FLAG_USER_READ) ) */
 
 /* Reimplemented for each arch. */
@@ -77,12 +79,12 @@ typedef struct PageMapEntry
 	UINT8 GlobalFlag : 1;
 	UINT8 Unused : 3;
 #if defined(__i386__)
-	#error GDT entry not implemented for legacy x86!
+#error GDT entry not implemented for legacy x86!
 #elif defined(__x86_64__)
 	UINT_PTR Address : 51;
 #endif
 	UINT8 NoExecuteFlag : 1;
-}PACKED PageMapEntry;
+} PACKED PageMapEntry;
 
 
 /**
@@ -95,19 +97,17 @@ typedef struct PageMapEntry
  * page table. In other words, the the least signifigant entry is the
  * first in the table.
  */
-inline 
-FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels)
+inline FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels)
 {
 	/* Split into 9 bit chunks. Only 4 levels to worry about. */
 	UINT64 Remainder = Address;
-	
+
 	/* Some state variables to hold the current locations. */
 	UINT16 Current = 0;
 	UINT8 Index = 0;
 	while (Index < 3)
 	{
-		/* Each entry is 9 bits long. */
-		Current = Remainder & 0x1FF;
+		Current = Remainder & X86_PAGE_LEVEL_BITMASK;
 		Remainder >>= 9;
 		Levels[Index] = Current;
 		Index++;

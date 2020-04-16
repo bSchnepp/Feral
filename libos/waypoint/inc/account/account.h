@@ -23,8 +23,8 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
-#ifndef _FERAL_WAYPOINT_ACCOUNT_H_ 
+
+#ifndef _FERAL_WAYPOINT_ACCOUNT_H_
 #define _FERAL_WAYPOINT_ACCOUNT_H_
 
 #include <feral/stdtypes.h>
@@ -36,23 +36,23 @@ IN THE SOFTWARE.
 	
 	If there is an error, the returned WPSTATUS is set accordingly.
  */
-WPSTATUS WpGetUserCount(OUT UINT64* AccountCounter); 
+WPSTATUS WpGetUserCount(OUT UINT64* AccountCounter);
 
- /**
+/**
 	Gets the current number of active (logged-in) users on
 	this machine.
 	
 	If there is an error, the returned WPSTATUS is set accordingly.
  */
-WPSTATUS WpGetActiveUserCount(OUT UINT64* AccountCounter); 
+WPSTATUS WpGetActiveUserCount(OUT UINT64* AccountCounter);
 
-  /**
+/**
   	Checks if a given user exists.
   	A given user exists if it's ID is taken, and it's name matches.
 	
 	If there is an error, the returned WPSTATUS is set accordingly.
  */
-WPSTATUS WpGetUserValidity(IN FERALUSER* User, OUT BOOL* Status); 
- 
- 
- #endif
+WPSTATUS WpGetUserValidity(IN FERALUSER* User, OUT BOOL* Status);
+
+
+#endif

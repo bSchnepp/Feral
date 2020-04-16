@@ -23,20 +23,20 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
- 
+
+
 #ifndef _FERAL_DAREON_NAVI_10_H_
 #define _FERAL_DAREON_NAVI_10_H_
- 
+
 #define DAREON_VIDEO_CARD_NAVI_NAME L"DAREON NAVI RX"
 /* TODO */
- 
- /* TODO: Go get one, and start hacking away at drivers at some point... */
- 
- /* Predictions (obviously I don't know what they'll *actually* be, but this is a good guess.) */
+
+/* TODO: Go get one, and start hacking away at drivers at some point... */
+
+/* Predictions (obviously I don't know what they'll *actually* be, but this is a good guess.) */
 #define VIDEO_CARD_IDENTIFIER_LOW_END_ONE L"DAREON NAVI RX 5500"
 #define VIDEO_CARD_IDENTIFIER_MAINSTREAM L"DAREON NAVI RX 5600"
 #define VIDEO_CARD_IDENTIFIER_HIGH_END_ONE L"DAREON NAVI RX 5700"
 #define VIDEO_CARD_IDENTIFIER_ENTHUSIAST_ONE L"DAREON NAVI RX 5800"
- 
+
 #endif

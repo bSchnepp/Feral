@@ -30,10 +30,11 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-// unimplemented
+	// unimplemented
 
 
 #ifdef __cplusplus

@@ -116,7 +116,7 @@ VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix)
 	UINT64 Len = 0;
 	UINT64 ValCopy = 0;
 	UINT64 ReverseIndex = 0;
-	
+
 	/* No point in continuing if it's zero. Just give '0' back. */
 	if (Val == 0)
 	{
@@ -132,30 +132,34 @@ VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix)
 		if (Rem <= 9 && Rem >= 0)
 		{
 			/* It's already a number. Just encode in UTF16. */
-			Buf[Len++]  =  Rem + L'0';
-		} else if (Rem < 35) {
+			Buf[Len++] = Rem + L'0';
+		}
+		else if (Rem < 35)
+		{
 			/* Encode the number as a lowercase letter. */
-			Buf[Len++]  =  (Rem - 10) + L'a';
-		} else {
+			Buf[Len++] = (Rem - 10) + L'a';
+		}
+		else
+		{
 			/* Encode as uppercase. */
-			Buf[Len++]  =  (Rem - 36) + L'A';
+			Buf[Len++] = (Rem - 36) + L'A';
 		}
 	}
-	
+
 	/* It's written BACKWARDS. So flip the order of the string. */
 	for (ReverseIndex = 0; ReverseIndex < Len / 2; ++ReverseIndex)
 	{
 		CHAR16 Tmp = Buf[ReverseIndex];
-		Buf[ReverseIndex] = Buf[Len - ReverseIndex  - 1];
-		Buf[Len - ReverseIndex  - 1] = Tmp;
+		Buf[ReverseIndex] = Buf[Len - ReverseIndex - 1];
+		Buf[Len - ReverseIndex - 1] = Tmp;
 	}
-	
+
 	/* Terminate the string. */
-	Buf[Len] =  '\0';
+	Buf[Len] = '\0';
 }
 
 #ifndef _FRLBOOT_NO_SUPPORT_ELF64_
-EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
+EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 {
 	/* TODO */
 	ElfHeader64 InitialHeader;
@@ -168,16 +172,16 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 	UINT64 Subindex;
 	UINT64 Size = sizeof(ElfHeader64);
 	UINT64 PHdrSize = sizeof(ElfProgramHeader64);
-	
+
 	/* Extra space, just to be safe. */
 	CHAR16 ItoaBuf[32];
-	
+
 	Status = File->Read(File, &Size, &InitialHeader);
 	if (Status != EFI_SUCCESS)
 	{
 		return Status;
 	}
-	
+
 	/* Check the header... */
 	CHAR Match[4] = {0x7F, 'E', 'L', 'F'};
 	for (Index = 0; Index < 4; ++Index)
@@ -187,53 +191,52 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 			return EFI_LOAD_ERROR;
 		}
 	}
-	
-	if (InitialHeader.e_machine != MACHINE_ID_NONE 
+
+	if (InitialHeader.e_machine != MACHINE_ID_NONE
 		&& InitialHeader.e_machine != CUR_ARCH_ELF)
 	{
 		return EFI_LOAD_ERROR;
 	}
-	
+
 	if (InitialHeader.e_phnum == 0)
 	{
-		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			L"Not an executable: missing program headers... \r\n");
 		return EFI_LOAD_ERROR;
 	}
-	
+
 	/* Change the position to the area currently cared about. */
 	for (Index = 0; Index < InitialHeader.e_phoff; ++Index)
 	{
 		/* Read the program data in... */
-		File->SetPosition(File, InitialHeader.e_phoff 
-			+ InitialHeader.e_phentsize * Index);
-		
+		File->SetPosition(File, InitialHeader.e_phoff
+						+ InitialHeader.e_phentsize * Index);
+
 		/* Read it in... */
 		File->Read(File, &PHdrSize, &ProgramHeader);
-		
+
 		if (ProgramHeader.p_type == PT_LOAD)
 		{
 			/* PAddr is in multiples of 4096. */
 			PAddress = ProgramHeader.p_paddr;
-		
+
 			Status = SystemTable->BootServices->AllocatePages(
 				AllocateAddress, EfiLoaderData,
 				BytesToEfiPages(ProgramHeader.p_memsz),
-				&PAddress
-			);
+				&PAddress);
 			InternalItoaBaseChange(BytesToEfiPages(ProgramHeader.p_memsz), ItoaBuf, 10);
-			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					L"Attempting to allocate: ");
-			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					ItoaBuf);
-			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					L" pages at location 0x");
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
+				L"Attempting to allocate: ");
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
+				ItoaBuf);
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
+				L" pages at location 0x");
 			/* Correct wrong address */
 			InternalItoaBaseChange(BytesToEfiPages(ProgramHeader.p_paddr << 12), ItoaBuf, 16);
-			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					ItoaBuf);
-			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-					L"\r\n");						
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
+				ItoaBuf);
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
+				L"\r\n");
 
 			/* Ignore EFI not doing it's job. (EFI_NOT_FOUND) */
 			if (Status != EFI_SUCCESS)
@@ -241,21 +244,23 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 				if (Status == EFI_NOT_FOUND)
 				{
 					/* warn the user that bios is buggy */
-					SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-						L"[WARNING]: BIOS bug being suppressed with brute force.\r\n"); 
-					SystemTable->ConOut->OutputString(SystemTable->ConOut, L"Ask manufacturer for fix.\r\n");				
-				} else {
-					SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					SystemTable->ConOut->OutputString(SystemTable->ConOut,
+						L"[WARNING]: BIOS bug being suppressed with brute force.\r\n");
+					SystemTable->ConOut->OutputString(SystemTable->ConOut, L"Ask manufacturer for fix.\r\n");
+				}
+				else
+				{
+					SystemTable->ConOut->OutputString(SystemTable->ConOut,
 						L"Failed to get address: ");
 					InternalItoaBaseChange(PAddress, ItoaBuf, 16);
-					SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+					SystemTable->ConOut->OutputString(SystemTable->ConOut,
 						ItoaBuf);
-					SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-						L"\r\n");	
+					SystemTable->ConOut->OutputString(SystemTable->ConOut,
+						L"\r\n");
 					return Status;
 				}
 			}
-			
+
 			/* Zero it all out first... */
 			for (Subindex = 0; Subindex < ProgramHeader.p_memsz;
 				++Subindex)
@@ -264,19 +269,19 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 			}
 			/* Read all the data in. */
 			Status = File->SetPosition(File, ProgramHeader.p_offset);
-			
+
 			if (Status != EFI_SUCCESS)
 			{
-				SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+				SystemTable->ConOut->OutputString(SystemTable->ConOut,
 					L"Failed to setup kernel (file seek).\r\n");
 				return Status;
 			}
 			UINTN PFilesz = ProgramHeader.p_filesz;
 
-			Status = File->Read(File, &(PFilesz), (VOID*)(PAddress));
-			if (Status != EFI_SUCCESS || *(CHAR*)(PAddress) == 0)
+			Status = File->Read(File, &(PFilesz), (VOID *)(PAddress));
+			if (Status != EFI_SUCCESS || *(CHAR *)(PAddress) == 0)
 			{
-				SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+				SystemTable->ConOut->OutputString(SystemTable->ConOut,
 					L"Failed to load program section.\r\n");
 			}
 		}
@@ -286,7 +291,7 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID** Entry)
 	VirtMemAreaFree += FERAL_VIRT_OFFSET;
 	/* align to 4k */
 	VirtMemAreaFree = VirtMemAreaFree & EFI_PAGE_MAP;
-	 
+
 	/* Entry is already in vaddr. */
 	*Entry = InitialHeader.e_entry;
 	return EFI_SUCCESS;
@@ -311,7 +316,7 @@ BOOL GetEfiMemoryMapToFreeOrNot(EFI_MEMORY_DESCRIPTOR *Place)
 		{
 			return TRUE;
 		}
-		
+
 		default:
 		{
 			return FALSE;
@@ -331,162 +336,160 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	UINTN Iterator = 0;
 	UINT32 CurrentWidth = 0;
 	UINT32 CurrentHeight = 0;
-	
+
 	/* Extra space, just to be safe. */
 	CHAR16 ItoaBuf[32];
-	
+
 	EFI_STATUS Result = EFI_SUCCESS;
 	EFI_MEMORY_DESCRIPTOR *MemoryMap = NULLPTR;
 
 	EFI_FILE_PROTOCOL *KernelImage = NULLPTR;
 	EFI_FILE_PROTOCOL *ESPRoot = NULLPTR;
-	
+
 	EFI_LOADED_IMAGE_PROTOCOL *LoadedImageProtocol = NULLPTR;
 	EFI_SIMPLE_FILESYSTEM_PROTOCOL *FileSysProtocol = NULLPTR;
 	EFI_GRAPHICS_OUTPUT_PROTOCOL *GraphicsProtocol = NULLPTR;
-	
+
 	EFI_HANDLE *VideoBuffers = NULLPTR;
-	
+
 	EFI_OPEN_PROTOCOL OpenProtocol;
-	
-	VOID (FERALAPI *kern_init)(EfiBootInfo*) = NULLPTR;
+
+	VOID(FERALAPI * kern_init)
+	(EfiBootInfo *) = NULLPTR;
 
 
 	ImageHandle = mImageHandle;
 	SystemTable = mSystemTable;
-	
+
 	/* Get all the GOPs... */
 	Result = SystemTable->BootServices->LocateHandleBuffer(ByProtocol,
 		&GuidEfiGraphicsOutputProtocol, NULL, &NumDisplays, &VideoBuffers);
-		
+
 	if (Result != EFI_SUCCESS)
 	{
-		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			L"Unable to get displays...\r\n");
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			EfiErrorToString(Result));
 		/* Still allow headless boot... */
 	}
-	
+
 	/* Clear the display. */
 	SystemTable->ConOut->ClearScreen(SystemTable->ConOut);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
 		L"Starting Feralboot...\r\n");
-		
+
 	OpenProtocol = SystemTable->BootServices->OpenProtocol;
 
 	/* cleanup later... */
 	UINT_PTR *DisplayBuffers = NULLPTR;
-	SystemTable->BootServices->AllocatePool(EfiRuntimeServicesData, 
-		(sizeof(UINT_PTR) * NumDisplays * 3), 
+	SystemTable->BootServices->AllocatePool(EfiRuntimeServicesData,
+		(sizeof(UINT_PTR) * NumDisplays * 3),
 		&DisplayBuffers);
-	
-	/* Seems like it's 1 more than supposed to */	
+
+	/* Seems like it's 1 more than supposed to */
 	for (Iterator = 0; Iterator < NumDisplays - 1; ++Iterator)
 	{
 		/* Get the current GOP. */
-		Result = OpenProtocol(VideoBuffers[Iterator], 
-			&GuidEfiGraphicsOutputProtocol, (VOID**)&GraphicsProtocol,
+		Result = OpenProtocol(VideoBuffers[Iterator],
+			&GuidEfiGraphicsOutputProtocol, (VOID **)&GraphicsProtocol,
 			ImageHandle, NULL,
 			EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
-			
+
 		if (Result != EFI_SUCCESS)
 		{
-			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
 				L"Failed to query display...\r\n");
 			SystemTable->ConOut->OutputString(SystemTable->ConOut,
 				EfiErrorToString(Result));
 			SystemTable->BootServices->Stall(12500000);
 			return Result;
 		}
-		
+
 		Result = GraphicsProtocol->SetMode(GraphicsProtocol, PixelRedGreenBlueReserved8BitPerColor);
 		if (Result != EFI_SUCCESS)
 		{
-			SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
 				L"Display does not use 32-bit RGB mode...\r\n");
 			SystemTable->ConOut->OutputString(SystemTable->ConOut,
 				EfiErrorToString(Result));
 			SystemTable->BootServices->Stall(12500000);
 			return Result;
-		}		
-		
+		}
+
 		/* Update the current width and height, then display. */
 		CurrentWidth = GraphicsProtocol->Mode->Info->HorizontalResolution;
 		CurrentHeight = GraphicsProtocol->Mode->Info->VerticalResolution;
-		
+
 		/* And tell the user that we found it! */
 		InternalItoaBaseChange(CurrentWidth, ItoaBuf, 10);
-		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-				L"Got display of width: ");
-		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-				ItoaBuf);
-		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-				L" and height of ");
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			L"Got display of width: ");
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			ItoaBuf);
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			L" and height of ");
 		InternalItoaBaseChange(CurrentHeight, ItoaBuf, 10);
-		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-				ItoaBuf);
-		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-				L"\r\n");
-				
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			ItoaBuf);
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			L"\r\n");
+
 		/* HACK: first and second are sizes.*/
-		DisplayBuffers[Iterator+0] = CurrentWidth;
-		DisplayBuffers[Iterator+1] = CurrentHeight;
-		DisplayBuffers[Iterator+2] = GraphicsProtocol->Mode->FrameBufferBase;
+		DisplayBuffers[Iterator + 0] = CurrentWidth;
+		DisplayBuffers[Iterator + 1] = CurrentHeight;
+		DisplayBuffers[Iterator + 2] = GraphicsProtocol->Mode->FrameBufferBase;
 	}
-	
+
 
 	/* Get the UEFI memory stuff. */
 	Result = SystemTable->BootServices->GetMemoryMap(&MapSize, MemoryMap,
-		NULL, &DescriptorSize, NULL); 
-		
+		NULL, &DescriptorSize, NULL);
+
 	if (Result == EFI_BUFFER_TOO_SMALL)
 	{
 		/* TODO... */
 	}
-	
+
 	/* Add some area to actually hold the info. */
 	MapSize += (DescriptorSize << 1);
 	Result = SystemTable->BootServices->AllocatePool(EfiLoaderData, MapSize,
-		(void**)(&MemoryMap)
-	);
+		(void **)(&MemoryMap));
 	if (Result != EFI_SUCCESS)
 	{
 		/* TODO... */
 	}
-	
-	Result = SystemTable->BootServices->GetMemoryMap(&MapSize, MemoryMap, 
-		&MapKey, &DescriptorSize, &DescriptorVersion
-	);
-	
+
+	Result = SystemTable->BootServices->GetMemoryMap(&MapSize, MemoryMap,
+		&MapKey, &DescriptorSize, &DescriptorVersion);
+
 	if (Result != EFI_SUCCESS)
 	{
 		/* TODO... */
 	}
 
 	Result = OpenProtocol(ImageHandle, &GuidEfiLoadedImageProtocol,
-		(void**)(&LoadedImageProtocol), ImageHandle, NULL, 
+		(void **)(&LoadedImageProtocol), ImageHandle, NULL,
 		EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
-		
+
 	if (Result != EFI_SUCCESS)
 	{
-		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			L"OpenProtocol had error (loaded image)...\r\n");
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			EfiErrorToString(Result));
 		SystemTable->BootServices->Stall(12500000);
 		return Result;
 	}
-		
+
 	/* Check for protocols necessary to mess with filesystem. */
-	Result = OpenProtocol(LoadedImageProtocol->DeviceHandle, 
-		&GuidEfiSimpleFSProtocol, (void**)(&FileSysProtocol), 
-		ImageHandle, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL
-	);
+	Result = OpenProtocol(LoadedImageProtocol->DeviceHandle,
+		&GuidEfiSimpleFSProtocol, (void **)(&FileSysProtocol),
+		ImageHandle, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 
 	if (Result != EFI_SUCCESS)
 	{
-		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			L"OpenProtocol had error (simple FS)..\r\n");
 
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
@@ -496,14 +499,14 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	}
 
 
-		
+
 	/* Load /EFI/Feral/FERALKER.NEL to do things! */
-	
+
 	Result = FileSysProtocol->OpenVolume(FileSysProtocol, &ESPRoot);
-	
+
 	if (Result != EFI_SUCCESS)
 	{
-		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			L"ESP could not be initialized...\r\n");
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			EfiErrorToString(Result));
@@ -512,46 +515,45 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 	}
 
 
-	
-	Result = ESPRoot->Open(ESPRoot, &KernelImage, 
-		L"\\EFI\\Feral\\FERALKER.NEL", EFI_FILE_MODE_READ, 
-		EFI_FILE_READ_ONLY
-	);
-	
+
+	Result = ESPRoot->Open(ESPRoot, &KernelImage,
+		L"\\EFI\\Feral\\FERALKER.NEL", EFI_FILE_MODE_READ,
+		EFI_FILE_READ_ONLY);
+
 	if (Result != EFI_SUCCESS)
 	{
-		SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			L"Kernel could not be initialized...\r\n");
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			EfiErrorToString(Result));
 		SystemTable->BootServices->Stall(12500000);
 		return Result;
 	}
-		
+
 	/* Terminate the watchdog timer. */
 	SystemTable->BootServices->SetWatchdogTimer(0, 0, 0, NULL);
-	
+
 	Result = ElfLoadFile(KernelImage, &kern_init);
 	InternalItoaBaseChange(kern_init, ItoaBuf, 16);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			L"Got entry point: 0x");
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			ItoaBuf);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			L"\r\n");
-			
-	InternalItoaBaseChange(DisplayBuffers[2], ItoaBuf, 16);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			L"Framebuffer: 0x");
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			ItoaBuf);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			L"\r\n");
-			
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
+		L"Got entry point: 0x");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
+		ItoaBuf);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
+		L"\r\n");
 
-	
+	InternalItoaBaseChange(DisplayBuffers[2], ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
+		L"Framebuffer: 0x");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
+		ItoaBuf);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
+		L"\r\n");
+
+
+
 	/* TODO: Keep EFI stuff in memory while this all happens... */
-	
+
 	if (Result != EFI_SUCCESS)
 	{
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
@@ -560,79 +562,79 @@ EFI_STATUS EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTa
 		SystemTable->RuntimeServices->ResetSystem(EfiResetShutdown,
 			EFI_SUCCESS, 0, NULLPTR);
 	}
-	
+
 	/* Close the file...  */
 	KernelImage->Close(KernelImage);
 
 	/* ehhhhh */
 	UINT64 NumMemoryRanges = MapSize / DescriptorSize;
 	EfiMemoryRange *MemoryRanges = NULLPTR;
-	SystemTable->BootServices->AllocatePool(EfiRuntimeServicesData, 
-		(sizeof(EfiMemoryRange) * NumMemoryRanges), 
-		(void**)&MemoryRanges);
-		
-	SystemTable->BootServices->AllocatePool(EfiRuntimeServicesData, 
-		(sizeof(EfiBootInfo)), 
-		(void**)&EnvBlock);
-		
+	SystemTable->BootServices->AllocatePool(EfiRuntimeServicesData,
+		(sizeof(EfiMemoryRange) * NumMemoryRanges),
+		(void **)&MemoryRanges);
+
+	SystemTable->BootServices->AllocatePool(EfiRuntimeServicesData,
+		(sizeof(EfiBootInfo)),
+		(void **)&EnvBlock);
+
 	InternalItoaBaseChange(EnvBlock, ItoaBuf, 16);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			L"EnvBlock: 0x");
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			ItoaBuf);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
-			L"\r\n");
-	
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
+		L"EnvBlock: 0x");
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
+		ItoaBuf);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
+		L"\r\n");
+
 	/* Iterate through the memory map one more time. */
 	for (Iterator = 0; Iterator < NumMemoryRanges; ++Iterator)
 	{
 		/* FIXME: Incompatible with C89 */
 		EFI_MEMORY_DESCRIPTOR *Current = &(MemoryMap[Iterator]);
 		UINTN Size = EFI_PAGE_SIZE * (Current->NumberOfPages);
-		
+
 		UINTN Begin = Current->PhysicalStart;
 		UINTN End = Current->PhysicalStart + Size;
-		
+
 		if (Current->Type == EfiRuntimeServicesCode
-			|| Current->Type ==  EfiRuntimeServicesData)
+			|| Current->Type == EfiRuntimeServicesData)
 		{
 			/* FIXME: remap the stuff. Do this, use 
 			   SetVirtualAddressMap, then ChangePointer on
 			   the table, and then we're good to mess
 			   with cr3. */
 		}
-		
+
 		MemoryRanges[Iterator].Usable = GetEfiMemoryMapToFreeOrNot(Current);
 		MemoryRanges[Iterator].Start = Begin;
 		MemoryRanges[Iterator].End = End;
 	}
-	
+
 	/* Terminate boot services (about to execute kernel) */
-	SystemTable->ConOut->OutputString(SystemTable->ConOut, 
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
 		L"Terminating firmware services...\r\n");
 	/* Start loading of the kernel. (setup and call KiSystemStartup) */
-	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);	
-	
+	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
+
 	/* Put the table at the end. */
-	VirtRuntimeTable = (EFI_RUNTIME_SERVICES*)(VirtMemAreaFree);
+	VirtRuntimeTable = (EFI_RUNTIME_SERVICES *)(VirtMemAreaFree);
 
 	EnvBlock->NumDisplays = NumDisplays;
 	EnvBlock->FramebufferPAddrs = DisplayBuffers;
-	
+
 	EnvBlock->NumMemoryRanges = NumMemoryRanges;
 	EnvBlock->MemoryRanges = MemoryRanges;
-	
+
 	for (int k = 0; k < EnvBlock->FramebufferPAddrs[0]; ++k)
 	{
 		for (int z = 0; z < EnvBlock->FramebufferPAddrs[1]; ++z)
 		{
-			((UINT32*)(EnvBlock->FramebufferPAddrs[2]))[k] = 0x00FFFF00;
+			((UINT32 *)(EnvBlock->FramebufferPAddrs[2]))[k] = 0x00FFFF00;
 		}
 	}
 	kern_init(EnvBlock);
 	for (int k = 0; k < EnvBlock->FramebufferPAddrs[0]; ++k)
 	{
-		((UINT32*)(EnvBlock->FramebufferPAddrs[2]))[k] = 0x00FF0000;
+		((UINT32 *)(EnvBlock->FramebufferPAddrs[2]))[k] = 0x00FF0000;
 	}
 
 	return EFI_SUCCESS;

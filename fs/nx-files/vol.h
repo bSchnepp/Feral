@@ -40,7 +40,7 @@ typedef UINT64 NxFilesVolumeField;
 typedef struct NxFilesVolumeHeader
 {
 	NxFilesAttribute MountLocation;
-	NxFilesAttribute 
-}NxFilesVolumeHeader;
+	NxFilesAttribute
+} NxFilesVolumeHeader;
 
 #endif

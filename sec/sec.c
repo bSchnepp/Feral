@@ -41,7 +41,7 @@ typedef struct
 {
 	FERALSTRING UserMapping;
 	WSTRING RootDir;
-}SeUserContext;
+} SeUserContext;
 
 
 typedef struct
@@ -50,27 +50,42 @@ typedef struct
 	UINT64 IdentifierSeconday;
 
 	SeUserContext UserContext;
-}SeSecurityContext;
+} SeSecurityContext;
 
 
 /* TODO: Refactor to have return as FERALSTATUS, and an INOUT parameter for the string. */
 STRING KiGetErrorType(IN FERALSTATUS Status)
 {
-	if (Status == STATUS_SUCCESS) {
+	if (Status == STATUS_SUCCESS)
+	{
 		return "STATUS_SUCCESS";
-	} else if (Status == STATUS_STACK_GUARD_VIOLATION) {
+	}
+	else if (Status == STATUS_STACK_GUARD_VIOLATION)
+	{
 		return "STATUS_STACK_GUARD_VIOLATION";
-	} else if (Status == STATUS_MEMORY_ACCESS_VIOLATION) {
+	}
+	else if (Status == STATUS_MEMORY_ACCESS_VIOLATION)
+	{
 		return "STATUS_MEMORY_ACCESS_VIOLATION";
-	} else if (Status == STATUS_MEMORY_PAGE_FAILURE) {
+	}
+	else if (Status == STATUS_MEMORY_PAGE_FAILURE)
+	{
 		return "STATUS_MEMORY_PAGE_FAILURE";
-	} else if (Status == STATUS_INVALID_MEMORY_LOCATION) {
+	}
+	else if (Status == STATUS_INVALID_MEMORY_LOCATION)
+	{
 		return "STATUS_INVALID_MEMORY_LOCATION";
-	} else if (Status == STATUS_OUT_OF_MEMORY) {
+	}
+	else if (Status == STATUS_OUT_OF_MEMORY)
+	{
 		return "STATUS_OUT_OF_MEMORY";
-	} else if (Status == STATUS_INVALID_OPCODE) {
+	}
+	else if (Status == STATUS_INVALID_OPCODE)
+	{
 		return "STATUS_INVALID_OPCODE";
-	} else {
+	}
+	else
+	{
 		return "OTHER_ERROR";
 	}
 }
@@ -85,9 +100,9 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 	UINT64 sp;
 	UINT64 bp;
 	UINT64 cr3;
-	
+
 	/* Clang doesn't really like blue syntax. Oh well. */
-	__asm__ volatile (
+	__asm__ volatile(
 		"movq %%rax, %0\n"
 		"movq %%rbx, %1\n"
 		"movq %%rcx, %2\n"
@@ -95,10 +110,9 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 		"movq %%rsp, %4\n"
 		"movq %%rbp, %5\n"
 		"movq %%cr3, %5\n"
-		: "=r"(a), "=r"(b), "=r"(c), "=r"(d), 
-		  "=r"(sp), "=r"(bp), "=r"(cr3)
-	);
-	
+		: "=r"(a), "=r"(b), "=r"(c), "=r"(d),
+		"=r"(sp), "=r"(bp), "=r"(cr3));
+
 	KiBlankVgaScreen(25, 80, VGA_BLUE);
 	char* errorMsg = "A problem has been detected and Feral has shutdown to prevent further damage.";
 	UINTN length = 0;
@@ -106,12 +120,12 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 	VgaPrintln(VGA_WHITE, VGA_BLUE, errorMsg, length);
 #endif
 	KiPrintFmt("If this is the first time this error has occured, try restarting your computer.\n");
-	
+
 	KiPrintLine("");
-	
+
 	KiPrintFmt("If the error persists, contact tech support and provide the following info:\n");
 	KiPrintFmt("Bug Check: 0x%x: %s\n", Status, KiGetErrorType(Status));
-	
+
 #if defined(__x86_64__)
 	KiPrintFmt("RAX: 0x%x\t RBX: 0x%x\t RCX: 0x%x\n", a, b, c);
 	KiPrintFmt("RDX: 0x%x\t RSP: 0x%x\t RBP: 0x%x\n", d, sp, bp);
@@ -121,13 +135,13 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 	/* KiPrintFmt("Bug Check occured at epoch time %l\n", (KeGetCurrentTime())); */
 	/* KiPrintFmt("System uptime is %l\n", (KeGetCurrentUptime() / 1000)); */
 	/* KiPrintFmt("System had %l tasks running\n", (KeGetTaskCount())); */
-	
+
 	/* KiPrintFmt("Feral will reboot in 15 seconds: log contents will be written to A:/System/Logs.\n"); */
 	for (;;)
 	{
 		/* Hang (for now) */
 	}
-	
+
 	return STATUS_SUCCESS;
 }
 

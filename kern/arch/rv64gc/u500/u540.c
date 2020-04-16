@@ -23,8 +23,8 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
- 
+
+
 /* 
 	TODO: this needs to actually work (one day). We'll
 	need to carefully consider how to do system calls, how it's different
@@ -41,5 +41,3 @@ VOID RV64EnterUserMode(VOID* ip, UINT_PTR StackTop)
 	return;
 }
 #endif
-
-

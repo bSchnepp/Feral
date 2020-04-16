@@ -23,21 +23,21 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
- 
+
+
 #ifndef _DAREON_GPU_DRIVER_VEGA_20_H_
 #define _DAREON_GPU_DRIVER_VEGA_20_H_
- 
+
 #include <feral/stdtypes.h>
- 
+
 #define DAREON_VIDEO_CARD_VEGA20_NAME L"DAREON VII"
- 
+
 typedef struct Vega20GPUInfo
 {
-	UINT64 CUCount;		/*  Only known SKU is 60 CUs. */
-	UINT64 ThreadsPerCU;	/*  Generally 64? */
-}Vega10GPUInfo;
+	UINT64 CUCount; /*  Only known SKU is 60 CUs. */
+	UINT64 ThreadsPerCU; /*  Generally 64? */
+} Vega10GPUInfo;
 
 /* (Vega 2 is only in one product.) */
- 
- #endif
+
+#endif

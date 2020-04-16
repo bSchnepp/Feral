@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019, Brian Schnepp
+Copyright (c) 2019, 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -54,7 +54,22 @@ typedef struct Command
 {
 	bool Running;
 	char *Line;
-}Command;
+} Command;
+
+typedef enum Operation
+{
+	OPERATION_CODE_INVALID = 0x0000 OPERATION_CODE_TYPE_RUN,
+	OPERATION_CODE_TYPE_USER_PROGRAM,
+	OPERATION_CODE_TYPE_ARGUMENT,
+	OPERATION_CODE_TYPE_EXIT,
+	OPERATION_CODE_TYPE_MAX = 0xFFFF
+} Operation;
+
+typedef struct ParserToken
+{
+	Operation Type;
+	FERALSTRING Content;
+} ParserToken;
 
 int main(int argc, char **argv)
 {
@@ -69,4 +84,3 @@ int main(int argc, char **argv)
 	}
 	return 0;
 }
-

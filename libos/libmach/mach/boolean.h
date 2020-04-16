@@ -27,7 +27,7 @@ IN THE SOFTWARE.
 #ifndef _MACH_BOOLEAN_H_
 #define _MACH_BOOLEAN_H_
 
-#include <mach/machine/boolean.h>	//Include the machine-specific stuff for booleans
+#include <mach/machine/boolean.h>//Include the machine-specific stuff for booleans
 
 
 // Check if TRUE and FALSE are defined.

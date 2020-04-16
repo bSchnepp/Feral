@@ -51,13 +51,13 @@ typedef enum KiSubsystemIdentifier
 	FERAL_SUBSYSTEM_OBJECT_MANAGEMENT,
 	FERAL_SUBSYSTEM_VIDEO_MANAGEMENT,
 	FERAL_SUBSYSTEM_POWER_MANAGEMENT,
-	FERAL_SUBSYSTEM_PROCESS_MANAGEMENT,	/* We can disable this if we want something like a thin client, and only one program (and one thread) per core.*/
-	
+	FERAL_SUBSYSTEM_PROCESS_MANAGEMENT, /* We can disable this if we want something like a thin client, and only one program (and one thread) per core.*/
+
 	FERAL_SUBSYSTEM_NETWORK_STACK,
-	FERAL_SUBSYSTEM_EMULATION_STACK,	/* CPU and 'foreign OS' emulation, including dynarec compiler(s). */
+	FERAL_SUBSYSTEM_EMULATION_STACK, /* CPU and 'foreign OS' emulation, including dynarec compiler(s). */
 	FERAL_SUBSYSTEM_AUDIO_STACK,
 	FERAL_SUBSYSTEM_INPUT_STACK,
-}KiSubsystemIdentifier;
+} KiSubsystemIdentifier;
 
 /* Bring up a system needed for the kernel. */
 FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem);
@@ -73,7 +73,7 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem);
 
 extern VOID SerialSend(UINT16 Port, CHAR c);
 
-#define SERIAL_PUTCHAR(x)  SerialSend(COM1_PORT, x)
+#define SERIAL_PUTCHAR(x) SerialSend(COM1_PORT, x)
 #else
 #define SERIAL_PUTCHAR(x) /* Nothing! */
 #endif

@@ -28,7 +28,8 @@ IN THE SOFTWARE.
 #define _FERAL_KERNEL_VGA_REGISTERS_H_
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
 
@@ -36,20 +37,20 @@ extern "C" {
 #define VGA_MISC_OUTPUT_REG 0x03C2
 
 #define VGA_FB_COMMAND_PORT 0x03D4
-#define VGA_FB_DATA_PORT    0x03D5
+#define VGA_FB_DATA_PORT 0x03D5
 
 #define VGA_HIGH_BYTE_COMMAND 0x0E
-#define VGA_LOW_BYTE_COMMAND  0x0F
+#define VGA_LOW_BYTE_COMMAND 0x0F
 
 /* VGA video resolutions... */
-#define VGA_VIDEO_MODE_80_25	0x0F00
+#define VGA_VIDEO_MODE_80_25 0x0F00
 
 /* I'm missing something here...  */
-#define VGA_VIDEO_MODE_80_43	0x0F02
-#define VGA_VIDEO_MODE_80_23	0x0F03
+#define VGA_VIDEO_MODE_80_43 0x0F02
+#define VGA_VIDEO_MODE_80_23 0x0F03
 
 
-//////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////
 
 
 #define VGA_AC_INDEX 0x03C0
@@ -57,7 +58,7 @@ extern "C" {
 #define VGA_AC_READ 0x03C1
 
 #define VGA_MISC_WRITE 0x03C2
-#define VGA_MISC_READ  0x03CC
+#define VGA_MISC_READ 0x03CC
 
 #define VGA_SEQ_INDEX 0x03C4
 #define VGA_SEQ_DATA 0x03C5
@@ -80,7 +81,6 @@ extern "C" {
 #define VGA_NUM_CRTC 25
 #define VGA_NUM_GRAPHICS 9
 #define VGA_NUM_TOTAL (1 + VGA_NUM_AC + VGA_NUM_SEQ + VGA_NUM_GRAPHICS + VGA_NUM_CRTC)
-
 
 
 

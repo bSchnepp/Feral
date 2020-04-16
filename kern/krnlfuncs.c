@@ -38,12 +38,12 @@ IN THE SOFTWARE.
  */
 
 
-static KrnlCharMap *CurrentCharMap = NULLPTR;
-static KrnlFirmwareFunctions *BackingFunctions = NULLPTR;
+static KrnlCharMap* CurrentCharMap = NULLPTR;
+static KrnlFirmwareFunctions* BackingFunctions = NULLPTR;
 
 
-FERALSTATUS KiUpdateFirmwareFunctions(KrnlFirmwareFunctions *Table, 
-	KrnlCharMap *CharMap)
+FERALSTATUS KiUpdateFirmwareFunctions(KrnlFirmwareFunctions* Table,
+	KrnlCharMap* CharMap)
 {
 	CurrentCharMap = CharMap;
 	BackingFunctions = Table;
@@ -70,7 +70,7 @@ FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount, 
+FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount,
 	OUT BOOL* Val)
 {
 	if ((Source == NULL) || (Dest == NULL))
@@ -79,8 +79,8 @@ FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount,
 	}
 	for (UINT64 i = 0; i < Amount; i++)
 	{
-		UINT_PTR *Src = (Source + i);
-		UINT_PTR *Dst = (Dest + i);
+		UINT_PTR* Src = (Source + i);
+		UINT_PTR* Dst = (Dest + i);
 		if (*Src != *Dst)
 		{
 			*(Val) = FALSE;
@@ -103,7 +103,7 @@ FERALSTATUS KiSetMemory(INOUT VOID*, IN UINTN, IN UINTN);
 /* Same as above, but with bytes. */
 FERALSTATUS KiSetMemoryBytes(INOUT VOID* Dest, IN UINT8 Val, IN UINTN Amt)
 {
-	UINT8 *dest = (UINT8*)Dest;
+	UINT8* dest = (UINT8*)Dest;
 	for (UINTN amt = 0; amt < Amt; ++amt)
 	{
 		dest[amt] = Val;
@@ -116,12 +116,12 @@ FERALSTATUS KiSetMemoryBytes(INOUT VOID* Dest, IN UINT8 Val, IN UINTN Amt)
 FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT* UINTN);
 */
 
-#define PRINT_LINE_GENERIC()						\
-	UINT64 length;							\
+#define PRINT_LINE_GENERIC() \
+	UINT64 length; \
 	FERALSTATUS FeralStatusError = KiGetStringLength(string, &length); \
-	if (FeralStatusError != STATUS_SUCCESS)			\
-	{								\
-		return FeralStatusError;				\
+	if (FeralStatusError != STATUS_SUCCESS) \
+	{ \
+		return FeralStatusError; \
 	}
 
 FERALSTATUS KiPrintLine(IN STRING string)
@@ -201,26 +201,30 @@ VOID internalItoaBaseChange(UINT64 val, STRING buf, UINT8 radix)
 		if (rem <= 9 && rem >= 0)
 		{
 			/* It's already a number. Just encode in ASCII. */
-			buf[len++]  =  rem + '0';
-		} else if (rem < 35) {
+			buf[len++] = rem + '0';
+		}
+		else if (rem < 35)
+		{
 			/* Encode the number as a lowercase letter. */
-			buf[len++]  =  (rem - 10) + 'a';
-		} else {
+			buf[len++] = (rem - 10) + 'a';
+		}
+		else
+		{
 			/* Encode as uppercase. */
-			buf[len++]  =  (rem - 36) + 'A';
+			buf[len++] = (rem - 36) + 'A';
 		}
 	}
-	
+
 	/* It's written BACKWARDS. So flip the order of the string. */
 	for (UINT64 i = 0; i < len / 2; ++i)
 	{
 		CHAR tmp = buf[i];
-		buf[i] = buf[len - i  - 1];
-		buf[len - i  - 1] = tmp;
+		buf[i] = buf[len - i - 1];
+		buf[len - i - 1] = tmp;
 	}
-	
+
 	/* Terminate the string. */
-	buf[len] =  '\0';
+	buf[len] = '\0';
 }
 
 /* 
@@ -246,34 +250,34 @@ VOID internalSignedItoa(INT64 val, STRING buf)
 {
 	UINT64 len = 0;
 	UINT64 base = 10;
-	
+
 	if (val >= 0)
 	{
 		return internalItoa(val, buf);
 	}
-	
+
 	/* We can assume we're negative: now we can avoid doing / or % 
 	 * on a negative value. 
 	 */
 	for (INT64 overzero = 0 - val; overzero != 0; overzero /= base)
 	{
 		CHAR rem = overzero % base;
-		buf[len++]  =  rem + '0';
+		buf[len++] = rem + '0';
 	}
-	
+
 	/* Append the -. Put it at the END since it'll be flipped soon. */
 	buf[len++] = '-';
-	
+
 	/* Flip the string around. */
 	for (UINT64 i = 0; i < len / 2; ++i)
 	{
 		CHAR tmp = buf[i];
-		buf[i] = buf[len - i  - 1];
-		buf[len - i  - 1] = tmp;
+		buf[i] = buf[len - i - 1];
+		buf[len - i - 1] = tmp;
 	}
-	
+
 	/* Terminate the string. */
-	buf[len] =  '\0';
+	buf[len] = '\0';
 }
 
 FERALSTATUS KiPrintFmt(const STRING fmt, ...)
@@ -293,15 +297,16 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 
 	BOOL upState = FALSE;
 	UINT8 repeatedCount = 0;
-	
+
 	UINT64 index = 0;
 	for (CHAR cur = fmt[0]; cur != '\0'; cur = fmt[++index])
-	{	
+	{
 		if (cur == '%' && !upState)
 		{
 			/* Push up */
 			upState = TRUE;
-		} else if (upState)
+		}
+		else if (upState)
 		{
 			/* 
 				If this state is up, it means we're in a special
@@ -314,37 +319,48 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 				STRING valistnext;
 				valistnext = va_arg(args, STRING);
 				KiPrint(valistnext);
-			} else if (cur == 'i' || cur == 'l') {
+			}
+			else if (cur == 'i' || cur == 'l')
+			{
 				INT32 valistnext;
 				valistnext = va_arg(args, INT32);
 				/* Create a buffer to store in. Integer is never longer than 20, so... */
 				CHAR buf[21] = {0};
 				internalSignedItoa((UINT64)valistnext, buf);
 				KiPrint(buf);
-			} else if (cur == 'l') {
+			}
+			else if (cur == 'l')
+			{
 				INT64 valistnext;
 				valistnext = va_arg(args, INT64);
 				/* Create a buffer to store in. Integer is never longer than 20, so... */
 				CHAR buf[21] = {0};
 				internalSignedItoa((UINT64)valistnext, buf);
 				KiPrint(buf);
-			} else if (cur == 'u') {
+			}
+			else if (cur == 'u')
+			{
 				UINT64 valistnext;
 				valistnext = va_arg(args, UINT64);
 				/* Create a buffer to store in. Integer is never longer than 21, so... */
 				CHAR buf[22] = {0};
 				internalItoa(valistnext, buf);
 				KiPrint(buf);
-			} else if (cur == 'x') {
+			}
+			else if (cur == 'x')
+			{
 				UINT64 valistnext;
 				valistnext = va_arg(args, UINT64);
 				/* Create a buffer to store in. Integer is never longer than 16, so... */
 				CHAR buf[17] = {0};
 				internalItoaBaseChange(valistnext, buf, 16);
 				KiPrint(buf);
-			} else if (cur == '%') {
+			}
+			else if (cur == '%')
+			{
 				KiPrint("%");
-			} else if(cur >= '0' && cur <= '9')
+			}
+			else if (cur >= '0' && cur <= '9')
 			{
 				if (fmt[++index] != '\0')
 				{
@@ -360,19 +376,23 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 			}
 			/* What do you mean %llu is a thing? */
 			upState = FALSE;
-		} else if (cur >= ' ') {
+		}
+		else if (cur >= ' ')
+		{
 			KiPutChar(cur);
-		} else if (cur == '\n') {
+		}
+		else if (cur == '\n')
+		{
 			KiPrintLine("");
-		} else if (cur == '\t') {
+		}
+		else if (cur == '\t')
+		{
 			/* Add 8 spaces. */
 			for (int i = 0; i < 8; i++)
 			{
 				KiPrint(" ");
 			}
 		}
-		
-
 	}
 	va_end(args);
 	return STATUS_SUCCESS;

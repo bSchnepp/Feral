@@ -33,31 +33,31 @@ typedef INT32 kern_return_t;
 // chances are that we'll either translate FERALSTATUS to these or just outright ignore the mach libos unless it affects Feral.
 // this whole library exists just so we can run gcc for GNU Mach\Hurd on Feral and other GNU programs.
 
-#define KERN_SUCCESS (0x00)			/* Everything's OK */
-#define KERN_INVALID_ADDRESS (0x01)		/* This memory address does not exist.*/
-#define KERN_PROTECTION_FAILURE (0x02)		/* Feral's memory protection layer won't let Mach personality access it. */
-#define KERN_NO_SPACE (0x03)			/* Address isn't specified, or it's already in use. */
+#define KERN_SUCCESS (0x00) /* Everything's OK */
+#define KERN_INVALID_ADDRESS (0x01) /* This memory address does not exist.*/
+#define KERN_PROTECTION_FAILURE (0x02) /* Feral's memory protection layer won't let Mach personality access it. */
+#define KERN_NO_SPACE (0x03) /* Address isn't specified, or it's already in use. */
 #define KERN_INVALID_ARGUMENT (0x04)
-#define KERN_FAILURE (0x05)			/* For some reason, Feral couldn't imitate MACH properly, or it just can't be done. */
-#define KERN_RESOURCE_SHORTAGE (0x06)		/* The requested resources can't be allocated. */
-#define KERN_NOT_RECIEVER (0x07)		/* The Task doesn't have the necessary Feral port permissions to go through. (not reciever) */
-#define KERN_NO_ACCESS (0x08)			/* Compatibility. Ignore. */
-#define KERN_MEMORY_FAILURE (0x09)		/* Page fault occured. */
-#define KERN_MEMORY_ERROR (0x0A)		/* Memory object couldn't be returned. Probably temporary. */
-#define KERN_ALREADY_IN_SET (0x0B)		/* Compatibility (ignore it) */
-#define KERN_NOT_IN_SET (0x0C)			/* Recieve right's not a member of the port set. */
-#define KERN_NAME_EXISTS (0x0D)			/* The name already denotes a right in the task. */
-#define KERN_ABORTED (0x0E)			/* The operation was aborted. This may be that the recieving progam quit, for example. */
-#define KERN_INVALID_NAME (0x0F)		/* The name wasn't found in the task. */
-#define KERN_INVALID_TASK (0x10)		/* The task doesn't exist, or wasn't found or something. */
-#define KERN_INVALID_RIGHT (0x11)		/* The name wasn't an appropriate right.*/
-#define KERN_INVALID_VALUE (0x12)		/* Invalid value. */
-#define KERN_UREFS_OVERFLOW (0x13)		/* On Mach, this would overflow user references. */
-#define KERN_INVALID_CAPABILITY (0x14)		/* Port capability is improper. */
-#define KERN_RIGHT_EXISTS (0x15)		/* The task already has the relevant ports, but under a different name. */
-#define KERN_INVALID_HOST (0x16)		/* The target host isn't a host. */
-#define KERN_MEMORY_PRESENT (0x17)		/* There was an attempt to crate a redundant memory object. */
-#define KERN_WRITE_PROTECTION_FAILURE (0x18)	/* Mach personality attempted to write to a write-protected page. */
-#define KERN_TERMINATED (0x19)			/* The object has been terminated, and no longer exists. */
+#define KERN_FAILURE (0x05) /* For some reason, Feral couldn't imitate MACH properly, or it just can't be done. */
+#define KERN_RESOURCE_SHORTAGE (0x06) /* The requested resources can't be allocated. */
+#define KERN_NOT_RECIEVER (0x07) /* The Task doesn't have the necessary Feral port permissions to go through. (not reciever) */
+#define KERN_NO_ACCESS (0x08) /* Compatibility. Ignore. */
+#define KERN_MEMORY_FAILURE (0x09) /* Page fault occured. */
+#define KERN_MEMORY_ERROR (0x0A) /* Memory object couldn't be returned. Probably temporary. */
+#define KERN_ALREADY_IN_SET (0x0B) /* Compatibility (ignore it) */
+#define KERN_NOT_IN_SET (0x0C) /* Recieve right's not a member of the port set. */
+#define KERN_NAME_EXISTS (0x0D) /* The name already denotes a right in the task. */
+#define KERN_ABORTED (0x0E) /* The operation was aborted. This may be that the recieving progam quit, for example. */
+#define KERN_INVALID_NAME (0x0F) /* The name wasn't found in the task. */
+#define KERN_INVALID_TASK (0x10) /* The task doesn't exist, or wasn't found or something. */
+#define KERN_INVALID_RIGHT (0x11) /* The name wasn't an appropriate right.*/
+#define KERN_INVALID_VALUE (0x12) /* Invalid value. */
+#define KERN_UREFS_OVERFLOW (0x13) /* On Mach, this would overflow user references. */
+#define KERN_INVALID_CAPABILITY (0x14) /* Port capability is improper. */
+#define KERN_RIGHT_EXISTS (0x15) /* The task already has the relevant ports, but under a different name. */
+#define KERN_INVALID_HOST (0x16) /* The target host isn't a host. */
+#define KERN_MEMORY_PRESENT (0x17) /* There was an attempt to crate a redundant memory object. */
+#define KERN_WRITE_PROTECTION_FAILURE (0x18) /* Mach personality attempted to write to a write-protected page. */
+#define KERN_TERMINATED (0x19) /* The object has been terminated, and no longer exists. */
 
 #endif

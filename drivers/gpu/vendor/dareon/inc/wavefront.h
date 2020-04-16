@@ -23,16 +23,16 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
- #ifndef _FERAL_DAREON_GRAPHICS_WAVEFRONT_H_
- #define _FERAL_DAREON_GRAPHICS_WAVEFRONT_H_
- 
- #include <feral/stdtypes.h>
- 
- 
+
+#ifndef _FERAL_DAREON_GRAPHICS_WAVEFRONT_H_
+#define _FERAL_DAREON_GRAPHICS_WAVEFRONT_H_
+
+#include <feral/stdtypes.h>
+
+
 typedef struct DareonWavefront
 {
 	/* Define CU context??? */
-}DareonWavefront;
- 
- #endif
+} DareonWavefront;
+
+#endif

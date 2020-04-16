@@ -40,7 +40,7 @@ IN THE SOFTWARE.
 // Technically, we're lying, in that we really only support the bare minimum needed to
 // load the kernel then leave the UEFI environment as fast as we can, but whatever.
 
-#define EFI_SPECIFICATION_MAJOR_REVISION  (2)
+#define EFI_SPECIFICATION_MAJOR_REVISION (2)
 #define EFI_SPECIFICATION_MINOR_REVISION (07)
 
 // For reading files and understanding what they're for.
@@ -76,68 +76,68 @@ typedef enum
 	EfiMemoryMappedIOPortSpace,
 	EfiPalCode,
 	EfiMaxMemoryType
-}EFI_MEMORY_TYPE;
+} EFI_MEMORY_TYPE;
 
 /* Important GUIDs... */
-#define EFI_EVENT_GROUP_EXIT_BOOT_SERVICES	\
-{						\
-	0x27ABF055,				\
-	0xB1B8,					\
-	0x4C26,					\
-	0x80,					\
-	0x48,					\
-	0x74,					\
-	0x8F,					\
-	0x37,					\
-	0xBA,					\
-	0xA2,					\
-	0xDF,					\
-}
+#define EFI_EVENT_GROUP_EXIT_BOOT_SERVICES \
+	{ \
+		0x27ABF055, \
+			0xB1B8, \
+			0x4C26, \
+			0x80, \
+			0x48, \
+			0x74, \
+			0x8F, \
+			0x37, \
+			0xBA, \
+			0xA2, \
+			0xDF, \
+	}
 
-#define EFI_EVENT_GROUP_VIRTUAL_ADDRESS_CHANGE	\
-{						\
-	0x13FA7698,				\
-	0xC831,					\
-	0x49C7,					\
-	0x87,					\
-	0xEA,					\
-	0x8F,					\
-	0x43,					\
-	0xFC,					\
-	0xC2,					\
-	0x51,					\
-	0x96,					\
-}
+#define EFI_EVENT_GROUP_VIRTUAL_ADDRESS_CHANGE \
+	{ \
+		0x13FA7698, \
+			0xC831, \
+			0x49C7, \
+			0x87, \
+			0xEA, \
+			0x8F, \
+			0x43, \
+			0xFC, \
+			0xC2, \
+			0x51, \
+			0x96, \
+	}
 
-#define EFI_EVENT_GROUP_MEMORY_MAP_CHANGE	\
-{						\
-	0x78BEE926,				\
-	0x692F,					\
-	0x48FD,					\
-	0x9E,					\
-	0xDB,					\
-	0x01,					\
-	0x42,					\
-	0x2E,					\
-	0xF0,					\
-	0xD7,					\
-	0xAB,					\
-}
+#define EFI_EVENT_GROUP_MEMORY_MAP_CHANGE \
+	{ \
+		0x78BEE926, \
+			0x692F, \
+			0x48FD, \
+			0x9E, \
+			0xDB, \
+			0x01, \
+			0x42, \
+			0x2E, \
+			0xF0, \
+			0xD7, \
+			0xAB, \
+	}
 
-#define EFI_EVENT_GROUP_READY_TO_BOOT		\
-{						\
-	0x7CE88FB3,				\
-	0x4BD7,					\
-	0x4679,					\
-	0x87,					\
-	0xA8,					\
-	0xA8,					\
-	0xD8,					\
-	0xDE,					\
-	0xE5,					\
-	0x0D,					\
-	0x2B,					\
-}
+#define EFI_EVENT_GROUP_READY_TO_BOOT \
+	{ \
+		0x7CE88FB3, \
+			0x4BD7, \
+			0x4679, \
+			0x87, \
+			0xA8, \
+			0xA8, \
+			0xD8, \
+			0xDE, \
+			0xE5, \
+			0x0D, \
+			0x2B, \
+	}
 
 
 #include <libreefi/efirt.h>

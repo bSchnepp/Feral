@@ -37,15 +37,15 @@ typedef struct EfiMemoryRange
 	BOOL Usable;
 	UINT_PTR Start;
 	UINT_PTR End;
-}EfiMemoryRange;
+} EfiMemoryRange;
 
 typedef struct EfiBootInfo
 {
 	UINT64 NumDisplays;
 	UINT_PTR *FramebufferPAddrs;
-	
+
 	UINT64 NumMemoryRanges;
 	EfiMemoryRange *MemoryRanges;
-}EfiBootInfo;
+} EfiBootInfo;
 
 #endif

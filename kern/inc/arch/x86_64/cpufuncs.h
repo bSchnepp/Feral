@@ -29,29 +29,29 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 
-#define CPU_x86_64_FAMILY_BULLDOZER	(0x15)
-#define CPU_x86_64_FAMILY_JAGUAR	(0x16)
-#define CPU_x86_64_FAMILY_PUMA		(0x16)
+#define CPU_x86_64_FAMILY_BULLDOZER (0x15)
+#define CPU_x86_64_FAMILY_JAGUAR (0x16)
+#define CPU_x86_64_FAMILY_PUMA (0x16)
 
-#define CPU_x86_64_FAMILY_ZEN		(0x17)
+#define CPU_x86_64_FAMILY_ZEN (0x17)
 
 /* These are all the same (*technically*) */
-#define CPU_x86_64_MODEL_ZEN_NAPLES		(0x01)	/* server */
-#define CPU_x86_64_MODEL_ZEN_WHITEHAVEN	(0x01)  /* high-end desktop */
-#define CPU_x86_64_MODEL_ZEN_SUMMIT_RIDGE	(0x01)	/* mainstream */
+#define CPU_x86_64_MODEL_ZEN_NAPLES (0x01) /* server */
+#define CPU_x86_64_MODEL_ZEN_WHITEHAVEN (0x01) /* high-end desktop */
+#define CPU_x86_64_MODEL_ZEN_SUMMIT_RIDGE (0x01) /* mainstream */
 
 /* The ones with the GPU in them too */
-#define CPU_x86_64_MODEL_ZEN_RAVEN_RIDGE	(0x11)
+#define CPU_x86_64_MODEL_ZEN_RAVEN_RIDGE (0x11)
 
 /* Zen 1 + */
-#define CPU_x86_64_MODEL_ZEN_PINNACLE_RIDGE	(0x08)
+#define CPU_x86_64_MODEL_ZEN_PINNACLE_RIDGE (0x08)
 /* TODO: Identify Colfax (the new (2018) TR4 stuff)*/
 
 
 /* Zen 2 */
-#define CPU_x86_64_MODEL_ZEN_ROME		(0x10)	/* Currently a guess, we have placeholders for now. */
-#define CPU_x86_64_MODEL_MATISSE		(0x10)
-#define CPU_x86_64_MODEL_CASTLE_PEAK		(0x10)
+#define CPU_x86_64_MODEL_ZEN_ROME (0x10) /* Currently a guess, we have placeholders for now. */
+#define CPU_x86_64_MODEL_MATISSE (0x10)
+#define CPU_x86_64_MODEL_CASTLE_PEAK (0x10)
 /* TODO: Identify Picasso (mobile APUs) */
 
 
@@ -63,41 +63,41 @@ IN THE SOFTWARE.
 /* Zen 4 */
 /* TODO: Identify Genoa (server CPUs succeding Milan) */
 
-#define	CPU_x86_64_FAMILY_INTEL_GENERAL		(0x06)
+#define CPU_x86_64_FAMILY_INTEL_GENERAL (0x06)
 /* Broadwell and earlier isn't defined (for now). */
-#define	CPU_x86_64_MODEL_SKYLAKE_CLIENT_MAINSTREAM	(94)
-#define	CPU_x86_64_MODEL_SKYLAKE_CLIENT_LOW_POWER	(78)
-#define	CPU_x86_64_MODEL_SKYLAKE_SERVER		(85)
+#define CPU_x86_64_MODEL_SKYLAKE_CLIENT_MAINSTREAM (94)
+#define CPU_x86_64_MODEL_SKYLAKE_CLIENT_LOW_POWER (78)
+#define CPU_x86_64_MODEL_SKYLAKE_SERVER (85)
 
-#define	CPU_x86_64_MODEL_KABY_LAKE_CLIENT_MAINSTREAM	(142)
-#define	CPU_x86_64_MODEL_KABY_LAKE_CLIENT_LOW_POWER	(158)
+#define CPU_x86_64_MODEL_KABY_LAKE_CLIENT_MAINSTREAM (142)
+#define CPU_x86_64_MODEL_KABY_LAKE_CLIENT_LOW_POWER (158)
 
-#define	CPU_x86_64_MODEL_COFFEE_LAKE_CLIENT_MAINSTREAM	(158)
+#define CPU_x86_64_MODEL_COFFEE_LAKE_CLIENT_MAINSTREAM (158)
 
 
 typedef enum
 {
-	CPUID_FEATURES_ECX_SSE3       = (1 << 0),
-	CPUID_FEATURES_ECX_PCLMUL     = (1 << 1),
-	CPUID_FEATURES_ECX_DTES64     = (1 << 2),
-	CPUID_FEATURES_ECX_MONITOR    = (1 << 3),
-	CPUID_FEATURES_ECX_DS_CPL     = (1 << 4),
-	CPUID_FEATURES_ECX_VMX        = (1 << 5),
-	CPUID_FEATURES_ECX_SMX        = (1 << 6),
-	CPUID_FEATURES_ECX_EST        = (1 << 7),
-	CPUID_FEATURES_ECX_TM2        = (1 << 8),
-	CPUID_FEATURES_ECX_SSSE3      = (1 << 9),
-	CPUID_FEATURES_ECX_CID        = (1 << 10),
+	CPUID_FEATURES_ECX_SSE3 = (1 << 0),
+	CPUID_FEATURES_ECX_PCLMUL = (1 << 1),
+	CPUID_FEATURES_ECX_DTES64 = (1 << 2),
+	CPUID_FEATURES_ECX_MONITOR = (1 << 3),
+	CPUID_FEATURES_ECX_DS_CPL = (1 << 4),
+	CPUID_FEATURES_ECX_VMX = (1 << 5),
+	CPUID_FEATURES_ECX_SMX = (1 << 6),
+	CPUID_FEATURES_ECX_EST = (1 << 7),
+	CPUID_FEATURES_ECX_TM2 = (1 << 8),
+	CPUID_FEATURES_ECX_SSSE3 = (1 << 9),
+	CPUID_FEATURES_ECX_CID = (1 << 10),
 	/* there is no 11. OK. Just going to trust that for now. */
-	CPUID_FEATURES_ECX_FMA        = (1 << 12),
-	CPUID_FEATURES_ECX_CX16       = (1 << 13),
-	CPUID_FEATURES_ECX_ETPRD      = (1 << 14),
-	CPUID_FEATURES_ECX_PDCM       = (1 << 15),
-}CPUID_ECX_FEATURES;	/* TODO... */
+	CPUID_FEATURES_ECX_FMA = (1 << 12),
+	CPUID_FEATURES_ECX_CX16 = (1 << 13),
+	CPUID_FEATURES_ECX_ETPRD = (1 << 14),
+	CPUID_FEATURES_ECX_PDCM = (1 << 15),
+} CPUID_ECX_FEATURES; /* TODO... */
 
 void cpuid_vendor_func(DWORD* part1, DWORD* part2, DWORD* part3);
-void cpuid_brand_name(DWORD* part1, DWORD* part2, DWORD* part3, DWORD* part4);	/* See comment in kernel_main.c for usage. Cleanup later. */
-UINT32	cpuid_family_number(void);
+void cpuid_brand_name(DWORD* part1, DWORD* part2, DWORD* part3, DWORD* part4); /* See comment in kernel_main.c for usage. Cleanup later. */
+UINT32 cpuid_family_number(void);
 
 UINT32 x86_read_cr0(void);
 UINT32 x86_read_cr3(void);
@@ -105,7 +105,7 @@ UINT32 x86_read_cr3(void);
 VOID x86_write_cr0(UINT32 val);
 VOID x86_write_cr3(UINT32 val);
 
-#define INTERRUPT __attribute__ ((interrupt))
+#define INTERRUPT __attribute__((interrupt))
 
 typedef struct x86InterruptFrame
 {
@@ -114,7 +114,7 @@ typedef struct x86InterruptFrame
 	UINTN FLAGS;
 	UINTN SP;
 	UINTN SS;
-}x86InterruptFrame;
+} x86InterruptFrame;
 
 /* Useful ("stable") functions. Refactor elsewhere later. */
 VOID KiRestoreInterrupts(IN BOOLEAN value);

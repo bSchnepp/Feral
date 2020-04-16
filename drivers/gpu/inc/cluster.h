@@ -23,21 +23,21 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
- #ifndef _FERAL_GPU_CLUSTER_H_
- #define _FERAL_GPU_CLUSTER_H_
- 
- #include <feral/string.h>
- 
- /* organize a couple GPUs as a cluster, exposing themselves as a single graphics card to various graphics APIs. */
- /* For example, we could have 2 Polaris 550s in one machine, a 1050 Ti in another, and some iGPU in the local machine, and Feral schedules them
+
+#ifndef _FERAL_GPU_CLUSTER_H_
+#define _FERAL_GPU_CLUSTER_H_
+
+#include <feral/string.h>
+
+/* organize a couple GPUs as a cluster, exposing themselves as a single graphics card to various graphics APIs. */
+/* For example, we could have 2 Polaris 550s in one machine, a 1050 Ti in another, and some iGPU in the local machine, and Feral schedules them
   	accordingly, such that we can so multi-GPU rendering at the cost of network latency. (for example, the iGPU could do just 2D text, the 1050 Ti does shading, and the dual 550s do geometry and whatnot.
   */
- typedef struct GPUCluster
+typedef struct GPUCluster
 {
 	FERALSTRING ClusterName;
 	/* TODO */
-}GPUCluster;
- 
- 
- #endif
+} GPUCluster;
+
+
+#endif

@@ -23,36 +23,35 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
- 
+
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <feral/stdtypes.h>
 
 typedef struct Definition;
 
-#define TRISTATE_NO	(-1)
-#define TRISTATE_MOD	(0)
-#define TRISTATE_YES	(1)
+#define TRISTATE_NO (-1)
+#define TRISTATE_MOD (0)
+#define TRISTATE_YES (1)
 
-#define CONTENTS_STATUS_ARE_TRISTATE	(0)
-#define CONTENTS_STATUS_ARE_STRING		(1)
-#define CONTENTS_STATUS_ARE_INTEGER		(2)
-#define CONTENTS_STATUS_ARE_OTHER		(3)
+#define CONTENTS_STATUS_ARE_TRISTATE (0)
+#define CONTENTS_STATUS_ARE_STRING (1)
+#define CONTENTS_STATUS_ARE_INTEGER (2)
+#define CONTENTS_STATUS_ARE_OTHER (3)
 
 typedef struct Definition
 {
 	STRING Item;
 	UINT32 contentsStatus;
-	union
-	{
+	union {
 		INT32 tristate;
 		STRING string;
-	}Contents;
-	
+	} Contents;
+
 	UINT64 numChildren;
 	struct Definition* children;
-}Definition;
+} Definition;
 
 
 Definition* ParseFile(STRING path)
@@ -62,7 +61,7 @@ Definition* ParseFile(STRING path)
 	{
 		return (Definition*)(0);
 	}
-	
+
 	fclose(file);
 }
 
@@ -72,14 +71,14 @@ void printUsage(void)
 	fprintf(stdout, "Usage: kconfig.elf <FILE>\n");
 }
 
-int main(int argc, STRING *argv)
+int main(int argc, STRING* argv)
 {
 	if (argc < 2)
 	{
 		printUsage();
 		return 0;
 	}
-	
+
 	Definition* res = ParseFile(argv[1]);
 	return 0;
 }

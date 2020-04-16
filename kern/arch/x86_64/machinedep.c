@@ -23,8 +23,8 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
- 
+
+
 #include <feral/stdtypes.h>
 #include <feral/kern/frlos.h>
 #include <feral/kern/krnlfuncs.h>
@@ -160,39 +160,39 @@ void x86InitializeIDT()
 
 	/* Make the PIT happy. */
 	INT32 Divisor = 11931840;
-	x86outb(0x43, 0x36);	/* Tell the PIT to accept it. */
+	x86outb(0x43, 0x36); /* Tell the PIT to accept it. */
 	x86outb(0x40, (Divisor >> 0) & 0xFF);
 	x86outb(0x40, (Divisor >> 8) & 0xFF);
-	
+
 	/* Initialize the PICs. 0x10 for INIT, and 0x01 for disabling stuff. */
-	KiSetMemoryBytes(IDT, 0, (sizeof(IDTDescriptor)) * 256); 
+	KiSetMemoryBytes(IDT, 0, (sizeof(IDTDescriptor)) * 256);
 	x86outb(X86_PIC_1_COMMAND, (0x10 | 0x01));
 	x86outb(X86_PIC_2_COMMAND, (0x10 | 0x01));
 	x86_io_stall();
-	
+
 	/* Do the remap! */
-	x86outb(X86_PIC_1_DATA, 0x20);	/* First 7 interrupts */
-	x86outb(X86_PIC_2_DATA, 0x28);	/* Last 8 interrupts */
+	x86outb(X86_PIC_1_DATA, 0x20); /* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x28); /* Last 8 interrupts */
 	x86_io_stall();
-	
+
 	/* Handle the cascades. */
-	x86outb(X86_PIC_1_DATA, 0x04);	/* First 7 interrupts */
-	x86outb(X86_PIC_2_DATA, 0x02);	/* Last 8 interrupts */
+	x86outb(X86_PIC_1_DATA, 0x04); /* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x02); /* Last 8 interrupts */
 	x86_io_stall();
-	
+
 	/* Environment info... */
-	x86outb(X86_PIC_1_DATA, 0x01);	/* First 7 interrupts */
-	x86outb(X86_PIC_2_DATA, 0x01);	/* Last 8 interrupts */
+	x86outb(X86_PIC_1_DATA, 0x01); /* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x01); /* Last 8 interrupts */
 	x86_io_stall();
-	
+
 	/* Leave this alone for now... */
-	x86outb(X86_PIC_1_DATA, 0x01);	/* First 7 interrupts */
-	x86outb(X86_PIC_2_DATA, 0x01);	/* Last 8 interrupts */
+	x86outb(X86_PIC_1_DATA, 0x01); /* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x01); /* Last 8 interrupts */
 	x86_io_stall();
-	
+
 	x86outb(X86_PIC_1_DATA, 0xFC); /* Only allow a few IRQs. For now. */
 	x86outb(X86_PIC_2_DATA, 0x80); /* Allow all the PIC 2 IRQs..? */
-	
+
 	for (UINTN i = 0; i < 255; ++i)
 	{
 		x86IDTSetGate(i, (UINT_PTR)(GenericHandler), 0x08, 0x8E);
@@ -213,7 +213,7 @@ void x86InitializeIDT()
 	UINT_PTR Location = (&IDT);
 	IDTPTR.Location = Location;
 	x86SetupIDTEntries();
-	
+
 	KiPrintFmt("IDT Ready to work...\n");
 	x86_install_idt(&IDTPTR);
 	KiRestoreInterrupts(TRUE);
@@ -223,7 +223,7 @@ volatile void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 
 {
 	/* 0 - 255 happens to be valid, so no need for checking. */
 	IDTDescriptor Descriptor = {0};
-	
+
 	Descriptor.Offset = (UINT16)(Base & 0xFFFF);
 	Descriptor.Offset2 = (UINT16)((Base >> 16) & 0xFFFF);
 	/* 
@@ -232,7 +232,7 @@ volatile void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 
 		is the same: don't do anything with it.
 	*/
 	Descriptor.RESERVED = 0;
-	
+
 	/* And the important bits. */
 	Descriptor.Selector = Selector;
 	Descriptor.TypeAttr = Flags;
@@ -243,7 +243,7 @@ volatile void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 
 	/* No TSS, so set to zero. */
 	Descriptor.IST = 0;
 #endif
-	IDT[Number] = Descriptor;	
+	IDT[Number] = Descriptor;
 }
 
 
@@ -294,9 +294,9 @@ typedef struct PS2KeyboardContext
 	UINT8 ShiftModifier;
 	UINT8 ControlModifier;
 	UINT8 AltModifier;
-}PS2KeyboardContext;
+} PS2KeyboardContext;
 
-static PS2KeyboardContext KeyboardContext = { 0 };
+static PS2KeyboardContext KeyboardContext = {0};
 
 char ApplyShiftIfNeeded(CHAR In);
 
@@ -307,11 +307,13 @@ char ApplyShiftIfNeeded(CHAR In)
 	{
 		return In;
 	}
-	
+
 	if (KeyboardContext.ShiftModifier)
 	{
 		return (In & ~0x20);
-	} else {
+	}
+	else
+	{
 		return (In | 0x20);
 	}
 }
@@ -324,11 +326,13 @@ void CheckStatusCode(UINT8 In)
 	{
 		KeyboardContext.ShiftModifier = !(KeyboardContext.ShiftModifier);
 	}
-	
+
 	if (In == 0x2A || In == 0x36)
 	{
 		KeyboardContext.ShiftModifier = 1;
-	} else if (In == 0xAA || In == 0xB6) {
+	}
+	else if (In == 0xAA || In == 0xB6)
+	{
 		KeyboardContext.ShiftModifier = 0;
 	}
 }
@@ -341,59 +345,113 @@ CHAR InternalConvertPS2KeyToASCII(CHAR In)
 	if (In == 0x1E)
 	{
 		ProperLetter = 'a';
-	} else if (In == 0x30) {
+	}
+	else if (In == 0x30)
+	{
 		ProperLetter = 'b';
-	} else if (In == 0x2E) {
+	}
+	else if (In == 0x2E)
+	{
 		ProperLetter = 'c';
-	} else if (In == 0x20) {
+	}
+	else if (In == 0x20)
+	{
 		ProperLetter = 'd';
-	} else if (In == 0x12) {
+	}
+	else if (In == 0x12)
+	{
 		ProperLetter = 'e';
-	} else if (In == 0x21) {
+	}
+	else if (In == 0x21)
+	{
 		ProperLetter = 'f';
-	} else if (In == 0x22) {
+	}
+	else if (In == 0x22)
+	{
 		ProperLetter = 'g';
-	} else if (In == 0x23) {
+	}
+	else if (In == 0x23)
+	{
 		ProperLetter = 'h';
-	} else if (In == 0x17) {
+	}
+	else if (In == 0x17)
+	{
 		ProperLetter = 'i';
-	} else if (In == 0x24) {
+	}
+	else if (In == 0x24)
+	{
 		ProperLetter = 'j';
-	} else if (In == 0x25) {
+	}
+	else if (In == 0x25)
+	{
 		ProperLetter = 'k';
-	} else if (In == 0x26) {
+	}
+	else if (In == 0x26)
+	{
 		ProperLetter = 'l';
-	} else if (In == 0x32) {
+	}
+	else if (In == 0x32)
+	{
 		ProperLetter = 'm';
-	} else if (In == 0x31) {
+	}
+	else if (In == 0x31)
+	{
 		ProperLetter = 'n';
-	} else if (In == 0x18) {
+	}
+	else if (In == 0x18)
+	{
 		ProperLetter = 'o';
-	} else if (In == 0x19) {
+	}
+	else if (In == 0x19)
+	{
 		ProperLetter = 'p';
-	} else if (In == 0x10) {
+	}
+	else if (In == 0x10)
+	{
 		ProperLetter = 'q';
-	} else if (In == 0x13) {
+	}
+	else if (In == 0x13)
+	{
 		ProperLetter = 'r';
-	} else if (In == 0x1F) {
+	}
+	else if (In == 0x1F)
+	{
 		ProperLetter = 's';
-	} else if (In == 0x14) {
+	}
+	else if (In == 0x14)
+	{
 		ProperLetter = 't';
-	} else if (In == 0x16) {
+	}
+	else if (In == 0x16)
+	{
 		ProperLetter = 'u';
-	} else if (In == 0x2F) {
+	}
+	else if (In == 0x2F)
+	{
 		ProperLetter = 'v';
-	} else if (In == 0x11) {
+	}
+	else if (In == 0x11)
+	{
 		ProperLetter = 'w';
-	} else if (In == 0x2D) {
+	}
+	else if (In == 0x2D)
+	{
 		ProperLetter = 'x';
-	} else if (In == 0x15) {
+	}
+	else if (In == 0x15)
+	{
 		ProperLetter = 'y';
-	} else if (In == 0x2C) {
+	}
+	else if (In == 0x2C)
+	{
 		ProperLetter = 'z';
-	} else if (In == 0x1C || In == 0x5A) {
+	}
+	else if (In == 0x1C || In == 0x5A)
+	{
 		ProperLetter = '\n';
-	} else if (In == 0x39 || In == 0x29) {
+	}
+	else if (In == 0x39 || In == 0x29)
+	{
 		ProperLetter = ' ';
 	}
 	return ApplyShiftIfNeeded(ProperLetter);

@@ -23,15 +23,15 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
+
 #ifndef _FERAL_KCOMMON_H_
 #define _FERAL_KCOMMON_H_
- 
+
 /* This function can be used by other parts of the kernel, and shouldn't change that often. */
 #define PUBLIC
 
-/* This function shouldn't be used outside it's subsystem. */ 
+/* This function shouldn't be used outside it's subsystem. */
 #define PRIVATE
 
- 
+
 #endif

@@ -31,8 +31,7 @@ IN THE SOFTWARE.
 #include <ddk/frlddk.h>
 #include <ddk/frldev.h>
 
-static DriverTree DriverRoot =
-{
+static DriverTree DriverRoot = {
 	FERAL_DRIVER_TYPE_ROOT,
 	NULLPTR,
 	NULLPTR,
@@ -63,7 +62,7 @@ FERALSTATUS KeAddDriverToTree(IN STRING DeviceType, IN FERAL_DRIVER* Driver)
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS KeGetDriverRoot(OUT DriverTree *Root)
+FERALSTATUS KeGetDriverRoot(OUT DriverTree* Root)
 {
 	if (DriverRoot.Next == NULLPTR && DriverRoot.RestSiblings == NULLPTR)
 	{
@@ -71,4 +70,3 @@ FERALSTATUS KeGetDriverRoot(OUT DriverTree *Root)
 	}
 	return &DriverRoot;
 }
-

@@ -33,9 +33,9 @@ IN THE SOFTWARE.
 typedef struct DataPacket
 {
 	FERALPORT *Source,
-	FERALPORT *Target,
-	UINT64 PayloadSize;
+		FERALPORT *Target,
+		UINT64 PayloadSize;
 	VOID *Payload;
-}DataPacket;
+} DataPacket;
 
 #endif

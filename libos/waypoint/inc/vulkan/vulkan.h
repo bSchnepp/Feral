@@ -50,16 +50,16 @@ IN THE SOFTWARE.
 
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-#define VK_MAKE_VERSION(maj, min, pch) (( (maj) << 22) | ( (min) << 12) | (pch))
+#define VK_MAKE_VERSION(maj, min, pch) (((maj) << 22) | ((min) << 12) | (pch))
 
-#define VK_API_VERSION_1_0 VK_MAKE_VERSION(1, 0, 0)	// For the base version
+#define VK_API_VERSION_1_0 VK_MAKE_VERSION(1, 0, 0)// For the base version
 
-//TODO
+	//TODO
 
 #ifdef __cplusplus
 }
 #endif
-

@@ -31,119 +31,120 @@ IN THE SOFTWARE.
 #include <krnl.h>
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
 
-typedef enum VgaColorValue
-{
-	VGA_BLACK = 0,
-	VGA_BLUE = 1,
-	VGA_GREEN = 2,
-	VGA_CYAN = 3,
-	VGA_RED = 4,
-	VGA_MAGENTA = 5,
-	VGA_BROWN = 6,
-	VGA_LIGHT_GREY = 7,
-	VGA_DARK_GREY = 8,
-	VGA_LIGHT_BLUE = 9,
-	VGA_LIGHT_GREEN = 10,
-	VGA_LIGHT_CYAN = 11,
-	VGA_LIGHT_RED = 12,
-	VGA_LIGHT_MAGENTA = 13,
-	VGA_LIGHT_BROWN = 14,	/* actually yellow */
-	VGA_WHITE = 15,
-}VgaColorValue;
+	typedef enum VgaColorValue
+	{
+		VGA_BLACK = 0,
+		VGA_BLUE = 1,
+		VGA_GREEN = 2,
+		VGA_CYAN = 3,
+		VGA_RED = 4,
+		VGA_MAGENTA = 5,
+		VGA_BROWN = 6,
+		VGA_LIGHT_GREY = 7,
+		VGA_DARK_GREY = 8,
+		VGA_LIGHT_BLUE = 9,
+		VGA_LIGHT_GREEN = 10,
+		VGA_LIGHT_CYAN = 11,
+		VGA_LIGHT_RED = 12,
+		VGA_LIGHT_MAGENTA = 13,
+		VGA_LIGHT_BROWN = 14, /* actually yellow */
+		VGA_WHITE = 15,
+	} VgaColorValue;
 
 
 #ifdef ILOVEBEAR18
-typedef struct VgaGraphicsContextCreateInfo
-{
-	FeralStructureType sType;
-	const void* pNext;
+	typedef struct VgaGraphicsContextCreateInfo
+	{
+		FeralStructureType sType;
+		const void* pNext;
 
-	UINT16* Framebuffer;
+		UINT16* Framebuffer;
 
-	UINT16 ScreenWidth;
-	UINT16 ScreenHeight;
+		UINT16 ScreenWidth;
+		UINT16 ScreenHeight;
 
-	BOOL TextMode;
-	BOOL FollowingInput;
-	BOOL CursorEnabled;
-}VgaGraphicsContextCreateInfo;
+		BOOL TextMode;
+		BOOL FollowingInput;
+		BOOL CursorEnabled;
+	} VgaGraphicsContextCreateInfo;
 
-typedef struct VgaGraphicsContextInfo
-{
-	FeralStructureType sType;
-	const void* pNext;
+	typedef struct VgaGraphicsContextInfo
+	{
+		FeralStructureType sType;
+		const void* pNext;
 
-	const VgaGraphicsContextCreateInfo *pCreateInfo;
+		const VgaGraphicsContextCreateInfo* pCreateInfo;
 
-	UINT16 CurrentRow;
-	UINT16 CurrentCol;
+		UINT16 CurrentRow;
+		UINT16 CurrentCol;
 
-	VgaColorValue Background;
-	VgaColorValue Foreground;
-	VgaColorValue Highlight;
-}VgaGraphicsContextInfo;
+		VgaColorValue Background;
+		VgaColorValue Foreground;
+		VgaColorValue Highlight;
+	} VgaGraphicsContextInfo;
 #endif
 
-/* Rework to look more like direction we're brining Feral API to. (redoing struct above) */
+	/* Rework to look more like direction we're brining Feral API to. (redoing struct above) */
 
-typedef struct
-{
-	UINT16 *Framebuffer;
-	
-	UINT16 *SwappedBuffer;
-	
-	UINT16 ScreenWidth;
-	UINT16 ScreenHeight;
-	
-	VgaColorValue Background;
-	VgaColorValue Foreground;
-	VgaColorValue Highlight;
-	
-	UINT16 CurrentRow;
-	UINT16 CurrentCol;
+	typedef struct
+	{
+		UINT16* Framebuffer;
 
-	BOOL TextMode;
-	BOOL FollowingInput;
-	BOOL CursorEnabled;
-}VgaContext;
+		UINT16* SwappedBuffer;
+
+		UINT16 ScreenWidth;
+		UINT16 ScreenHeight;
+
+		VgaColorValue Background;
+		VgaColorValue Foreground;
+		VgaColorValue Highlight;
+
+		UINT16 CurrentRow;
+		UINT16 CurrentCol;
+
+		BOOL TextMode;
+		BOOL FollowingInput;
+		BOOL CursorEnabled;
+	} VgaContext;
 
 
-VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color);
+	VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color);
 
-VOID VgaPutChar(CHAR letter);
+	VOID VgaPutChar(CHAR letter);
 
-VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy);
+	VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter, DWORD posx, DWORD posy);
 
-VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter);
+	VOID VgaAutoEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter);
 
-VOID VgaPutChar(CHAR letter);
+	VOID VgaPutChar(CHAR letter);
 
-VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy);
+	VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length, DWORD posx, DWORD posy);
 
-VOID VgaPrint(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length); 
+	VOID VgaPrint(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length);
 
-VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length); 
+	VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background, CHAR* string, DWORD length);
 
-VOID VgaAutoPrintln(VgaColorValue Foreground, VgaColorValue Background, CHAR *String);
+	VOID VgaAutoPrintln(VgaColorValue Foreground, VgaColorValue Background, CHAR* String);
 
-VOID VgaAutoPrint(VgaColorValue Foreground, VgaColorValue Background, CHAR *String);
+	VOID VgaAutoPrint(VgaColorValue Foreground, VgaColorValue Background, CHAR* String);
 
-VOID VgaMoveCursor(DWORD PosX, DWORD PosY);
+	VOID VgaMoveCursor(DWORD PosX, DWORD PosY);
 
-VOID VgaSetCurrentPosition(UINT16 X, UINT16 Y);
+	VOID VgaSetCurrentPosition(UINT16 X, UINT16 Y);
 
-/* Whenever we set a character, set the position of the cursor to it + 1. */
-VOID VgaTraceCharacters(BOOL value);
+	/* Whenever we set a character, set the position of the cursor to it + 1. */
+	VOID VgaTraceCharacters(BOOL value);
 
-VOID VgaSetCursorEnabled(BOOL value);
+	VOID VgaSetCursorEnabled(BOOL value);
 
-VOID VgaSwapBuffers(VOID);
+	VOID VgaSwapBuffers(VOID);
 
-UINT8 VgaPrepareEnvironment(VgaContext *context);
+	UINT8 VgaPrepareEnvironment(VgaContext* context);
 
 
 #if defined(__cplusplus)

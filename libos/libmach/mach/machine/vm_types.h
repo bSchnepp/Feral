@@ -37,11 +37,11 @@ typedef INTN integer_t;
 // Someone may graft a emulation layer for this successful commerical desktop OS on top of our libmach, and thus we need to support that too.
 // (We need to be able to support _everything_, provided someone else feels like writing a process handler and a corresponding driver.)
 #if defined(__LP64__)
-typedef uintptr_t	vm_offset_t;
-typedef uintptr_t	vm_size_t;
+typedef uintptr_t vm_offset_t;
+typedef uintptr_t vm_size_t;
 #else
-typedef	natural_t	vm_offset_t;
-typedef natural_t	vm_size_t;
+typedef natural_t vm_offset_t;
+typedef natural_t vm_size_t;
 #endif
 
 typedef INT32 int32;
@@ -52,15 +52,13 @@ typedef INT16 signed16_t;
 typedef INT32 signed32_t;
 typedef INT64 signed64_t;
 
-typedef UINT8  unsigned8_t;
+typedef UINT8 unsigned8_t;
 typedef UINT16 unsigned16_t;
 typedef UINT32 unsigned32_t;
 typedef UINT64 unsigned64_t;
 
 typedef FLOAT float32_t;
 typedef DOUBLE float64_t;
- 
+
 
 #endif
-
-

@@ -36,23 +36,21 @@ IN THE SOFTWARE.
 #define BYTE_SIZE 8
 
 // any i386 port should use PAE.
-#define I386_PGBYTES (4 * 1024)		/* Number of bytes per page (4KiB)*/
-#define I386_PGSHIFT 12			/* Bitshift needed for pages */
+#define I386_PGBYTES (4 * 1024) /* Number of bytes per page (4KiB)*/
+#define I386_PGSHIFT 12 /* Bitshift needed for pages */
 
 // For large pages
-#define I386_LPGBYTES (1024 * 1024 * 2)		/* Number of bytes per page (2MiB) */
-#define I386_LPGSHIFT 21			/* Bitshift needed for pages */
+#define I386_LPGBYTES (1024 * 1024 * 2) /* Number of bytes per page (2MiB) */
+#define I386_LPGSHIFT 21 /* Bitshift needed for pages */
 
 /* These are the same */
 #if defined(__i386__) || defined(__x86_64__)
-#define	PAGE_SIZE	I386_PGBYTES
-#define	PAGE_SHIFT	I386_PGSHIFT
+#define PAGE_SIZE I386_PGBYTES
+#define PAGE_SHIFT I386_PGSHIFT
 #else
 #error libmach not supported -- either remove libmach from libos folder (no Mach support), or port it properly (Requires effort).
 #endif
 
- 
+
 
 #endif
-
-

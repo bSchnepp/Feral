@@ -30,54 +30,55 @@ IN THE SOFTWARE.
 // I don't use C++ in the kernel because, well, it's the kernel. I don't want to set up exceptions and all that,
 // and would much rather not be limited to a very small subset of the language.
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
 
-/* Struct to define a verbose string (O(1) to get the length of the string) */
-typedef struct FERALSTRING
-{
-	UINT64 Length;
-	WSTRING Content;
-}FERALSTRING;
-
-/* Inline functions to do string comparison. We do NOT want the overhead of a function call for something trivial. */
-/* Returns 0 if equal, 1 if they differ in length, and 2 if their content differs at some point, -1 for erronous length on a string causing an error.*/
-static BOOL FrlStringCmp(FERALSTRING* String1, FERALSTRING* String2)
-{
-	if (String1->Length != String2->Length)
+	/* Struct to define a verbose string (O(1) to get the length of the string) */
+	typedef struct FERALSTRING
 	{
-		/* If they differ in length, there is no way they can possibly be equal. */
-		return 1;
-	}
-	
-	/* Check for every single letter. If it's not the same, well, they're not equal. */
-	for (UINT64 i = 0; i < String1->Length; i++)
+		UINT64 Length;
+		WSTRING Content;
+	} FERALSTRING;
+
+	/* Inline functions to do string comparison. We do NOT want the overhead of a function call for something trivial. */
+	/* Returns 0 if equal, 1 if they differ in length, and 2 if their content differs at some point, -1 for erronous length on a string causing an error.*/
+	static BOOL FrlStringCmp(FERALSTRING* String1, FERALSTRING* String2)
 	{
-		if (String1->Content[i] == '\0' || String2->Content[i] == '\0')
+		if (String1->Length != String2->Length)
 		{
-			return -1;
+			/* If they differ in length, there is no way they can possibly be equal. */
+			return 1;
 		}
-		
-		if (String1->Content[i] != String2->Content[i])
+
+		/* Check for every single letter. If it's not the same, well, they're not equal. */
+		for (UINT64 i = 0; i < String1->Length; i++)
 		{
-			return 2;
+			if (String1->Content[i] == '\0' || String2->Content[i] == '\0')
+			{
+				return -1;
+			}
+
+			if (String1->Content[i] != String2->Content[i])
+			{
+				return 2;
+			}
 		}
+		return 0;
 	}
-	return 0;
-}
 
-/* Create a string. */
-FERALSTATUS FrlCreateString(IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content);
+	/* Create a string. */
+	FERALSTATUS FrlCreateString(IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content);
 
-/* Delete a string. */
-FERALSTATUS FrlDeleteString(IN FERALSTRING* String);
+	/* Delete a string. */
+	FERALSTATUS FrlDeleteString(IN FERALSTRING* String);
 
-/* Clone a string */
-FERALSTATUS FrlCloneString(IN FERALSTRING* Source, IN FERALSTRING* OutLocation);
+	/* Clone a string */
+	FERALSTATUS FrlCloneString(IN FERALSTRING* Source, IN FERALSTRING* OutLocation);
 
 #if defined(__cplusplus)
 }

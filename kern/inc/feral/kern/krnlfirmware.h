@@ -38,7 +38,7 @@ typedef VOID (*PrintlnFunc)(STRING, UINT64);
 typedef STRING (*GetFirmwareNameFunc)(VOID);
 
 /* TODO */
-typedef VOID* (*GetNativeFirmwareMemoryMapFunc)(VOID);
+typedef VOID *(*GetNativeFirmwareMemoryMapFunc)(VOID);
 
 typedef struct KrnlCharMap
 {
@@ -50,8 +50,8 @@ typedef struct KrnlCharMap
 	UINT16 NumUpperCase;
 
 	/* Should be numerals, lowercase, uppercase. In order. */
-	UINT8  **CharMap; /* Bytemap for now. */
-}KrnlCharMap;
+	UINT8 **CharMap; /* Bytemap for now. */
+} KrnlCharMap;
 
 typedef struct KrnlFirmwareFunctions
 {
@@ -60,9 +60,9 @@ typedef struct KrnlFirmwareFunctions
 	PrintlnFunc Println;
 	GetNativeFirmwareMemoryMapFunc GetNativeFirmwareMemoryMap;
 	/* Add more functions as needed. */
-}KrnlFirmwareFunctions;
+} KrnlFirmwareFunctions;
 
-FERALSTATUS KiUpdateFirmwareFunctions(KrnlFirmwareFunctions *Table, 
+FERALSTATUS KiUpdateFirmwareFunctions(KrnlFirmwareFunctions *Table,
 	KrnlCharMap *CharMap);
 
 

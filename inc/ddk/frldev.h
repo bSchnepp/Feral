@@ -31,19 +31,20 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
-/*
+	/*
 	TODO: Definitions for the CSHORT Type below.
  */
 
-typedef struct
-{
-	CSHORT	Type;
+	typedef struct
+	{
+		CSHORT Type;
 
-	// TODO	
-}DEVICE_OBJECT;
+		// TODO
+	} DEVICE_OBJECT;
 
 
 

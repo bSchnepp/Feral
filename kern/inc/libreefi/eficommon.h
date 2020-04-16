@@ -38,30 +38,29 @@ typedef UINT64 EFI_LBA;
 typedef UINT64 EFI_PHYSICAL_ADDRESS;
 typedef UINT64 EFI_VIRTUAL_ADDRESS;
 
-#define MDE_CPU_X64	// In case any code relies upon that...
+#define MDE_CPU_X64// In case any code relies upon that...
 
 #ifndef __WCHAR_TYPE__
 #define __WCHAR_TYPE__ short
 #endif
 
-// #define HAVE_USE_MS_ABI 1	// Let's just not support old versions of GCC 
+// #define HAVE_USE_MS_ABI 1	// Let's just not support old versions of GCC
 // since having some weird objcopy hack is bad
 // I don't think I should bother with gnu-efi compatibility (since clang can make pe-coff anyway, so i don't need to borrow linker scripts and all)
 // Probably should just get rid of that define altogether
 
-#define EFI_ERROR_MASK 	(0x8000000000000000)
-#define EFI_OEM_MASK   	(0xC000000000000000)
-#define EFIERR(x) 	(EFI_ERROR_MASK | x)
-#define EFIERR_OEM(x) 	(EFI_OEM_MASK | x)
+#define EFI_ERROR_MASK (0x8000000000000000)
+#define EFI_OEM_MASK (0xC000000000000000)
+#define EFIERR(x) (EFI_ERROR_MASK | x)
+#define EFIERR_OEM(x) (EFI_OEM_MASK | x)
 
 #define BAD_POINTER (0xFBFBFBFBFBFBFBFBULL)
 #define MAX_ADDRESS (0xFFFFFFFFFFFFFFFFULL)
-#define MAX_2_BITS  (0xC000000000000000ULL)
-#define MAX_BIT     (0x8000000000000000ULL)
+#define MAX_2_BITS (0xC000000000000000ULL)
+#define MAX_BIT (0x8000000000000000ULL)
 
-#define MAX_INTN    ((INTN) 0x7FFFFFFFFFFFFFFFULL)
-#define MAX_UINTN   ((UINTN)0xFFFFFFFFFFFFFFFFULL)
-
+#define MAX_INTN ((INTN)0x7FFFFFFFFFFFFFFFULL)
+#define MAX_UINTN ((UINTN)0xFFFFFFFFFFFFFFFFULL)
 
 
 
@@ -91,7 +90,7 @@ typedef UINT64 EFI_VIRTUAL_ADDRESS;
 #define OPTIONAL
 
 
-typedef struct 
+typedef struct
 {
 	UINT32 Data1;
 	UINT16 Data2;
@@ -104,40 +103,39 @@ typedef struct
 	UINT8 Data9;
 	UINT8 Data11;
 	UINT8 Data12;
-}EFI_GUID;
+} EFI_GUID;
 
 // Needed for simple text input protocol...
-#define EFI_SIMPLE_TEXT_INPUT_PROTOCOL_GUID		\
-{							\
-	0x387477C1,					\
-	0x69C7,						\
-	0x11D2,						\
-	0x8E,						\
-	0x39						\
-	0x00,						\
-	0xA0,						\
-	0xC9,						\
-	0x69,						\
-	0x72,						\
-	0x3B,						\
-}
+#define EFI_SIMPLE_TEXT_INPUT_PROTOCOL_GUID \
+	{ \
+		0x387477C1, \
+			0x69C7, \
+			0x11D2, \
+			0x8E, \
+			0x39 0x00, \
+			0xA0, \
+			0xC9, \
+			0x69, \
+			0x72, \
+			0x3B, \
+	}
 
 
 // Needed for simple text output protocol... (no, this isn't a typo, they're the same.)
-#define EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL_GUID		\
-{							\
-	0x387477c2,					\
-	0x69C7,						\
-	0x11D2,						\
-	0x8E,						\
-	0x39,						\
-	0x00,						\
-	0xA0,						\
-	0xC9,						\
-	0x69,						\
-	0x72,						\
-	0x3B,						\
-}
+#define EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL_GUID \
+	{ \
+		0x387477c2, \
+			0x69C7, \
+			0x11D2, \
+			0x8E, \
+			0x39, \
+			0x00, \
+			0xA0, \
+			0xC9, \
+			0x69, \
+			0x72, \
+			0x3B, \
+	}
 
 /* EFI allocation enum. */
 
@@ -147,14 +145,14 @@ typedef enum EFI_ALLOCATE_TYPE
 	AllocateMaxAddress,
 	AllocateAddress,
 	MaxAllocateType,
-}EFI_ALLOCATE_TYPE;
+} EFI_ALLOCATE_TYPE;
 
 typedef enum
 {
 	TimerCancel,
 	TimerPeriodic,
 	TimerRelative
-}EFI_TIMER_DELAY;
+} EFI_TIMER_DELAY;
 
 typedef struct
 {
@@ -163,13 +161,13 @@ typedef struct
 	UINT32 HeaderSize;
 	UINT32 CRC32;
 	UINT32 Reserved;
-}EFI_TABLE_HEADER;
+} EFI_TABLE_HEADER;
 
 typedef struct
 {
 	UINT16 ScanCode;
 	CHAR16 UnicodeChar;
-}EFI_INPUT_KEY;
+} EFI_INPUT_KEY;
 
 typedef struct
 {
@@ -178,22 +176,22 @@ typedef struct
 	EFI_VIRTUAL_ADDRESS VirtualStart;
 	UINT64 NumberOfPages;
 	UINT64 Attribute;
-}EFI_MEMORY_DESCRIPTOR;
+} EFI_MEMORY_DESCRIPTOR;
 
-#define EFI_MEMORY_UC		(0x0000000000000001)
-#define EFI_MEMORY_WC		(0x0000000000000002)
-#define EFI_MEMORY_WT		(0x0000000000000004)
-#define EFI_MEMORY_WB		(0x0000000000000008)
-#define EFI_MEMORY_UCE		(0x0000000000000010)
-#define EFI_MEMORY_WP		(0x0000000000001000)
-#define EFI_MEMORY_RP		(0x0000000000002000)
-#define EFI_MEMORY_XP		(0x0000000000004000)
-#define EFI_MEMORY_RUNTIME	(0x8000000000000000)
+#define EFI_MEMORY_UC (0x0000000000000001)
+#define EFI_MEMORY_WC (0x0000000000000002)
+#define EFI_MEMORY_WT (0x0000000000000004)
+#define EFI_MEMORY_WB (0x0000000000000008)
+#define EFI_MEMORY_UCE (0x0000000000000010)
+#define EFI_MEMORY_WP (0x0000000000001000)
+#define EFI_MEMORY_RP (0x0000000000002000)
+#define EFI_MEMORY_XP (0x0000000000004000)
+#define EFI_MEMORY_RUNTIME (0x8000000000000000)
 
 typedef enum
 {
 	EFI_NATIVE_INTERFACE
-}EFI_INTERFACE_TYPE;
+} EFI_INTERFACE_TYPE;
 
 
 #endif

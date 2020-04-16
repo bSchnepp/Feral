@@ -63,20 +63,20 @@ IN THE SOFTWARE.
 /* 
 	Adjacent nodes always point to adjacent memory areas. Flaw in this
 	allocator for now, but that can be fixed.
- */ 
+ */
 typedef struct Node
 {
-	BOOL Used;	/* Already in use? */
-	BOOL Last;	/* Is this the last node? */
-	VOID *Area;	/* What area is it in? */
-	UINT64 NodeIndex;	/* In the Arena, what number is this? */
-	
+	BOOL Used; /* Already in use? */
+	BOOL Last; /* Is this the last node? */
+	VOID *Area; /* What area is it in? */
+	UINT64 NodeIndex; /* In the Arena, what number is this? */
+
 	struct Node *Previous;
 	struct Node *Next;
-	
+
 	/* How much space does it take up, as multiples of ALLOC_BLOCK_SIZE? */
 	UINT64 ChunkIncrement;
-}Node;
+} Node;
 
 
 /* 
@@ -85,11 +85,11 @@ typedef struct Node
  */
 typedef struct Arena
 {
-	UINT64 Size;		/* How much space is there? */
-	UINT64 ThreadIndex;	/* What hart owns this arena? */
-	Node *Root;		/* The start of the list. O(n) removal. */
-	Node *NextToAllocate;	/* O(1) indexing for malloc performance */
-}Arena;
+	UINT64 Size; /* How much space is there? */
+	UINT64 ThreadIndex; /* What hart owns this arena? */
+	Node *Root; /* The start of the list. O(n) removal. */
+	Node *NextToAllocate; /* O(1) indexing for malloc performance */
+} Arena;
 
 
 #endif

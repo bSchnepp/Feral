@@ -100,7 +100,7 @@ FERALSTATUS InitSerialDevice(VOID *OutData)
 	CHAR Ignored = '\0';
 	SerialRecv(COM1_PORT+2, 1, &Ignored);
 	SerialRecv(COM1_PORT+0, 1, &Ignored);
-#endif	
+#endif
 
 	SerialSetInterrupts(COM1_PORT, 0);
 #if defined(__x86_64__) || defined(__i386__)
@@ -124,6 +124,6 @@ FERALSTATUS InitSerialDevice(VOID *OutData)
 		KiPrintFmt("%s\n", "Unable to initialize serial! (no port)");
 		return STATUS_ERROR;
 	}
-	
+
 	return STATUS_SUCCESS;
 }

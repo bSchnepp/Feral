@@ -48,7 +48,6 @@ VOID WpFunctionCallback(WpDebugReportCallbackFlags flags, WpDebugReportComType o
 	{
 		WpConOut(SYSERR, message);
 	}
-
 }
 #endif
 

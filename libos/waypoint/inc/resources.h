@@ -38,13 +38,13 @@ IN THE SOFTWARE.
 // (though I'd expect very few programs would actually use this feature.)
 
 /* _all_ system resources left on the system */
-#define SYSTEM_RESOURCES_ALL	(0x0000)
+#define SYSTEM_RESOURCES_ALL (0x0000)
 
 /* The resources the calling user has access to. This may or may not be equal to ALL. */
-#define SYSTEM_RESOURCES_USER	(0x0001)
+#define SYSTEM_RESOURCES_USER (0x0001)
 
 /* The resources this program is allowed to use. This may be less than what the user has access to. */
-#define SYSTEM_RESOURCES_TASK	(0x0002)
+#define SYSTEM_RESOURCES_TASK (0x0002)
 
 /* The resources which this thread is allowed to use. This may be less than what the task has access to. */
 #define SYSTEM_RESOURCES_THREAD (0x0004)

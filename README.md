@@ -81,13 +81,23 @@ or outright preventing hardening of core infrastructure (ie, preventing the abil
 this seems totally unsatisfactory, wastes precious network bandwidth, and interrupts me when I do *not* want to be interrupted. What's particularly annoying is the removal of
 an application, and either through some filesystem bug, an intentional design flaw, some kind of marketing scheme, or some combination of all 3, the application keeps returning.
 
-Feral, in the future, will support SVM virtualization extensions ("Pacifica"), 
+Feral, in the future, will support SVM virtualization extensions ("Pacifica"),
+
+## Supported hardware?
+
+For now, Feral is primarilly aimed at supporting PC-compatible machines using the Zen 1 architecture for their CPU.
+Critically, this means that your machine needs to be *PC compatible* and use the traditional PC BIOS or a compatibility layer with CSM
+in order to boot Feral.
+
+Currently, hardware being tested includes a PC with a 4"x4" motherboard and an N3700 CPU ("Braswell") with 4GB of RAM,
+a 17z laptop with a 2500U (aforementioned Zen 1), and in the future, an x5-Z8350 with 2GB of RAM ("Cherry Trail").
 
 ## Core architecture?
 Architecturally, Feral is similar to a variety of prior systems originating between 1969 and 1993, with the most obvious being CMU's Mach project, and the Plan 9 project. Feral discards the "everything is a file"
 design in favor of "everything is a 'network resource'", which is intended to align with more modern hardware and software designs. Everything can be sent packets and recieve packets:
 writing to the filesystem is much the same as opening a web page and sending/recieving data to/from that. Feral also takes a lot of design inspiration from a variety of products which competed with
-BSD and other then-current *NIX distributions, specifically intending to avoid "just creating another *NIX clone".
+BSD and other then-current *NIX distributions, specifically intending to avoid "just creating another *NIX clone". The primary difference from the microkernel architecture is rather than have daemons in user mode
+that provide various services, Feral opts instead for "driver layers" and loads then dynamically into the kernel.
 
 In other words, Feral flips the conventional "network stuff are just special files" on it's head: files are just special kinds of network stuff.
 

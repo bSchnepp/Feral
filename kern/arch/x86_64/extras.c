@@ -23,31 +23,37 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
+
 
 #include <feral/stdtypes.h>
 #include <arch/x86_64/cpuio.h>
 #include <arch/x86_64/cpufuncs.h>
- 
- 
+
+
 BYTE x86inb(WORD port)
 {
 	UINT8 RetVal;
-	__asm__ volatile ("inb %1, %0" : "=a"(RetVal) : "Nd"(port));
+	__asm__ volatile("inb %1, %0"
+			 : "=a"(RetVal)
+			 : "Nd"(port));
 	return RetVal;
 }
 
 WORD x86inw(WORD port)
 {
 	UINT16 RetVal;
-	__asm__ volatile ("inw %1, %0" : "=a"(RetVal) : "Nd"(port));
+	__asm__ volatile("inw %1, %0"
+			 : "=a"(RetVal)
+			 : "Nd"(port));
 	return RetVal;
 }
 
 DWORD x86inl(WORD port)
 {
 	UINT32 RetVal;
-	__asm__ volatile ("inl %1, %0" : "=a"(RetVal) : "Nd"(port));
+	__asm__ volatile("inl %1, %0"
+			 : "=a"(RetVal)
+			 : "Nd"(port));
 	return RetVal;
 }
 
@@ -62,17 +68,17 @@ static inline QUAD  x86inq(WORD port)
 
 VOID x86outb(WORD port, BYTE val)
 {
-	__asm__ volatile ("outb %0, %1" :: "a"(val), "d"(port));
+	__asm__ volatile("outb %0, %1" ::"a"(val), "d"(port));
 }
 
 VOID x86outw(WORD port, WORD val)
 {
-	__asm__ volatile ("outw %0, %1" :: "a"(val), "d"(port));
+	__asm__ volatile("outw %0, %1" ::"a"(val), "d"(port));
 }
 
 VOID x86outl(WORD port, DWORD val)
 {
-	__asm__ volatile ("outl %0, %1" :: "a"(val), "d"(port));
+	__asm__ volatile("outl %0, %1" ::"a"(val), "d"(port));
 }
 
 #if 0

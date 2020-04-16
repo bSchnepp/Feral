@@ -28,7 +28,8 @@ IN THE SOFTWARE.
 #define _FERAL_FERAL_STDTYPES_H_
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
 #include <stdint.h>
@@ -70,9 +71,9 @@ extern "C" {
 */
 
 /* Team Red's ABI. (the one basically everyone else uses). */
-#define FERALAPI __attribute__((cdecl))	
+#define FERALAPI __attribute__((cdecl))
 
-#define  MSAPI __attribute__((ms_abi))
+#define MSAPI __attribute__((ms_abi))
 #define WINAPI __attribute__((ms_abi))
 #define EFIAPI __attribute__((ms_abi))
 
@@ -80,10 +81,10 @@ extern "C" {
 #define INLINE inline
 #define VOID void
 
-typedef unsigned char BYTE;
-typedef BYTE BOOLEAN;
-typedef char CCHAR;
-typedef char CHAR;
+	typedef unsigned char BYTE;
+	typedef BYTE BOOLEAN;
+	typedef char CCHAR;
+	typedef char CHAR;
 
 #ifndef FERAL_NO_DEPRECATED
 /* 
@@ -91,106 +92,106 @@ typedef char CHAR;
 	(8-bit word, 32-bit words, etc.)
  */
 #define PVOID void*
-typedef uint32_t DWORD;
-typedef uint64_t DWORDLONG;
+	typedef uint32_t DWORD;
+	typedef uint64_t DWORDLONG;
 #endif
 
-typedef uint32_t DWORD32;
-typedef uint64_t DWORD64;
+	typedef uint32_t DWORD32;
+	typedef uint64_t DWORD64;
 
-typedef float FLOAT;
-typedef double DOUBLE;
+	typedef float FLOAT;
+	typedef double DOUBLE;
 
-typedef float FLOAT32;
-typedef double FLOAT64;
+	typedef float FLOAT32;
+	typedef double FLOAT64;
 
-typedef int32_t INT;
-typedef INT BOOL;
-typedef uint16_t WORD;
+	typedef int32_t INT;
+	typedef INT BOOL;
+	typedef uint16_t WORD;
 
-typedef int8_t INT8;
-typedef int16_t INT16;
-typedef int32_t INT32;
-typedef int64_t INT64;
+	typedef int8_t INT8;
+	typedef int16_t INT16;
+	typedef int32_t INT32;
+	typedef int64_t INT64;
 
-typedef unsigned char UINT8;
-typedef uint16_t UINT16;
-typedef uint32_t UINT32;
-typedef uint64_t UINT64;
+	typedef unsigned char UINT8;
+	typedef uint16_t UINT16;
+	typedef uint32_t UINT32;
+	typedef uint64_t UINT64;
 
-typedef int32_t LONG;
-typedef int64_t LONGLONG;
+	typedef int32_t LONG;
+	typedef int64_t LONGLONG;
 
 /* We're LP64. */
 #if defined(__x86_64__) || defined(__aarch64__)
-typedef int64_t INT_PTR;
-typedef uint64_t UINT_PTR;
+	typedef int64_t INT_PTR;
+	typedef uint64_t UINT_PTR;
 #elif defined(__i386__)
 typedef int32_t INT_PTR;
 typedef uint32_t UINT_PTR;
 #endif
 
-typedef INT_PTR LONG_PTR;
+	typedef INT_PTR LONG_PTR;
 
-typedef uint64_t QUAD;
-typedef QUAD QWORD;
+	typedef uint64_t QUAD;
+	typedef QUAD QWORD;
 
 #if defined(__x86_64__) || defined(__aarch64__)
-typedef uint64_t UINTN;
-typedef  int64_t  INTN;
+	typedef uint64_t UINTN;
+	typedef int64_t INTN;
 #elif defined(__i386__)
 typedef uint32_t UINTN;
-typedef  int32_t  INTN;	
+typedef int32_t INTN;
 #endif
-/* 
+	/* 
 	286 and earlier not supported. 
 	(16-bit x86 is *very* old and doesn't support paging).
  */
 
 
-/* Ensure we define wchar_t. This is important, as we *really* love Unicode. */
-typedef unsigned short wchar_t;
-typedef wchar_t* WSTRING;
-typedef wchar_t WCHAR;
-/* Also define WIDE CHAR and WIDE STRING. */
+	/* Ensure we define wchar_t. This is important, as we *really* love Unicode. */
+	typedef unsigned short wchar_t;
+	typedef wchar_t* WSTRING;
+	typedef wchar_t WCHAR;
+	/* Also define WIDE CHAR and WIDE STRING. */
 
-typedef CHAR* STRING;
+	typedef CHAR* STRING;
 
-typedef UINT32 COLORREF;
-typedef int16_t	CSHORT;
+	typedef UINT32 COLORREF;
+	typedef int16_t CSHORT;
 
-typedef UINT64 TIMEUNIT;
+	typedef UINT64 TIMEUNIT;
 
-typedef struct
-{
-	UINT16 Year;
-	UINT8 Month;
-	UINT8 Day;
-	UINT8 Hour;
-	UINT8 Minute;
-	UINT8 Second;
-}FERALTIME;
+	typedef struct
+	{
+		UINT16 Year;
+		UINT8 Month;
+		UINT8 Day;
+		UINT8 Hour;
+		UINT8 Minute;
+		UINT8 Second;
+	} FERALTIME;
 
-typedef struct
-{
-	UINT16 Year;
-	UINT8 Month;
-	UINT8 Day;
-	UINT8 Hour;
-	UINT8 Minute;
-	UINT8 Second;
-	UINT8 Millisecond;
-	UINT8 Microsecond;
-	UINT8 Nanosecond;
-}FERALTIMEHARD;
+	typedef struct
+	{
+		UINT16 Year;
+		UINT8 Month;
+		UINT8 Day;
+		UINT8 Hour;
+		UINT8 Minute;
+		UINT8 Second;
+		UINT8 Millisecond;
+		UINT8 Microsecond;
+		UINT8 Nanosecond;
+	} FERALTIMEHARD;
 
-typedef struct GUID
-{
-	UINT32 Data1;
-	UINT16 Data2;
-	UINT16 Data3;
-	UINT8 Data4[8];
-}GUID;
+	typedef struct GUID
+	{
+		UINT32 Data1;
+		UINT16 Data2;
+		UINT16 Data3;
+		UINT8 Data4[8];
+	} GUID;
 
 /* Please avoid using this. (some archs don't like packed structs) */
 #define PACKED __attribute__((packed))
@@ -204,7 +205,7 @@ typedef struct GUID
 #define NULLPTR NULL
 #endif
 
-typedef void* POINTER;
+	typedef void* POINTER;
 
 #if defined(__cplusplus)
 }

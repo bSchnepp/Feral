@@ -54,13 +54,6 @@ FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT UINTN*);
 
 
 
-
-
-
-
-
-
-
 /* Equivalent to a kernel panic. In goes in the current system status which 
    triggers the panic. */
 FERALSTATUS KiStopError(IN FERALSTATUS);

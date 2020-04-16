@@ -23,21 +23,21 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
- /* General definitions for the Red team's graphics cards. */
- 
- #ifndef _FERAL_DAREON_GRAPHICS_H_
- #define _FERAL_DAREON_GRAPHICS_H_
- 
- /* Fun fact: Dareon is an anagram. */
- #define GPU_DRIVER_VENDOR_NAME "DAREON GRAPHICS DRIVER"
- 
- #define DAREON_RESET_GRAPHICS			(1 << 0)
- #define DAREON_RESET_COMPUTE			(1 << 1)
- #define DAREON_RESET_DMA				(1 << 2)
- #define DAREON_RESET_CP					(1 << 3)
- /* TODO */
- 
- 
- 
- #endif
+
+/* General definitions for the Red team's graphics cards. */
+
+#ifndef _FERAL_DAREON_GRAPHICS_H_
+#define _FERAL_DAREON_GRAPHICS_H_
+
+/* Fun fact: Dareon is an anagram. */
+#define GPU_DRIVER_VENDOR_NAME "DAREON GRAPHICS DRIVER"
+
+#define DAREON_RESET_GRAPHICS (1 << 0)
+#define DAREON_RESET_COMPUTE (1 << 1)
+#define DAREON_RESET_DMA (1 << 2)
+#define DAREON_RESET_CP (1 << 3)
+/* TODO */
+
+
+
+#endif

@@ -33,7 +33,11 @@ IN THE SOFTWARE.
 #include <mm/mm.h>
 
 
-#define VALIDATE_SUCCESS(x) if (x != STATUS_SUCCESS) { KiStopError(x); }
+#define VALIDATE_SUCCESS(x) \
+	if (x != STATUS_SUCCESS) \
+	{ \
+		KiStopError(x); \
+	}
 
 typedef enum FeralStructureType
 {
@@ -43,15 +47,15 @@ typedef enum FeralStructureType
 	FERAL_STRUCTURE_TYPE_PORT_INFO = 3,
 	FERAL_STRUCTURE_TYPE_GRAPHICS_CONTEXT_CREATE_INFO = 4,
 	FERAL_STRUCTURE_TYPE_GRAPHICS_CONTEXT_INFO = 5,
-	
-}FeralStructureType;
+
+} FeralStructureType;
 
 // What the processor we're controlling is doing. (ie, no tasks attached to them)
 typedef enum PROCESSOR_STATE
 {
 	ProcessorStateActive,
 	ProcessorStateIdle,
-}PROCESSOR_STATE;
+} PROCESSOR_STATE;
 
 // What each running program is doing.
 typedef enum TASK_STATE
@@ -62,14 +66,14 @@ typedef enum TASK_STATE
 	TaskStateInactiveInSwap,
 	TaskStateTransitionToSwap,
 	TaskStateTransitionActivity,
-}TASK_STATE;
+} TASK_STATE;
 
 typedef enum THREAD_STATE
 {
 	ThreadStateBlocking,
 	ThreadStateRunning,
 	ThreadStateInactive
-}THREAD_STATE;
+} THREAD_STATE;
 
 // Currently just a stub.
 FERALSTATUS KiLoadAllDrivers(VOID);
@@ -78,9 +82,8 @@ FERALSTATUS KiLoadAllDrivers(VOID);
 typedef struct KTIMER
 {
 	FERALTIME InterruptTime;
-	
-}KTIMER;
+
+} KTIMER;
 
 
 #endif
-

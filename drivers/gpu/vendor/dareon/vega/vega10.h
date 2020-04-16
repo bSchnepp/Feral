@@ -23,24 +23,24 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
- 
+
+
 #ifndef _DAREON_GPU_DRIVER_VEGA_10_H_
 #define _DAREON_GPU_DRIVER_VEGA_10_H_
- 
+
 #include <feral/stdtypes.h>
- 
+
 #define DAREON_VIDEO_CARD_VEGA10_NAME L"DAREON VEGA"
- 
+
 typedef struct Vega10GPUInfo
 {
 	UINT64 CUCount;
-	UINT64 ThreadsPerCU;	/* generally 64? */
-}Vega10GPUInfo;
+	UINT64 ThreadsPerCU; /* generally 64? */
+} Vega10GPUInfo;
 
 /* (for here, "vega" + suffix means CU COUNT, not Vega revision */
 /* ZEN SBCs can have Vega3, Vega6, Vega7, Vega8, Vega11, Vega20,  and Vega22, and some ASICs can be vega56, and Vega64, vega88 and vega128.*/
 /* The 128 variant is two dies.*/
 /*  Prioritize vega support above all other gpu archs (and buy more of the things) */
- 
- #endif
+
+#endif

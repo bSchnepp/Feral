@@ -24,9 +24,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#include <feral/stdtypes.h> 
+#include <feral/stdtypes.h>
 #include <mm/mmcommon.h>
- 
+
 #ifndef _FERAL_KERN_FERAL_MM_PAGE_H_
 #define _FERAL_KERN_FERAL_MM_PAGE_H_
 

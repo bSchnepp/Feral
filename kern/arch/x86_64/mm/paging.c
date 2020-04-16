@@ -23,7 +23,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
+
 #include <arch/x86_64/mm/pageflags.h>
 
 
@@ -45,17 +45,18 @@ UINT_PTR ConvertPageEntryToAddress(PageMapEntry *Entry)
 
 FERALSTATUS MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
 {
+	/* Shift over 12 bytes, to get to level 4 table immediately. */
 	UINT64 Addr = Physical >> 12;
 	UINT16 Bitmask = 0xFFF; /* For now, only do 4096 byte pages. */
-	
+
 	UINT16 PageLevels[4];
 	FERALSTATUS Err = x86FindPageLevels(Virtual, PageLevels);
-		
+
 	if (Err != STATUS_SUCCESS)
 	{
 		return Err;
 	}
-	
+
 	PageMapEntry* Level3Table = (PageMapEntry*)(PML4[PageLevels[3]);
 	PageMapEntry* Level2Table = (PageMapEntry*)(
 		ConvertPageEntryToAddress(Level3Table)[PageLevels[2]
@@ -63,10 +64,11 @@ FERALSTATUS MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
 	PageMapEntry* Level1Table = (PageMapEntry*)(
 		ConvertPageEntryToAddress(Level2Table)[PageLevels[1]
 	);
-	
-	PageMapEntry *FinalLevel = (PageMapEntry*)(
-		ConvertPageEntryToAddress(Level1Table)[PageLevels0]
-	);
-	
+
+	PageMapEntry *FinalLevel = (PageMapEntry *)(ConvertPageEntryToAddress(Level1Table)[PageLevels0]);
+
 	return STATUS_SUCCESS;
 }
+
+
+FERALSTATUS CreateNewPageTable(

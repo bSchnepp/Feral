@@ -23,7 +23,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
+
 
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
@@ -66,11 +66,11 @@ typedef struct MemoryManagementState
 {
 	/* For now, we *do not* support huge pages generally. */
 	MmPhysicalAllocationInfo *pAllocInfo;
-	
+
 	/* Sum up total free area, right bitshift 3. */
 	UINT8 *BitmaskUsedFrames;
 	UINT_PTR MaxPAddr;
-	
+
 	/* NOTE: We need to check if the frame goes beyond
 	   the first range. If it did, then we need to move
 	   on to the next one. Keep going for each range
@@ -79,7 +79,7 @@ typedef struct MemoryManagementState
 	   Each bit represents free or in use. 0 for free,
 	   1 for in use.
 	 */
-}MemoryManagementState;
+} MemoryManagementState;
 
 /* Not the best thing ever, but... */
 static MemoryManagementState MmState;
@@ -90,7 +90,7 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 {
 	/* Association the pAllocInfo first. */
 	MmState.pAllocInfo = info->pPhysicalAllocationInfo;
-	
+
 	/* Look through the memory locations. Place at PMM in first place 
 	   I guess for now. 
 	 */
@@ -105,10 +105,10 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 			/* Prevent odd memory-based flaws the hard way. */
 			KiStopError(STATUS_MEMORY_ACCESS_VIOLATION);
 		}
-		
+
 		/* Add the size in to the total. */
 		TotalSystemMemory += range.Size;
-		
+
 		/* What's the end address here? Is it bigger? */
 		if (range.End > MaximumPAddr)
 		{
@@ -117,7 +117,7 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	}
 	PmmLocation = kernel_end + 4096;
 	KiPrintFmt("Detected %uMB of free RAM\n", TotalSystemMemory / (1024 * 1024));
-	
+
 	/* Bit of ehhh here. Assume everything from 0 - MaximumPAddr is valid. */
 	/* We'll take our total, copy it, and shift it over to be a valid map. */
 	/* In our model, 1 bit = (FrameSize). 1 byte = 8 * FrameSize. */
@@ -125,35 +125,34 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	UINT64 BufferSize = (MaximumPAddr);
 	MmState.MaxPAddr = MaximumPAddr;
 	UINT64 FrameSize = MmState.pAllocInfo->FrameSize;
-	UINT8 ShiftAmt = 3;	/* Map 1 bit to 8 bytes at least (2^3) */
+	UINT8 ShiftAmt = 3; /* Map 1 bit to 8 bytes at least (2^3) */
 	while (FrameSize >>= 1)
 	{
 		/* FrameSize must be power of 2, but can technically be any power. */
 		++ShiftAmt;
 	}
 	BufferSize >>= ShiftAmt;
-	
+
 	/* Take our location from before, and use it accordingly. */
-	UINT8 *PmmBitmap = (UINT8*)(PmmLocation + KERN_VIRT_OFFSET);
+	UINT8 *PmmBitmap = (UINT8 *)(PmmLocation + KERN_VIRT_OFFSET);
 	KiSetMemoryBytes(PmmBitmap, 0, BufferSize);
 	MmState.BitmaskUsedFrames = PmmBitmap;
-	
+
 	/* Mark everything as in use. */
 	for (UINT_PTR index = kern_start; index < PmmLocation + BufferSize; index += FrameSize)
 	{
 		VALIDATE_SUCCESS(SetMemoryAlreadyInUse(index, TRUE));
 	}
-	
+
 	/* Start the heap stuff up. No SMP support yet, so 1 hart. */
 	/* 128MB heap should be enough for now? */
 	const UINT64 HeapSize = (1024 * 1024 * 128);
-	UINT_PTR HeapAddr = 
-		(KERN_VIRT_OFFSET + PmmLocation + BufferSize);
+	UINT_PTR HeapAddr = (KERN_VIRT_OFFSET + PmmLocation + BufferSize);
 	HeapAddr += MmState.pAllocInfo->FrameSize;
-	
+
 	MmCreateAllocatorState(1, HeapAddr, HeapSize);
-	for (UINT_PTR Addr = HeapAddr - KERN_VIRT_OFFSET; Addr < (HeapSize); 
-		Addr+=MmState.pAllocInfo->FrameSize)
+	for (UINT_PTR Addr = HeapAddr - KERN_VIRT_OFFSET; Addr < (HeapSize);
+		Addr += MmState.pAllocInfo->FrameSize)
 	{
 		VALIDATE_SUCCESS(SetMemoryAlreadyInUse(Addr, TRUE));
 	}
@@ -171,7 +170,7 @@ FERALSTATUS GetMemoryAlreadyInUse(UINT_PTR Location, BOOL *Status)
 	/* Each bit represents MmState.pAllocInfo->FrameSize bytes...
 	  Mult. this by 8 for per byte. Look until expected address > Location.
 	*/
-	
+
 	UINT_PTR FrameSize = MmState.pAllocInfo->FrameSize;
 	UINT_PTR BaseAddr = 0;
 	/* This is the size of each *byte* in our buffer. */
@@ -180,9 +179,9 @@ FERALSTATUS GetMemoryAlreadyInUse(UINT_PTR Location, BOOL *Status)
 	{
 		BaseAddr += Increment;
 	}
-	 
-	 /* BaseAddr will now be at the *byte* we want. */
-	 /* We take the formula (FrameSize) % 8 in order to find the bit 
+
+	/* BaseAddr will now be at the *byte* we want. */
+	/* We take the formula (FrameSize) % 8 in order to find the bit 
 	    to check. 
 	  */
 	UINT8 ContainingByte = MmState.BitmaskUsedFrames[BaseAddr];
@@ -202,7 +201,7 @@ FERALSTATUS SetMemoryAlreadyInUse(UINT_PTR Location, BOOL Status)
 	/* Each bit represents MmState.pAllocInfo->FrameSize bytes...
 	  Mult. this by 8 for per byte. Look until expected address > Location.
 	*/
-	
+
 	UINT_PTR FrameSize = MmState.pAllocInfo->FrameSize;
 	UINT_PTR BaseAddr = 0;
 	/* This is the size of each *byte* in our buffer. */
@@ -211,27 +210,31 @@ FERALSTATUS SetMemoryAlreadyInUse(UINT_PTR Location, BOOL Status)
 	{
 		BaseAddr += Increment;
 	}
-	 
-	 /* BaseAddr will now be at the *byte* we want. */
-	 /* We take the formula (FrameSize) % 8 in order to find the bit 
+
+	/* BaseAddr will now be at the *byte* we want. */
+	/* We take the formula (FrameSize) % 8 in order to find the bit 
 	    to check. 
 	  */
 	UINT8 ContainingByte = MmState.BitmaskUsedFrames[BaseAddr];
 	UINT8 BitNum = (Location / FrameSize) % 8;
 	BOOL InUse = (ContainingByte >> BitNum) & 0x01;
-	  
+
 	if (InUse && !Status)
 	{
 		/* Free it */
 		MmState.BitmaskUsedFrames[BaseAddr] = (ContainingByte) & ((255) ^ (1 << BitNum));
 		return STATUS_SUCCESS;
-	} else if (!InUse && Status) {
+	}
+	else if (!InUse && Status)
+	{
 		/* Allocate it. */
 		MmState.BitmaskUsedFrames[BaseAddr] = (ContainingByte) | (1 << BitNum);
 		return STATUS_SUCCESS;
-	} else {
+	}
+	else
+	{
 		return STATUS_MEMORY_ACCESS_VIOLATION;
-	}	
+	}
 }
 
 

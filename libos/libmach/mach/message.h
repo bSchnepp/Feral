@@ -44,13 +44,13 @@ IN THE SOFTWARE.
 typedef natural_t mach_msg_timeout_t;
 
 
-typedef MACH_MSG_TIMEOUT_NONE	((mach_msg_timeout_t)(0));
+typedef MACH_MSG_TIMEOUT_NONE((mach_msg_timeout_t)(0));
 
 /* TODO: document better */
-#define MACH_MSGH_BITS_ZERO		(0x00000000)
-#define MACH_MSGH_BITS_REMOTE_MASK	(0x000000FF)
-#define MACH_MSGH_BITS_LOCAL_MASK	(0x0000FF00)
-#define MACH_MSGH_BITS_COMPLEX		(0x80000000)
+#define MACH_MSGH_BITS_ZERO (0x00000000)
+#define MACH_MSGH_BITS_REMOTE_MASK (0x000000FF)
+#define MACH_MSGH_BITS_LOCAL_MASK (0x0000FF00)
+#define MACH_MSGH_BITS_COMPLEX (0x80000000)
 
 /* TODO!!! */
 

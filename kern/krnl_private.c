@@ -43,8 +43,8 @@ IN THE SOFTWARE.
 /* TODO: Implement randomization for this. */
 #if defined(__i386__) || defined(__arm__)
 #else
-	#include <arch/x86_64/vga/vga.h>
-	#define STACK_CHK_GUARD 0x23C72A7D59AA6F2D
+#include <arch/x86_64/vga/vga.h>
+#define STACK_CHK_GUARD 0x23C72A7D59AA6F2D
 #endif
 
 UINT_PTR __stack_chk_guard = STACK_CHK_GUARD;
@@ -56,12 +56,11 @@ FERALSTATUS KiLoadAllDrivers(VOID)
 #ifdef TEMPORARY_SERIAL_DRIVER_STUB
 	// Hold on, we have a serial driver directly injected into the kernel rather than as a shared object.
 	// This is for debugging purposes for now (we just throw output to COM1 for now.)
-	
+
 #endif
 
 	return STATUS_SUCCESS;
 }
-
 
 
 
@@ -71,9 +70,11 @@ VOID KiRestoreInterrupts(BOOLEAN value)
 {
 	if (value)
 	{
-		__asm__ __volatile__ ("sti");
-	} else {
-		__asm__ __volatile__ ("cli");
+		__asm__ __volatile__("sti");
+	}
+	else
+	{
+		__asm__ __volatile__("cli");
 	}
 }
 
