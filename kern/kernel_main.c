@@ -24,14 +24,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#include <stdint.h>
-
-#if defined(__x86_64__)
-#include <arch/x86_64/cpuio.h>
-#include <arch/x86_64/cpufuncs.h>
-#endif
-
-
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
 #include <feral/handle.h>
@@ -114,24 +106,4 @@ FERALSTATUS KeBootstrapSystem(VOID)
 {
 	/* Bootstrap process to actually get to user mode. */
 	return STATUS_SUCCESS;
-}
-
-
-
-/*
- * Some things aren't set up by the firmware for us, or known
- * to be.
- * So, deal with that.
- * Ideally, this would be in a machine dependent place...
- */
-VOID KiStartupMachineDependent(VOID)
-{
-#if defined(__x86_64__) || defined(__i386__)
-	/* Be careful: '__riscv__' is deprecated. */
-	x86InitializeIDT();
-#elif defined(__riscv)
-
-#elif defined(__aarch64__)
-
-#endif
 }
