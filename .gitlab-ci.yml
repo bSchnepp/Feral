@@ -1,3 +1,7 @@
+# FIXME: This was a hack to run on one of my own servers.
+# This should be made reproducible, so it can run on a fresh Docker image
+# or whatever (Nomad, kubernetes, etc).
+
 image: debian:sid
 
 stages:

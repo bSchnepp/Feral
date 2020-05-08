@@ -46,62 +46,15 @@ IN THE SOFTWARE.
 
 #include <arch/processor.h>
 
-static UINT8 FeralVersionMajor;
-static UINT8 FeralVersionMinor;
-static UINT8 FeralVersionPatch;
-
-/* 
-	Things to do in order:
-	Keyboard input [on this, getting close to working..?]
-	In-memory filesystem
-	On-disk filesystem (ext2 is enough, 8.3 FAT would be OK to also support)
-	Get user mode working!
-	Working libc
-	System call mechanism. Write a "native" driver (program under env,
-	the kernel passes off to the appropriate function for the driver. Kernel
-	itself only throws syscall work at drivers to do.)
-	We'll eventually need Linux emulation for a "port" of LLVM/Clang, NASM,
-	etc., without actually modifying the binary. (Should be unmodified.)
-	We'll also want to port a JVM, golang, Python (either 2 or 3), and
-	some other stuff too, just for fun.
-	
-	Work on being self-hosting: Feral needs to compile on Feral.
-	We'll also want to create (or port) a nice desktop windowing protocol
-	like X, Wayland, or just make a nice one that's specific to Waypoint.
-	Likewise, we'll need to figure out how to get some NIC drivers onboard.
-	Get rid of multiboot 2 stuff, eventually make our own EFI bootloader.
-	Write a new filesystem focusing on getting as good read speeds as
-	possible on modern SSDs. At this stage, we'll want support for AHCI,
-	SATA, and NVMe. Do not care about IDE/PATA.
-	Write a hypervisor, and embed it in the kernel! (This will be fun!)
-	Graphics drivers are pretty important to get working.
-	
-	Nothing older than the vega10 should be supported. There's really no
-	need to: I don't have a lot of GPUs lying around, and since
-	I'm really only focusing on the hardware I've got, I don't really
-	have a reason to support older GPUs, especially from a different vendor.
-	(Though, getting Blue GPUs to work sounds fun.)
-	
-	Getting version control on a Feral system would be great!
-	Dogfood, dogfood, and dogfood more. If you don't dogfood, then
-	you're not going to be as willing to fix it.
-	
-	Get a web browser going. Write a LibHTML, possibly port an open
-	source ES6 engine like ChakraCore? Build one
-	from scratch? At least have HTML4 support, and pretend HTML5 + CSS.
-	Also, consider porting Mono.
-*/
-
-/* TODO */
-#if defined(__aarch64__)
-FERALSTATUS KiPrintLine()
+typedef struct FeralVersionInfo
 {
-}
+	UINT8 FeralVersionMajor;
+	UINT8 FeralVersionMinor;
+	UINT8 FeralVersionPatch;
+}FeralVersionInfo;
 
-FERALSTATUS KiPrintWarnLine()
-{
-}
-#endif
+
+static FeralVersionInfo VersionInfo;
 
 /* 	
 	This is the kernel's *real* entry point. 
@@ -116,18 +69,17 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	 */
 	KiUpdateFirmwareFunctions(EnvBlock->FunctionTable, EnvBlock->CharMap);
 
-	FeralVersionMajor = FERAL_VERSION_MAJOR;
-	FeralVersionMinor = FERAL_VERSION_MINOR;
-	FeralVersionPatch = FERAL_VERSION_PATCH;
+	VersionInfo.FeralVersionMajor = FERAL_VERSION_MAJOR;
+	VersionInfo.FeralVersionMinor = FERAL_VERSION_MINOR;
+	VersionInfo.FeralVersionPatch = FERAL_VERSION_PATCH;
 
 	KiPrintFmt("\nStarting Feral Kernel \"%s\" Version %01u.%01u.%01u\n",
 		FERAL_VERSION_SHORT,
-		FERAL_VERSION_MAJOR,
-		FERAL_VERSION_MINOR,
-		FERAL_VERSION_PATCH);
+		VersionInfo.FeralVersionMajor,
+		VersionInfo.FeralVersionMinor,
+		VersionInfo.FeralVersionPatch);
 
 	KiPrintLine("Copyright (c) 2018-2019, Brian Schnepp");
-	KiPrintLine("Licensed under the Boost Software License.");
 	KiPrintFmt("Booted using %s\n",
 		EnvBlock->FunctionTable->GetFirmwareName());
 	KiPrintFmt("%s\n", "Preparing execution environment...");
@@ -170,6 +122,7 @@ FERALSTATUS KeBootstrapSystem(VOID)
  * Some things aren't set up by the firmware for us, or known
  * to be.
  * So, deal with that.
+ * Ideally, this would be in a machine dependent place...
  */
 VOID KiStartupMachineDependent(VOID)
 {

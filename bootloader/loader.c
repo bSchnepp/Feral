@@ -36,8 +36,6 @@ IN THE SOFTWARE.
 #if defined(__x86_64__)
 #define CUR_ARCH_ELF MACHINE_ID_X86_64
 #endif
-
-
 #else
 #error "Unsupported compile mode..."
 #endif
