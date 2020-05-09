@@ -13,10 +13,10 @@ GRUB_CFG  := arch/$(ARCH)/grub.cfg
 
 TARGET     = -target $(ARCH)-pc-none-gnu
 
-AS        := nasm       # We use nasm to assemble.
-CC        := clang      # We use clang to compile.
-CXX       := clang++    # We may use C++ for something later. (Would only ever really be a "C with classes" anyway.)
-LD        := ld.lld -flavor gnu --verbose
+AS        = nasm       # We use nasm to assemble.
+CC        = clang      # We use clang to compile.
+CXX       = clang++    # We may use C++ for something later. (Would only ever really be a "C with classes" anyway.)
+LD        = ld.lld -flavor gnu --verbose
 
 INCLUDES  := inc
 

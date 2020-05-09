@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020 Brian Schnepp
+Copyright (c) 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining a copy of the software and accompanying documentation covered by 
@@ -24,27 +24,11 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#if defined(__x86_64__)
-#include <arch/x86_64/cpuio.h>
-#include <arch/x86_64/cpufuncs.h>
+#include <libreefi/efistatus.h>
+ 
+#ifndef _LIBREEFI_EFIHANDLER_H_
+#define _LIBREEFI_EFIHANDLER_H_
+
+#define EFI_OK_OR_ERR_EXT(x) ((x) == EFI_SUCCESS)
+
 #endif
-
-
-#include <feral/feralstatus.h>
-#include <feral/stdtypes.h>
-#include <feral/handle.h>
-#include <feral/kern/frlos.h>
-#include <mm/mm.h>
-
-#include <feral/kern/krnlfuncs.h>
-#include <feral/kern/krnlbase.h>
-
-#include <krnl.h>
-#include <kern_ver.h>
-
-#include <arch/processor.h>
-
-VOID KiStartupMachineDependent(VOID)
-{
-	x86InitializeIDT();
-}

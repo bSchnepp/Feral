@@ -91,65 +91,85 @@ VOID WriteMessage(CHAR16 *String)
 	SystemTable->ConOut->OutputString(SystemTable->ConOut, String);
 }
 
-EFI_STATUS SetupEfiFramebufferData(EFI_HANDLE *VideoBuffers, UINT_PTR *DisplayBuffers)
+UINT64 BytesToEfiPages(UINT64 Bytes)
 {
-	/* Pointer to the GOP, temporarilly at least. */
-	EFI_GRAPHICS_OUTPUT_PROTOCOL *GraphicsProtocol = NULLPTR;
-	
-	/* Assume at least 1 display */
-	for (Iterator = 1; Iterator < NumDisplays; ++Iterator)
+	/* Lazy implementation for debugging... */
+	UINT64 RetVal = Bytes >> EFI_PAGE_SHIFT;
+	if (RetVal % EFI_PAGE_SIZE || RetVal == 0)
 	{
-		/* Get the current GOP. */
-		Result = OpenProtocol(VideoBuffers[Iterator-1],
-			&GuidEfiGraphicsOutputProtocol, (VOID **)&GraphicsProtocol,
-			ImageHandle, NULL,
-			EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+		++RetVal;
+	}
+	return RetVal;
+}
 
-		if (Result != EFI_SUCCESS)
+/* Borrowed from krnlfuncs... */
+VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix)
+{
+	UINT64 Len = 0;
+	UINT64 ValCopy = 0;
+	UINT64 ReverseIndex = 0;
+
+	/* No point in continuing if it's zero. Just give '0' back. */
+	if (Val == 0)
+	{
+		*Buf = L'0';
+		*(Buf + 1) = L'\0';
+		return;
+	}
+	/* Weird behavior if you exceed 10 + 26 + 26 as radix. */
+	for (ValCopy = Val; ValCopy != 0; ValCopy /= Radix)
+	{
+		/* We need the remainder to see how to encode. */
+		CHAR16 Rem = ValCopy % Radix;
+		if (Rem <= 9 && Rem >= 0)
 		{
-			SystemTable->ConOut->OutputString(SystemTable->ConOut,
-				L"Failed to query display...\r\n");
-			SystemTable->ConOut->OutputString(SystemTable->ConOut,
-				EfiErrorToString(Result));
-			SystemTable->BootServices->Stall(12500000);
-			return Result;
+			/* It's already a number. Just encode in UTF16. */
+			Buf[Len++] = Rem + L'0';
+		}
+		else if (Rem < 35)
+		{
+			/* Encode the number as a lowercase letter. */
+			Buf[Len++] = (Rem - 10) + L'a';
+		}
+		else
+		{
+			/* Encode as uppercase. */
+			Buf[Len++] = (Rem - 36) + L'A';
+		}
+	}
+
+	/* It's written BACKWARDS. So flip the order of the string. */
+	for (ReverseIndex = 0; ReverseIndex < Len / 2; ++ReverseIndex)
+	{
+		CHAR16 Tmp = Buf[ReverseIndex];
+		Buf[ReverseIndex] = Buf[Len - ReverseIndex - 1];
+		Buf[Len - ReverseIndex - 1] = Tmp;
+	}
+
+	/* Terminate the string. */
+	Buf[Len] = '\0';
+}
+
+BOOL GetEfiMemoryMapToFreeOrNot(EFI_MEMORY_DESCRIPTOR *Place)
+{
+	switch (Place->Type)
+	{
+		case EfiLoaderCode:
+		case EfiLoaderData:
+		case EfiBootServicesCode:
+		case EfiBootServicesData:
+		case EfiConventionalMemory:
+		{
+			return TRUE;
 		}
 
-		Result = GraphicsProtocol->SetMode(GraphicsProtocol, PixelRedGreenBlueReserved8BitPerColor);
-		if (Result != EFI_SUCCESS)
+		default:
 		{
-			SystemTable->ConOut->OutputString(SystemTable->ConOut,
-				L"Display does not use 32-bit RGB mode...\r\n");
-			SystemTable->ConOut->OutputString(SystemTable->ConOut,
-				EfiErrorToString(Result));
-			SystemTable->BootServices->Stall(12500000);
-			return Result;
+			return FALSE;
 		}
-
-		/* Update the current width and height, then display. */
-		CurrentWidth = GraphicsProtocol->Mode->Info->HorizontalResolution;
-		CurrentHeight = GraphicsProtocol->Mode->Info->VerticalResolution;
-
-		/* And tell the user that we found it! */
-		InternalItoaBaseChange(CurrentWidth, ItoaBuf, 10);
-		SystemTable->ConOut->OutputString(SystemTable->ConOut,
-			L"Got display of width: ");
-		SystemTable->ConOut->OutputString(SystemTable->ConOut,
-			ItoaBuf);
-		SystemTable->ConOut->OutputString(SystemTable->ConOut,
-			L" and height of ");
-		InternalItoaBaseChange(CurrentHeight, ItoaBuf, 10);
-		SystemTable->ConOut->OutputString(SystemTable->ConOut,
-			ItoaBuf);
-		SystemTable->ConOut->OutputString(SystemTable->ConOut,
-			L"\r\n");
-
-		/* HACK: first and second are sizes.*/
-		DisplayBuffers[Iterator + 0] = CurrentWidth;
-		DisplayBuffers[Iterator + 1] = CurrentHeight;
-		DisplayBuffers[Iterator + 2] = GraphicsProtocol->Mode->FrameBufferBase;
 	}
 }
+
 
 
 EFI_STATUS 
@@ -164,6 +184,9 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 
 	UINTN NumDisplays = 0;
 	EFI_HANDLE *VideoBuffers = NULLPTR;
+	
+	/* TODO: Get the ACPI tables from EFI */
+	
 	
 	/* Get all the GOPs... */
 	Result = SystemTable->BootServices->LocateHandleBuffer(ByProtocol,
@@ -192,7 +215,7 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	SystemTable->BootServices->AllocatePool(EfiRuntimeServicesData,
 		(sizeof(UINT_PTR) * NumDisplays * 3),
 		&DisplayBuffers);
-	SetupEfiFramebufferData(VideoBuffers, DisplayBuffers);
+	//SetupEfiFramebufferData(VideoBuffers, DisplayBuffers);
 	
 	
 	return EFI_SUCCESS;

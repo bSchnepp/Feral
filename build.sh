@@ -1,4 +1,7 @@
-## Properly set up the new build system.
+#!/bin/sh
+
+## This is temporary until I get around to writing something
+## like make oajust a better build system for this sort of thing.
 
 ARCH="$1"
 CMD="$2"
