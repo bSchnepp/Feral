@@ -222,6 +222,8 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 		return EFI_LOAD_ERROR;
 	}
 
+	UINT64 BaseAddr = 0;
+
 	/* Change the position to the area currently cared about. */
 	for (UINT32 Index = 0; Index < InitialHeader.e_phoff; ++Index)
 	{
@@ -229,18 +231,18 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 		File->SetPosition(File, InitialHeader.e_phoff
 					+ InitialHeader.e_phentsize * Index);
 
+		Status = SystemTable->BootServices->AllocatePages(
+			AllocateAnyPages, EfiLoaderData,
+			BytesToEfiPages(8 * 1024 * 1024),	/* Pre-allocate 8MB. */
+			&PAddress);
+
+		BaseAddr = PAddress;
+
 		/* Read it in... */
 		File->Read(File, &PHdrSize, &ProgramHeader);
 
 		if (ProgramHeader.p_type == PT_LOAD)
 		{
-			/* PAddr is in multiples of 4096. */
-			PAddress = ProgramHeader.p_paddr;
-
-			Status = SystemTable->BootServices->AllocatePages(
-				AllocateAnyPages, EfiLoaderData,
-				BytesToEfiPages(ProgramHeader.p_memsz),
-				&PAddress);
 			InternalItoaBaseChange(BytesToEfiPages(ProgramHeader.p_memsz), ItoaBuf, 10);
 			SystemTable->ConOut->OutputString(SystemTable->ConOut,
 				L"Attempting to allocate: ");
@@ -264,6 +266,7 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 					ItoaBuf);
 				SystemTable->ConOut->OutputString(SystemTable->ConOut,
 					L"\r\n");
+				SystemTable->BootServices->Stall(10000);
 				return Status;
 			}
 
@@ -280,6 +283,7 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 			{
 				SystemTable->ConOut->OutputString(SystemTable->ConOut,
 					L"Failed to setup kernel (file seek).\r\n");
+				SystemTable->BootServices->Stall(10000);
 				return Status;
 			}
 			UINTN PFilesz = ProgramHeader.p_filesz;
@@ -291,7 +295,11 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 					EfiErrorToString(Status));
 				SystemTable->ConOut->OutputString(SystemTable->ConOut,
 					L" : Failed to load program section.\r\n");
+				SystemTable->BootServices->Stall(10000);
 			}
+
+			/* PAddr is in multiples of 4096. */
+			PAddress += ProgramHeader.p_paddr;
 		}
 	}
 	/* Update this so that uefi_main is happy. */
@@ -301,7 +309,16 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 	VirtMemAreaFree = VirtMemAreaFree & EFI_PAGE_MAP;
 
 	/* Entry is already in vaddr. */
-	*Entry = InitialHeader.e_entry;
+	*Entry = ((InitialHeader.e_entry) - FERAL_VIRT_OFFSET) + BaseAddr;
+
+	/* And tell the user that we found it! */
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
+		L"Kernel will be loaded with base: 0x");
+	InternalItoaBaseChange(BaseAddr, ItoaBuf, 16);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
+		ItoaBuf);
+	SystemTable->ConOut->OutputString(SystemTable->ConOut,
+		L"\r\n");
 	return EFI_SUCCESS;
 }
 

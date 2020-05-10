@@ -39,7 +39,7 @@ kernel-efi:
 	$(CC) $(TARGET) -I$(INCLUDES) -DFERAL_BUILD_STANDALONE_UEFI_ $(CFLAGS) ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) -DFERAL_BUILD_STANDALONE_UEFI_ $(CFLAGS) $(VGA_FILES)
 	$(LD) -T $(LINKIN_EFI) -o $(KERNEL) ./*.o ./kern/*.o
-	strip $(KERNEL)
+	#strip $(KERNEL)
 	
 img-efi: 	kernel-efi
 	mkdir -p build/EFI/Feral
