@@ -83,9 +83,9 @@ STRING GetEfiFirmwareClaim()
 VOID kern_init(EfiBootInfo *BootInfo)
 {
 	UINT32 *FramebufferTemp = (UINT32 *)(BootInfo->FramebufferPAddrs[2]);
-	for (int i = 0; i < (UINT32 *)(BootInfo->FramebufferPAddrs[0]); ++i)
+	for (int i = 0; i < (UINT32 *)(BootInfo->FramebufferPAddrs[1]); ++i)
 	{
-		for (int k = 0; k < (UINT32 *)(BootInfo->FramebufferPAddrs[1]);
+		for (int k = 0; k < (UINT32 *)(BootInfo->FramebufferPAddrs[0]);
 			++k)
 		{
 			UINT32 FBVal = 0xFFFFFFFF;
