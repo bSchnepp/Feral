@@ -45,7 +45,6 @@ _start64:
 	rep stosb
 
 .map_page_tables:
-	
 	; Use huge pages (2MB), map at 2MB * ecx.
 	mov rax, 0x200000
 	mul rcx
@@ -138,10 +137,6 @@ bss_end:
 section .data
 ; Store our multiboot pointer.
 efi_value dd 0
-
-; For if loaded in multiboot 2 efi.
-efi_image dq 0
-efi_systab dq 0
 
 ALIGN 4096
 p4_table:

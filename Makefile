@@ -24,6 +24,8 @@ kernel:
 	 
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES)
+	# hack to avoid build conflict with efi
+	rm -rf init64.o
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
 	
 kernel-efi:

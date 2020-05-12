@@ -108,7 +108,7 @@ VOID InternalVgaPrintln(STRING Str, UINT64 Len);
 
 STRING GetBiosFirmwareClaim()
 {
-	return "PC Compatible BIOS";
+	return "PC Compatible BIOS (Multiboot 2)";
 }
 
 
@@ -433,21 +433,5 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 	}
 	return STATUS_SUCCESS;
 }
-
-#ifndef _NO_UEFI_STUB_
-static EFI_HANDLE ImageHandle;
-static EFI_SYSTEM_TABLE *SystemTable;
-
-EFI_STATUS EFIAPI mb2_uefi_main(EFI_HANDLE mImageHandle,
-	EFI_SYSTEM_TABLE *mSystemTable)
-{
-	SystemTable->ConOut->OutputString(SystemTable->ConOut,
-		L"Hello, world!\r\n");
-	for (;;)
-	{
-	}
-	return STATUS_SUCCESS;
-}
-#endif
 
 #endif

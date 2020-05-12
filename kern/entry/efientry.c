@@ -82,7 +82,12 @@ STRING GetEfiFirmwareClaim()
 
 VOID kern_init(EfiBootInfo *BootInfo)
 {
-	/*  Issue is now the framebuffers aren't mapped in memory. */
+	/*  Issue is now the framebuffers aren't mapped in memory. 
+	 *  We'll need to put the EFI stuff somewhere in the first 2MB,
+	 *  so the kernel can read that data.
+	 *  (BootInfo right now is wherever EFI feels like it...)
+	 */
+#if 0
 	UINT32 *FramebufferTemp = (UINT32 *)(BootInfo->FramebufferPAddrs[2]);
 	for (int i = 0; i < (UINT32 *)(BootInfo->FramebufferPAddrs[1]); ++i)
 	{
@@ -93,6 +98,7 @@ VOID kern_init(EfiBootInfo *BootInfo)
 			FramebufferTemp[i] = FBVal;
 		}
 	}
+#endif
 
 
 	/* Set up the character map. */

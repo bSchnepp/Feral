@@ -192,7 +192,6 @@ BOOL EfiAllocAddr(UINT64 Amt, VOID *Ptr, BOOL Code)
 	return Status == EFI_SUCCESS;
 }
 
-
 EFI_STATUS ValidateElfHeader(ElfHeader64 *Header)
 {
 	/* Check the header... */

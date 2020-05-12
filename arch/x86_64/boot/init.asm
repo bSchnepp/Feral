@@ -38,12 +38,6 @@ header_start:
 	dw 7
 	dw 0
 	dd 8
-	
-	; The location for the entry point for uefi
-	dw 9
-	dw 0
-	dd 16
-	dd uefi_trampoline
 
 	; This end structure is required by Multiboot.
 	dw 0
@@ -89,18 +83,6 @@ gdt_64:
 	dq gdt_64	; The pointer that the GDT wants.
 
 section .earlytext
-
-BITS 64
-extern mb2_uefi_main
-uefi_trampoline:
-	; Play a little game to do a far return.
-	; Call is really 'push rax' (in a way), and
-	; we'll do that explicitly to do a far jump.
-	mov rax, (mb2_uefi_main + 0)
-	push rax
-	retf
-	jmp $
-BITS 32
 
 global _start
 _start:
