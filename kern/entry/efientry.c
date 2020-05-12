@@ -87,18 +87,16 @@ VOID kern_init(EfiBootInfo *BootInfo)
 	 *  so the kernel can read that data.
 	 *  (BootInfo right now is wherever EFI feels like it...)
 	 */
-#if 0
+
 	UINT32 *FramebufferTemp = (UINT32 *)(BootInfo->FramebufferPAddrs[2]);
-	for (int i = 0; i < (UINT32 *)(BootInfo->FramebufferPAddrs[1]); ++i)
+	for (int i = 0; i < (BootInfo->FramebufferPAddrs[1]); ++i)
 	{
-		for (int k = 0; k < (UINT32 *)(BootInfo->FramebufferPAddrs[0]);
-			++k)
+		for (int k = 0; k < (BootInfo->FramebufferPAddrs[0]); ++k)
 		{
 			UINT32 FBVal = 0xFFFFFFFF;
-			FramebufferTemp[i] = FBVal;
+			//FramebufferTemp[i] = FBVal;
 		}
 	}
-#endif
 
 
 	/* Set up the character map. */

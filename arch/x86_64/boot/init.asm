@@ -30,10 +30,6 @@ header_start:
 	dw 0
 	dd 8
 	
-	
-	; In the case of UEFI-MB2, we want to use a wrapper to call
-	; what we were going to do anyway.
-	
 	; Boot services tag (we have a multiboot2-->bare uefi trampoline)
 	dw 7
 	dw 0

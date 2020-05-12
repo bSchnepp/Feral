@@ -77,9 +77,6 @@ static EFI_SYSTEM_TABLE *SystemTable;
 /* Firmware function to open stuff. */
 static EFI_OPEN_PROTOCOL OpenProtocol;
 
-/* The boot info to give to the kernel... */
-static EfiBootInfo *EnvBlock = NULLPTR;
-
 static CHAR16 *KernelLoc = L"\\EFI\\Feral\\FERALKER.NEL";
 
 VOID WriteMessage(CHAR16 *String)
@@ -189,6 +186,34 @@ BOOL EfiAllocAddr(UINT64 Amt, VOID *Ptr, BOOL Code)
 		BytesToEfiPages(Amt),
 		Ptr);
 
+	return Status == EFI_SUCCESS;
+}
+
+/**
+ * Allocates some memory which does not exceed a certain area.
+ * @author Brian Schnepp
+ * 
+ * @param Amt The amount, in bytes, to have allocated.
+ * @param Ptr The resulting area where memory was allocated
+ * @param MaxAddress The maximum address of the last byte of the allocation.
+ * @param Code True if this should be executable, false otherwise.
+ */
+BOOL EfiAllocMaxAddr(UINT64 Amt, VOID **Ptr, UINTN MaxAddress, BOOL Code)
+{
+	EFI_MEMORY_TYPE MemType =  EfiRuntimeServicesData;
+	if (Code)
+	{
+		MemType = EfiRuntimeServicesCode;
+	}
+
+	UINTN Addr = (MaxAddress - Amt);
+	EFI_STATUS Status = SystemTable->BootServices->AllocatePages(
+		AllocateMaxAddress,
+		MemType,
+		BytesToEfiPages(Amt),
+		&(Addr));
+
+	*Ptr = Addr;
 	return Status == EFI_SUCCESS;
 }
 
@@ -459,11 +484,10 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	/* Get the locations for the video buffers...
 	 * The kernel accepts an "array of structs" style pointer
 	 * where the beginning, end, and display data are all defined.
-	 * For now, allocate a little extra space for debugging.
 	 */
 	UINT_PTR *DisplayBuffers = NULLPTR;
-	EfiMalloc((sizeof(UINT_PTR) * NumDisplays * 4),
-		&DisplayBuffers);
+	EfiAllocMaxAddr((sizeof(UINT_PTR) * NumDisplays * 3),
+		&DisplayBuffers, 2 * 1024 * 1024, FALSE);
 	SetupEfiFramebufferData(VideoBuffers, DisplayBuffers, NumDisplays);
 
 	/* Check for protocols necessary to mess with filesystem. */
@@ -536,12 +560,6 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	SystemTable->ConOut->OutputString(SystemTable->ConOut,
 		L"\r\n");
 
-	if (DisplayBuffers[0] != 640 || DisplayBuffers[1] != 480)
-	{
-		SystemTable->ConOut->OutputString(SystemTable->ConOut,
-			L"Display buffers was corrupted...");
-	}
-
 	/* Close the file...  */
 	KernelImage->Close(KernelImage);
 
@@ -584,8 +602,17 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	EfiMalloc((sizeof(EfiMemoryRange) * NumMemoryRanges),
 		(void **)&MemoryRanges);
 
-	EfiMalloc((sizeof(EfiBootInfo)),
-		(void **)&EnvBlock);
+
+	EfiBootInfo *EnvBlock = NULLPTR;
+	/* Don't allocate above 2MB. */
+	if (!EfiAllocMaxAddr(sizeof(EfiBootInfo), 
+		(void **)&EnvBlock, 
+		2 * 1024 * 1024, 
+		FALSE))
+	{
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			L"Firmware ran out of memory. Trying anyway.\r\n");
+	}
 
 	InternalItoaBaseChange(EnvBlock, ItoaBuf, 16);
 	SystemTable->ConOut->OutputString(SystemTable->ConOut,
