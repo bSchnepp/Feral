@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018,2019 Brian Schnepp
+Copyright (c) 2018,2019,2020 Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
 obtaining  a copy of the software and accompanying documentation covered by 
@@ -39,7 +39,7 @@ extern "C"
 {
 #endif
 
-	typedef struct DRIVER_OBJECT
+	typedef struct DriverObject
 	{
 		STRING ObjectName;
 		FERAL_OBJECT_TYPE ObjectType;
@@ -64,15 +64,12 @@ extern "C"
 		UINT64 RESERVED4;
 
 		VOID* ObjectPointer; /* Pointer to the object in question. */
-	} DRIVER_OBJECT;
-
-	/* Compatibility */
-	typedef DRIVER_OBJECT DriverObject;
+	}DriverObject;
 
 	typedef struct
 	{
-		DRIVER_OBJECT Object;
-	} FERAL_DRIVER_CREATE_CONTEXT, FeralDriverCreateContext;
+		DriverObject Object;
+	} FeralDriverCreateContext;
 
 	typedef struct FERAL_DRIVER
 	{
@@ -82,8 +79,7 @@ extern "C"
 		'DUAL:[<LICENSE1>,<LICENSE2>]' for dual-licenses. We don't 
 		actually _do anything_ with that, it's just so that when loaded,
 		you can see what is non-free and whatever if you care about that
-		sort of stuff.
-	 */
+		sort of stuff. */
 		STRING LicenceName;
 
 		/* Reference to the object we're controlling in question. */
@@ -96,20 +92,16 @@ extern "C"
 		/*
 		The main function as the kernel calls.
 		The kernel passes a DriverObject to it, sees if the driver likes it, along with the associated configuration
-		in the record mangement system if applicable.
-	*/
-		FERALSTATUS (*DriverInit)
-		(IN FERALOBJECT* Object, IN WSTRING RmsPath);
+		in the record mangement system if applicable. */
+		FERALSTATUS (*DriverInit) (IN FERALOBJECT* Object, IN WSTRING RmsPath);
 
-		/*
-	// Destructor for the driver.
-	// This is called whenever the kernel intends to either restart or outright shut down the driver.
-	// (For example, a driver fault, and the kernel tries to save the system by shutting down the driver.)
-	// Keep in mind this is in kernel-space, and you should free whatever you allocated.
-	// You should also check for failure and all, ensure you do _not_ corrupt memory.
-	// Your driver may also be unloaded if a higher priority driver is detected later on during boot time.
-	// Ensure your priority is correct.
-	*/
+		/* Destructor for the driver.
+		 * This is called whenever the kernel intends to either restart or outright shut down the driver.
+		 * (For example, a driver fault, and the kernel tries to save the system by shutting down the driver.)
+		 * Keep in mind this is in kernel-space, and you should free whatever you allocated.
+		 * You should also check for failure and all, ensure you do _not_ corrupt memory.
+		 * Your driver may also be unloaded if a higher priority driver is detected later on during boot time.
+		 * Ensure your priority is correct. */
 		FERALSTATUS (*DriverExit)
 		(VOID);
 

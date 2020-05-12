@@ -27,8 +27,6 @@ IN THE SOFTWARE.
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
 
-#include <bogus/fluff.h>
-
 #if defined(__cplusplus)
 extern "C"
 {
@@ -36,7 +34,7 @@ extern "C"
 
 	typedef enum
 	{
-		FORMAT_TYPE_ELF,
+		FORMAT_TYPE_ELF = 0x0000,
 		FORMAT_TYPE_COFF,
 		FORMAT_TYPE_PE,
 		FORMAT_TYPE_MACHO,
@@ -45,39 +43,8 @@ extern "C"
 		FORMAT_TYPE_MZ,// Legacy *-DOS executable
 		FORMAT_TYPE_AOUT,
 		FORMAT_TYPE_COM,
-		FORMAT_TYPE_OTHER,
+		FORMAT_TYPE_OTHER = 0xFFFF,
 	} ExecutableFormat;
-
-	typedef enum
-	{
-		ELF_ARCH_NONE = 0x00,
-		ELF_ARCH_SPARC = 0x02,
-		ELF_ARCH_I386 = 0x03,
-		ELF_ARCH_MIPS = 0x08,
-		ELF_ARCH_POWER = 0x14,
-		ELF_ARCH_AARCH32 = 0x28,
-		ELF_ARCH_JCORE = 0x2A,
-		ELF_ARCH_IA64 = 0x32,
-		ELF_ARCH_X86_64 = 0x3E,
-		ELF_ARCH_AARCH64 = 0xB7,
-	} ElfFormatArchitecture;
-
-	typedef enum
-	{
-		ELF_SYSTEM_V = 0x00,
-
-		ELF_NETBSD = 0x02,
-		ELF_LINUX = 0x03,
-		ELF_GNU = 0x04,
-		ELF_INDIANA = 0x06,
-
-
-		ELF_FREEBSD = 0x09,
-
-
-		ELF_FERAL_WAYPOINT = 0xFE,
-	} ElfFormatIdentifier;
-
 
 	typedef struct
 	{
