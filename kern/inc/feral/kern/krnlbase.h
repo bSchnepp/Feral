@@ -34,6 +34,7 @@ IN THE SOFTWARE.
 /* Should complain whenever it's not some multiple of 8 bits. */
 typedef struct KrnlPhysicalDisplay
 {
+	UINT8 BitsPerAlpha;
 	UINT8 BitsPerRed;
 	UINT8 BitsPerGreen;
 	UINT8 BitsPerBlue;

@@ -49,6 +49,9 @@ IN THE SOFTWARE.
 #endif
 
 
+/* How much does the kernel */
+#define MAX_INIT_PAGED (2 * 1024 * 1024)
+
 #define EFI_PAGE_SIZE (4096)
 #define EFI_PAGE_SHIFT (12)
 #define EFI_PAGE_MAP (~(EFI_PAGE_SIZE - 1))
@@ -582,7 +585,10 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 
 	/* Add some area to actually hold the info. */
 	MapSize += (DescriptorSize << 1);
-	Result = EfiMalloc(MapSize, (void **)(&MemoryMap));
+	Result = EfiAllocMaxAddr(MapSize, 
+		(void **)(&MemoryMap), 
+		MAX_INIT_PAGED, 
+		FALSE);
 	if (Result != EFI_SUCCESS)
 	{
 		/* TODO... */
@@ -599,8 +605,8 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	UINT64 NumMemoryRanges = MapSize / DescriptorSize;
 	EfiMemoryRange *MemoryRanges = NULLPTR;
 
-	EfiMalloc((sizeof(EfiMemoryRange) * NumMemoryRanges),
-		(void **)&MemoryRanges);
+	EfiAllocMaxAddr((sizeof(EfiMemoryRange) * NumMemoryRanges),
+		(void **)&MemoryRanges, MAX_INIT_PAGED, FALSE);
 
 
 	EfiBootInfo *EnvBlock = NULLPTR;

@@ -109,6 +109,12 @@ VOID kern_init(EfiBootInfo *BootInfo)
 	CharMap.CharMap = DefaultCharMap;
 
 	FirmwareFuncs.GetFirmwareName = GetEfiFirmwareClaim;
+
+	EnvBlock.CharMap = &CharMap;
+	EnvBlock.FunctionTable = &FirmwareFuncs;
+
+	//KiSystemStartup(&EnvBlock);
+	for (;;){} /* Prevent leaving this function for whatever reason. */
 }
 
 
