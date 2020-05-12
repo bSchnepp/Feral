@@ -96,7 +96,7 @@ qemu-efi: 	img-efi
 	cp $(EFI_CODE) ./efi.bin
 	
 	# Instead of a normal ISO, we pretend the build directory is an ESP.
-	qemu-system-$(ARCH) $(CPU) -smp 2 -m 6G --enable-kvm -pflash ./efi.bin -hda fat:rw:build -net none
+	qemu-system-$(ARCH) $(CPU) -smp 2 -m 6G --enable-kvm -pflash ./efi.bin -hda fat:rw:build -net none -d int,cpu_reset -no-reboot -no-shutdown
 	rm -rf ./efi.bin
 	
 qemu-efi-lldb:	img-efi
@@ -106,9 +106,13 @@ qemu-efi-lldb:	img-efi
 
 qemu-nokvm-efi:	img-efi
 	cp $(EFI_CODE) ./efi.bin
-	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -pflash  ./efi.bin
+	qemu-system-$(ARCH) $(CPU) -smp 2 -m 6G -pflash ./efi.bin -hda fat:rw:build -net none
 	rm -rf ./efi.bin
 
+qemu-nokvm-efi-lldb:	img-efi
+	cp $(EFI_CODE) ./efi.bin
+	qemu-system-$(ARCH) $(CPU) -smp 2 -m 6G -pflash ./efi.bin -hda fat:rw:build -net none -S -s -d int,cpu_reset -no-reboot -no-shutdown
+	rm -rf ./efi.bin
 
 qemu-nokvm-unsupportedcpu-efi:	img-efi
 	cp $(EFI_CODE) ./efi.bin

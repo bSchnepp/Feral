@@ -1,4 +1,4 @@
-ENTRY(kern_init)
+ENTRY(_start64)
 
 SECTIONS
 {

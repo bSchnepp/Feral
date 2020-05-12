@@ -23,11 +23,6 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
  */
- 
-/*  New bootloader. 
- * We'll keep the old one in since this should really be
- * marked as 'staging'. 
- */
 
 /* NOTE: The terms "BIOS", "UEFI" and "firmware" are used INTERCHANGABLY.
  * For the PC-compatible BIOS, "PC-compatible BIOS" is used instead to
@@ -180,6 +175,51 @@ BOOL EfiMalloc(UINT64 Amt, VOID **Ptr)
 	return Status == EFI_SUCCESS;
 }
 
+BOOL EfiAllocAddr(UINT64 Amt, VOID *Ptr, BOOL Code)
+{
+	EFI_MEMORY_TYPE MemType =  EfiRuntimeServicesData;
+	if (Code)
+	{
+		MemType = EfiRuntimeServicesCode;
+	}
+
+	EFI_STATUS Status = SystemTable->BootServices->AllocatePages(
+		AllocateAddress,
+		MemType,
+		BytesToEfiPages(Amt),
+		Ptr);
+
+	return Status == EFI_SUCCESS;
+}
+
+
+EFI_STATUS ValidateElfHeader(ElfHeader64 *Header)
+{
+	/* Check the header... */
+	CHAR Match[4] = {0x7F, 'E', 'L', 'F'};
+	for (UINT32 Index = 0; Index < sizeof(Match); ++Index)
+	{
+		if (Header->magic[Index] != Match[Index])
+		{
+			return EFI_LOAD_ERROR;
+		}
+	}
+
+	if (Header->e_machine != MACHINE_ID_NONE
+		&& Header->e_machine != CUR_ARCH_ELF)
+	{
+		return EFI_LOAD_ERROR;
+	}
+
+	if (Header->e_phnum == 0)
+	{
+		SystemTable->ConOut->OutputString(SystemTable->ConOut,
+			L"Not an executable: missing program headers... \r\n");
+		return EFI_LOAD_ERROR;
+	}
+	return STATUS_SUCCESS;
+}
+
 EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 {
 	ElfHeader64 InitialHeader;
@@ -199,27 +239,10 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 		return Status;
 	}
 
-	/* Check the header... */
-	CHAR Match[4] = {0x7F, 'E', 'L', 'F'};
-	for (UINT32 Index = 0; Index < sizeof(Match); ++Index)
+	Status = ValidateElfHeader(&InitialHeader);
+	if (Status != EFI_SUCCESS)
 	{
-		if (InitialHeader.magic[Index] != Match[Index])
-		{
-			return EFI_LOAD_ERROR;
-		}
-	}
-
-	if (InitialHeader.e_machine != MACHINE_ID_NONE
-		&& InitialHeader.e_machine != CUR_ARCH_ELF)
-	{
-		return EFI_LOAD_ERROR;
-	}
-
-	if (InitialHeader.e_phnum == 0)
-	{
-		SystemTable->ConOut->OutputString(SystemTable->ConOut,
-			L"Not an executable: missing program headers... \r\n");
-		return EFI_LOAD_ERROR;
+		return Status;
 	}
 
 	UINT64 BaseAddr = 0;
@@ -231,64 +254,53 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 		File->SetPosition(File, InitialHeader.e_phoff
 					+ InitialHeader.e_phentsize * Index);
 
-		Status = SystemTable->BootServices->AllocatePages(
-			AllocateAnyPages, EfiLoaderData,
-			BytesToEfiPages(8 * 1024 * 1024),	/* Pre-allocate 8MB. */
-			&PAddress);
-
-		BaseAddr = PAddress;
-
 		/* Read it in... */
 		File->Read(File, &PHdrSize, &ProgramHeader);
 
 		if (ProgramHeader.p_type == PT_LOAD)
 		{
-			InternalItoaBaseChange(BytesToEfiPages(ProgramHeader.p_memsz), ItoaBuf, 10);
-			SystemTable->ConOut->OutputString(SystemTable->ConOut,
-				L"Attempting to allocate: ");
-			SystemTable->ConOut->OutputString(SystemTable->ConOut,
-				ItoaBuf);
-			SystemTable->ConOut->OutputString(SystemTable->ConOut,
-				L" pages at location 0x");
-			/* Correct wrong address */
-			InternalItoaBaseChange(BytesToEfiPages(ProgramHeader.p_paddr << 12), ItoaBuf, 16);
-			SystemTable->ConOut->OutputString(SystemTable->ConOut,
-				ItoaBuf);
-			SystemTable->ConOut->OutputString(SystemTable->ConOut,
-				L"\r\n");
+			EFI_PHYSICAL_ADDRESS PAddr
+				= ProgramHeader.p_vaddr;
+			if (PAddr > FERAL_VIRT_OFFSET)
+			{
+				PAddr -= FERAL_VIRT_OFFSET;
+			}
+			
+			/* 0x01 is the executable flag.
+			 * Remember to replicate that in the ELF header!
+			 *  (TODO on that)
+			 */
+			Status = EfiAllocAddr(ProgramHeader.p_memsz, 
+				PAddr, 
+				ProgramHeader.p_flags & 0x01);
 
 			if (Status != EFI_SUCCESS)
 			{
 				SystemTable->ConOut->OutputString(SystemTable->ConOut,
-					L"Kernel load error at: ");
-				InternalItoaBaseChange(PAddress, ItoaBuf, 16);
+					L"EfiAllocAddr failed...\r\n");
 				SystemTable->ConOut->OutputString(SystemTable->ConOut,
-					ItoaBuf);
-				SystemTable->ConOut->OutputString(SystemTable->ConOut,
-					L"\r\n");
-				SystemTable->BootServices->Stall(10000);
+					EfiErrorToString(Status));
+				SystemTable->BootServices->Stall(12500000);
 				return Status;
 			}
-
-			/* Zero it all out first... */
-			for (UINT32 Subindex = 0; Subindex < ProgramHeader.p_memsz;
-				++Subindex)
-			{
-				((CHAR *)(PAddress))[Subindex] = '\0';
-			}
-			/* Read all the data in. */
+			
+			/* Go ahead and bulldoze whatever memory was there,
+			 * and load the kernel there.
+			 */
 			Status = File->SetPosition(File, ProgramHeader.p_offset);
-
 			if (Status != EFI_SUCCESS)
 			{
-				SystemTable->ConOut->OutputString(SystemTable->ConOut,
-					L"Failed to setup kernel (file seek).\r\n");
-				SystemTable->BootServices->Stall(10000);
 				return Status;
 			}
-			UINTN PFilesz = ProgramHeader.p_filesz;
 
-			Status = File->Read(File, &(PFilesz), (VOID *)(PAddress));
+			/* Load the ELF contents to that location. */
+			UINT8 *EfiMem = NULLPTR;
+			UINTN FileSz = ProgramHeader.p_filesz;
+			Status = File->Read(
+				File, 
+				&FileSz, 
+				EfiMem);
+			
 			if (Status != EFI_SUCCESS)
 			{
 				SystemTable->ConOut->OutputString(SystemTable->ConOut,
@@ -298,23 +310,26 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 				SystemTable->BootServices->Stall(10000);
 			}
 
-			/* PAddr is in multiples of 4096. */
-			PAddress += ProgramHeader.p_paddr;
+			for (UINT64 Index = 0; Index < ProgramHeader.p_filesz; 
+				++Index)
+			{
+				UINT8 *Out = (UINT8*)(PAddr);
+				Out[Index] = EfiMem[Index];
+			}
 		}
 	}
-	/* Update this so that uefi_main is happy. */
-	UINT64 VirtMemAreaFree = PAddress + ProgramHeader.p_filesz + 4096;
-	VirtMemAreaFree += FERAL_VIRT_OFFSET;
-	/* align to 4k */
-	VirtMemAreaFree = VirtMemAreaFree & EFI_PAGE_MAP;
 
-	/* Entry is already in vaddr. */
-	*Entry = ((InitialHeader.e_entry) - FERAL_VIRT_OFFSET) + BaseAddr;
+	/* Entry is already in vaddr. Ensure we jump right. */
+	*Entry = (InitialHeader.e_entry);
+	if (*Entry > FERAL_VIRT_OFFSET)
+	{
+		*Entry -= FERAL_VIRT_OFFSET;
+	}
 
-	/* And tell the user that we found it! */
 	SystemTable->ConOut->OutputString(SystemTable->ConOut,
-		L"Kernel will be loaded with base: 0x");
-	InternalItoaBaseChange(BaseAddr, ItoaBuf, 16);
+		L"Kernel (virt) entry is at: 0x");
+	InternalItoaBaseChange(InitialHeader.e_entry, 
+		ItoaBuf, 16);
 	SystemTable->ConOut->OutputString(SystemTable->ConOut,
 		ItoaBuf);
 	SystemTable->ConOut->OutputString(SystemTable->ConOut,
@@ -528,14 +543,6 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 			L"Display buffers was corrupted...");
 	}
 
-	InternalItoaBaseChange(DisplayBuffers[2], ItoaBuf, 16);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut,
-		L"Framebuffer: 0x");
-	SystemTable->ConOut->OutputString(SystemTable->ConOut,
-		ItoaBuf);
-	SystemTable->ConOut->OutputString(SystemTable->ConOut,
-		L"\r\n");
-
 	/* Close the file...  */
 	KernelImage->Close(KernelImage);
 
@@ -609,12 +616,6 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 		MemoryRanges[Iterator].Usable = GetEfiMemoryMapToFreeOrNot(Current);
 		MemoryRanges[Iterator].Start = Begin;
 		MemoryRanges[Iterator].End = End;
-
-		if (MemoryRanges[Iterator].Usable)
-		{
-			SystemTable->ConOut->OutputString(SystemTable->ConOut,
-				L"Got a free region!\r\n");
-		}
 	}
 
 	EnvBlock->NumMemoryRanges = NumMemoryRanges;
@@ -633,7 +634,7 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	{
 		for (UINT64 Col = 0; Col < DisplayBuffers[0]; ++Col)
 		{
-			((UINT32*)(DisplayBuffers[2]))[(Row * DisplayBuffers[0]) + Col] = 0x000000FF;
+			//((UINT32*)(DisplayBuffers[2]))[(Row * DisplayBuffers[0]) + Col] = 0x000000FF;
 		}
 	}
 	kern_init(EnvBlock);

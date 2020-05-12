@@ -82,6 +82,7 @@ STRING GetEfiFirmwareClaim()
 
 VOID kern_init(EfiBootInfo *BootInfo)
 {
+	/*  Issue is now the framebuffers aren't mapped in memory. */
 	UINT32 *FramebufferTemp = (UINT32 *)(BootInfo->FramebufferPAddrs[2]);
 	for (int i = 0; i < (UINT32 *)(BootInfo->FramebufferPAddrs[1]); ++i)
 	{
@@ -92,6 +93,7 @@ VOID kern_init(EfiBootInfo *BootInfo)
 			FramebufferTemp[i] = FBVal;
 		}
 	}
+
 
 	/* Set up the character map. */
 	CharMap.CharMapWidth = 8;
