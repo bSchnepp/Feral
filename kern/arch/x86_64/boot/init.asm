@@ -5,6 +5,10 @@ MULTIBOOT_MAGIC EQU 0xE85250D6
 MULTIBOOT_ARCH_ EQU 0x00000000
 MULTIBOOT_SIZE_ EQU (header_end - header_start)
 
+extern p2_table
+extern p3_table
+extern p4_table
+
 ; FFFFFFFFC0000000, which is the full P4, P3, but entry 0 for P2.
 KERN_VIRT_OFFSET EQU 0xFFFFFFFFC0000000
 
@@ -252,22 +256,6 @@ endloop:
 	hlt
 	jmp endloop
 
-global get_initial_p4_table
-global get_initial_p3_table
-global get_initial_p2_table
-
-get_initial_p4_table:
-	mov rax, p4_table
-	ret
-
-get_initial_p3_table:
-	mov rax, p3_table
-	ret
-	
-get_initial_p2_table:
-	mov rax, p2_table
-	ret
-
 section .bss
 bss_start:
 
@@ -287,18 +275,3 @@ multiboot_value dd 0
 ; For if loaded in multiboot 2 efi.
 efi_image dq 0
 efi_systab dq 0
-
-ALIGN 4096
-p4_table:
-	dq (p3_table - KERN_VIRT_OFFSET) + 3
-	times 510 dq 0
-	dq (p3_table - KERN_VIRT_OFFSET) + 3
-	
-p3_table:
-	dq (p2_table - KERN_VIRT_OFFSET) + 3
-	times 510 dq 0
-	dq (p2_table - KERN_VIRT_OFFSET) + 3
-
-p2_table:
-	times 512 dq 0	; Declare 512 entries.
-	

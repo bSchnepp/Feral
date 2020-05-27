@@ -54,12 +54,6 @@ _start64:
 	inc rcx	; Increment it...
 	cmp rcx, 512	; P2 needs 512 entries. (one gigabyte of identity mapping.)
 	jne .map_page_tables
-	
-tlb_flush_pre_far_call:
-	mov rcx, cr3
-	mov cr3, rcx
-
-create_gdt:
 	lgdt [gdt_64.gdtpointer]
 	
 	
@@ -105,6 +99,10 @@ endloop:
 	sti ; Force enable interrupts, or else bad things happen!
 	hlt
 	jmp endloop
+
+global p4_table
+global p3_table
+global p2_table
 
 global get_initial_p4_table
 global get_initial_p3_table

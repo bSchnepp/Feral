@@ -618,6 +618,7 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	{
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			L"Firmware ran out of memory. Trying anyway.\r\n");
+		SystemTable->BootServices->Stall(125000);
 	}
 
 	InternalItoaBaseChange(EnvBlock, ItoaBuf, 16);
@@ -666,7 +667,10 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	{
 		for (UINT64 Col = 0; Col < DisplayBuffers[0]; ++Col)
 		{
-			//((UINT32*)(DisplayBuffers[2]))[(Row * DisplayBuffers[0]) + Col] = 0x000000FF;
+			/* Look a little pretty, and visually indicate boot
+			 * was successful. TODO: Diable if -v was passed in */
+			((UINT32*)(DisplayBuffers[2]))
+				[(Row * DisplayBuffers[0]) + Col] = 0x00161616;
 		}
 	}
 	kern_init(EnvBlock);

@@ -1,5 +1,0 @@
-/*
-	RISC-V initialization code...
- */
-
-

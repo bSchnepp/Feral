@@ -5,7 +5,7 @@ include arch/$(ARCH)/Archrules.mk
 
 
 INCLUDES += -Ikern/inc
-VGA_FILES != ls arch/$(ARCH)/vga/*.c
+VGA_FILES != ls kern/arch/$(ARCH)/vga/*.c
 
 # We still require GNU GRUB and xorriso for testing though...
 .PHONY:	all clean run iso kernel qemu qemu-nokvm
@@ -15,32 +15,26 @@ all:	kernel
 kernel:
 	mkdir -p build/$(ARCH)/	
 	
-	# Hack to support mb2
-	cd arch/x86_64 && make mb2-extra
-	cd arch && $(MAKE)
 	cd io && $(MAKE) 
 	cd drivers && $(MAKE)
 	cd kern && $(MAKE)
 	 
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES)
-	# hack to avoid build conflict with efi
-	rm -rf init64.o
-	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o ./kern/*.o
+	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o
 	
 kernel-efi:
 	mkdir -p build/$(ARCH)/
 	mkdir -p build/EFI/Boot
 	mkdir -p build/EFI/Feral
 	
-	cd arch && $(MAKE)
 	cd io && $(MAKE) 
 	cd drivers && $(MAKE)
 	cd kern && $(MAKE) all-efi
 	 
 	$(CC) $(TARGET) -I$(INCLUDES) -DFERAL_BUILD_STANDALONE_UEFI_ $(CFLAGS) ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) -DFERAL_BUILD_STANDALONE_UEFI_ $(CFLAGS) $(VGA_FILES)
-	$(LD) -T $(LINKIN_EFI) -o $(KERNEL) ./*.o ./kern/*.o
+	$(LD) -T $(LINKIN_EFI) -o $(KERNEL) ./*.o
 	#strip $(KERNEL)
 	
 img-efi: 	kernel-efi

@@ -24,12 +24,14 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+#include <feral/stdtypes.h>
+#include <feral/feralstatus.h>
 #include <arch/x86_64/mm/pageflags.h>
 
 
 BOOL CheckIfMapped(PageMapEntry *Entry)
 {
-	return (Entry->Present);
+	return (Entry->PresentFlag);
 }
 
 UINT_PTR ConvertPageEntryToAddress(PageMapEntry *Entry)
@@ -57,6 +59,7 @@ FERALSTATUS MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
 		return Err;
 	}
 
+	PageMapEntry OrigEntry = PML4[PageLevels[3]];
 	PageMapEntry* Level3Table = (PageMapEntry*)(PML4[PageLevels[3]);
 	PageMapEntry* Level2Table = (PageMapEntry*)(
 		ConvertPageEntryToAddress(Level3Table)[PageLevels[2]
@@ -65,7 +68,8 @@ FERALSTATUS MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
 		ConvertPageEntryToAddress(Level2Table)[PageLevels[1]
 	);
 
-	PageMapEntry *FinalLevel = (PageMapEntry *)(ConvertPageEntryToAddress(Level1Table)[PageLevels0]);
+	PageMapEntry *FinalLevel = (PageMapEntry *)(ConvertPageEntryToAddress(
+		Level1Table)[PageLevels[0]]);
 
 	return STATUS_SUCCESS;
 }
