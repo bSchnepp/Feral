@@ -23,4 +23,5 @@ all-efi:
 	mv *.o ../
 	
 clean:
+	cd arch && $(MAKE) clean
 	rm -rf ./*.o

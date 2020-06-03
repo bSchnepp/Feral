@@ -1,6 +1,6 @@
 include ../../../Makerules
 
-FILES += vga/*.c archstart.c
+FILES += vga/*.c mm/*.c archstart.c
 CFLAGS += -I../inc -I../ -I../../ -I../../../ -I../../../kern/inc -I../../../inc
 
 all:
@@ -12,3 +12,4 @@ all:
 	
 clean:
 	rm -rf *.o
+	rm -rf boot/*.o

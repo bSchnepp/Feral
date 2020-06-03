@@ -59,20 +59,5 @@ FERALSTATUS MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
 		return Err;
 	}
 
-	PageMapEntry OrigEntry = PML4[PageLevels[3]];
-	PageMapEntry* Level3Table = (PageMapEntry*)(PML4[PageLevels[3]);
-	PageMapEntry* Level2Table = (PageMapEntry*)(
-		ConvertPageEntryToAddress(Level3Table)[PageLevels[2]
-	);
-	PageMapEntry* Level1Table = (PageMapEntry*)(
-		ConvertPageEntryToAddress(Level2Table)[PageLevels[1]
-	);
-
-	PageMapEntry *FinalLevel = (PageMapEntry *)(ConvertPageEntryToAddress(
-		Level1Table)[PageLevels[0]]);
-
 	return STATUS_SUCCESS;
 }
-
-
-FERALSTATUS CreateNewPageTable(
