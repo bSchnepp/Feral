@@ -45,6 +45,26 @@ UINT_PTR ConvertPageEntryToAddress(PageMapEntry *Entry)
 	return (UINT_PTR)(UnhandledAddress);
 }
 
+/**
+ * Finds the page levels required to allocate a specific, 4KiB aligned
+ * address. Initial address is assumed to be aligned at 4KiB.
+ * @author Brian Schnepp
+ * @param Address The physical address to look up allocation for
+ * @param Levels An array of 4 UINT16s which, from left to right,
+ * will be written to with the order of level 1 page table to level 4
+ * page table. In other words, the the least signifigant entry is the
+ * first in the table.
+ * @return STATUS_SUCCESS if valid
+ */
+FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels)
+{
+	Levels[0] = (Address >> 12) & 0x1FF;
+	Levels[1] = (Address >> 21) & 0x1FF;
+	Levels[2] = (Address >> 30) & 0x1FF;
+	Levels[3] = (Address >> 39) & 0x1FF;
+	return STATUS_SUCCESS;
+}
+
 FERALSTATUS MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
 {
 	/* Shift over 12 bytes, to get to level 4 table immediately. */
@@ -58,6 +78,7 @@ FERALSTATUS MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
 	{
 		return Err;
 	}
+
 
 	return STATUS_SUCCESS;
 }

@@ -86,33 +86,6 @@ typedef struct PageMapEntry
 	UINT8 NoExecuteFlag : 1;
 } PACKED PageMapEntry;
 
-
-/**
- * Finds the page levels required to allocate a specific, 4KiB aligned
- * address. Initial address is assumed to be aligned at 4KiB.
- * @author Brian Schnepp
- * @param Address The physical address to look up allocation for
- * @param Levels An array of 4 UINT16s which, from left to right,
- * will be written to with the order of level 1 page table to level 4
- * page table. In other words, the the least signifigant entry is the
- * first in the table.
- */
-inline FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels)
-{
-	/* Split into 9 bit chunks. Only 4 levels to worry about. */
-	UINT64 Remainder = Address;
-
-	/* Some state variables to hold the current locations. */
-	UINT16 Current = 0;
-	UINT8 Index = 0;
-	while (Index < 3)
-	{
-		Current = Remainder & X86_PAGE_LEVEL_BITMASK;
-		Remainder >>= 9;
-		Levels[Index] = Current;
-		Index++;
-	}
-	return STATUS_SUCCESS;
-}
+FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels);
 
 #endif
