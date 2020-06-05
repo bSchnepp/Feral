@@ -28,6 +28,8 @@ IN THE SOFTWARE.
 #include <feral/feralstatus.h>
 #include <arch/x86_64/mm/pageflags.h>
 
+#include <mm/mm.h>
+#include <feral/kern/krnlfuncs.h>
 
 BOOL CheckIfMapped(PageMapEntry *Entry)
 {
@@ -51,8 +53,8 @@ UINT_PTR ConvertPageEntryToAddress(PageMapEntry *Entry)
  * @author Brian Schnepp
  * @param Address The physical address to look up allocation for
  * @param Levels An array of 4 UINT16s which, from left to right,
- * will be written to with the order of level 1 page table to level 4
- * page table. In other words, the the least signifigant entry is the
+ * will be written to with the order of level 4 page table to level 1
+ * page table. In other words, the the most signifigant entry is the
  * first in the table.
  * @return STATUS_SUCCESS if valid
  */
@@ -65,7 +67,23 @@ FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels)
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
+/**
+ * Maps an address given a handle to the PML4, in virtual memory,
+ * to a physical address and a desired virtual address.
+ * A physical address can be bound to several different virtual
+ * addresses, but a virtual address cannot be unbound with this function.
+ * 
+ * @author Brian Schnepp
+ * 
+ * @param PML4 The PML4 to reference, which is usually retrived from the CR3
+ * register
+ * @param Physical The desired physical address to map
+ * @param Virtual The desired virtual address to map the Physical address to
+ * 
+ * @return STATUS_SUCCESS on success, STATUS_MEMORY_PAGE_FAILURE if the
+ * virtual address is already in use
+ */
+FERALSTATUS x86MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
 {
 	/* Shift over 12 bytes, to get to level 4 table immediately. */
 	UINT64 Addr = Physical >> 12;
@@ -79,6 +97,136 @@ FERALSTATUS MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
 		return Err;
 	}
 
+	/* TODO: Consider rolling this into a simple loop. */
+
+	/* From the PML4, we need to find the pdpe entry. */
+	PageMapEntry *PDP = NULLPTR;
+	if (PML4[PageLevels[0]].PresentFlag)
+	{
+		PDP = (PageMapEntry*)(PML4[PageLevels[0]].Address << 12);
+	} else {
+		/* Create new page entry */
+		PDP = (PageMapEntry*)MmKernelMalloc(sizeof(PageMapEntry) * 512);
+		KiSetMemoryBytes(PDP, 0, sizeof(PageMapEntry) * 512);
+
+		/* Add in the entry */
+		PML4[PageLevels[0]].Address = (((UINT64)PDP) >> 12);
+		PML4[PageLevels[0]].PresentFlag = TRUE;
+		PML4[PageLevels[0]].WritableFlag = TRUE;
+	}
+
+	/* Again for level 3... */
+	PageMapEntry *PD = NULLPTR;
+	if (PDP[PageLevels[1]].PresentFlag)
+	{
+		PD = (PageMapEntry*)(PDP[PageLevels[1]].Address << 12);
+	} else {
+		/* Create new page entry */
+		PD = (PageMapEntry*)MmKernelMalloc(sizeof(PageMapEntry) * 512);
+		KiSetMemoryBytes(PD, 0, sizeof(PageMapEntry) * 512);
+
+		/* Add in the entry */
+		PDP[PageLevels[1]].Address = (((UINT64)PD) >> 12);
+		PDP[PageLevels[1]].PresentFlag = TRUE;
+		PDP[PageLevels[1]].WritableFlag = TRUE;
+	}
+
+	/* Again for level 2... */
+	PageMapEntry *PT = NULLPTR;
+	if (PD[PageLevels[2]].PresentFlag)
+	{
+		PT = (PageMapEntry*)(PD[PageLevels[2]].Address << 12);
+	} else {
+		/* Create new page entry */
+		PT = (PageMapEntry*)MmKernelMalloc(sizeof(PageMapEntry) * 512);
+		KiSetMemoryBytes(PT, 0, sizeof(PageMapEntry) * 512);
+
+		/* Add in the entry */
+		PD[PageLevels[2]].Address = (((UINT64)PT) >> 12);
+		PD[PageLevels[2]].PresentFlag = TRUE;
+		PD[PageLevels[2]].WritableFlag = TRUE;
+	}
+
+	/* Again for level 1... */
+	if (PT[PageLevels[3]].PresentFlag)
+	{
+		return STATUS_MEMORY_PAGE_FAILURE;
+	} else {
+		PT[PageLevels[3]].Address = (((UINT64)Physical) >> 12);
+		PT[PageLevels[3]].PresentFlag = TRUE;
+		PT[PageLevels[3]].WritableFlag = TRUE;
+	}
+
+	return STATUS_SUCCESS;
+}
+
+/**
+ * Unmaps an address given a handle to the PML4, in virtual memory,
+ * to a physical address and a desired virtual address.
+ * Note that a virtual address has a many-to-one relationship with a physical
+ * address, and unbinding a particular virtual address may not make a given
+ * physical address unreachable if it happens to be mapped to more than one
+ * location.
+ * 
+ * @author Brian Schnepp
+ * 
+ * @param PML4 The PML4 to reference, which is usually retrived from the CR3
+ * register
+ * @param Virtual The desired virtual address to unmap
+ * 
+ * @return STATUS_SUCCESS on success, STATUS_MEMORY_PAGE_FAILURE if the
+ * virtual address was not already in use
+ */
+FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
+{
+	UINT16 Bitmask = 0xFFF; /* For now, only do 4096 byte pages. */
+
+	UINT16 PageLevels[4];
+	FERALSTATUS Err = x86FindPageLevels(Virtual, PageLevels);
+
+	if (Err != STATUS_SUCCESS)
+	{
+		return Err;
+	}
+
+	/* TODO: Consider rolling this into a simple loop. */
+
+	/* From the PML4, we need to find the pdpe entry. */
+	PageMapEntry *PDP = NULLPTR;
+	if (PML4[PageLevels[0]].PresentFlag)
+	{
+		PDP = (PageMapEntry*)(PML4[PageLevels[0]].Address << 12);
+	} else {
+		return STATUS_MEMORY_PAGE_FAILURE;
+	}
+
+	/* Again for level 3... */
+	PageMapEntry *PD = NULLPTR;
+	if (PDP[PageLevels[1]].PresentFlag)
+	{
+		PD = (PageMapEntry*)(PDP[PageLevels[1]].Address << 12);
+	} else {
+		return STATUS_MEMORY_PAGE_FAILURE;
+	}
+
+	/* Again for level 2... */
+	PageMapEntry *PT = NULLPTR;
+	if (PD[PageLevels[2]].PresentFlag)
+	{
+		PT = (PageMapEntry*)(PD[PageLevels[2]].Address << 12);
+	} else {
+		return STATUS_MEMORY_PAGE_FAILURE;
+	}
+
+	/* Again for level 1... */
+	if (PT[PageLevels[3]].PresentFlag)
+	{
+		PT[PageLevels[3]].PresentFlag = FALSE;
+		PT[PageLevels[3]].WritableFlag = FALSE;
+		PT[PageLevels[3]].Address = 0x00;
+	} else {
+		return STATUS_MEMORY_PAGE_FAILURE;
+	}
 
 	return STATUS_SUCCESS;
 }

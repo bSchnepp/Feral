@@ -489,3 +489,15 @@ volatile void x86SetupIDTEntries()
 	x86IDTSetGate(0x21, (UINT_PTR)(PS2KeyboardHandler), 0x08, 0x8E);
 	x86IDTSetGate(0x2C, (UINT_PTR)(PS2KeyboardHandler), 0x08, 0x8E);
 }
+
+VOID KiRestoreInterrupts(BOOLEAN value)
+{
+	if (value)
+	{
+		__asm__ __volatile__("sti");
+	}
+	else
+	{
+		__asm__ __volatile__("cli");
+	}
+}

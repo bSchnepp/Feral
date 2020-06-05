@@ -71,7 +71,7 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 		VersionInfo.FeralVersionMinor,
 		VersionInfo.FeralVersionPatch);
 
-	KiPrintLine("Copyright (c) 2018-2019, Brian Schnepp");
+	KiPrintLine("Copyright (c) 2018-2020, Brian Schnepp");
 	KiPrintFmt("Booted using %s\n",
 		EnvBlock->FunctionTable->GetFirmwareName());
 	KiPrintFmt("%s\n", "Preparing execution environment...");
@@ -99,7 +99,6 @@ VOID KiStartupProcessor(UINT64 ProcessorNumber)
 {
 	/*  Create a new stack for this core. */
 }
-
 
 
 FERALSTATUS KeBootstrapSystem(VOID)
