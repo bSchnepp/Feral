@@ -1,4 +1,0 @@
-We'll need to do some things in order to get drivers to load:
-
-	- Shared object loader (drivers are just shared objects with a special permission, located under A:/System/Drivers/)
-		- (Said drivers can export to the filesystem, so they can expose 'A:/System/APIs/libvulkan.so.1'.

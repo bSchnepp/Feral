@@ -1,5 +1,0 @@
-TODO: Work on this driver
-This is for COFFEE LAKE, WHISKEY LAKE, and maybe we can get it to work for KABY LAKE and SKYLAKE.
-
-I don't have any hardware for testing this (other than the very same machine I had initially started developing Feral on, if it still works),
-But these are all i915-compatible, so it should *just work*.

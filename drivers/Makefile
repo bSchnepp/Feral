@@ -1,6 +1,6 @@
 include ../Makerules
 
-all:	device gpu proc
+all:	device proc
 	# $(CC) $(CFLAGS) devices.o -o ../drivers.o
 	mv devices.o ../driver.o
 
@@ -8,9 +8,6 @@ all:	device gpu proc
 
 device:
 	cd devices && $(MAKE)
-
-gpu:
-	cd gpu && $(MAKE)
 
 proc:
 	cd proc && $(MAKE)
