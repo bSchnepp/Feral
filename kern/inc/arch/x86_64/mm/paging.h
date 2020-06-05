@@ -32,7 +32,7 @@ IN THE SOFTWARE.
 #ifndef _FERAL_PAGING_H_
 #define _FERAL_PAGING_H_
 
-FERALSTATUS 
+FERALSTATUS
 x86MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual);
 
 

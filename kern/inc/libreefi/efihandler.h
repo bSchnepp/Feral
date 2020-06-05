@@ -25,7 +25,7 @@ IN THE SOFTWARE.
  */
 
 #include <libreefi/efistatus.h>
- 
+
 #ifndef _LIBREEFI_EFIHANDLER_H_
 #define _LIBREEFI_EFIHANDLER_H_
 

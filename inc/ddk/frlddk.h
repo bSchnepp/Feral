@@ -64,7 +64,7 @@ extern "C"
 		UINT64 RESERVED4;
 
 		VOID* ObjectPointer; /* Pointer to the object in question. */
-	}DriverObject;
+	} DriverObject;
 
 	typedef struct
 	{
@@ -93,7 +93,8 @@ extern "C"
 		The main function as the kernel calls.
 		The kernel passes a DriverObject to it, sees if the driver likes it, along with the associated configuration
 		in the record mangement system if applicable. */
-		FERALSTATUS (*DriverInit) (IN FERALOBJECT* Object, IN WSTRING RmsPath);
+		FERALSTATUS (*DriverInit)
+		(IN FERALOBJECT* Object, IN WSTRING RmsPath);
 
 		/* Destructor for the driver.
 		 * This is called whenever the kernel intends to either restart or outright shut down the driver.
@@ -102,11 +103,11 @@ extern "C"
 		 * You should also check for failure and all, ensure you do _not_ corrupt memory.
 		 * Your driver may also be unloaded if a higher priority driver is detected later on during boot time.
 		 * Ensure your priority is correct. */
-		FERALSTATUS (*DriverExit)
+		FERALSTATUS(*DriverExit)
 		(VOID);
 
 		/* Arbitrary input (can be anything!!!) */
-		FERALSTATUS (*DriverDispatch)
+		FERALSTATUS(*DriverDispatch)
 		(UINT64 NumArgs, VOID** Stuff);
 
 

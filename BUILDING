@@ -1,3 +1,21 @@
+Dependencies are:
+GNU xorriso
+BSD Make (installed as 'bmake'.) This is NOT compatible with GNU Make.
+LLVM/Clang
+NASM
+
+For testing
+_______________
+QEMU (KVM optional, use qemu-nokvm instead if not on Linux)
+OVMF (For UEFI port, and for testing only in QEMU.)
+
+___
+Getting Started:
+
+pacman -S clang lld xorriso llvm nasm bmake
+
+
+
 # (ADAPT TO YOUR DISTRO)
 
 sudo pacman -S nasm

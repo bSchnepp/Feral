@@ -58,18 +58,13 @@ IN THE SOFTWARE.
 #define FERAL_VIRT_OFFSET (0xFFFFFFFFC0000000)
 
 /* We need these GUIDs to load the protocols we want. */
-static 
-EFI_GUID GuidEfiLoadedImageProtocol = EFI_LOADED_IMAGE_PROTOCOL_GUID;
+static EFI_GUID GuidEfiLoadedImageProtocol = EFI_LOADED_IMAGE_PROTOCOL_GUID;
 
-static 
-EFI_GUID GuidEfiSimpleFSProtocol = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
+static EFI_GUID GuidEfiSimpleFSProtocol = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
 
-static 
-EFI_GUID GuidEfiFileInfoGuid = EFI_FILE_INFO_ID;
+static EFI_GUID GuidEfiFileInfoGuid = EFI_FILE_INFO_ID;
 
-static 
-EFI_GUID GuidEfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
-
+static EFI_GUID GuidEfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
 
 
@@ -177,7 +172,7 @@ BOOL EfiMalloc(UINT64 Amt, VOID **Ptr)
 
 BOOL EfiAllocAddr(UINT64 Amt, VOID *Ptr, BOOL Code)
 {
-	EFI_MEMORY_TYPE MemType =  EfiRuntimeServicesData;
+	EFI_MEMORY_TYPE MemType = EfiRuntimeServicesData;
 	if (Code)
 	{
 		MemType = EfiRuntimeServicesCode;
@@ -203,7 +198,7 @@ BOOL EfiAllocAddr(UINT64 Amt, VOID *Ptr, BOOL Code)
  */
 BOOL EfiAllocMaxAddr(UINT64 Amt, VOID **Ptr, UINTN MaxAddress, BOOL Code)
 {
-	EFI_MEMORY_TYPE MemType =  EfiRuntimeServicesData;
+	EFI_MEMORY_TYPE MemType = EfiRuntimeServicesData;
 	if (Code)
 	{
 		MemType = EfiRuntimeServicesCode;
@@ -279,7 +274,7 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 	{
 		/* Read the program data in... */
 		File->SetPosition(File, InitialHeader.e_phoff
-					+ InitialHeader.e_phentsize * Index);
+						+ InitialHeader.e_phentsize * Index);
 
 		/* Read it in... */
 		File->Read(File, &PHdrSize, &ProgramHeader);
@@ -292,13 +287,13 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 			{
 				PAddr -= FERAL_VIRT_OFFSET;
 			}
-			
+
 			/* 0x01 is the executable flag.
 			 * Remember to replicate that in the ELF header!
 			 *  (TODO on that)
 			 */
-			Status = EfiAllocAddr(ProgramHeader.p_memsz, 
-				PAddr, 
+			Status = EfiAllocAddr(ProgramHeader.p_memsz,
+				PAddr,
 				ProgramHeader.p_flags & 0x01);
 
 			if (Status != EFI_SUCCESS)
@@ -310,7 +305,7 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 				SystemTable->BootServices->Stall(12500000);
 				return Status;
 			}
-			
+
 			/* Go ahead and bulldoze whatever memory was there,
 			 * and load the kernel there.
 			 */
@@ -324,10 +319,10 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 			UINT8 *EfiMem = NULLPTR;
 			UINTN FileSz = ProgramHeader.p_filesz;
 			Status = File->Read(
-				File, 
-				&FileSz, 
+				File,
+				&FileSz,
 				EfiMem);
-			
+
 			if (Status != EFI_SUCCESS)
 			{
 				SystemTable->ConOut->OutputString(SystemTable->ConOut,
@@ -337,10 +332,10 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 				SystemTable->BootServices->Stall(10000);
 			}
 
-			for (UINT64 Index = 0; Index < ProgramHeader.p_filesz; 
+			for (UINT64 Index = 0; Index < ProgramHeader.p_filesz;
 				++Index)
 			{
-				UINT8 *Out = (UINT8*)(PAddr);
+				UINT8 *Out = (UINT8 *)(PAddr);
 				Out[Index] = EfiMem[Index];
 			}
 		}
@@ -355,7 +350,7 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 
 	SystemTable->ConOut->OutputString(SystemTable->ConOut,
 		L"Kernel (virt) entry is at: 0x");
-	InternalItoaBaseChange(InitialHeader.e_entry, 
+	InternalItoaBaseChange(InitialHeader.e_entry,
 		ItoaBuf, 16);
 	SystemTable->ConOut->OutputString(SystemTable->ConOut,
 		ItoaBuf);
@@ -364,19 +359,19 @@ EFI_STATUS EFIAPI ElfLoadFile(IN EFI_FILE_PROTOCOL *File, OUT VOID **Entry)
 	return EFI_SUCCESS;
 }
 
-EFI_STATUS SetupEfiFramebufferData(EFI_HANDLE *VideoBuffers, 
+EFI_STATUS SetupEfiFramebufferData(EFI_HANDLE *VideoBuffers,
 	UINT_PTR *DisplayBuffers,
 	UINT64 NumDisplays)
 {
 	/* Pointer to the GOP, temporarilly at least. */
 	EFI_GRAPHICS_OUTPUT_PROTOCOL *GraphicsProtocol = NULLPTR;
 	CHAR16 ItoaBuf[32];
-	
+
 	for (UINT64 Iterator = 0; Iterator < NumDisplays; Iterator++)
 	{
 		/* Get the current GOP. */
 		EFI_STATUS Result = OpenProtocol(VideoBuffers[Iterator],
-			&GuidEfiGraphicsOutputProtocol, 
+			&GuidEfiGraphicsOutputProtocol,
 			(VOID **)&GraphicsProtocol,
 			ImageHandle, NULL,
 			EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
@@ -391,7 +386,7 @@ EFI_STATUS SetupEfiFramebufferData(EFI_HANDLE *VideoBuffers,
 			return Result;
 		}
 
-		Result = GraphicsProtocol->SetMode(GraphicsProtocol, 
+		Result = GraphicsProtocol->SetMode(GraphicsProtocol,
 			PixelRedGreenBlueReserved8BitPerColor);
 		if (Result != EFI_SUCCESS)
 		{
@@ -404,16 +399,16 @@ EFI_STATUS SetupEfiFramebufferData(EFI_HANDLE *VideoBuffers,
 		}
 
 		/* Update the current width and height, then display. */
-		UINT64 CurrentWidth 
+		UINT64 CurrentWidth
 			= GraphicsProtocol->Mode->Info->HorizontalResolution;
-		UINT64 CurrentHeight 
+		UINT64 CurrentHeight
 			= GraphicsProtocol->Mode->Info->VerticalResolution;
 
 		/* HACK: first and second are sizes.*/
-		DisplayBuffers[(3*Iterator) + 0] = CurrentWidth;
-		DisplayBuffers[(3*Iterator) + 1] = CurrentHeight;
+		DisplayBuffers[(3 * Iterator) + 0] = CurrentWidth;
+		DisplayBuffers[(3 * Iterator) + 1] = CurrentHeight;
 
-		DisplayBuffers[(3*Iterator) + 2] 
+		DisplayBuffers[(3 * Iterator) + 2]
 			= GraphicsProtocol->Mode->FrameBufferBase;
 
 		/* And tell the user that we found it! */
@@ -433,7 +428,7 @@ EFI_STATUS SetupEfiFramebufferData(EFI_HANDLE *VideoBuffers,
 
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			L"Which has it's framebuffer at: 0x");
-		InternalItoaBaseChange(GraphicsProtocol->Mode->FrameBufferBase, 
+		InternalItoaBaseChange(GraphicsProtocol->Mode->FrameBufferBase,
 			ItoaBuf, 16);
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			ItoaBuf);
@@ -442,7 +437,7 @@ EFI_STATUS SetupEfiFramebufferData(EFI_HANDLE *VideoBuffers,
 	}
 }
 
-EFI_STATUS 
+EFI_STATUS
 EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 {
 	/* Overwrite this variable for status... */
@@ -459,21 +454,22 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	CHAR16 ItoaBuf[32];
 
 	/* Kernel entry point */
-	VOID (FERALAPI *kern_init)(EfiBootInfo *) = NULLPTR;
-	
+	VOID(FERALAPI * kern_init)
+	(EfiBootInfo *) = NULLPTR;
+
 	/* TODO: Get the ACPI tables from EFI */
-	
-	
+
+
 	/* Get all the GOPs... */
 	UINT64 NumDisplays = 0;
 	Result = SystemTable->BootServices->LocateHandleBuffer(ByProtocol,
-		&GuidEfiGraphicsOutputProtocol, 
-		NULL, 
-		&NumDisplays, 
+		&GuidEfiGraphicsOutputProtocol,
+		NULL,
+		&NumDisplays,
 		&VideoBuffers);
-		
+
 	OpenProtocol = SystemTable->BootServices->OpenProtocol;
-		
+
 	if (Result != EFI_SUCCESS)
 	{
 		/*  TODO: Handle headless boot. */
@@ -483,7 +479,7 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	SystemTable->ConOut->ClearScreen(SystemTable->ConOut);
 
 	WriteMessage(L"Starting Feralboot...\n");
-	
+
 	/* Get the locations for the video buffers...
 	 * The kernel accepts an "array of structs" style pointer
 	 * where the beginning, end, and display data are all defined.
@@ -550,7 +546,9 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	{
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			EfiErrorToString(Result));
-		for (int i = 0; i < INT32_MAX; ++i){}
+		for (int i = 0; i < INT32_MAX; ++i)
+		{
+		}
 		SystemTable->RuntimeServices->ResetSystem(EfiResetShutdown,
 			EFI_SUCCESS, 0, NULLPTR);
 	}
@@ -585,9 +583,9 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 
 	/* Add some area to actually hold the info. */
 	MapSize += (DescriptorSize << 1);
-	Result = EfiAllocMaxAddr(MapSize, 
-		(void **)(&MemoryMap), 
-		MAX_INIT_PAGED, 
+	Result = EfiAllocMaxAddr(MapSize,
+		(void **)(&MemoryMap),
+		MAX_INIT_PAGED,
 		FALSE);
 	if (Result != EFI_SUCCESS)
 	{
@@ -611,10 +609,10 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 
 	EfiBootInfo *EnvBlock = NULLPTR;
 	/* Don't allocate above 2MB. */
-	if (!EfiAllocMaxAddr(sizeof(EfiBootInfo), 
-		(void **)&EnvBlock, 
-		2 * 1024 * 1024, 
-		FALSE))
+	if (!EfiAllocMaxAddr(sizeof(EfiBootInfo),
+		    (void **)&EnvBlock,
+		    2 * 1024 * 1024,
+		    FALSE))
 	{
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			L"Firmware ran out of memory. Trying anyway.\r\n");
@@ -660,7 +658,7 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	/* Terminate boot services (about to execute kernel) */
 	SystemTable->ConOut->OutputString(SystemTable->ConOut,
 		L"Terminating firmware services...\r\n");
-	
+
 	/* Blank the screen once more, then call the kernel */
 	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
 	for (UINT64 Row = 0; Row < DisplayBuffers[1]; ++Row)
@@ -669,11 +667,14 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 		{
 			/* Look a little pretty, and visually indicate boot
 			 * was successful. TODO: Diable if -v was passed in */
-			((UINT32*)(DisplayBuffers[2]))
-				[(Row * DisplayBuffers[0]) + Col] = 0x00161616;
+			((UINT32 *)(DisplayBuffers[2]))
+				[(Row * DisplayBuffers[0]) + Col]
+				= 0x00161616;
 		}
 	}
 	kern_init(EnvBlock);
-	for (int i = 0; i < INT32_MAX; ++i){}
+	for (int i = 0; i < INT32_MAX; ++i)
+	{
+	}
 	return EFI_SUCCESS;
 }

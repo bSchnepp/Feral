@@ -43,7 +43,7 @@ typedef struct FeralVersionInfo
 	UINT8 FeralVersionMajor;
 	UINT8 FeralVersionMinor;
 	UINT8 FeralVersionPatch;
-}FeralVersionInfo;
+} FeralVersionInfo;
 
 
 static FeralVersionInfo VersionInfo;

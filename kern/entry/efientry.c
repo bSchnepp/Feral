@@ -114,7 +114,9 @@ VOID kern_init(EfiBootInfo *BootInfo)
 	EnvBlock.FunctionTable = &FirmwareFuncs;
 
 	//KiSystemStartup(&EnvBlock);
-	for (;;){} /* Prevent leaving this function for whatever reason. */
+	for (;;)
+	{
+	} /* Prevent leaving this function for whatever reason. */
 }
 
 

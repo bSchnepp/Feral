@@ -379,7 +379,7 @@ typedef struct
 
 	// The main method to call when updating this frame. This changes the event state and all,
 	// and is required for all GUI applications.
-	VOID (*ApplicationRepaint)
+	VOID(*ApplicationRepaint)
 	(WP_FRAME_MSG MSG);
 
 

@@ -48,9 +48,9 @@ extern "C"
 
 	typedef struct
 	{
-		FERALSTATUS (*LoaderMain)
+		FERALSTATUS(*LoaderMain)
 		(IN ExecutableFormat Format);
-		FERALSTATUS (*LoaderExit)
+		FERALSTATUS(*LoaderExit)
 		(VOID);
 
 	} FormatHandler;

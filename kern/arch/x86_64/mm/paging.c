@@ -103,10 +103,12 @@ FERALSTATUS x86MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtua
 	PageMapEntry *PDP = NULLPTR;
 	if (PML4[PageLevels[0]].PresentFlag)
 	{
-		PDP = (PageMapEntry*)(PML4[PageLevels[0]].Address << 12);
-	} else {
+		PDP = (PageMapEntry *)(PML4[PageLevels[0]].Address << 12);
+	}
+	else
+	{
 		/* Create new page entry */
-		PDP = (PageMapEntry*)MmKernelMalloc(sizeof(PageMapEntry) * 512);
+		PDP = (PageMapEntry *)MmKernelMalloc(sizeof(PageMapEntry) * 512);
 		KiSetMemoryBytes(PDP, 0, sizeof(PageMapEntry) * 512);
 
 		/* Add in the entry */
@@ -119,10 +121,12 @@ FERALSTATUS x86MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtua
 	PageMapEntry *PD = NULLPTR;
 	if (PDP[PageLevels[1]].PresentFlag)
 	{
-		PD = (PageMapEntry*)(PDP[PageLevels[1]].Address << 12);
-	} else {
+		PD = (PageMapEntry *)(PDP[PageLevels[1]].Address << 12);
+	}
+	else
+	{
 		/* Create new page entry */
-		PD = (PageMapEntry*)MmKernelMalloc(sizeof(PageMapEntry) * 512);
+		PD = (PageMapEntry *)MmKernelMalloc(sizeof(PageMapEntry) * 512);
 		KiSetMemoryBytes(PD, 0, sizeof(PageMapEntry) * 512);
 
 		/* Add in the entry */
@@ -135,10 +139,12 @@ FERALSTATUS x86MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtua
 	PageMapEntry *PT = NULLPTR;
 	if (PD[PageLevels[2]].PresentFlag)
 	{
-		PT = (PageMapEntry*)(PD[PageLevels[2]].Address << 12);
-	} else {
+		PT = (PageMapEntry *)(PD[PageLevels[2]].Address << 12);
+	}
+	else
+	{
 		/* Create new page entry */
-		PT = (PageMapEntry*)MmKernelMalloc(sizeof(PageMapEntry) * 512);
+		PT = (PageMapEntry *)MmKernelMalloc(sizeof(PageMapEntry) * 512);
 		KiSetMemoryBytes(PT, 0, sizeof(PageMapEntry) * 512);
 
 		/* Add in the entry */
@@ -151,7 +157,9 @@ FERALSTATUS x86MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtua
 	if (PT[PageLevels[3]].PresentFlag)
 	{
 		return STATUS_MEMORY_PAGE_FAILURE;
-	} else {
+	}
+	else
+	{
 		PT[PageLevels[3]].Address = (((UINT64)Physical) >> 12);
 		PT[PageLevels[3]].PresentFlag = TRUE;
 		PT[PageLevels[3]].WritableFlag = TRUE;
@@ -195,8 +203,10 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	PageMapEntry *PDP = NULLPTR;
 	if (PML4[PageLevels[0]].PresentFlag)
 	{
-		PDP = (PageMapEntry*)(PML4[PageLevels[0]].Address << 12);
-	} else {
+		PDP = (PageMapEntry *)(PML4[PageLevels[0]].Address << 12);
+	}
+	else
+	{
 		return STATUS_MEMORY_PAGE_FAILURE;
 	}
 
@@ -204,8 +214,10 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	PageMapEntry *PD = NULLPTR;
 	if (PDP[PageLevels[1]].PresentFlag)
 	{
-		PD = (PageMapEntry*)(PDP[PageLevels[1]].Address << 12);
-	} else {
+		PD = (PageMapEntry *)(PDP[PageLevels[1]].Address << 12);
+	}
+	else
+	{
 		return STATUS_MEMORY_PAGE_FAILURE;
 	}
 
@@ -213,8 +225,10 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	PageMapEntry *PT = NULLPTR;
 	if (PD[PageLevels[2]].PresentFlag)
 	{
-		PT = (PageMapEntry*)(PD[PageLevels[2]].Address << 12);
-	} else {
+		PT = (PageMapEntry *)(PD[PageLevels[2]].Address << 12);
+	}
+	else
+	{
 		return STATUS_MEMORY_PAGE_FAILURE;
 	}
 
@@ -224,7 +238,9 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 		PT[PageLevels[3]].PresentFlag = FALSE;
 		PT[PageLevels[3]].WritableFlag = FALSE;
 		PT[PageLevels[3]].Address = 0x00;
-	} else {
+	}
+	else
+	{
 		return STATUS_MEMORY_PAGE_FAILURE;
 	}
 

@@ -97,7 +97,7 @@ typedef struct OBJECT_ATTRIBUTES
 typedef struct ObjectFunction
 {
 	STRING FunctionName;
-	FERALSTATUS (*FunctionReference)
+	FERALSTATUS(*FunctionReference)
 	(IN UINT64 NumArgs, IN VOID** Stuff);
 } ObjectFunction;
 

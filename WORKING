@@ -1,9 +1,0 @@
-Currently working:
-	- Boot (multiboot2 on x86_64 using GRUB2)
-	- Printing out text w/ VGA (a handful of cases where buffer isn't correctly copied with very big strings left to fix)
-
-
-Important TODOs:
-	- Serial driver for debugging, and print for aarch64 port
-	- Incorporate remaining code from old Feral kernel & cleanup
-	- Attempt to build on Darwin 10.13.6 (works after compiling LLD from source and only building the kernel, no iso, no test. Does it actually run?)
