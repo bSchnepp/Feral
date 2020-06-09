@@ -7,6 +7,7 @@ all:
 	$(AS) -felf64 boot/helper.asm
 	$(AS) -felf64 boot/init.asm -o init_mb2.o
 	$(AS) -felf64 boot/init64.asm -o init64.o
+	$(AS) -felf64 mm/mm.asm -o init-mm.o
 	$(CC) $(CFLAGS) $(FILES)
 	mv ./*.o ./boot/*.o ../../../
 	

@@ -546,9 +546,7 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	{
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
 			EfiErrorToString(Result));
-		for (int i = 0; i < INT32_MAX; ++i)
-		{
-		}
+		SystemTable->BootServices->Stall(125000);
 		SystemTable->RuntimeServices->ResetSystem(EfiResetShutdown,
 			EFI_SUCCESS, 0, NULLPTR);
 	}
@@ -611,7 +609,7 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 	/* Don't allocate above 2MB. */
 	if (!EfiAllocMaxAddr(sizeof(EfiBootInfo),
 		    (void **)&EnvBlock,
-		    2 * 1024 * 1024,
+		    MAX_INIT_PAGED,
 		    FALSE))
 	{
 		SystemTable->ConOut->OutputString(SystemTable->ConOut,
@@ -667,14 +665,11 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 		{
 			/* Look a little pretty, and visually indicate boot
 			 * was successful. TODO: Diable if -v was passed in */
-			((UINT32 *)(DisplayBuffers[2]))
-				[(Row * DisplayBuffers[0]) + Col]
-				= 0x00161616;
+			//((UINT32 *)(DisplayBuffers[2]))
+			//	[(Row * DisplayBuffers[0]) + Col]
+			//	= 0x00161616;
 		}
 	}
 	kern_init(EnvBlock);
-	for (int i = 0; i < INT32_MAX; ++i)
-	{
-	}
 	return EFI_SUCCESS;
 }

@@ -6,6 +6,7 @@
 
 x86_read_cr0:
 	mov rax, cr0
+	mov cr0, rax
 	ret
 
 x86_write_cr0:
@@ -14,6 +15,7 @@ x86_write_cr0:
 
 x86_read_cr3:
 	mov rax, cr3
+	mov cr3, rax
 	ret
 
 x86_write_cr3:

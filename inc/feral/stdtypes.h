@@ -71,7 +71,7 @@ extern "C"
 */
 
 /* Team Red's ABI. (the one basically everyone else uses). */
-#define FERALAPI __attribute__((cdecl))
+#define FERALAPI __attribute__((sysv_abi))
 
 #define MSAPI __attribute__((ms_abi))
 #define WINAPI __attribute__((ms_abi))

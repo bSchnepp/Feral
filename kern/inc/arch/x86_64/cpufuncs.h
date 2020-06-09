@@ -99,11 +99,11 @@ void cpuid_vendor_func(DWORD* part1, DWORD* part2, DWORD* part3);
 void cpuid_brand_name(DWORD* part1, DWORD* part2, DWORD* part3, DWORD* part4); /* See comment in kernel_main.c for usage. Cleanup later. */
 UINT32 cpuid_family_number(void);
 
-UINT32 x86_read_cr0(void);
-UINT32 x86_read_cr3(void);
+UINT64 x86_read_cr0(void);
+UINT64 x86_read_cr3(void);
 
-VOID x86_write_cr0(UINT32 val);
-VOID x86_write_cr3(UINT32 val);
+VOID x86_write_cr0(UINT64 val);
+VOID x86_write_cr3(UINT64 val);
 
 #define INTERRUPT __attribute__((interrupt))
 

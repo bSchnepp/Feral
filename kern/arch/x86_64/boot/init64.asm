@@ -128,7 +128,7 @@ bss_start:
 
 ALIGN 16
 stack_bottom:
-	resb 16384	; Nice and big (16KiB) stack.
+	resb 65536	; Nice and big (64KiB) stack.
 stack_top:
 bss_end:
 

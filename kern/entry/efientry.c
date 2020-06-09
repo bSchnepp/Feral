@@ -59,45 +59,26 @@ static KrnlEnvironmentBlock EnvBlock = {0};
 
 #include "charmap_default.inl"
 
-
-FERALSTATUS KiStartupSystem(KiSubsystemIdentifier Subsystem)
-{
-	if (Subsystem == FERAL_SUBSYSTEM_MEMORY_MANAGEMENT)
-	{
-	}
-	else if (Subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC)
-	{
-	}
-	else
-	{
-		/*  Placeholder for more stuff later on. (disks, network...) */
-	}
-}
-
 STRING GetEfiFirmwareClaim()
 {
 	return "UEFI 2.8 compatible firmware";
 }
 
 
-VOID kern_init(EfiBootInfo *BootInfo)
+#if defined(__x86_64__)
+#include <arch/x86_64/mm/paging.h>
+#include <arch/x86_64/mm/pageflags.h>
+#endif
+
+static UINT64 OrigNumMemoryRanges = 0;
+static EfiMemoryRange *OrigMemoryRanges = NULLPTR;
+static EfiBootInfo *OrigBootInfo = NULLPTR;
+
+VOID FERALAPI kern_init(EfiBootInfo *BootInfo)
 {
-	/*  Issue is now the framebuffers aren't mapped in memory. 
-	 *  We'll need to put the EFI stuff somewhere in the first 2MB,
-	 *  so the kernel can read that data.
-	 *  (BootInfo right now is wherever EFI feels like it...)
-	 */
-
-	UINT32 *FramebufferTemp = (UINT32 *)(BootInfo->FramebufferPAddrs[2]);
-	for (int i = 0; i < (BootInfo->FramebufferPAddrs[1]); ++i)
-	{
-		for (int k = 0; k < (BootInfo->FramebufferPAddrs[0]); ++k)
-		{
-			UINT32 FBVal = 0xFFFFFFFF;
-			//FramebufferTemp[i] = FBVal;
-		}
-	}
-
+	OrigNumMemoryRanges = BootInfo->NumMemoryRanges;
+	OrigMemoryRanges = BootInfo->MemoryRanges;
+	OrigBootInfo = OrigBootInfo;
 
 	/* Set up the character map. */
 	CharMap.CharMapWidth = 8;
@@ -113,12 +94,113 @@ VOID kern_init(EfiBootInfo *BootInfo)
 	EnvBlock.CharMap = &CharMap;
 	EnvBlock.FunctionTable = &FirmwareFuncs;
 
-	//KiSystemStartup(&EnvBlock);
+	KiSystemStartup(&EnvBlock);
 	for (;;)
 	{
 	} /* Prevent leaving this function for whatever reason. */
 }
 
 
+/* FIXME: Genericize and move back out. */
+
+
+/* it's 3am and this hack should work. */
+#define SYSTEM_STARTED_UP_MEMORY_MANAGEMENT (1 << 0)
+static UINT8 SystemLock = 0;
+
+
+FERALSTATUS KiStartupSystem(KiSubsystemIdentifier Subsystem)
+{
+	if (Subsystem == FERAL_SUBSYSTEM_MEMORY_MANAGEMENT)
+	{
+		if ((SystemLock & SYSTEM_STARTED_UP_MEMORY_MANAGEMENT)) 
+		{
+			return STATUS_UNSUPPORTED_OPERATION;
+		}
+
+		MmPhysicalAllocationInfo AllocInfo;
+		AllocInfo.sType = MM_STRUCTURE_TYPE_PHYSICAL_ALLOCATION_INFO;
+		AllocInfo.pNext = (void *)(0);
+		AllocInfo.FrameSize = 4096;
+
+		AllocInfo.FreeAreaRangeCount = OrigNumMemoryRanges;
+		MmFreeAreaRange Ranges[OrigNumMemoryRanges];
+		for (UINT64 i = 0; i < OrigNumMemoryRanges; ++i)
+		{
+			if (OrigMemoryRanges[i].Usable)
+			{
+				Ranges[i].sType = MM_STRUCTURE_TYPE_FREE_AREA_RANGE;
+				Ranges[i].pNext = (void *)(0);
+				Ranges[i].Start = OrigMemoryRanges[i].Start;
+				Ranges[i].End = OrigMemoryRanges[i].End;
+				Ranges[i].Size = Ranges[i].End - Ranges[i].Start;
+			} else {
+				Ranges[i].sType = MM_STRUCTURE_TYPE_USED_AREA_RANGE;
+				Ranges[i].pNext = (void *)(0);
+				Ranges[i].Start = OrigMemoryRanges[i].Start;
+				Ranges[i].End = OrigMemoryRanges[i].End;
+				Ranges[i].Size = Ranges[i].End - Ranges[i].Start;
+			}
+		}
+		AllocInfo.Ranges = Ranges;
+		MmCreateInfo info;
+
+		info.sType = MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO;
+		info.pNext = NULLPTR;
+		info.pPhysicalAllocationInfo = &AllocInfo;
+		FERALSTATUS Status = KiInitializeMemMgr(&info);
+
+		/* One more thing: temprary map of the EFI framebuffer */
+		if (Status == STATUS_SUCCESS)
+		{
+			/* Does this strictly need to be volatile? */
+			volatile PageMapEntry PML4 = x86_read_cr3();
+
+			/*  Issue is now the framebuffers aren't mapped in memory. 
+			 *  Let's go ahead and fix that!
+			 */
+			UINT32 *FramebufferTemp = (UINT32 *)(OrigBootInfo->FramebufferPAddrs[2]);
+			/* One issue: we don't have kmalloc yet, 
+			 * so init the memory system early. This means a special case
+			 * needs to be done for kernel_main to not re-init the malloc stuff.
+			 */
+			for (UINT_PTR Index = 0; Index < ((OrigBootInfo->FramebufferPAddrs[1]) * (OrigBootInfo->FramebufferPAddrs[0])) / 4096; ++Index)
+			{
+				FERALSTATUS Something = x86MapAddress(&PML4, 
+					(UINT_PTR)(FramebufferTemp + (Index * 4096)), 
+					(UINT_PTR)(FramebufferTemp + (Index * 4096)));	
+			}
+			x86_write_cr3(PML4);	
+
+
+			for (int i = 0; i < (OrigBootInfo->FramebufferPAddrs[1]); ++i)
+			{
+				for (int k = 0; k < (OrigBootInfo->FramebufferPAddrs[0]); ++k)
+				{
+					UINT32 FBVal = 0xFFFFFFFF;
+					FramebufferTemp[i] = FBVal;
+				}
+			}
+		}
+
+		return Status;
+	}
+	else if (Subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC)
+	{
+		KiStartupMachineDependent();
+		/* TODO: Enable serial driver
+		 * iff use-serial=true, instead of
+		 * whenever there is the
+		 * command line...
+		 */
+		VOID *Databack = NULLPTR;
+		InitSerialDevice(Databack);
+	}
+	else
+	{
+		/*  Placeholder for more stuff later on. (disks, network...) */
+	}
+	return STATUS_SUCCESS;
+}
 
 #endif

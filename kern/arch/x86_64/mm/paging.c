@@ -31,14 +31,9 @@ IN THE SOFTWARE.
 #include <mm/mm.h>
 #include <feral/kern/krnlfuncs.h>
 
-BOOL CheckIfMapped(PageMapEntry *Entry)
-{
-	return (Entry->PresentFlag);
-}
-
 UINT_PTR ConvertPageEntryToAddress(PageMapEntry *Entry)
 {
-	UINT64 UnhandledAddress = (Entry->Address << 12);
+	UINT64 UnhandledAddress = PAGE_ALIGN(*Entry);
 	if (UnhandledAddress >> 47)
 	{
 		/* Higher half address... mirror bit 48. */
@@ -85,10 +80,6 @@ FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels)
  */
 FERALSTATUS x86MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual)
 {
-	/* Shift over 12 bytes, to get to level 4 table immediately. */
-	UINT64 Addr = Physical >> 12;
-	UINT16 Bitmask = 0xFFF; /* For now, only do 4096 byte pages. */
-
 	UINT16 PageLevels[4];
 	FERALSTATUS Err = x86FindPageLevels(Virtual, PageLevels);
 
@@ -101,9 +92,9 @@ FERALSTATUS x86MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtua
 
 	/* From the PML4, we need to find the pdpe entry. */
 	PageMapEntry *PDP = NULLPTR;
-	if (PML4[PageLevels[0]].PresentFlag)
+	if (PML4[PageLevels[0]] & X86_PAGE_FLAG_PRESENT)
 	{
-		PDP = (PageMapEntry *)(PML4[PageLevels[0]].Address << 12);
+		PDP = (PageMapEntry *)(PAGE_ALIGN(PML4[PageLevels[0]]));
 	}
 	else
 	{
@@ -112,16 +103,16 @@ FERALSTATUS x86MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtua
 		KiSetMemoryBytes(PDP, 0, sizeof(PageMapEntry) * 512);
 
 		/* Add in the entry */
-		PML4[PageLevels[0]].Address = (((UINT64)PDP) >> 12);
-		PML4[PageLevels[0]].PresentFlag = TRUE;
-		PML4[PageLevels[0]].WritableFlag = TRUE;
+		PML4[PageLevels[0]] |= (PAGE_ALIGN(KERN_VIRT_TO_PHYS((UINT64)PDP)));
+		PML4[PageLevels[0]] |= X86_PAGE_FLAG_PRESENT;
+		PML4[PageLevels[0]] |= X86_PAGE_FLAG_WRITABLE;
 	}
 
 	/* Again for level 3... */
 	PageMapEntry *PD = NULLPTR;
-	if (PDP[PageLevels[1]].PresentFlag)
+	if (PDP[PageLevels[1]] & X86_PAGE_FLAG_PRESENT)
 	{
-		PD = (PageMapEntry *)(PDP[PageLevels[1]].Address << 12);
+		PD = (PageMapEntry *)(PAGE_ALIGN(PDP[PageLevels[1]]));
 	}
 	else
 	{
@@ -130,16 +121,16 @@ FERALSTATUS x86MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtua
 		KiSetMemoryBytes(PD, 0, sizeof(PageMapEntry) * 512);
 
 		/* Add in the entry */
-		PDP[PageLevels[1]].Address = (((UINT64)PD) >> 12);
-		PDP[PageLevels[1]].PresentFlag = TRUE;
-		PDP[PageLevels[1]].WritableFlag = TRUE;
+		PDP[PageLevels[1]] |= (PAGE_ALIGN(KERN_VIRT_TO_PHYS((UINT64)PD)));
+		PDP[PageLevels[1]] |= X86_PAGE_FLAG_PRESENT;
+		PDP[PageLevels[1]] |= X86_PAGE_FLAG_WRITABLE;
 	}
 
 	/* Again for level 2... */
 	PageMapEntry *PT = NULLPTR;
-	if (PD[PageLevels[2]].PresentFlag)
+	if (PD[PageLevels[2]] & X86_PAGE_FLAG_PRESENT)
 	{
-		PT = (PageMapEntry *)(PD[PageLevels[2]].Address << 12);
+		PT = (PageMapEntry *)(PAGE_ALIGN(PD[PageLevels[2]]));
 	}
 	else
 	{
@@ -148,21 +139,21 @@ FERALSTATUS x86MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtua
 		KiSetMemoryBytes(PT, 0, sizeof(PageMapEntry) * 512);
 
 		/* Add in the entry */
-		PD[PageLevels[2]].Address = (((UINT64)PT) >> 12);
-		PD[PageLevels[2]].PresentFlag = TRUE;
-		PD[PageLevels[2]].WritableFlag = TRUE;
+		PD[PageLevels[2]] |= (PAGE_ALIGN(KERN_VIRT_TO_PHYS((UINT64)PT)));
+		PD[PageLevels[2]] |= X86_PAGE_FLAG_PRESENT;
+		PD[PageLevels[2]] |= X86_PAGE_FLAG_WRITABLE;
 	}
 
 	/* Again for level 1... */
-	if (PT[PageLevels[3]].PresentFlag)
+	if (PT[PageLevels[3]] & X86_PAGE_FLAG_PRESENT)
 	{
 		return STATUS_MEMORY_PAGE_FAILURE;
 	}
 	else
 	{
-		PT[PageLevels[3]].Address = (((UINT64)Physical) >> 12);
-		PT[PageLevels[3]].PresentFlag = TRUE;
-		PT[PageLevels[3]].WritableFlag = TRUE;
+		PT[PageLevels[3]] |= (PAGE_ALIGN(Physical));
+		PT[PageLevels[3]] |= X86_PAGE_FLAG_PRESENT;
+		PT[PageLevels[3]] |= X86_PAGE_FLAG_WRITABLE;
 	}
 
 	return STATUS_SUCCESS;
@@ -201,9 +192,9 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 
 	/* From the PML4, we need to find the pdpe entry. */
 	PageMapEntry *PDP = NULLPTR;
-	if (PML4[PageLevels[0]].PresentFlag)
+	if (PML4[PageLevels[0]] & X86_PAGE_FLAG_PRESENT)
 	{
-		PDP = (PageMapEntry *)(PML4[PageLevels[0]].Address << 12);
+		PDP = (PageMapEntry *)(PAGE_ALIGN(PML4[PageLevels[0]]));
 	}
 	else
 	{
@@ -212,9 +203,9 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 
 	/* Again for level 3... */
 	PageMapEntry *PD = NULLPTR;
-	if (PDP[PageLevels[1]].PresentFlag)
+	if (PDP[PageLevels[1]] & X86_PAGE_FLAG_PRESENT)
 	{
-		PD = (PageMapEntry *)(PDP[PageLevels[1]].Address << 12);
+		PD = (PageMapEntry *)(PAGE_ALIGN(PML4[PageLevels[1]]));
 	}
 	else
 	{
@@ -223,9 +214,9 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 
 	/* Again for level 2... */
 	PageMapEntry *PT = NULLPTR;
-	if (PD[PageLevels[2]].PresentFlag)
+	if (PD[PageLevels[2]] & X86_PAGE_FLAG_PRESENT)
 	{
-		PT = (PageMapEntry *)(PD[PageLevels[2]].Address << 12);
+		PT = (PageMapEntry *)(PAGE_ALIGN(PML4[PageLevels[2]]));
 	}
 	else
 	{
@@ -233,11 +224,10 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	}
 
 	/* Again for level 1... */
-	if (PT[PageLevels[3]].PresentFlag)
+	if (PT[PageLevels[3]] & X86_PAGE_FLAG_PRESENT)
 	{
-		PT[PageLevels[3]].PresentFlag = FALSE;
-		PT[PageLevels[3]].WritableFlag = FALSE;
-		PT[PageLevels[3]].Address = 0x00;
+		PT[PageLevels[3]] &= ~X86_PAGE_FLAG_PRESENT;
+		PT[PageLevels[3]] &= ~X86_PAGE_FLAG_WRITABLE;
 	}
 	else
 	{

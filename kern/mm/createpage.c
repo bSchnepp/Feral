@@ -102,8 +102,7 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 		MmFreeAreaRange range = MmState.pAllocInfo->Ranges[n];
 		if (range.sType != MM_STRUCTURE_TYPE_FREE_AREA_RANGE)
 		{
-			/* Prevent odd memory-based flaws the hard way. */
-			KiStopError(STATUS_MEMORY_ACCESS_VIOLATION);
+			continue;
 		}
 
 		/* Add the size in to the total. */
@@ -116,7 +115,7 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 		}
 	}
 	PmmLocation = kernel_end + 4096;
-	KiPrintFmt("Detected %uMB of free RAM\n", TotalSystemMemory / (1024 * 1024));
+	//KiPrintFmt("Detected %uMB of free RAM\n", TotalSystemMemory / (1024 * 1024));
 
 	/* Bit of ehhh here. Assume everything from 0 - MaximumPAddr is valid. */
 	/* We'll take our total, copy it, and shift it over to be a valid map. */
@@ -235,16 +234,4 @@ FERALSTATUS SetMemoryAlreadyInUse(UINT_PTR Location, BOOL Status)
 	{
 		return STATUS_MEMORY_ACCESS_VIOLATION;
 	}
-}
-
-
-FERALSTATUS ExtractAddressFromPageEntry(IN PageMapEntry *Entry, OUT UINT_PTR *Address)
-{
-	if (!Entry->PresentFlag)
-	{
-		/* HACK (for now) since we don't have pager. */
-		return STATUS_MEMORY_ACCESS_VIOLATION;
-	}
-	*Address = (UINT_PTR)((Entry->Address) << 13);
-	return STATUS_SUCCESS;
 }

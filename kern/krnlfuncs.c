@@ -103,10 +103,15 @@ FERALSTATUS KiSetMemory(INOUT VOID*, IN UINTN, IN UINTN);
 /* Same as above, but with bytes. */
 FERALSTATUS KiSetMemoryBytes(INOUT VOID* Dest, IN UINT8 Val, IN UINTN Amt)
 {
-	UINT8* dest = (UINT8*)Dest;
-	for (UINTN amt = 0; amt < Amt; ++amt)
+	UINT64* dest = (UINT64*)Dest;
+	/* Blocks of 8 bytes should be massive speedup here */
+	for (UINTN amt = 0; amt < Amt/8; ++amt)
 	{
 		dest[amt] = Val;
+	}
+	for (UINTN Rest = 8*(Amt/8); Rest < Amt; ++Amt)
+	{
+		dest[Rest] = Val;
 	}
 	return STATUS_SUCCESS;
 }
