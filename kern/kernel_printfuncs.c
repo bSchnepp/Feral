@@ -55,67 +55,6 @@ FERALSTATUS KiPutChar(CHAR c)
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
-{
-	if ((Source == NULL) || (Dest == NULL))
-	{
-		return STATUS_INVALID_MEMORY_LOCATION;
-	}
-	CHAR* srcAsChar = (CHAR*)(Source);
-	CHAR* dstAsChar = (CHAR*)(Dest);
-	for (UINT64 c = 0; c < Amount; ++c)
-	{
-		*dstAsChar++ = *srcAsChar++;
-	}
-	return STATUS_SUCCESS;
-}
-
-FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount,
-	OUT BOOL* Val)
-{
-	if ((Source == NULL) || (Dest == NULL))
-	{
-		return STATUS_INVALID_MEMORY_LOCATION;
-	}
-	for (UINT64 i = 0; i < Amount; i++)
-	{
-		UINT_PTR* Src = (Source + i);
-		UINT_PTR* Dst = (Dest + i);
-		if (*Src != *Dst)
-		{
-			*(Val) = FALSE;
-			break;
-		}
-		*(Val) = TRUE;
-	}
-	return STATUS_SUCCESS;
-}
-
-//TODO: Implement the rest of this stuff.
-#if 0
-//Start, New location, size
-FERALSTATUS KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINTN);
-
-//Where, with what, and how many UINTNs to set.
-FERALSTATUS KiSetMemory(INOUT VOID*, IN UINTN, IN UINTN);
-#endif
-
-/* Same as above, but with bytes. */
-FERALSTATUS KiSetMemoryBytes(INOUT VOID* Dest, IN UINT8 Val, IN UINTN Amt)
-{
-	UINT64* dest = (UINT64*)Dest;
-	/* Blocks of 8 bytes should be massive speedup here */
-	for (UINTN amt = 0; amt < Amt/8; ++amt)
-	{
-		dest[amt] = Val;
-	}
-	for (UINTN Rest = 8*(Amt/8); Rest < Amt; ++Amt)
-	{
-		dest[Rest] = Val;
-	}
-	return STATUS_SUCCESS;
-}
-
 /*
 //Same as above but with a wide string.
 FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT* UINTN);
