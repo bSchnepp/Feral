@@ -58,9 +58,28 @@ into the kernel, for the most part this is accurate to the intention:
 ![Feral Architecture](Documentation/images/feralarch.png)
 
 ## Building?
-Run ./build.sh $ARCH $COMMAND,
-where $ARCH is the arch (x86_64), and $COMMAND
-is the command to run (qemu, qemu-nokvm, clean, etc.)
+The script `build.sh` is a wrapper around the Makefile and
+architecture-specific environment variables. You should run
+```sh
+./build.sh x86_64 qemu
+./build.sh x86_64 qemu-efi
+./build.sh x86_64 qemu-nokvm
+./build.sh aarch64 qemu
+```
+Or as otherwise appropriate for your combination of
+architecture and desired target. For just an ISO generated
+from your installation of GRUB and xorriso, you can run
+```sh
+./build.sh x86_64 iso
+```
+which will produce a Multiboot 2 compatible version of Feral.
+However, in the future, Feral will only support it's own bootloader and
+loading through the EFI firmware. To generate those files, such that they
+can be copied to a valid FAT32 ESP partition and booted, you should run
+```sh
+./build.sh x86_64 img-efi
+```
+The relevant files in either case will be placed in the build/ directory.
 
 This is temporary, and will be replaced with a proper
 build system (Kconfig) later.

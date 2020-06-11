@@ -44,7 +44,7 @@ IN THE SOFTWARE.
 typedef natural_t mach_msg_timeout_t;
 
 
-typedef MACH_MSG_TIMEOUT_NONE((mach_msg_timeout_t)(0));
+#define MACH_MSG_TIMEOUT_NONE ((mach_msg_timeout_t)(0));
 
 /* TODO: document better */
 #define MACH_MSGH_BITS_ZERO (0x00000000)
