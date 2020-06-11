@@ -172,7 +172,6 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier Subsystem)
 			}
 			x86_write_cr3(PML4);	
 
-
 			for (int i = 0; i < (OrigBootInfo->FramebufferPAddrs[1]); ++i)
 			{
 				for (int k = 0; k < (OrigBootInfo->FramebufferPAddrs[0]); ++k)
@@ -182,7 +181,6 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier Subsystem)
 				}
 			}
 		}
-
 		return Status;
 	}
 	else if (Subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC)

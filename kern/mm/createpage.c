@@ -86,7 +86,7 @@ static MemoryManagementState MmState;
 
 
 /* TODO: Move to other source file. */
-FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
+FERALSTATUS FERALAPI KiInitializeMemMgr(MmCreateInfo *info)
 {
 	/* Association the pAllocInfo first. */
 	MmState.pAllocInfo = info->pPhysicalAllocationInfo;
@@ -97,43 +97,35 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	UINT64 TotalSystemMemory = 0;
 	UINT_PTR PmmLocation = 0;
 	UINT_PTR MaximumPAddr = 0;
+
 	for (UINT64 n = 0; n < MmState.pAllocInfo->FreeAreaRangeCount; ++n)
 	{
 		MmFreeAreaRange range = MmState.pAllocInfo->Ranges[n];
-		if (range.sType != MM_STRUCTURE_TYPE_FREE_AREA_RANGE)
+		if (range.sType == MM_STRUCTURE_TYPE_FREE_AREA_RANGE && range.Size)
 		{
-			continue;
-		}
+			/* Add the size in to the total. */
+			TotalSystemMemory += range.Size;
 
-		/* Add the size in to the total. */
-		TotalSystemMemory += range.Size;
-
-		/* What's the end address here? Is it bigger? */
-		if (range.End > MaximumPAddr)
-		{
-			MaximumPAddr = range.End;
+			/* What's the end address here? Is it bigger? */
+			if (range.End > MaximumPAddr)
+			{
+				MaximumPAddr = range.End;
+			}
 		}
 	}
-	PmmLocation = kernel_end + 4096;
+	UINT_PTR FrameSize = info->pPhysicalAllocationInfo->FrameSize;
+	PmmLocation = kernel_end + FrameSize;
 	//KiPrintFmt("Detected %uMB of free RAM\n", TotalSystemMemory / (1024 * 1024));
 
 	/* Bit of ehhh here. Assume everything from 0 - MaximumPAddr is valid. */
 	/* We'll take our total, copy it, and shift it over to be a valid map. */
 	/* In our model, 1 bit = (FrameSize). 1 byte = 8 * FrameSize. */
 	/* Since the PMM also includes *non-free* RAM, use 0 - MaximumPAddr. */
-	UINT64 BufferSize = (MaximumPAddr);
 	MmState.MaxPAddr = MaximumPAddr;
-	UINT64 FrameSize = MmState.pAllocInfo->FrameSize;
-	UINT8 ShiftAmt = 3; /* Map 1 bit to 8 bytes at least (2^3) */
-	while (FrameSize >>= 1)
-	{
-		/* FrameSize must be power of 2, but can technically be any power. */
-		++ShiftAmt;
-	}
-	BufferSize >>= ShiftAmt;
+	UINT64 BufferSize = (UINT64)(MmState.MaxPAddr) / FrameSize;
 
 	/* Take our location from before, and use it accordingly. */
-	UINT8 *PmmBitmap = (UINT8 *)(PmmLocation + KERN_VIRT_OFFSET);
+	UINT8 *PmmBitmap = (UINT8 *)(kernel_end | KERN_VIRT_OFFSET) + FrameSize;
 	KiSetMemoryBytes(PmmBitmap, 0, BufferSize);
 	MmState.BitmaskUsedFrames = PmmBitmap;
 
@@ -144,11 +136,10 @@ FERALSTATUS KiInitializeMemMgr(MmCreateInfo *info)
 	}
 
 	/* Start the heap stuff up. No SMP support yet, so 1 hart. */
-	/* 128MB heap should be enough for now? */
-	const UINT64 HeapSize = (1024 * 1024 * 128);
-	UINT_PTR HeapAddr = (KERN_VIRT_OFFSET + PmmLocation + BufferSize);
-	HeapAddr += MmState.pAllocInfo->FrameSize;
-
+	/* 4M heap should be enough for now? */
+	const UINT64 HeapSize = (1024 * 1024 * 4);
+	UINT_PTR HeapAddr = (KERN_VIRT_OFFSET | (PmmLocation + BufferSize));
+	HeapAddr += FrameSize;
 	MmCreateAllocatorState(1, HeapAddr, HeapSize);
 	for (UINT_PTR Addr = HeapAddr - KERN_VIRT_OFFSET; Addr < (HeapSize);
 		Addr += MmState.pAllocInfo->FrameSize)

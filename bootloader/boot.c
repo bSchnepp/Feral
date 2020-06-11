@@ -645,6 +645,22 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 		MemoryRanges[Iterator].Usable = GetEfiMemoryMapToFreeOrNot(Current);
 		MemoryRanges[Iterator].Start = Begin;
 		MemoryRanges[Iterator].End = End;
+
+		if (MemoryRanges[Iterator].Usable)
+		{
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
+				L"MemRange: ");
+			InternalItoaBaseChange(MemoryRanges[Iterator].Start, ItoaBuf, 16);
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
+				ItoaBuf);
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
+				L" ");
+			InternalItoaBaseChange(MemoryRanges[Iterator].End, ItoaBuf, 16);
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
+				ItoaBuf);
+			SystemTable->ConOut->OutputString(SystemTable->ConOut,
+				L"\r\n");
+		}
 	}
 
 	EnvBlock->NumMemoryRanges = NumMemoryRanges;

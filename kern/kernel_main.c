@@ -67,7 +67,7 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 
 	/* Set up memory immediately so we can use the framebuffer */
 	KiStartupSystem(FERAL_SUBSYSTEM_MEMORY_MANAGEMENT);
-
+	
 	KiPrintFmt("\nStarting Feral Kernel \"%s\" Version %01u.%01u.%01u\n",
 		FERAL_VERSION_SHORT,
 		VersionInfo.FeralVersionMajor,

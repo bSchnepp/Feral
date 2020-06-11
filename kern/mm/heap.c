@@ -26,8 +26,11 @@ IN THE SOFTWARE.
 
 
 #include <feral/stdtypes.h>
-#include <mm/heap.h>
+
 #include <mm/mm.h>
+#include <mm/heap.h>
+
+#include <feral/kern/krnlfuncs.h>
 
 /* Well, it works... */
 static AllocatorState CurrentState;
@@ -79,6 +82,7 @@ AllocatorState *MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea,
 	Arena *ArenaStart = (Arena *)(HeapArea);
 	/* Space to reserve for nodes. */
 	UINT64 NodeSize = (HeapAmount / (NumArenas * sizeof(Node)));
+
 	for (UINT64 Counter = 0; Counter < NumArenas; ++Counter)
 	{
 		/* Write to that area an Arena... */
@@ -100,7 +104,8 @@ AllocatorState *MmCreateAllocatorState(UINT64 NumArenas, VOID *HeapArea,
 		/* Gets a place which should be empty. */
 		Current.NextToAllocate = ((Node *)(Current.Root)) + 1;
 
-		KiSetMemoryBytes(*(Current.NextToAllocate), 0, sizeof(Node));
+		UINT64 NodeAmt = sizeof(Node);
+		KiSetMemoryBytes(Current.NextToAllocate, 0, NodeAmt);
 		Current.NextToAllocate->Previous = Current.Root;
 		ArenaStart[Counter] = Current;
 	}

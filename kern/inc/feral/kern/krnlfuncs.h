@@ -31,29 +31,29 @@ IN THE SOFTWARE.
 /* Utility stuff... */
 
 /* Start, end, size. */
-FERALSTATUS KiCopyMemory(IN VOID*, IN VOID*, IN UINTN);
+FERALSTATUS FERALAPI KiCopyMemory(IN VOID*, IN VOID*, IN UINT64);
 
 /* First, Second, Size, Equal */
-FERALSTATUS KiCompareMemory(IN VOID*, IN VOID*, IN UINTN, OUT BOOL*);
+FERALSTATUS FERALAPI KiCompareMemory(IN VOID*, IN VOID*, IN UINT64, OUT BOOL*);
 
 /* Start, New location, size */
-FERALSTATUS KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINTN);
+FERALSTATUS FERALAPI KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINT64);
 
 /* Where, with what, and how many UINTNs to set. */
-FERALSTATUS KiSetMemory(INOUT VOID*, IN UINTN, IN UINTN);
+FERALSTATUS FERALAPI KiSetMemory(INOUT VOID*, IN UINTN, IN UINT64);
 
 /* Same as above, but with bytes. */
-FERALSTATUS KiSetMemoryBytes(INOUT VOID*, IN UINT8, IN UINTN);
+FERALSTATUS FERALAPI KiSetMemoryBytes(INOUT VOID*, IN UINT8, IN UINT64);
 
 /* TODO: Replace bad temp strlen with this
    String, length of it. */
-FERALSTATUS KiGetStringLength(IN STRING, OUT UINT64*);
+FERALSTATUS FERALAPI KiGetStringLength(IN STRING, OUT UINT64*);
 
 /* Same as above but with a wide string. */
-FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT UINTN*);
+FERALSTATUS FERALAPI KiGetWideStringLength(IN WSTRING, OUT UINT64*);
 
 
 
 /* Equivalent to a kernel panic. In goes in the current system status which 
    triggers the panic. */
-FERALSTATUS KiStopError(IN FERALSTATUS);
+FERALSTATUS FERALAPI KiStopError(IN FERALSTATUS);

@@ -27,6 +27,8 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
+#include <feral/kern/krnlfuncs.h>
+
 FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
 {
 	if ((Source == NULL) || (Dest == NULL))
@@ -66,24 +68,20 @@ FERALSTATUS KiCompareMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount,
 //TODO: Implement the rest of this stuff.
 #if 0
 //Start, New location, size
-FERALSTATUS KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINTN);
+FERALSTATUS KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINT64);
 
 //Where, with what, and how many UINTNs to set.
-FERALSTATUS KiSetMemory(INOUT VOID*, IN UINTN, IN UINTN);
+FERALSTATUS KiSetMemory(INOUT VOID*, IN UINTN, IN UINT64);
 #endif
 
 /* Same as above, but with bytes. */
-FERALSTATUS KiSetMemoryBytes(INOUT VOID* Dest, IN UINT8 Val, IN UINTN Amt)
+FERALSTATUS FERALAPI KiSetMemoryBytes(INOUT VOID* Dest, IN UINT8 Val, IN UINT64 Amt)
 {
-	UINT64* dest = (UINT64*)Dest;
-	/* Blocks of 8 bytes should be massive speedup here */
-	for (UINTN amt = 0; amt < Amt/8; ++amt)
+	UINT8* RealDest = (UINT8*)Dest;
+	/* TODO: Blocks of 8 to speed up performance again */
+	for (UINT64 Index = 0; Index < Amt; ++Index)
 	{
-		dest[amt] = Val;
-	}
-	for (UINTN Rest = 8*(Amt/8); Rest < Amt; ++Amt)
-	{
-		dest[Rest] = Val;
+		RealDest[Index] = Val;
 	}
 	return STATUS_SUCCESS;
 }

@@ -24,11 +24,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_FRLOS_H_
-#define _FERAL_FRLOS_H_
 
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
+
+#ifndef _FERAL_FRLOS_H_
+#define _FERAL_FRLOS_H_
 
 /* All kernel functions should return a FERALSTATUS. */
 FERALSTATUS KiPrintLine(STRING string);
@@ -64,8 +65,6 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem);
 
 #ifdef KERN_DEBUG
 
-#ifndef _NO_SERIAL_DEBUG_PRINT_
-
 /* hack for serial */
 #ifndef COM1_PORT
 #define COM1_PORT 0x3F8
@@ -78,14 +77,16 @@ extern VOID SerialSend(UINT16 Port, CHAR c);
 #define SERIAL_PUTCHAR(x) /* Nothing! */
 #endif
 
-inline VOID SerialPrint(const char *X)
+inline static VOID SerialPrint(STRING X)
 {
+#ifndef _NO_SERIAL_DEBUG_PRINT_
 	UINT64 Index = 0;
 	while (X[Index] != '\0')
 	{
 		SERIAL_PUTCHAR(X[Index]);
 		Index++;
 	}
+#endif
 }
 
 static FERALSTATUS KiDebugPrint(STRING string)
@@ -95,8 +96,5 @@ static FERALSTATUS KiDebugPrint(STRING string)
 	SerialPrint("\n");
 	return KiPrintFmt("\n");
 }
-#else
-#define KiDebugPrint(x)
-#endif
 
 #endif
