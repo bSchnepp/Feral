@@ -1,8 +1,8 @@
 /*
-Copyright (c) 2020 Brian Schnepp
+Copyright (c) 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization 
-obtaining  a copy of the software and accompanying documentation covered by 
+obtaining a copy of the software and accompanying documentation covered by 
 this license (the "Software") to use, reproduce, display, distribute, execute, 
 and transmit the Software, and to prepare derivative works of the Software, 
 and to permit third-parties to whom the Software is furnished to do so, all 
@@ -24,24 +24,27 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_DRIVER_SERIAL_H_
-#define _FERAL_DRIVER_SERIAL_H_
+#include <feral/stdtypes.h>
+#include <feral/kern/frlos.h>
+#include <feral/kern/krnlfuncs.h>
 
-#define COM1_PORT 0x3F8
-#define COM1_DATA (COM1_PORT)
+#include <feral/string.h>
+#include <feral/feraluser.h>
 
-#define SERIAL_INTERRUPT_COMMAND(port) (port + 1)
-#define SERIAL_FIFO_COMMAND(port) (port + 2)
-#define SERIAL_LINE_COMMAND(port) (port + 3)
-#define SERIAL_MODEM_COMMAND(port) (port + 4)
-#define SERIAL_LINE_STATUS(port) (port + 5)
+#include "sec.h"
 
-#define SERIAL_LINE_ENABLE_DLAB (0x80)
-#define SERIAL_LINE_ENABLE_FIFO (0xC7)
-
-FERALSTATUS InitSerialDevice(VOID *OutData);
-VOID SerialSend(UINT16 Port, CHAR c);
-VOID SerialRecv(UINT16 Port, UINT64 Amt, BYTE *Buf);
-
-
+#if defined(__x86_64__)
+#include <arch/x86_64/vga/vga.h>
+#include <arch/x86_64/cpufuncs.h>
 #endif
+
+__attribute__((noreturn))
+VOID __stack_chk_fail(void)
+{
+	KiStopError(STATUS_STACK_GUARD_VIOLATION);
+	KiRestoreInterrupts(FALSE);
+	for (;;)
+	{
+		/* Hang (for now) */
+	}
+}

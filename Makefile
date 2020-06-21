@@ -22,6 +22,7 @@ kernel:
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES)
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o
+	cd tests && $(MAKE) all
 	
 kernel-efi:
 	mkdir -p build/$(ARCH)/
@@ -36,6 +37,7 @@ kernel-efi:
 	$(CC) $(TARGET) -I$(INCLUDES) -DFERAL_BUILD_STANDALONE_UEFI_ $(CFLAGS) $(VGA_FILES)
 	$(LD) -T $(LINKIN_EFI) -o $(KERNEL) ./*.o
 	#strip $(KERNEL)
+	cd tests && $(MAKE) all
 	
 img-efi: 	kernel-efi
 	mkdir -p build/EFI/Feral
@@ -69,6 +71,7 @@ clean:
 	
 	cd kern && $(MAKE) clean
 	cd sec && $(MAKE) clean
+	cd tests && $(MAKE) clean
 
 qemu:	iso
 	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G --enable-kvm -d int,cpu_reset -no-reboot -no-shutdown # We enable KVM to access the features of the ZEN version 1.... we'll need to change this when we're (eventually) self-hosting.

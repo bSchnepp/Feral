@@ -36,7 +36,7 @@ IN THE SOFTWARE.
 
 #include "serial.h"
 
-VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
+volatile VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
 {
 #if defined(__x86_64__) || defined(__i386__)
 	x86outb(SERIAL_LINE_COMMAND(Port), SERIAL_LINE_ENABLE_DLAB);
@@ -45,7 +45,7 @@ VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
 #endif
 }
 
-VOID SerialSetInterrupts(UINT16 Port, UINT8 Bitmask)
+volatile VOID SerialSetInterrupts(UINT16 Port, UINT8 Bitmask)
 {
 #if defined(__x86_64__) || defined(__i386__)
 	x86outb(SERIAL_FIFO_COMMAND(Port), Bitmask);
@@ -59,12 +59,12 @@ VOID SerialSetInterrupts(UINT16 Port, UINT8 Bitmask)
  * @param Port The port to configure
  * @param Bitmask The mask for how to configure the serial port.
  */
-VOID SerialSetFlags(UINT16 Port, UINT8 Bitmask)
+volatile VOID SerialSetFlags(UINT16 Port, UINT8 Bitmask)
 {
 	x86outb(SERIAL_LINE_COMMAND(Port), Bitmask);
 }
 
-VOID SerialSetMode(UINT16 Port, UINT8 Data)
+volatile VOID SerialSetMode(UINT16 Port, UINT8 Data)
 {
 	x86outb(SERIAL_FIFO_COMMAND(Port), Data);
 }

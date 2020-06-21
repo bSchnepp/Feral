@@ -35,6 +35,7 @@ IN THE SOFTWARE.
 
 #if defined(__x86_64__)
 #include <arch/x86_64/vga/vga.h>
+#include <arch/x86_64/cpufuncs.h>
 #endif
 
 typedef struct
@@ -145,12 +146,4 @@ FERALSTATUS KiStopError(IN FERALSTATUS Status)
 	return STATUS_SUCCESS;
 }
 
-__attribute__((noreturn))
-VOID __stack_chk_fail(void)
-{
-	KiStopError(STATUS_STACK_GUARD_VIOLATION);
-	for (;;)
-	{
-		/* Hang (for now) */
-	}
-}
+

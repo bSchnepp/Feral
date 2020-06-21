@@ -101,16 +101,16 @@ FERALSTATUS FERALAPI KiInitializeMemMgr(MmCreateInfo *info)
 	for (UINT64 n = 0; n < MmState.pAllocInfo->FreeAreaRangeCount; ++n)
 	{
 		MmFreeAreaRange range = MmState.pAllocInfo->Ranges[n];
-		if (range.sType == MM_STRUCTURE_TYPE_FREE_AREA_RANGE && range.Size)
+		if (range.sType == MM_STRUCTURE_TYPE_FREE_AREA_RANGE)
 		{
 			/* Add the size in to the total. */
 			TotalSystemMemory += range.Size;
+		}
 
-			/* What's the end address here? Is it bigger? */
-			if (range.End > MaximumPAddr)
-			{
-				MaximumPAddr = range.End;
-			}
+		/* What's the end address here? Is it bigger? */
+		if (range.End > MaximumPAddr)
+		{
+			MaximumPAddr = range.End;
 		}
 	}
 	UINT_PTR FrameSize = info->pPhysicalAllocationInfo->FrameSize;
@@ -137,7 +137,7 @@ FERALSTATUS FERALAPI KiInitializeMemMgr(MmCreateInfo *info)
 
 	/* Start the heap stuff up. No SMP support yet, so 1 hart. */
 	/* 4M heap should be enough for now? */
-	const UINT64 HeapSize = (1024 * 1024 * 4);
+	const UINT64 HeapSize = (1024 * 1024 * 8);
 	UINT_PTR HeapAddr = (KERN_VIRT_OFFSET | (PmmLocation + BufferSize));
 	HeapAddr += FrameSize;
 	MmCreateAllocatorState(1, HeapAddr, HeapSize);
