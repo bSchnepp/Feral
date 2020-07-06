@@ -101,7 +101,11 @@ FERALSTATUS FERALAPI KiInitializeMemMgr(MmCreateInfo *info)
 	for (UINT64 n = 0; n < MmState.pAllocInfo->FreeAreaRangeCount; ++n)
 	{
 		MmFreeAreaRange range = MmState.pAllocInfo->Ranges[n];
-		if (range.sType == MM_STRUCTURE_TYPE_FREE_AREA_RANGE)
+		if (range.sType != MM_STRUCTURE_TYPE_FREE_AREA_RANGE 
+			&& range.sType != MM_STRUCTURE_TYPE_USED_AREA_RANGE) 
+		{
+			continue;
+		} else if (range.sType == MM_STRUCTURE_TYPE_FREE_AREA_RANGE)
 		{
 			/* Add the size in to the total. */
 			TotalSystemMemory += range.Size;

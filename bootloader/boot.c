@@ -35,6 +35,9 @@ IN THE SOFTWARE.
 #include <libreefi/efi.h>
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
+
+#include <mm/mm.h>
+
 #include <feral/kern/krnlbase.h>
 #include <feral/kern/krnlentry.h>
 
@@ -141,22 +144,35 @@ VOID InternalItoaBaseChange(UINT64 Val, CHAR16 *Buf, UINT8 Radix)
 	Buf[Len] = '\0';
 }
 
-BOOL GetEfiMemoryMapToFreeOrNot(EFI_MEMORY_DESCRIPTOR *Place)
+MmStructureType GetEfiMemoryMapToFreeOrNot(EFI_MEMORY_DESCRIPTOR *Place)
 {
 	switch (Place->Type)
 	{
+		case EfiConventionalMemory:
+		{
+			return MM_STRUCTURE_TYPE_FREE_AREA_RANGE;
+		}
+
 		case EfiLoaderCode:
 		case EfiLoaderData:
 		case EfiBootServicesCode:
 		case EfiBootServicesData:
-		case EfiConventionalMemory:
+		case EfiRuntimeServicesCode:
+		case EfiRuntimeServicesData:
 		{
-			return TRUE;
+			return MM_STRUCTURE_TYPE_USED_AREA_RANGE;
 		}
 
+		case EfiPalCode:
+		case EfiMemoryMappedIO:
+		case EfiMemoryMappedIOPortSpace:
+		case EfiUnusableMemory:
+		case EfiReservedMemoryType:
+		case EfiACPIReclaimMemory:
+		case EfiACPIMemoryNVS:
 		default:
 		{
-			return FALSE;
+			return MM_STRUCTURE_TYPE_OTHER_AREA_RANGE;
 		}
 	}
 }
@@ -642,11 +658,11 @@ EFIAPI uefi_main(EFI_HANDLE mImageHandle, EFI_SYSTEM_TABLE *mSystemTable)
 			   with cr3. */
 		}
 
-		MemoryRanges[Iterator].Usable = GetEfiMemoryMapToFreeOrNot(Current);
+		MemoryRanges[Iterator].Usage = GetEfiMemoryMapToFreeOrNot(Current);
 		MemoryRanges[Iterator].Start = Begin;
 		MemoryRanges[Iterator].End = End;
 
-		if (MemoryRanges[Iterator].Usable)
+		if (MemoryRanges[Iterator].Usage == MM_STRUCTURE_TYPE_FREE_AREA_RANGE)
 		{
 			SystemTable->ConOut->OutputString(SystemTable->ConOut,
 				L"MemRange: ");

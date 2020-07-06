@@ -426,7 +426,6 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 		 */
 		VOID *Databack = NULLPTR;
 		InitSerialDevice(Databack);
-		for (;;) {}
 	}
 	else
 	{

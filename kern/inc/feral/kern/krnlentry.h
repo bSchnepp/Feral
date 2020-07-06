@@ -24,6 +24,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+#include <mm/mm.h>
 
 #include <feral/stdtypes.h>
 #include <feral/kern/krnlbase.h>
@@ -34,7 +35,7 @@ IN THE SOFTWARE.
 
 typedef struct EfiMemoryRange
 {
-	BOOL Usable;
+	MmStructureType Usage;
 	UINT_PTR Start;
 	UINT_PTR End;
 } EfiMemoryRange;

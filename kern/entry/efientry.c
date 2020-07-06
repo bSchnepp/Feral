@@ -65,6 +65,19 @@ STRING GetEfiFirmwareClaim()
 }
 
 
+/* Single character */
+static VOID EfiPutChar(CHAR Char)
+{
+
+}
+
+/* String, length */
+static VOID EfiPrintln(STRING Str, UINT64 Strlen)
+{
+
+}
+
+
 #if defined(__x86_64__)
 #include <arch/x86_64/mm/paging.h>
 #include <arch/x86_64/mm/pageflags.h>
@@ -83,13 +96,14 @@ VOID FERALAPI kern_init(EfiBootInfo *BootInfo)
 	/* Set up the character map. */
 	CharMap.CharMapWidth = 8;
 	CharMap.CharMapHeight = 8;
-
 	CharMap.NumNumerals = 10;
 	CharMap.NumLowerCase = 26;
 	CharMap.NumUpperCase = 26;
 	CharMap.CharMap = DefaultCharMap;
 
 	FirmwareFuncs.GetFirmwareName = GetEfiFirmwareClaim;
+	FirmwareFuncs.PutChar = EfiPutChar;
+	FirmwareFuncs.Println = EfiPrintln;
 
 	EnvBlock.CharMap = &CharMap;
 	EnvBlock.FunctionTable = &FirmwareFuncs;
@@ -127,24 +141,14 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier Subsystem)
 		MmFreeAreaRange Ranges[OrigNumMemoryRanges];
 		for (UINT64 i = 0; i < OrigNumMemoryRanges; ++i)
 		{
-			if (OrigMemoryRanges[i].Usable)
-			{
-				Ranges[i].sType = MM_STRUCTURE_TYPE_FREE_AREA_RANGE;
-				Ranges[i].pNext = (void *)(0);
-				Ranges[i].Start = OrigMemoryRanges[i].Start;
-				Ranges[i].End = OrigMemoryRanges[i].End;
-				Ranges[i].Size = Ranges[i].End - Ranges[i].Start;
-			} else {
-				Ranges[i].sType = MM_STRUCTURE_TYPE_USED_AREA_RANGE;
-				Ranges[i].pNext = (void *)(0);
-				Ranges[i].Start = OrigMemoryRanges[i].Start;
-				Ranges[i].End = OrigMemoryRanges[i].End;
-				Ranges[i].Size = Ranges[i].End - Ranges[i].Start;
-			}
+			Ranges[i].sType = OrigMemoryRanges[i].Usage;
+			Ranges[i].pNext = (void *)(0);
+			Ranges[i].Start = OrigMemoryRanges[i].Start;
+			Ranges[i].End = OrigMemoryRanges[i].End;
+			Ranges[i].Size = Ranges[i].End - Ranges[i].Start;
 		}
 		AllocInfo.Ranges = Ranges;
 		MmCreateInfo info;
-
 		info.sType = MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO;
 		info.pNext = NULLPTR;
 		info.pPhysicalAllocationInfo = &AllocInfo;
@@ -170,8 +174,7 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier Subsystem)
 					(UINT_PTR)(FramebufferTemp + (Index * 4096)), 
 					(UINT_PTR)(FramebufferTemp + (Index * 4096)));	
 			}
-			x86_write_cr3(PML4);	
-
+			x86_write_cr3(PML4);
 			for (int i = 0; i < (OrigBootInfo->FramebufferPAddrs[1]); ++i)
 			{
 				for (int k = 0; k < (OrigBootInfo->FramebufferPAddrs[0]); ++k)
