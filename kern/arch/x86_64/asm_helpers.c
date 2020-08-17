@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2019, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -24,15 +24,60 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_KCOMMON_H_
-#define _FERAL_KCOMMON_H_
 
-/* This function can be used by other parts of the kernel, and shouldn't change
- * that often. */
-#define PUBLIC
-
-/* This function shouldn't be used outside it's subsystem. */
-#define PRIVATE
+#include <feral/stdtypes.h>
+#include <arch/x86_64/cpuio.h>
+#include <arch/x86_64/cpufuncs.h>
 
 
+BYTE x86inb(WORD port)
+{
+	UINT8 RetVal;
+	__asm__ volatile("inb %1, %0" : "=a"(RetVal) : "Nd"(port));
+	return RetVal;
+}
+
+WORD x86inw(WORD port)
+{
+	UINT16 RetVal;
+	__asm__ volatile("inw %1, %0" : "=a"(RetVal) : "Nd"(port));
+	return RetVal;
+}
+
+DWORD x86inl(WORD port)
+{
+	UINT32 RetVal;
+	__asm__ volatile("inl %1, %0" : "=a"(RetVal) : "Nd"(port));
+	return RetVal;
+}
+
+#if 0
+static inline QUAD  x86inq(WORD port)
+{
+	UINT64 RetVal;
+	__asm__ volatile ("inq %1, %0" : "=a"(RetVal) : "Nd"(port));
+	return RetVal;
+}
+#endif
+
+VOID x86outb(WORD port, BYTE val)
+{
+	__asm__ volatile("outb %0, %1" ::"a"(val), "d"(port));
+}
+
+VOID x86outw(WORD port, WORD val)
+{
+	__asm__ volatile("outw %0, %1" ::"a"(val), "d"(port));
+}
+
+VOID x86outl(WORD port, DWORD val)
+{
+	__asm__ volatile("outl %0, %1" ::"a"(val), "d"(port));
+}
+
+#if 0
+VOID x86outq(WORD port, QUAD val)
+{
+	__asm__ volatile ("out %0, %1" :: "a"(val), "d"(port));
+}
 #endif
