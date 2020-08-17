@@ -15,11 +15,9 @@ all:	kernel
 kernel:
 	mkdir -p build/$(ARCH)/	
 	
-	cd io && $(MAKE) 
 	cd drivers && $(MAKE)
 	cd kern && $(MAKE)
 	 
-	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES)
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o
 	cd tests && $(MAKE) all
@@ -29,11 +27,9 @@ kernel-efi:
 	mkdir -p build/EFI/Boot
 	mkdir -p build/EFI/Feral
 	
-	cd io && $(MAKE) 
 	cd drivers && $(MAKE)
 	cd kern && $(MAKE) all-efi
 	 
-	$(CC) $(TARGET) -I$(INCLUDES) -DFERAL_BUILD_STANDALONE_UEFI_ $(CFLAGS) ./io/*.c -o ./iofuncs.o
 	$(CC) $(TARGET) -I$(INCLUDES) -DFERAL_BUILD_STANDALONE_UEFI_ $(CFLAGS) $(VGA_FILES)
 	$(LD) -T $(LINKIN_EFI) -o $(KERNEL) ./*.o
 	#strip $(KERNEL)

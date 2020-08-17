@@ -38,23 +38,6 @@ static DriverTree DriverRoot = {
 	NULLPTR,
 };
 
-FERALSTATUS KeCreateDriver(INOUT FeralDriver* Target,
-	FERALSTATUS (*DriverInit)(IN DriverObject* Object, IN WSTRING RmsPath),
-	FERALSTATUS (*DriverExit)(VOID),
-	FERALSTATUS (*DriverDispatch)(UINT64 NumArgs, VOID** Stuff))
-{
-	if ((DriverInit == NULLPTR) || (DriverDispatch = NULLPTR))
-	{
-		return STATUS_ERROR;
-	}
-
-	Target->DriverInit = DriverInit;
-	Target->DriverExit = DriverExit;
-	Target->DriverDispatch = DriverDispatch;
-	/* Not yet implemented... */
-	return STATUS_ERROR;
-}
-
 FERALSTATUS KeAddDriverToTree(IN STRING DeviceType, IN FERAL_DRIVER* Driver)
 {
 	return STATUS_SUCCESS;
