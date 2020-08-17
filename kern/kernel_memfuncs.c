@@ -65,15 +65,6 @@ FERALSTATUS KiCompareMemory(
 	return STATUS_SUCCESS;
 }
 
-// TODO: Implement the rest of this stuff.
-#if 0
-//Start, New location, size
-FERALSTATUS KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINT64);
-
-//Where, with what, and how many UINTNs to set.
-FERALSTATUS KiSetMemory(INOUT VOID*, IN UINTN, IN UINT64);
-#endif
-
 /* Same as above, but with bytes. */
 FERALSTATUS FERALAPI KiSetMemoryBytes(
 	INOUT VOID* Dest, IN UINT8 Val, IN UINT64 Amt)

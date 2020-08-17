@@ -71,6 +71,9 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 		FERAL_VERSION_SHORT, VersionInfo.FeralVersionMajor,
 		VersionInfo.FeralVersionMinor, VersionInfo.FeralVersionPatch);
 
+	/* And then throw some other messages out there
+	 * to prove that the framebuffer works.
+	 */
 	KiPrintLine("Copyright (c) 2018-2020, Brian Schnepp");
 	KiPrintFmt("Booted using %s\n",
 		EnvBlock->FunctionTable->GetFirmwareName());

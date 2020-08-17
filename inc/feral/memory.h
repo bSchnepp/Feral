@@ -29,26 +29,6 @@ IN THE SOFTWARE.
 #ifndef _FERAL_MEMORY_H_
 #define _FERAL_MEMORY_H_
 
-
-/*
-	TODO: Try to mitigate Rowhammer as best we can.
-	All dynamic memory should *never* be contiguous in memory
-	as compared to it's normal memory model (ie, array > 1 page is
-	not in right order on physical memory.), but take care to ensure
-	other applications don't get a slice of memory between another
-	program's pages.
-
-	We'll *eventually* be unable to deal with this, but we can do something
-	like arbitrarilly say that programs run under users without a specific
-	privilege can only use up to a specific, non-100% amount of total
-	available memory (memory quotas), something like 10% for "we want to
-	be as hard to break as possible" up to 75% for "don't care about
-   security" types.
-
-	Then, it's up to users to set up program permissions correctly, set up
-   security policies, and don't try to create a 'root' user.
- */
-
-
+/* TODO */
 
 #endif

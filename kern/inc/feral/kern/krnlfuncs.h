@@ -36,13 +36,7 @@ FERALSTATUS FERALAPI KiCopyMemory(IN VOID*, IN VOID*, IN UINT64);
 /* First, Second, Size, Equal */
 FERALSTATUS FERALAPI KiCompareMemory(IN VOID*, IN VOID*, IN UINT64, OUT BOOL*);
 
-/* Start, New location, size */
-FERALSTATUS FERALAPI KiMoveMemory(IN VOID*, IN CONST VOID*, IN UINT64);
-
-/* Where, with what, and how many UINTNs to set. */
-FERALSTATUS FERALAPI KiSetMemory(INOUT VOID*, IN UINTN, IN UINT64);
-
-/* Same as above, but with bytes. */
+/* Dest, byte value, amount */
 FERALSTATUS FERALAPI KiSetMemoryBytes(INOUT VOID*, IN UINT8, IN UINT64);
 
 /* TODO: Replace bad temp strlen with this

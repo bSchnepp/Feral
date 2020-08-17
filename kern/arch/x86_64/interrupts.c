@@ -295,13 +295,14 @@ typedef struct PS2KeyboardContext
 	UINT8 ShiftModifier;
 	UINT8 ControlModifier;
 	UINT8 AltModifier;
+	UINT8 CapsLock;
 } PS2KeyboardContext;
 
 static PS2KeyboardContext KeyboardContext = {0};
 
-char ApplyShiftIfNeeded(CHAR In);
+CHAR ApplyShiftIfNeeded(CHAR In);
 
-char ApplyShiftIfNeeded(CHAR In)
+CHAR ApplyShiftIfNeeded(CHAR In)
 {
 	/* There's some symbols like < and ; we have to worry about later. */
 	if (In < 'A' || In > 'z')
@@ -319,143 +320,80 @@ char ApplyShiftIfNeeded(CHAR In)
 	}
 }
 
-
+#include "charmap.inl"
 
 void CheckStatusCode(UINT8 In)
 {
-	if (In == 0xBA)
+	BOOL Released = (In & 0x80) != 0x00;
+	UINT8 Index = In & 0x7F;
+	const CHAR *Content = PS2Charmap[Index];
+	
+	UINT64 MaxLength = 6; /* Length of "LShift" */
+	UINT64 ContentLength = 0;
+	KiGetStringLength(Content, &ContentLength);
+	BOOL LeftShift = FALSE;
+	BOOL RightShift = FALSE;
+	
+	UINT64 CompareLength = (ContentLength < MaxLength) 
+		? ContentLength 
+		: MaxLength;
+
+	BOOL IsShift = FALSE;
+	KiCompareMemory(Content, "LShift", CompareLength, &IsShift);
+	if (!IsShift)
 	{
-		KeyboardContext.ShiftModifier
-			= !(KeyboardContext.ShiftModifier);
+		/* Try again for right shift */
+		KiCompareMemory(Content, "RShift", CompareLength, &IsShift);
 	}
 
-	if (In == 0x2A || In == 0x36)
+	if (!Released && IsShift)
 	{
-		KeyboardContext.ShiftModifier = 1;
+		KeyboardContext.ShiftModifier = !(KeyboardContext.CapsLock);
+		return;
 	}
-	else if (In == 0xAA || In == 0xB6)
+	else if (Released && IsShift)
 	{
-		KeyboardContext.ShiftModifier = 0;
+		KeyboardContext.ShiftModifier = (KeyboardContext.CapsLock);
+		return;
 	}
+
+	/* Also handle caps lock case. */
+	BOOL IsCapsLock = FALSE;
+	KiCompareMemory(Content, "CapsLock", CompareLength, &IsCapsLock);
+	if (!Released && IsCapsLock)
+	{
+		/* Invert on press event. */
+		KeyboardContext.ShiftModifier = !(KeyboardContext.ShiftModifier);
+		KeyboardContext.CapsLock = !(KeyboardContext.CapsLock);
+		return;
+	}
+
 }
 
 /* TODO: Support new keymaps... */
 CHAR InternalConvertPS2KeyToASCII(CHAR In)
 {
 	/* TODO: convert this to a lookup table... */
-	CHAR ProperLetter = '\0';
-	if (In == 0x1E)
+	UINT64 ContentLength = 0;
+	UINT8 Index = In & 0x7F;
+	const CHAR *Content = PS2Charmap[Index];
+	KiGetStringLength(Content, &ContentLength);
+
+	CHAR ProperLetter = Content[0];
+	if (In == 0x1C || In == 0x5A)
 	{
-		ProperLetter = 'a';
-	}
-	else if (In == 0x30)
-	{
-		ProperLetter = 'b';
-	}
-	else if (In == 0x2E)
-	{
-		ProperLetter = 'c';
-	}
-	else if (In == 0x20)
-	{
-		ProperLetter = 'd';
-	}
-	else if (In == 0x12)
-	{
-		ProperLetter = 'e';
-	}
-	else if (In == 0x21)
-	{
-		ProperLetter = 'f';
-	}
-	else if (In == 0x22)
-	{
-		ProperLetter = 'g';
-	}
-	else if (In == 0x23)
-	{
-		ProperLetter = 'h';
-	}
-	else if (In == 0x17)
-	{
-		ProperLetter = 'i';
-	}
-	else if (In == 0x24)
-	{
-		ProperLetter = 'j';
-	}
-	else if (In == 0x25)
-	{
-		ProperLetter = 'k';
-	}
-	else if (In == 0x26)
-	{
-		ProperLetter = 'l';
-	}
-	else if (In == 0x32)
-	{
-		ProperLetter = 'm';
-	}
-	else if (In == 0x31)
-	{
-		ProperLetter = 'n';
-	}
-	else if (In == 0x18)
-	{
-		ProperLetter = 'o';
-	}
-	else if (In == 0x19)
-	{
-		ProperLetter = 'p';
-	}
-	else if (In == 0x10)
-	{
-		ProperLetter = 'q';
-	}
-	else if (In == 0x13)
-	{
-		ProperLetter = 'r';
-	}
-	else if (In == 0x1F)
-	{
-		ProperLetter = 's';
-	}
-	else if (In == 0x14)
-	{
-		ProperLetter = 't';
-	}
-	else if (In == 0x16)
-	{
-		ProperLetter = 'u';
-	}
-	else if (In == 0x2F)
-	{
-		ProperLetter = 'v';
-	}
-	else if (In == 0x11)
-	{
-		ProperLetter = 'w';
-	}
-	else if (In == 0x2D)
-	{
-		ProperLetter = 'x';
-	}
-	else if (In == 0x15)
-	{
-		ProperLetter = 'y';
-	}
-	else if (In == 0x2C)
-	{
-		ProperLetter = 'z';
-	}
-	else if (In == 0x1C || In == 0x5A)
-	{
-		ProperLetter = '\n';
+		return '\n';
 	}
 	else if (In == 0x39 || In == 0x29)
 	{
-		ProperLetter = ' ';
+		return ' ';
 	}
+
+	if (ContentLength != 1)
+	{
+		return '\0';
+	}
+	
 	return ApplyShiftIfNeeded(ProperLetter);
 }
 
@@ -468,9 +406,10 @@ INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
 	Keycode = x86inb(0x60); /* Data is 0x60. */
 	CheckStatusCode(Keycode);
 	CHAR Letter = InternalConvertPS2KeyToASCII(Keycode);
-	CHAR Buffer[2] = {0};
+	CHAR Buffer[2] = {"\0", "\0"};
 	Buffer[0] = Letter;
-	if (Letter)
+	Buffer[1] = '\0';
+	if (Letter && (Keycode & 0x7F) == Keycode)
 	{
 		KiPrintFmt(Buffer);
 	}
