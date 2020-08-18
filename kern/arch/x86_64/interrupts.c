@@ -26,8 +26,11 @@ IN THE SOFTWARE.
 
 
 #include <feral/stdtypes.h>
+
 #include <feral/kern/frlos.h>
 #include <feral/kern/krnlfuncs.h>
+#include <feral/kern/krnlfirmware.h>
+
 #include <arch/x86_64/idt/idt.h>
 #include <arch/x86_64/cpuio.h>
 #include <arch/x86_64/cpufuncs.h>
@@ -368,6 +371,20 @@ void CheckStatusCode(UINT8 In)
 		return;
 	}
 
+	UINT64 MaxBackspaceLength = 9; /* Length of "Backspace" */
+	BOOL IsBackspace = FALSE;
+	
+	CompareLength = (ContentLength < MaxBackspaceLength) 
+		? ContentLength 
+		: MaxBackspaceLength;
+
+	KiCompareMemory(Content, "Backspace", CompareLength, &IsBackspace);
+	if (!Released && IsBackspace)
+	{
+		KiBackspace();
+		return;
+	}
+
 }
 
 /* TODO: Support new keymaps... */
@@ -393,7 +410,7 @@ CHAR InternalConvertPS2KeyToASCII(CHAR In)
 	{
 		return '\0';
 	}
-	
+
 	return ApplyShiftIfNeeded(ProperLetter);
 }
 

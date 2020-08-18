@@ -103,18 +103,29 @@ static KrnlFirmwareFunctions FirmwareFuncs = {0};
 static KrnlCharMap CharMap = {0};
 static KrnlEnvironmentBlock EnvBlock = {0};
 
-STRING GetBiosFirmwareClaim();
-VOID InternalVgaPrintln(STRING Str, UINT64 Len);
+static STRING GetBiosFirmwareClaim();
+static VOID InternalVgaPrintln(STRING Str, UINT64 Len);
+static VOID InternalVgaBackspace();
 
-STRING GetBiosFirmwareClaim()
+static STRING GetBiosFirmwareClaim()
 {
 	return "PC Compatible BIOS (Multiboot 2)";
 }
 
 
-VOID InternalVgaPrintln(STRING Str, UINT64 Len)
+static VOID InternalVgaPrintln(STRING Str, UINT64 Len)
 {
 	VgaPrintln(VGA_WHITE, VGA_BLACK, Str, Len);
+}
+
+static VOID InternalVgaBackspace()
+{
+	UINT16 X = 0;
+	UINT16 Y = 0;
+	VgaGetCurrentPosition(&X, &Y);
+	VgaMoveCursor(X-1, Y);
+	VgaPutChar(' ');
+	VgaMoveCursor(X-1, Y);
 }
 
 VOID kern_init(UINT32 MBINFO)
@@ -407,6 +418,7 @@ VOID kern_init(UINT32 MBINFO)
 	FirmwareFuncs.PutChar = VgaPutChar;
 	FirmwareFuncs.Println = InternalVgaPrintln;
 	FirmwareFuncs.GetFirmwareName = GetBiosFirmwareClaim;
+	FirmwareFuncs.Backspace = InternalVgaBackspace;
 	EnvBlock.FunctionTable = &FirmwareFuncs;
 	EnvBlock.CharMap = &CharMap;
 	/* Kernel initialization is done, move on to actual tasks. */

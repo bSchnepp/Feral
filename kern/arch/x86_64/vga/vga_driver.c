@@ -222,6 +222,12 @@ VOID VgaSetCurrentPosition(UINT16 X, UINT16 Y)
 	currentContext->CurrentCol = X;
 }
 
+VOID VgaGetCurrentPosition(UINT16 *X, UINT16 *Y)
+{
+	(*Y) = currentContext->CurrentRow;
+	(*X) = currentContext->CurrentCol;
+}
+
 /**
 	Puts a character in the next available cell, with the
 	foreground and background specified.

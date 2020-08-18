@@ -55,6 +55,12 @@ FERALSTATUS KiPutChar(CHAR c)
 	return STATUS_SUCCESS;
 }
 
+FERALSTATUS KiBackspace()
+{
+	BackingFunctions->Backspace();
+	return STATUS_SUCCESS;
+}
+
 /*
 //Same as above but with a wide string.
 FERALSTATUS KiGetWideStringLength(IN WSTRING, OUT* UINTN);

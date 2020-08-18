@@ -32,10 +32,18 @@ IN THE SOFTWARE.
 
 /* Single character */
 typedef VOID (*PutCharFunc)(CHAR);
+
 /* String, length */
 typedef VOID (*PrintlnFunc)(STRING, UINT64);
+
 /* The name of the underlying firmware (EFI, BIOS, etc.) */
 typedef STRING (*GetFirmwareNameFunc)(VOID);
+
+/* Implementation of backspace visually. 
+ * It simply needs to clear the previous cell, then decrement
+ * the current index in the video buffer.
+ */
+typedef VOID (*BackspaceFunc)(VOID);
 
 /* TODO */
 typedef VOID *(*GetNativeFirmwareMemoryMapFunc)(VOID);
@@ -59,12 +67,11 @@ typedef struct KrnlFirmwareFunctions
 	PutCharFunc PutChar;
 	PrintlnFunc Println;
 	GetNativeFirmwareMemoryMapFunc GetNativeFirmwareMemoryMap;
+	BackspaceFunc Backspace;
 	/* Add more functions as needed. */
 } KrnlFirmwareFunctions;
 
 FERALSTATUS KiUpdateFirmwareFunctions(
 	KrnlFirmwareFunctions *Table, KrnlCharMap *CharMap);
-
-
 
 #endif

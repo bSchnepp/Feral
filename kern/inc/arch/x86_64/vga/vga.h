@@ -56,39 +56,6 @@ extern "C"
 		VGA_WHITE = 15,
 	} VgaColorValue;
 
-
-#ifdef ILOVEBEAR18
-	typedef struct VgaGraphicsContextCreateInfo
-	{
-		FeralStructureType sType;
-		const void* pNext;
-
-		UINT16* Framebuffer;
-
-		UINT16 ScreenWidth;
-		UINT16 ScreenHeight;
-
-		BOOL TextMode;
-		BOOL FollowingInput;
-		BOOL CursorEnabled;
-	} VgaGraphicsContextCreateInfo;
-
-	typedef struct VgaGraphicsContextInfo
-	{
-		FeralStructureType sType;
-		const void* pNext;
-
-		const VgaGraphicsContextCreateInfo* pCreateInfo;
-
-		UINT16 CurrentRow;
-		UINT16 CurrentCol;
-
-		VgaColorValue Background;
-		VgaColorValue Foreground;
-		VgaColorValue Highlight;
-	} VgaGraphicsContextInfo;
-#endif
-
 	/* Rework to look more like direction we're brining Feral API to.
 	 * (redoing struct above) */
 
@@ -143,7 +110,9 @@ extern "C"
 
 	VOID VgaMoveCursor(DWORD PosX, DWORD PosY);
 
-	VOID VgaSetCurrentPosition(UINT16 X, UINT16 Y);
+	VOID VgaGetCurrentPosition(OUT UINT16 *X, OUT UINT16 *Y);
+
+	VOID VgaSetCurrentPosition(IN UINT16 X, OUT IN UINT16 Y);
 
 	/* Whenever we set a character, set the position of the cursor to it
 	 * + 1. */
