@@ -228,6 +228,12 @@ VOID VgaGetCurrentPosition(UINT16 *X, UINT16 *Y)
 	(*X) = currentContext->CurrentCol;
 }
 
+VgaGetFramebufferDimensions(UINT16 *Width, UINT16 *Height)
+{
+	(*Width) = currentContext->ScreenWidth;
+	(*Height) = currentContext->ScreenHeight;
+}
+
 /**
 	Puts a character in the next available cell, with the
 	foreground and background specified.

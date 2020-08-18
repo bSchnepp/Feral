@@ -123,9 +123,20 @@ static VOID InternalVgaBackspace()
 	UINT16 X = 0;
 	UINT16 Y = 0;
 	VgaGetCurrentPosition(&X, &Y);
-	VgaMoveCursor(X-1, Y);
+
+	UINT16 Width = 0;
+	UINT16 Height = 0;
+	VgaGetFramebufferDimensions(&Width, &Height);
+
+	if (X == 0)
+	{
+		return;
+	}
+	--X;
+
+	VgaMoveCursor(X, Y);
 	VgaPutChar(' ');
-	VgaMoveCursor(X-1, Y);
+	VgaMoveCursor(X, Y);
 }
 
 VOID kern_init(UINT32 MBINFO)
