@@ -96,9 +96,6 @@ VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
 	VgaAutoPrintln(VGA_WHITE, VGA_BLACK, "");
 }
 
-
-static VgaContext graphicsContext = {0};
-static UINT16 OtherBuffer[80 * 25];
 static KrnlFirmwareFunctions FirmwareFuncs = {0};
 static KrnlCharMap CharMap = {0};
 static KrnlEnvironmentBlock EnvBlock = {0};
@@ -112,7 +109,11 @@ static STRING GetBiosFirmwareClaim()
 	return "PC Compatible BIOS (Multiboot 2)";
 }
 
-
+static UINT_PTR MaxAddress = 0x00;
+static UINT_PTR(InternalGetMaxPhysicalAddressFunc)(VOID)
+{
+	return MaxAddress;
+}
 static VOID InternalVgaPrintln(STRING Str, UINT64 Len)
 {
 	VgaPrintln(VGA_WHITE, VGA_BLACK, Str, Len);
@@ -141,8 +142,7 @@ static VOID InternalVgaBackspace()
 
 VOID kern_init(UINT32 MBINFO)
 {
-	UINT8 misc = VgaPrepareEnvironment(&graphicsContext);
-	graphicsContext.SwappedBuffer = OtherBuffer;
+	UINT8 misc = VgaPrepareEnvironment();
 	KiBlankVgaScreen(25, 80, VGA_BLACK);
 	VgaAutoPrintln(
 		VGA_WHITE, VGA_BLACK, "Starting initial kernel setup...");
@@ -173,6 +173,7 @@ VOID kern_init(UINT32 MBINFO)
 	 *
 	 * Each of these tags is then processed based on the ID of it.
 	 */
+	uint64_t MaxMem = 0;
 	for (multiboot_tag *MultibootInfo
 		= (multiboot_tag *)((UINT_PTR)(MBINFO + 8));
 		MultibootInfo->type != MULTIBOOT_TAG_TYPE_END;
@@ -324,6 +325,14 @@ VOID kern_init(UINT32 MBINFO)
 				 * E820_MEMORY_TYPE_INV ignored. */
 			}
 			FreeMemCount = FreeAreasWritten >> 1;
+			for (uint32_t Index = 0; Index < FreeAreasWritten;
+				++Index)
+			{
+				if (FreeMemLocs[Index] > MaxAddress)
+				{
+					MaxAddress = FreeMemLocs[Index];
+				}
+			}
 		}
 		else if (Type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS)
 		{
@@ -430,6 +439,7 @@ VOID kern_init(UINT32 MBINFO)
 	FirmwareFuncs.Println = InternalVgaPrintln;
 	FirmwareFuncs.GetFirmwareName = GetBiosFirmwareClaim;
 	FirmwareFuncs.Backspace = InternalVgaBackspace;
+	FirmwareFuncs.GetMaxPhysicalAddress = InternalGetMaxPhysicalAddressFunc;
 	EnvBlock.FunctionTable = &FirmwareFuncs;
 	EnvBlock.CharMap = &CharMap;
 	/* Kernel initialization is done, move on to actual tasks. */

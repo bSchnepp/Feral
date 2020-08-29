@@ -39,11 +39,14 @@ typedef VOID (*PrintlnFunc)(STRING, UINT64);
 /* The name of the underlying firmware (EFI, BIOS, etc.) */
 typedef STRING (*GetFirmwareNameFunc)(VOID);
 
-/* Implementation of backspace visually. 
+/* Implementation of backspace visually.
  * It simply needs to clear the previous cell, then decrement
  * the current index in the video buffer.
  */
 typedef VOID (*BackspaceFunc)(VOID);
+
+/* String, length */
+typedef UINT_PTR (*GetMaxPhysicalAddressFunc)(VOID);
 
 /* TODO */
 typedef VOID *(*GetNativeFirmwareMemoryMapFunc)(VOID);
@@ -67,6 +70,7 @@ typedef struct KrnlFirmwareFunctions
 	PutCharFunc PutChar;
 	PrintlnFunc Println;
 	GetNativeFirmwareMemoryMapFunc GetNativeFirmwareMemoryMap;
+	GetMaxPhysicalAddressFunc GetMaxPhysicalAddress;
 	BackspaceFunc Backspace;
 	/* Add more functions as needed. */
 } KrnlFirmwareFunctions;

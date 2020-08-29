@@ -200,9 +200,9 @@ typedef struct
 	EFI_LOCATE_HANDLE_BUFFER LocateHandleBuffer;
 	EFI_LOCATE_PROTOCOL LocateProtocol;
 	EFI_INSTALL_MULTIPLE_PROTOCOL_INTERFACES
-		InstallMultipleProtocolInterfaces;
+	InstallMultipleProtocolInterfaces;
 	EFI_UNINSTALL_MULTIPLE_PROTOCOL_INTERFACES
-		UninstallMultipleProtocolInterfaces;
+	UninstallMultipleProtocolInterfaces;
 	EFI_CALCULATE_CRC32 CalculateCrc32;
 	EFI_COPY_MEM CopyMem;
 	EFI_SET_MEM SetMem;

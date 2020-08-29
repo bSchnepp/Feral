@@ -270,7 +270,7 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 				valistnext = va_arg(args, STRING);
 				KiPrint(valistnext);
 			}
-			else if (cur == 'i' || cur == 'l')
+			else if (cur == 'i')
 			{
 				INT32 valistnext;
 				valistnext = va_arg(args, INT32);

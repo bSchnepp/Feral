@@ -36,7 +36,9 @@ IN THE SOFTWARE.
 
 #include <arch/x86_64/mm/pageflags.h>
 
-static VgaContext *currentContext;
+static VgaContext graphicsContext = {0};
+static UINT16 OtherBuffer[80 * 25];
+static VgaContext *CurVgaContext;
 
 
 typedef UINT16 ColorValue;
@@ -49,33 +51,33 @@ VOID internalSetItem(UINT16 row, UINT16 col, UINT16 content);
 
 UINT16 internalGetItem(UINT16 row, UINT16 col)
 {
-	return currentContext
-		->SwappedBuffer[(row * currentContext->ScreenWidth) + col];
+	return CurVgaContext
+		->SwappedBuffer[(row * CurVgaContext->ScreenWidth) + col];
 }
 
 VOID internalSetItem(UINT16 row, UINT16 col, UINT16 content)
 {
-	currentContext->SwappedBuffer[(row * currentContext->ScreenWidth) + col]
+	CurVgaContext->SwappedBuffer[(row * CurVgaContext->ScreenWidth) + col]
 		= content;
 }
 
 VOID internalVgaPushUp(VOID)
 {
 	UINT16 row;
-	for (row = 0; row < currentContext->ScreenHeight - 1; ++row)
+	for (row = 0; row < CurVgaContext->ScreenHeight - 1; ++row)
 	{
-		for (UINT16 col = 0; col < currentContext->ScreenWidth; ++col)
+		for (UINT16 col = 0; col < CurVgaContext->ScreenWidth; ++col)
 		{
 			internalSetItem(
 				row, col, internalGetItem(row + 1, col));
 		}
 	}
 
-	for (UINT16 col = 0; col < currentContext->ScreenWidth; ++col)
+	for (UINT16 col = 0; col < CurVgaContext->ScreenWidth; ++col)
 	{
 		internalSetItem(row, col, (UINT16)(0));
 	}
-	VgaMoveCursor(0, currentContext->ScreenHeight - 1);
+	VgaMoveCursor(0, CurVgaContext->ScreenHeight - 1);
 }
 
 
@@ -83,27 +85,27 @@ VOID internalVgaPushUp(VOID)
 	Prepares a VGA context for use by the kernel in
 	pre-initialization stages.
  */
-UINT8 VgaPrepareEnvironment(VgaContext *context)
+UINT8 VgaPrepareEnvironment()
 {
 	// Ensure a bit in port 0x03C2 is set.
 	UINT8 miscreg = x86inb(0x3CC);
 	x86outb(VGA_MISC_OUTPUT_REG, (miscreg | 0xE7));
 
-	context->Framebuffer = (UINT16 *)(KERN_PHYS_TO_VIRT(0xB8000));
-	context->ScreenWidth = 80;
-	context->ScreenHeight = 25;
+	CurVgaContext = &(graphicsContext);
+	CurVgaContext->Framebuffer = (UINT16 *)(KERN_PHYS_TO_VIRT(0xB8000));
+	CurVgaContext->ScreenWidth = 80;
+	CurVgaContext->ScreenHeight = 25;
 
-	context->Background = VGA_BLACK;
-	context->Foreground = VGA_WHITE;
-	context->Highlight = VGA_LIGHT_BROWN;
+	CurVgaContext->Background = VGA_BLACK;
+	CurVgaContext->Foreground = VGA_WHITE;
+	CurVgaContext->Highlight = VGA_LIGHT_BROWN;
 
-	context->TextMode = 1;
-	context->FollowingInput = 0;
+	CurVgaContext->TextMode = 1;
+	CurVgaContext->FollowingInput = 0;
 
-	context->CurrentRow = 0;
-	context->CurrentCol = 0;
-
-	currentContext = context;
+	CurVgaContext->CurrentRow = 0;
+	CurVgaContext->CurrentCol = 0;
+	CurVgaContext->SwappedBuffer = OtherBuffer;
 
 	return miscreg;
 }
@@ -113,33 +115,33 @@ UINT8 VgaPrepareEnvironment(VgaContext *context)
  */
 VOID VgaMoveCursor(DWORD PosX, DWORD PosY)
 {
-	if (!currentContext->CursorEnabled)
+	if (!CurVgaContext->CursorEnabled)
 	{
 		return;
 	}
 	UINT16 FinalPos
-		= (UINT16)((PosY * (currentContext->ScreenWidth)) + PosX);
+		= (UINT16)((PosY * (CurVgaContext->ScreenWidth)) + PosX);
 	x86outb(VGA_FB_COMMAND_PORT, VGA_LOW_BYTE_COMMAND);
 	x86outb(VGA_FB_DATA_PORT, (UINT8)((FinalPos) & (0x00FF)));
 
 	x86outb(VGA_FB_COMMAND_PORT, VGA_HIGH_BYTE_COMMAND);
 	x86outb(VGA_FB_DATA_PORT, (UINT8)((FinalPos >> 8) & (0x00FF)));
-	VgaEntry(currentContext->Highlight, currentContext->Background, '\0',
+	VgaEntry(CurVgaContext->Highlight, CurVgaContext->Background, '\0',
 		PosX, PosY);
 }
 
 VOID VgaSwapBuffers(VOID)
 {
-	for (UINT64 Offset = 0;
-		Offset
-		< ((currentContext->ScreenWidth * currentContext->ScreenHeight)
-			>> 2);
-		++Offset)
+	UINT64 ScreenSize
+		= (CurVgaContext->ScreenWidth * CurVgaContext->ScreenHeight);
+
+	/* VGA is based on 16-bit values. Copy them 64 at a time. */
+	for (UINT64 Offset = 0; Offset < (ScreenSize >> 2); ++Offset)
 	{
 		UINT64 *FramebufferAsSixtyFour
-			= (UINT64 *)(currentContext->Framebuffer);
+			= (UINT64 *)(CurVgaContext->Framebuffer);
 		UINT64 *SwapBufferAsSixtyFour
-			= (UINT64 *)(currentContext->SwappedBuffer);
+			= (UINT64 *)(CurVgaContext->SwappedBuffer);
 
 		FramebufferAsSixtyFour[Offset] = SwapBufferAsSixtyFour[Offset];
 	}
@@ -169,7 +171,7 @@ VOID VgaSetCursorEnabled(BOOL value)
 		x86outb(VGA_FB_DATA_PORT, 0x20);
 		x86_io_stall();
 	}
-	currentContext->CursorEnabled = value;
+	CurVgaContext->CursorEnabled = value;
 }
 
 /**
@@ -179,23 +181,23 @@ VOID VgaSetCursorEnabled(BOOL value)
  */
 VOID VgaTraceCharacters(BOOL value)
 {
-	currentContext->FollowingInput = value;
+	CurVgaContext->FollowingInput = value;
 }
 
 /**
 	Sets a given position on the screen with a given value.
  */
-VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter,
-	DWORD posx, DWORD posy)
+VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR Letter,
+	DWORD PosX, DWORD PosY)
 {
-	if (posy >= currentContext->ScreenHeight)
+	if (PosY >= CurVgaContext->ScreenHeight)
 	{
 		internalVgaPushUp();
 	}
-	ColorValue color = ((background << 4) | (foreground)) << 8;
-	UINT16 offset = posx + (posy * currentContext->ScreenWidth);
-	currentContext->SwappedBuffer[offset] = ((UINT16)(letter) | color);
-	currentContext->CurrentCol = posx;
+	ColorValue Color = ((background << 4) | (foreground)) << 8;
+	UINT16 Offset = PosX + (PosY * CurVgaContext->ScreenWidth);
+	CurVgaContext->SwappedBuffer[Offset] = ((UINT16)(Letter) | Color);
+	CurVgaContext->CurrentCol = PosX;
 }
 
 /**
@@ -203,14 +205,14 @@ VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR letter,
 	that the whole screen, from (0, 0) to (width, height),
 	is replaced with a square of the color color.
  */
-VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
+VOID KiBlankVgaScreen(DWORD Height, DWORD Width, DWORD Color)
 {
-	currentContext->Background = color;
-	for (UINT16 h = 0; h < height; ++h)
+	CurVgaContext->Background = Color;
+	for (UINT16 H = 0; H < Height; ++H)
 	{
-		for (UINT16 w = 0; w < width; ++w)
+		for (UINT16 W = 0; W < Width; ++W)
 		{
-			VgaEntry(color, color, (CHAR)('\0'), w, h);
+			VgaEntry(Color, Color, (CHAR)('\0'), W, H);
 		}
 	}
 	VgaSetCurrentPosition(0, 0);
@@ -218,20 +220,20 @@ VOID KiBlankVgaScreen(DWORD height, DWORD width, DWORD color)
 
 VOID VgaSetCurrentPosition(UINT16 X, UINT16 Y)
 {
-	currentContext->CurrentRow = Y;
-	currentContext->CurrentCol = X;
+	CurVgaContext->CurrentRow = Y;
+	CurVgaContext->CurrentCol = X;
 }
 
 VOID VgaGetCurrentPosition(UINT16 *X, UINT16 *Y)
 {
-	(*Y) = currentContext->CurrentRow;
-	(*X) = currentContext->CurrentCol;
+	(*Y) = CurVgaContext->CurrentRow;
+	(*X) = CurVgaContext->CurrentCol;
 }
 
 VgaGetFramebufferDimensions(UINT16 *Width, UINT16 *Height)
 {
-	(*Width) = currentContext->ScreenWidth;
-	(*Height) = currentContext->ScreenHeight;
+	(*Width) = CurVgaContext->ScreenWidth;
+	(*Height) = CurVgaContext->ScreenHeight;
 }
 
 /**
@@ -242,24 +244,24 @@ VOID VgaAutoEntry(
 	VgaColorValue foreground, VgaColorValue background, CHAR letter)
 {
 	/* Check if we're overflowing. */
-	if (currentContext->CurrentCol >= currentContext->ScreenWidth)
+	if (CurVgaContext->CurrentCol >= CurVgaContext->ScreenWidth)
 	{
-		currentContext->CurrentCol = 0;
-		currentContext->CurrentRow++;
+		CurVgaContext->CurrentCol = 0;
+		CurVgaContext->CurrentRow++;
 	}
 
 	/* Now check if row count is too large, in which case, move everything
 	 * up one. */
-	if (currentContext->CurrentRow >= currentContext->ScreenHeight)
+	if (CurVgaContext->CurrentRow >= CurVgaContext->ScreenHeight)
 	{
-		currentContext->CurrentRow = (currentContext->ScreenHeight - 1);
+		CurVgaContext->CurrentRow = (CurVgaContext->ScreenHeight - 1);
 		internalVgaPushUp();
 	}
 
 	/* Now in safe-to-write state. */
-	VgaEntry(foreground, background, letter, currentContext->CurrentCol,
-		currentContext->CurrentRow);
-	currentContext->CurrentCol++;
+	VgaEntry(foreground, background, letter, CurVgaContext->CurrentCol,
+		CurVgaContext->CurrentRow);
+	CurVgaContext->CurrentCol++;
 }
 
 /**
@@ -269,23 +271,23 @@ VOID VgaAutoEntry(
 VOID VgaPutChar(CHAR letter)
 {
 	VgaAutoEntry(
-		currentContext->Foreground, currentContext->Background, letter);
-	if (currentContext->FollowingInput)
+		CurVgaContext->Foreground, CurVgaContext->Background, letter);
+	if (CurVgaContext->FollowingInput)
 	{
-		if (currentContext->CurrentCol >= currentContext->ScreenWidth)
+		if (CurVgaContext->CurrentCol >= CurVgaContext->ScreenWidth)
 		{
-			currentContext->CurrentCol = 0;
-			currentContext->CurrentRow++;
+			CurVgaContext->CurrentCol = 0;
+			CurVgaContext->CurrentRow++;
 		}
 
-		if (currentContext->CurrentRow >= currentContext->ScreenHeight)
+		if (CurVgaContext->CurrentRow >= CurVgaContext->ScreenHeight)
 		{
-			currentContext->CurrentRow
-				= currentContext->ScreenHeight - 1;
+			CurVgaContext->CurrentRow
+				= CurVgaContext->ScreenHeight - 1;
 			internalVgaPushUp();
 		}
 		VgaMoveCursor(
-			currentContext->CurrentCol, currentContext->CurrentRow);
+			CurVgaContext->CurrentCol, CurVgaContext->CurrentRow);
 	}
 }
 
@@ -296,15 +298,15 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background,
 
 	for (CHAR c = *string; index < length; c = string[++index])
 	{
-		if (posx >= currentContext->ScreenWidth)
+		if (posx >= CurVgaContext->ScreenWidth)
 		{
 			posx = 0;
-			currentContext->CurrentRow = ++posy;
+			CurVgaContext->CurrentRow = ++posy;
 		}
 
-		if (posy >= currentContext->ScreenHeight)
+		if (posy >= CurVgaContext->ScreenHeight)
 		{
-			posy = currentContext->ScreenHeight - 1;
+			posy = CurVgaContext->ScreenHeight - 1;
 			internalVgaPushUp();
 		}
 
@@ -319,8 +321,8 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background,
 		else if (c == '\n')
 		{
 			/* Now, reset the last row's state. */
-			currentContext->CurrentCol = 0;
-			currentContext->CurrentRow++;
+			CurVgaContext->CurrentCol = 0;
+			CurVgaContext->CurrentRow++;
 		}
 		else if (c == '\0')
 		{
@@ -337,16 +339,16 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background,
 	CHAR *string, DWORD length)
 {
 	VgaStringEntry(foreground, background, string, length,
-		currentContext->CurrentCol, currentContext->CurrentRow);
-	currentContext->CurrentRow++;
-	currentContext->CurrentCol = 0;
+		CurVgaContext->CurrentCol, CurVgaContext->CurrentRow);
+	CurVgaContext->CurrentRow++;
+	CurVgaContext->CurrentCol = 0;
 
-	if (currentContext->CurrentRow >= currentContext->ScreenHeight)
+	if (CurVgaContext->CurrentRow >= CurVgaContext->ScreenHeight)
 	{
-		currentContext->CurrentRow = currentContext->ScreenHeight - 1;
+		CurVgaContext->CurrentRow = CurVgaContext->ScreenHeight - 1;
 		internalVgaPushUp();
 	}
-	VgaMoveCursor(currentContext->CurrentCol, currentContext->CurrentRow);
+	VgaMoveCursor(CurVgaContext->CurrentCol, CurVgaContext->CurrentRow);
 }
 
 VOID VgaAutoPrintln(
@@ -364,7 +366,7 @@ VOID VgaAutoPrint(
 	KiGetStringLength(String, &Length);
 
 	VgaStringEntry(Foreground, Background, String, Length,
-		currentContext->CurrentCol, currentContext->CurrentRow);
-	currentContext->CurrentCol++;
-	VgaMoveCursor(currentContext->CurrentCol, currentContext->CurrentRow);
+		CurVgaContext->CurrentCol, CurVgaContext->CurrentRow);
+	CurVgaContext->CurrentCol++;
+	VgaMoveCursor(CurVgaContext->CurrentCol, CurVgaContext->CurrentRow);
 }

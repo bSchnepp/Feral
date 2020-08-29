@@ -85,8 +85,12 @@ qemu-nokvm-unsupportedcpu:	iso
 	qemu-system-$(ARCH) -cpu KnightsMill -cdrom $(ISO) -smp 2 -m 6G
 	
 qemu-lldb:	iso
-	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -S -s -d int,cpu_reset -no-reboot&	
+	qemu-system-$(ARCH) $(CPU) --enable-kvm -cdrom $(ISO) -smp 2 -m 6G -S -s -d int,cpu_reset -no-reboot&	
 	
+qemu-nokvm-lldb:	iso
+	qemu-system-$(ARCH) $(CPU) -cdrom $(ISO) -smp 2 -m 6G -S -s -d int,cpu_reset -no-reboot&	
+
+
 qemu-efi: 	img-efi
 	cp $(EFI_CODE) ./efi.bin
 	

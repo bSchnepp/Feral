@@ -110,11 +110,11 @@ extern "C"
 
 	VOID VgaMoveCursor(DWORD PosX, DWORD PosY);
 
-	VOID VgaGetCurrentPosition(OUT UINT16 *X, OUT UINT16 *Y);
+	VOID VgaGetCurrentPosition(OUT UINT16* X, OUT UINT16* Y);
 
 	VOID VgaSetCurrentPosition(IN UINT16 X, OUT IN UINT16 Y);
 
-	VgaGetFramebufferDimensions(OUT UINT16 *Width, OUT UINT16 *Height);
+	VgaGetFramebufferDimensions(OUT UINT16* Width, OUT UINT16* Height);
 
 	/* Whenever we set a character, set the position of the cursor to it
 	 * + 1. */
@@ -124,7 +124,7 @@ extern "C"
 
 	VOID VgaSwapBuffers(VOID);
 
-	UINT8 VgaPrepareEnvironment(VgaContext* context);
+	UINT8 VgaPrepareEnvironment();
 
 
 #if defined(__cplusplus)

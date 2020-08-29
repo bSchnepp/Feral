@@ -71,6 +71,11 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 		FERAL_VERSION_SHORT, VersionInfo.FeralVersionMajor,
 		VersionInfo.FeralVersionMinor, VersionInfo.FeralVersionPatch);
 
+	/* Fmt doesn't properly take 'lu' yet, so deal with this... */
+	KiPrintFmt("Found %l mebibytes of free memory\n",
+		EnvBlock->FunctionTable->GetMaxPhysicalAddress()
+			/ (1024 * 1024));
+
 	/* And then throw some other messages out there
 	 * to prove that the framebuffer works.
 	 */

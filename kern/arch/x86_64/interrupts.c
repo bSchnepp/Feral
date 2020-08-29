@@ -330,16 +330,15 @@ void CheckStatusCode(UINT8 In)
 	BOOL Released = (In & 0x80) != 0x00;
 	UINT8 Index = In & 0x7F;
 	const CHAR *Content = PS2Charmap[Index];
-	
+
 	UINT64 MaxLength = 6; /* Length of "LShift" */
 	UINT64 ContentLength = 0;
 	KiGetStringLength(Content, &ContentLength);
 	BOOL LeftShift = FALSE;
 	BOOL RightShift = FALSE;
-	
-	UINT64 CompareLength = (ContentLength < MaxLength) 
-		? ContentLength 
-		: MaxLength;
+
+	UINT64 CompareLength
+		= (ContentLength < MaxLength) ? ContentLength : MaxLength;
 
 	BOOL IsShift = FALSE;
 	KiCompareMemory(Content, "LShift", CompareLength, &IsShift);
@@ -366,17 +365,18 @@ void CheckStatusCode(UINT8 In)
 	if (!Released && IsCapsLock)
 	{
 		/* Invert on press event. */
-		KeyboardContext.ShiftModifier = !(KeyboardContext.ShiftModifier);
+		KeyboardContext.ShiftModifier
+			= !(KeyboardContext.ShiftModifier);
 		KeyboardContext.CapsLock = !(KeyboardContext.CapsLock);
 		return;
 	}
 
 	UINT64 MaxBackspaceLength = 9; /* Length of "Backspace" */
 	BOOL IsBackspace = FALSE;
-	
-	CompareLength = (ContentLength < MaxBackspaceLength) 
-		? ContentLength 
-		: MaxBackspaceLength;
+
+	CompareLength = (ContentLength < MaxBackspaceLength)
+				? ContentLength
+				: MaxBackspaceLength;
 
 	KiCompareMemory(Content, "Backspace", CompareLength, &IsBackspace);
 	if (!Released && IsBackspace)
@@ -384,7 +384,6 @@ void CheckStatusCode(UINT8 In)
 		KiBackspace();
 		return;
 	}
-
 }
 
 /* TODO: Support new keymaps... */
