@@ -4,7 +4,7 @@ SECTIONS
 {
 	. = 1M;
 	kern_start = .;
-	KERN_VIRT_OFFSET = 0xFFFFFFFFC0000000;
+	KERN_VIRT_OFFSET = 0xFFFFFF8000000000;
 	
 	.earlytext :
 	{

@@ -30,6 +30,8 @@ global x86_interrupt_19
 
 global x86_interrupt_33
 
+KERN_VIRT_OFFSET EQU 0xFFFFFF8000000000
+
 cpuid_vendor_func:
 ; In order: RDI, RSI, RDX.
 push rbp		; Don't think this is necessary, but let's do it anyway.

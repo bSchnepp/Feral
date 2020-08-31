@@ -485,7 +485,19 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 		info.sType = MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO;
 		info.pNext = NULLPTR;
 		info.pPhysicalAllocationInfo = &allocInfo;
-		return KiInitializeMemMgr(&info);
+		FERALSTATUS Status = KiInitializeMemMgr(&info);
+		if (Status != STATUS_SUCCESS)
+		{
+			return Status;
+		}
+
+		/* First part of manipulating page tables in C... 
+		 * We no longer need lower half, so just wipe it out.
+		 */
+		UINT_PTR *OrigP4 = get_initial_p4_table();
+		//OrigP4[0] = 0x00;
+		//x86_write_cr3(OrigP4);
+		return STATUS_SUCCESS;
 	}
 	else if (subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC)
 	{

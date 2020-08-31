@@ -9,8 +9,8 @@ extern p2_table
 extern p3_table
 extern p4_table
 
-; FFFFFFFFC0000000, which is the full P4, P3, but entry 0 for P2.
-KERN_VIRT_OFFSET EQU 0xFFFFFFFFC0000000
+; FFFFFFFFC0000000, which is the full P4, but entry 0 for P3, P2.
+KERN_VIRT_OFFSET EQU 0xFFFFFF8000000000
 
 header_start:
 
@@ -209,12 +209,8 @@ create_gdt:
 	; kern_start is multiboot-only.
 	; Get around to that later.
 
-	; Force TLB flush
-	mov ecx, cr3
-	mov cr3, ecx
-	
-	
-	
+
+begin_trampoline:
 	; invoke far return to go to 64-bit mode.
 	push 0x08
 	; do a short little dance to ensure we load the right address.
@@ -250,7 +246,7 @@ kern_start:
 
 	extern kern_init
 	mov rax, kern_init
-	call rax
+	jmp rax
 endloop:
 	sti ; Force enable interrupts, or else bad things happen!
 	hlt

@@ -4,7 +4,7 @@ SECTIONS
 {
 	. = 1M;
 	kern_start = .;
-	KERN_VIRT_OFFSET = 0xFFFFFFFFC0000000;
+	KERN_VIRT_OFFSET = 0xFFFFFF8000000000;
 	
 	
 	.multiboot2 :
@@ -46,6 +46,9 @@ SECTIONS
 	.bss : AT(ADDR(.bss) - KERN_VIRT_OFFSET)
 	{
 		*(.bss)
+		*(.dynbss)
+		*(COMMON)
+		. = ALIGN(. != 0 ? 64 / 8 : 1);
 	}
 	
 	.data : AT(ADDR(.data) - KERN_VIRT_OFFSET)

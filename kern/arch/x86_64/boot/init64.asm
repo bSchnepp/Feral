@@ -1,5 +1,5 @@
 ; FFFFFFFFC0000000, which is the full P4, P3, but entry 0 for P2.
-KERN_VIRT_OFFSET EQU 0xFFFFFFFFC0000000
+KERN_VIRT_OFFSET EQU 0xFFFFFF8000000000
 
 GLOBAL _start64
 BITS 64
@@ -19,9 +19,13 @@ boot_panic_invalid_arch:
 
 section .earlydata
 gdt_64:
+.null: equ $ - gdt_64
 	dq 0	; The zero entry, which is needed for the GDT.
 
 .code: equ $ - gdt_64
+	dq (1 << 40) | (1 << 43) | (1 << 44) | (1 << 47) ; The GDT needs to be done like this.
+
+.data: equ $ - gdt_64
 	dq (1 << 40) | (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53) ; The GDT needs to be done like this.
 
 .gdtpointer:
@@ -66,7 +70,7 @@ _start64:
 
 	push 0x08
 
-	mov rax, qword (kern_start - KERN_VIRT_OFFSET)
+	mov rax, qword (kern_start - 0)
 	jmp rax
 	jmp $
 
@@ -91,7 +95,6 @@ kern_start:
 	mov rcx, cr3
 	mov cr3, rcx
 
-	
 	extern kern_init
 	mov rax, kern_init
 	call rax
@@ -103,6 +106,8 @@ endloop:
 global p4_table
 global p3_table
 global p2_table
+
+global x86_check_gdt
 
 global get_initial_p4_table
 global get_initial_p3_table
@@ -120,6 +125,20 @@ get_initial_p2_table:
 	mov rax, p2_table
 	ret
 
+x86_check_gdt:
+	mov rax, gdt_64_hh.gdtpointer
+	lgdt [rax]
+	; For now, we need to terminate any other descriptors, as cs is the only one we care about.
+	push rax
+	mov ax, 0
+	mov ss, ax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	pop rax
+	ret
+
 section .bss
 bss_start:
 
@@ -133,6 +152,21 @@ stack_top:
 bss_end:
 
 section .data
+
+gdt_64_hh:
+.null: equ $ - gdt_64_hh
+	dq 0	; The zero entry, which is needed for the GDT.
+
+.code: equ $ - gdt_64_hh
+	dq (1 << 40) | (1 << 43) | (1 << 44) | (1 << 47) ; The GDT needs to be done like this.
+
+.data: equ $ - gdt_64_hh
+	dq (1 << 40) | (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53) ; The GDT needs to be done like this.
+
+.gdtpointer:
+	dw $ - gdt_64_hh - 1
+	dq gdt_64_hh	; The pointer that the GDT wants.
+
 ; Store our multiboot pointer.
 efi_value dd 0
 
@@ -144,8 +178,7 @@ p4_table:
 	
 p3_table:
 	dq (p2_table - KERN_VIRT_OFFSET) + 3
-	times 510 dq 0
-	dq (p2_table - KERN_VIRT_OFFSET) + 3
+	times 511 dq 0
 
 p2_table:
 	times 512 dq 0	; Declare 512 entries.

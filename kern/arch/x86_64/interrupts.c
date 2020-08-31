@@ -34,6 +34,7 @@ IN THE SOFTWARE.
 #include <arch/x86_64/idt/idt.h>
 #include <arch/x86_64/cpuio.h>
 #include <arch/x86_64/cpufuncs.h>
+#include <arch/x86_64/mm/pageflags.h>
 
 
 #define X86_PIC_1_COMMAND (0x20)
@@ -447,10 +448,32 @@ volatile void x86SetupIDTEntries()
 	x86IDTSetGate(0x2C, (UINT_PTR)(PS2KeyboardHandler), 0x08, 0x8E);
 }
 
+/* Probably should move these out at some point. */
+typedef struct GDTPointer
+{
+	UINT16 Limit;
+	UINT64 Base;
+}PACKED GDTPointer;
+
+typedef struct GDTEntry
+{
+	UINT16 Limit;
+	UINT16 Base;
+	UINT8 BaseMed;
+	UINT8 AccessByte;
+	UINT8 LimitHigh : 4;
+	UINT8 Granularity : 4;
+	UINT8 BaseHigh;
+}PACKED GDTEntry;
+
+
+extern void x86_check_gdt(VOID);
+
 VOID KiRestoreInterrupts(BOOLEAN value)
 {
 	if (value)
-	{
+	{		
+		//x86_check_gdt();
 		__asm__ __volatile__("sti");
 	}
 	else

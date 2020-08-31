@@ -71,8 +71,8 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 		FERAL_VERSION_SHORT, VersionInfo.FeralVersionMajor,
 		VersionInfo.FeralVersionMinor, VersionInfo.FeralVersionPatch);
 
-	/* Fmt doesn't properly take 'lu' yet, so deal with this... */
-	KiPrintFmt("Found %l mebibytes of free memory\n",
+	/* Fmt doesn't properly take 'lu' yet, FIXME TODO... */
+	KiPrintFmt("Found %lu mebibytes of free memory\n",
 		EnvBlock->FunctionTable->GetMaxPhysicalAddress()
 			/ (1024 * 1024));
 
@@ -98,7 +98,10 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 		TODO: Call up KiStartupProcessor for each processor.
 		Each processor should have it's x87 enabled, so we can do SSE
 		stuff in usermode.
+
+		(also bulldozer will probably cause some drama with that...)
 	 */
+	for (;;) {}
 }
 
 /* UINT64 just in case there's some crazy 6 billion core server one day. */

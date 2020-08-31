@@ -48,7 +48,7 @@ typedef VOID (*BackspaceFunc)(VOID);
 /* String, length */
 typedef UINT_PTR (*GetMaxPhysicalAddressFunc)(VOID);
 
-/* TODO */
+/* TODO: Remove */
 typedef VOID *(*GetNativeFirmwareMemoryMapFunc)(VOID);
 
 typedef struct KrnlCharMap
