@@ -1,3 +1,6 @@
+#ifndef _INLINE_CHARMAP_INL_
+#define _INLINE_CHARMAP_INL_
+
 static UINT8 **DefaultCharMap =
 {
 	{
@@ -711,3 +714,5 @@ static UINT8 **DefaultCharMap =
 		0b11111111,
 	},
 };
+
+#endif

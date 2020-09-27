@@ -25,7 +25,7 @@ IN THE SOFTWARE.
  */
 
 #include <feral/stdtypes.h>
-#include <sec/secsrv/hydrogen.h>
+#include <secsrv/hydrogen.h>
 
 BOOL CheckSecurityClearance(
 	SecurityClearanceLevel userHas, SecurityClearanceLevel wanted)

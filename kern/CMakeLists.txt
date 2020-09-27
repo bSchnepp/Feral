@@ -1,0 +1,19 @@
+LIST(APPEND KERNEL_SOURCES kernel_main.c)
+LIST(APPEND KERNEL_SOURCES kernel_memfuncs.c)
+LIST(APPEND KERNEL_SOURCES kernel_printfuncs.c)
+LIST(APPEND KERNEL_SOURCES kernel_private.c)
+LIST(APPEND KERNEL_SOURCES krnlstring.c)
+
+# driver folder doesn't really do anything just yet.
+
+INCLUDE_DIRECTORIES(inc)
+
+ADD_SUBDIRECTORY(arch/x86_64)
+ADD_SUBDIRECTORY(entry)
+ADD_SUBDIRECTORY(mm)
+
+ADD_LIBRARY(Kernel OBJECT 
+	${KERNEL_SOURCES}
+	$<TARGET_OBJECTS:ArchLib>
+	$<TARGET_OBJECTS:EntryLib>
+	$<TARGET_OBJECTS:MemMgrLib>)

@@ -473,7 +473,7 @@ VOID KiRestoreInterrupts(BOOLEAN value)
 {
 	if (value)
 	{		
-		//x86_check_gdt();
+		x86_check_gdt();
 		__asm__ __volatile__("sti");
 	}
 	else

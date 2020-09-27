@@ -20,7 +20,7 @@ kernel:
 	 
 	$(CC) $(TARGET) -I$(INCLUDES) $(CFLAGS) $(VGA_FILES)
 	$(LD) -T $(LINKIN) -o $(KERNEL) ./*.o
-	cd tests && $(MAKE) all
+	#cd tests && $(MAKE) all
 	
 kernel-efi:
 	mkdir -p build/$(ARCH)/
@@ -33,7 +33,7 @@ kernel-efi:
 	$(CC) $(TARGET) -I$(INCLUDES) -DFERAL_BUILD_STANDALONE_UEFI_ $(CFLAGS) $(VGA_FILES)
 	$(LD) -T $(LINKIN_EFI) -o $(KERNEL) ./*.o
 	#strip $(KERNEL)
-	cd tests && $(MAKE) all
+	#cd tests && $(MAKE) all
 	
 img-efi: 	kernel-efi
 	mkdir -p build/EFI/Feral

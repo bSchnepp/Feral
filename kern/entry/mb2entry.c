@@ -53,7 +53,7 @@ IN THE SOFTWARE.
 
 
 /* hack: include the serial driver in a brute forcey way. */
-#include <drivers/devices/serial/serial.h>
+#include <drivers/serial/serial.h>
 
 
 /* hack for now */

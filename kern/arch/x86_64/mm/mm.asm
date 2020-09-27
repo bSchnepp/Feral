@@ -1,3 +1,5 @@
+BITS 64
+
 [global x86_read_cr0]
 [global x86_write_cr0]
 [global x86_read_cr3]

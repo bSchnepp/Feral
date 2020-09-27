@@ -1,3 +1,6 @@
+#ifndef _INLINE_CHARMAP_INL
+#define _INLINE_CHARMAP_INL
+
 /* Index is input & (0x7F). Extended keycodes like 0xE0 aren't supported. */
 
 /* TODO: Handle different keymaps... */
@@ -88,3 +91,5 @@ const char *PS2Charmap[] =
 	"F11",
 	"F12",
 };
+
+#endif
