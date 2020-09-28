@@ -1,14 +1,11 @@
 # FERAL KERNEL
 
 ## What is Feral?
-Feral is an experimental monolithic kernel, which is intended for use by my Waypoint operating system. It's primary goals
-are flexibility, compatibility, security, and performance, roughly in that order.
+Feral is a monolithic kernel, just as a small hobby project to build a complete
+operating system from scratch, even if that's very slowly.
 
-Feral is designed to run on recent PCs, as of 2020, with the core architecture belonging to either the "Skylake" or
-direct descendants such as "Kaby Lake", "Ice Lake", and "Coffee Lake", as well as the "Zen" microarchitecture, and it's
-immediate descendants, such as "Zen+", "Zen 2", and "Zen 3", where the firmware is either compatible with BIOS, as a
-traditional PC, or is compatible with UEFI version 2.8. As such, certain x86 systems like "Liverpool" or "Scorpio" are
-not supported, as well as legacy x86 PCs like the PC AT and it's many clones.
+Feral is designed to run on recent PC systems with a reasonably compatible BIOS.
+For now, Feral does not support UEFI, although a port is in progress.
 
 ## Supported Hardware
 
@@ -17,19 +14,11 @@ PC-compatible microcomputers. On modern micros, your southbridge, such as x399 o
 probably has something compatible. In the future, Feral intends to move on to
 utilization of newer processor features, such as the APIC, and eventually the 
 xAPIC and x2APIC. In addition, Feral will support symmetric multiprocessing.
-This however, does mean that for certain kinds of hardware with very strange
-BIOSes, such as the aforementioned Liverpool CPU, it may be difficult or even
-impossible for Feral to ever run on such a device.
-
-Feral is in the process of a rewrite to some core initialization functions, partly to allow porting to devices
-which are truely headless, partly to allow for early setup of video output protocols, and to deprecate Multiboot 2 support.
-For now, Feral is most functional when set up to boot over Multiboot 2 protocol. The UEFI port is incomplete, and
-does not support the timers, or outputs to video after loading of the kernel.
 
 Currently, hardware being tested includes a PC with a 4"x4" motherboard and an N3700 CPU ("Braswell") with 4GB of RAM,
 a 17z laptop with a 2500U (aforementioned Zen 1), and in the future, an x5-Z8350 with 2GB of RAM ("Cherry Trail").
 
-In the future, Feral is intended to run on Aarch64 (BCM2711), POWER (Sforza uarch), and RV64GC (U540 SoC) hardware,
+In the future, Feral is intended to run on Aarch64 (BCM2711), POWER (Sforza), and RV64GC (U540) hardware,
 with ports written somewhere in that order.
 
 ## Core architecture?
@@ -58,45 +47,36 @@ into the kernel, for the most part this is accurate to the intention:
 ![Feral Architecture](Documentation/images/feralarch.png)
 
 ## Building?
-The script `build.sh` is a wrapper around the Makefile and
-architecture-specific environment variables. You should run
-```sh
-./build.sh x86_64 qemu
-./build.sh x86_64 qemu-efi
-./build.sh x86_64 qemu-nokvm
-./build.sh aarch64 qemu
-```
-Or as otherwise appropriate for your combination of
-architecture and desired target. For just an ISO generated
-from your installation of GRUB and xorriso, you can run
-```sh
-./build.sh x86_64 iso
-```
-which will produce a Multiboot 2 compatible version of Feral.
-However, in the future, Feral will only support it's own bootloader and
-loading through the EFI firmware. To generate those files, such that they
-can be copied to a valid FAT32 ESP partition and booted, you should run
-```sh
-./build.sh x86_64 img-efi
-```
-The relevant files in either case will be placed in the build/ directory.
+Feral now uses CMake to build.
+A utility script is included for the common case of building
+for x86_64 and QEMU in `vm_test.sh`, and with the GDB stub enabled in `vm_test_gdb.sh`.
 
-This is temporary, and will be replaced with a proper
-build system (Kconfig) later.
+For manually building, you must use Clang as your C compiler. There are currently
+no toolchain files to support building for different architectures, but they
+will be present in a yet-to-be-made `cmake/` directory.
+
+The kernel proper can be built with simply
+```
+mkdir build
+cd build
+cmake .. -DCMAKE_C_COMPILER=clang
+make -j`nproc`
+```
+as a file called `FERALKER`.
 
 ## Minimum requirements?
 Feral should run comfortably on any PC implementing the x86-64 instruction set
-(ie, at least K8 CPU), and at least 1GB of system memory. This memory requirement 
-is done out of laziness in the assembly bootstrapping stage, and Feral is expected
-to lower system requirements to 128MB of RAM in the future.
+(ie, at least K8 CPU), and at least 1GB of system memory.
+This memory requirement will be lowered in the future, but for now is required
+to make things a little easier when setting up the kernel initially.
 
 Feral expects a VGA-compatible display adapter to be present for a PC. As such,
 you'll need some form of video adapter capable of running in VGA mode. Most
-consumer-class CPUs and GPUs implement this.
+consumer-class CPUs and GPUs implement this in at least one of their GPUs.
 
-Feral is tested on a 1950X processor through KVM, and is only *supported* running on version
-1 of the Zen microarchitecture. It is probable that Feral works just fine on other
-x86 implementations, but this is not tested.
+Currently, Feral is tested exclusively on virtual machines on top of Zen 1 1950X,
+and a handful of smaller Zen 1 machines. It is probable Feral will run fine on
+other hardware, but it is not tested.
 
 ## Is there any naming convention?
 Folders should be named in a way to avoid unnecessary characters (ie, 'inc' vs 'include'.)
