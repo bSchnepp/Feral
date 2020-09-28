@@ -1,3 +1,4 @@
+BITS  32
 section .multiboot2
 align 4
 

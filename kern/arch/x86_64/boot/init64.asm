@@ -1,8 +1,9 @@
+BITS 64
+
 ; FFFFFFFFC0000000, which is the full P4, P3, but entry 0 for P2.
 KERN_VIRT_OFFSET EQU 0xFFFFFF8000000000
 
 GLOBAL _start64
-BITS 64
 
 ; This is the blue box of death. We'll worry about a useful panic() later.
 ; The real panic() (KeInternalWarn() for warning, KeStopError() for actual 'panic()') later.
@@ -178,7 +179,8 @@ p4_table:
 	
 p3_table:
 	dq (p2_table - KERN_VIRT_OFFSET) + 3
-	times 511 dq 0
+	times 510 dq 0
+	dq (p2_table - KERN_VIRT_OFFSET) + 3
 
 p2_table:
 	times 512 dq 0	; Declare 512 entries.
