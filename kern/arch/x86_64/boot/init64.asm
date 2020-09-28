@@ -48,7 +48,7 @@ _start64:
 	sub rcx, rdi
 	cld
 	rep stosb
-
+	
 .map_page_tables:
 	; Use huge pages (2MB), map at 2MB * ecx.
 	mov rax, 0x200000
@@ -59,15 +59,15 @@ _start64:
 	inc rcx	; Increment it...
 	cmp rcx, 512	; P2 needs 512 entries. (one gigabyte of identity mapping.)
 	jne .map_page_tables
+
+gdt_setup:
 	lgdt [gdt_64.gdtpointer]
-	
 	
 	; Unlike in MB2 mode, there isn't really
 	; a reaosn to enable paging, since UEFI does that for us.
 	; Instead, just set up our page tables here.
 	mov rax, (p4_table - KERN_VIRT_OFFSET)	; Put the address for the p4 table in EAX.
 	mov cr3, rax		; Then clobber whatever is in CR3 and move it there.
-
 
 	push 0x08
 
@@ -96,6 +96,12 @@ kern_start:
 	mov rcx, cr3
 	mov cr3, rcx
 
+	; Ensure we still get out GDT in higher half
+	lea rax, [gdt_64.gdtpointer]
+	add rax, KERN_VIRT_OFFSET
+	jmp $
+	lgdt [rax]
+
 	extern kern_init
 	mov rax, kern_init
 	call rax
@@ -107,8 +113,6 @@ endloop:
 global p4_table
 global p3_table
 global p2_table
-
-global x86_check_gdt
 
 global get_initial_p4_table
 global get_initial_p3_table
@@ -126,19 +130,6 @@ get_initial_p2_table:
 	mov rax, p2_table
 	ret
 
-x86_check_gdt:
-	mov rax, gdt_64_hh.gdtpointer
-	lgdt [rax]
-	; For now, we need to terminate any other descriptors, as cs is the only one we care about.
-	push rax
-	mov ax, 0
-	mov ss, ax
-	mov ds, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
-	pop rax
-	ret
 
 section .bss
 bss_start:
@@ -153,21 +144,6 @@ stack_top:
 bss_end:
 
 section .data
-
-gdt_64_hh:
-.null: equ $ - gdt_64_hh
-	dq 0	; The zero entry, which is needed for the GDT.
-
-.code: equ $ - gdt_64_hh
-	dq (1 << 40) | (1 << 43) | (1 << 44) | (1 << 47) ; The GDT needs to be done like this.
-
-.data: equ $ - gdt_64_hh
-	dq (1 << 40) | (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53) ; The GDT needs to be done like this.
-
-.gdtpointer:
-	dw $ - gdt_64_hh - 1
-	dq gdt_64_hh	; The pointer that the GDT wants.
-
 ; Store our multiboot pointer.
 efi_value dd 0
 

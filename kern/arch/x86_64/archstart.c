@@ -44,6 +44,31 @@ IN THE SOFTWARE.
 
 #include <arch/processor.h>
 
+/* Probably should move these out at some point. */
+typedef struct GDTPointer
+{
+	UINT16 Limit;
+	UINT64 Base;
+}PACKED GDTPointer;
+
+typedef struct GDTEntry
+{
+	UINT16 Limit;
+	UINT16 Base;
+	UINT8 BaseMed;
+	UINT8 AccessByte;
+	UINT8 LimitHigh : 4;
+	UINT8 Granularity : 4;
+	UINT8 BaseHigh;
+}PACKED GDTEntry;
+
+
+VOID x86CreateGDT()
+{
+	/* nyi */
+}
+
+
 VOID KiStartupMachineDependent(VOID)
 {
 	x86InitializeIDT();

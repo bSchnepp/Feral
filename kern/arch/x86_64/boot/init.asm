@@ -204,7 +204,6 @@ enable_paging:
 ; We still need to create a GDT so we can run 64-bit code.
 ; Let's start...
 create_gdt:
-	
 	lgdt [gdt_64.gdtpointer]
 	; Hold up just a second here. We need to pass to kern_start the multiboot header before it runs off into KiSystemStartup.
 	; kern_start is multiboot-only.
