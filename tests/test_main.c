@@ -44,15 +44,6 @@ void *kern_end;
 
 typedef TEST_STATUS (*TestCase)(VOID);
 
-TEST_STATUS CompilerCheck(VOID)
-{
-	ASSERT_EQ_LLD(0, 0, "CompilerCheck", "Zero Equals Zero");
-	ASSERT_NEQ_LLD(0, 1, "CompilerCheck", "Zero Equals One");
-	ASSERT_EQ_STR("0", "0", "CompilerCheck", "Zero Equals Zero");
-	ASSERT_NEQ_STR("0", "1", "CompilerCheck", "Zero Equals One");
-	return TEST_STATUS_OK;
-}
-
 struct SomeStruct
 {
 	int Value;
@@ -68,9 +59,50 @@ TEST_STATUS KernelMemCpy()
 	ASSERT_EQ_MEM(&k1, &k2, sizeof(struct SomeStruct), "KernelLib", "KiCopyMemory");
 }
 
+TEST_STATUS KernelCStringLength()
+{
+	STRING Val1 = "abcdef";
+	STRING Val2 = "fedcba";
+
+	UINT64 Len1 = 0;
+	UINT64 Len2 = 0;
+
+	KiGetStringLength(Val1, &Len1);
+	KiGetStringLength(Val2, &Len2);
+	
+	ASSERT_EQ_LLD(Len1, Len2, "KernelLib", "KiGetStringLength");
+}
+
+TEST_STATUS KernelCStringLengthDiff()
+{
+	STRING Val1 = "abcdef";
+	STRING Val2 = "fedcba0";
+
+	UINT64 Len1 = 0;
+	UINT64 Len2 = 0;
+
+	KiGetStringLength(Val1, &Len1);
+	KiGetStringLength(Val2, &Len2);
+	
+	ASSERT_NEQ_LLD(Len1, Len2, "KernelLib", "KiGetStringLengthDiff");
+}
+
+TEST_STATUS KernelCompareMemoryNeg()
+{
+	struct SomeStruct k1 = {0};
+	struct SomeStruct k2 = {4, {'a', 'b', 'c', 'd'}, {11}};
+
+	BOOL Value = 0;
+	KiCompareMemory(&k2, &k1, sizeof(struct SomeStruct), &Value);
+	
+	ASSERT_FALSE(Value, "KernelLib", "KiCompareMemory");
+}
+
 TestCase Cases[] = {
-	CompilerCheck,
+	KernelCStringLength,
+	KernelCStringLengthDiff,
 	KernelMemCpy,
+	KernelCompareMemoryNeg,
 };
 
 /* function pointer array is uniform size, unlike something like utf-8,
@@ -84,10 +116,6 @@ int main(int argc, char **argv)
 	{
 		TestCase Func = Cases[Index];
 		TEST_STATUS Status = Func();
-		if (Status != TEST_STATUS_OK)
-		{
-			return Status;
-		}
 	}
 	return 0;
 }

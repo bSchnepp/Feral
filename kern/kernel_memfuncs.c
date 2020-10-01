@@ -37,10 +37,22 @@ FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
 	}
 	CHAR* srcAsChar = (CHAR*)(Source);
 	CHAR* dstAsChar = (CHAR*)(Dest);
-	for (UINT64 c = 0; c < Amount; ++c)
+	
+	/* Fastest possible non-FPU memcpy off the top of my head. */
+	UINT32 Index = 0;
+	for (Index = 0; Index < Amount; Index += 4)
 	{
-		*dstAsChar++ = *srcAsChar++;
+		dstAsChar[Index + 0] = srcAsChar[Index + 0];
+		dstAsChar[Index + 1] = srcAsChar[Index + 1];
+		dstAsChar[Index + 2] = srcAsChar[Index + 2];
+		dstAsChar[Index + 3] = srcAsChar[Index + 3];	
 	}
+	
+	for (; Index < Amount; ++Index)
+	{
+		dstAsChar[Index] = srcAsChar[Index];
+	}
+	
 	return STATUS_SUCCESS;
 }
 
