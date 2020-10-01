@@ -33,6 +33,41 @@ IN THE SOFTWARE.
 #define _FERAL_X86_TESTS_
 
 #if defined(__x86_64__) || defined(__i386__)
+
+void x86_io_stall();
+BYTE x86inb(WORD port);
+WORD x86inw(WORD port);
+DWORD x86inl(WORD port);
+VOID x86outb(WORD port, BYTE val);
+VOID x86outw(WORD port, WORD val);
+VOID x86outl(WORD port, DWORD val);
+UINT64 x86_read_cr3();
+VOID VgaAutoEntry(
+	UINT16 foreground, UINT16 background, CHAR letter);
+VOID VgaPutChar(CHAR letter);
+VOID VgaAutoPrint(
+	UINT16 Foreground, UINT16 Background, CHAR *String);
+VOID VgaAutoPrintln(
+	UINT16 Foreground, UINT16 Background, CHAR *String);
+VOID KiBlankVgaScreen(UINT32 Height, UINT32 Width, UINT32 Color);
+VOID VgaSetCursorEnabled(BOOL value);
+VOID VgaTraceCharacters(BOOL value);
+VOID VgaMoveCursor(UINT32 PosX, UINT32 PosY);
+VOID KiStartupMachineDependent(VOID);
+VOID VgaSetCurrentPosition(UINT16 X, UINT16 Y);
+VOID VgaGetCurrentPosition(UINT16 *X, UINT16 *Y);
+VgaGetFramebufferDimensions(UINT16 *Width, UINT16 *Height);
+UINT32 cpuid_vendor_func();
+UINT32 cpuid_brand_name();
+UINT32 cpuid_family_number();
+VOID VgaPrepareEnvironment();
+VOID KiRestoreInterrupts(BOOL Value);
+VOID *get_initial_p4_table();
+VOID VgaPrintln(UINT16 foreground, UINT16 background,
+	CHAR *string, DWORD length);
+VOID x86_write_cr3(UINT64 cr3);
+
+
 /* hack to deal with arch-specific stuff */
 void x86_io_stall()
 {

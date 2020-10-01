@@ -31,6 +31,12 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
+
+FERALSTATUS KiStartupSystem()
+{
+
+}
+
 /* stubs for some assembly stuff the kernel expects. Maybe fixme?
  */
 void *kern_start;
@@ -47,8 +53,24 @@ TEST_STATUS CompilerCheck(VOID)
 	return TEST_STATUS_OK;
 }
 
+struct SomeStruct
+{
+	int Value;
+	char SomeOther[4];
+	long long int Another[11];
+};
+
+TEST_STATUS KernelMemCpy()
+{
+	struct SomeStruct k1 = {0};
+	struct SomeStruct k2 = {4, {'a', 'b', 'c', 'd'}, {11}};
+	KiCopyMemory(&k2, &k1, sizeof(struct SomeStruct));
+	ASSERT_EQ_MEM(&k1, &k2, sizeof(struct SomeStruct), "KernelLib", "KiCopyMemory");
+}
+
 TestCase Cases[] = {
 	CompilerCheck,
+	KernelMemCpy,
 };
 
 /* function pointer array is uniform size, unlike something like utf-8,

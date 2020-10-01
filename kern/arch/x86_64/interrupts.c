@@ -324,7 +324,7 @@ CHAR ApplyShiftIfNeeded(CHAR In)
 	}
 }
 
-#include "charmap.inl"
+#include <keymaps/charmap.inl>
 
 void CheckStatusCode(UINT8 In)
 {

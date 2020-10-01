@@ -19,6 +19,8 @@ IF (CMAKE_C_COMPILER STREQUAL "clang")
 # But this is the easy way to force it to work right...
 SET(BASE_COMPILER_FLAGS "-ffreestanding -nostdlib -mno-red-zone -c -mno-mmx -mno-sse -msoft-float -fno-vectorize -fstack-protector-all -fPIE -fPIC")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${BASE_COMPILER_FLAGS} -Wall -Wextra -O2 -Wstrict-prototypes -Wvla -Wmissing-prototypes -mcmodel=kernel")
+SET(CMAKE_C_KERN_FLAGS "${CMAKE_C_FLAGS} ${BASE_COMPILER_FLAGS} -Wall -Wextra -O2 -Wstrict-prototypes -Wvla -Wmissing-prototypes -mcmodel=kernel")
+SET(CMAKE_C_USER_FLAGS "-Wall -Wextra -O2 -Wstrict-prototypes -Wvla -Wmissing-prototypes -g3 -mno-red-zone -c -mno-mmx -mno-sse -msoft-float -fno-vectorize -fstack-protector-all -fPIE")
 SET(CMAKE_C_LINK_EXECUTABLE "<CMAKE_LINKER> -T ${LINKER_SCRIPT} <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 ELSE()
 MESSAGE(FATAL_ERROR "Unsupported compiler. Use clang. Got ${CMAKE_C_COMPILER}")

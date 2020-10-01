@@ -134,6 +134,48 @@ UINT64 TEST_INTERNAL_Lesser = 0;
 			"\033[1;32mPASSED TEST: %s not equal to %s\033[0m\n", \
 			x, y); \
 	}
+	
+#define ASSERT_EQ_MEM(x, y, length, TestName, TestCategory) \
+	TEST_INTERNAL_Lesser = (length); \
+	if ((memcmp(x, y, TEST_INTERNAL_Lesser) != 0) \
+		|| (TEST_INTERNAL_LengthOne != TEST_INTERNAL_LengthTwo)) \
+	{ \
+		fprintf(stderr, "In test %s of category %s: \n", TestName, \
+			TestCategory); \
+		fprintf(stderr, \
+			"\033[1;31mFAILED TEST: %p not equal to %p\033[0m\n", \
+			x, y); \
+		return TEST_STATUS_ERR; \
+	} \
+	else \
+	{ \
+		fprintf(stderr, "In test %s of category %s: \n", TestName, \
+			TestCategory); \
+		fprintf(stderr, \
+			"\033[1;32mPASSED TEST: %p is equal to %p\033[0m\n", \
+			x, y); \
+	}
+
+#define ASSERT_NEQ_MEM(x, y, length, TestName, TestCategory) \
+	TEST_INTERNAL_Lesser = (length); \
+	if ((memcmp((char*)x, (char*)y, TEST_INTERNAL_Lesser) == 0) \
+		&& (TEST_INTERNAL_LengthOne == TEST_INTERNAL_LengthTwo)) \
+	{ \
+		fprintf(stderr, "In test %s of category %s: \n", TestName, \
+			TestCategory); \
+		fprintf(stderr, \
+			"\033[1;31mFAILED TEST: %p is equal to %p\033[0m\n", \
+			x, y); \
+		return TEST_STATUS_ERR; \
+	} \
+	else \
+	{ \
+		fprintf(stderr, "In test %s of category %s: \n", TestName, \
+			TestCategory); \
+		fprintf(stderr, \
+			"\033[1;32mPASSED TEST: %p not equal to %p\033[0m\n", \
+			x, y); \
+	}
 
 
 #define ASSSERT_TRUE(x, TestName, TestCategory) \
