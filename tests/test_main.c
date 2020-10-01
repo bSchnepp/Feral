@@ -26,31 +26,10 @@ IN THE SOFTWARE.
 
 #include "defines.h"
 
+#include "x86-stub.h"
+
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
-
-#if defined(__x86_64__) || defined(__i386__)
-/* hack to deal with arch-specific stuff */
-void x86_io_stall()
-{
-	volatile int i = 0;
-	volatile int b = 1;
-	i = i + b;
-	return;
-}
-
-UINT64 x86_read_cr3()
-{
-	return 0;
-}
-
-VOID x86_write_cr3(UINT64 cr3)
-{
-	volatile UINT64 Copy = cr3;
-	Copy += 1;
-	Copy -= 1;
-}
-#endif
 
 /* stubs for some assembly stuff the kernel expects. Maybe fixme?
  */

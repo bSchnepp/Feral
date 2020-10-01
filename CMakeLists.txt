@@ -17,7 +17,7 @@ SET(CMAKE_ASM_NASM_OBJECT_FORMAT "elf64")
 IF (CMAKE_C_COMPILER STREQUAL "clang")
 # Well aware this is frowned upon.
 # But this is the easy way to force it to work right...
-SET(BASE_COMPILER_FLAGS "-ffreestanding -nostdlib -mno-red-zone -c -mno-mmx -mno-sse -msoft-float -fno-vectorize -fstack-protector-all")
+SET(BASE_COMPILER_FLAGS "-ffreestanding -nostdlib -mno-red-zone -c -mno-mmx -mno-sse -msoft-float -fno-vectorize -fstack-protector-all -fPIE -fPIC")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${BASE_COMPILER_FLAGS} -Wall -Wextra -O2 -Wstrict-prototypes -Wvla -Wmissing-prototypes -mcmodel=kernel")
 SET(CMAKE_C_LINK_EXECUTABLE "<CMAKE_LINKER> -T ${LINKER_SCRIPT} <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 ELSE()
@@ -50,6 +50,7 @@ ENABLE_LANGUAGE(C)
 ADD_SUBDIRECTORY(drivers)
 ADD_SUBDIRECTORY(kern)
 ADD_SUBDIRECTORY(sec)
+ADD_SUBDIRECTORY(tests)
 
 ADD_EXECUTABLE(FERALKER
 	$<TARGET_OBJECTS:Security>)

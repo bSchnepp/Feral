@@ -1,12 +1,26 @@
-# FIXME: This was a hack to run on one of my own servers.
-# This should be made reproducible, so it can run on a fresh Docker image
-# or whatever (Nomad, kubernetes, etc).
-
-image: debian:sid
+image: debian:buster
 
 stages:
         - build
 
+before_script:
+       - export DEBIAN_FRONTEND=noninteractive
+       - apt-get update -qq
+       - apt-get install git cmake gcc g++ binutils build-essential clang clang-tools llvm lld qemu-system nasm xorriso bmake mtools grub-common -qq 
+       - git submodule update --init --recursive
+       
+
 build-iso:
        stage: build
-       script: "./build.sh x86_64 iso"
+       script:
+       - rm -rf build
+       - mkdir -p build
+       - cd build
+       - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang
+       - scan-build make -j`nproc`
+       - mv FERALKER FERALKER.NEL
+       - mkdir -p isofiles/boot/grub
+       - cp  FERALKER.NEL isofiles/boot
+       - cp ../arch/x86_64/grub.cfg isofiles/boot/grub
+       - grub-mkrescue --verbose --output=WAYPOINT.ISO isofiles 2> /dev/null
+       - ./FERALTESTS
