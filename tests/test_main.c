@@ -87,6 +87,17 @@ TEST_STATUS KernelCStringLengthDiff()
 	ASSERT_NEQ_LLD(Len1, Len2, "KernelLib", "KiGetStringLengthDiff");
 }
 
+TEST_STATUS KernelCompareMemory()
+{
+	struct SomeStruct k1 = {0};
+	struct SomeStruct k2 = {4, {'a', 'b', 'c', 'd'}, {11}};
+
+	BOOL Value = 0;
+	KiCopyMemory(&k2, &k1, sizeof(struct SomeStruct));
+	KiCompareMemory(&k2, &k1, sizeof(struct SomeStruct), &Value);
+	ASSERT_TRUE(Value, "KernelLib", "KiCompareMemory");
+}
+
 TEST_STATUS KernelCompareMemoryNeg()
 {
 	struct SomeStruct k1 = {0};
@@ -102,6 +113,7 @@ TestCase Cases[] = {
 	KernelCStringLength,
 	KernelCStringLengthDiff,
 	KernelMemCpy,
+	KernelCompareMemory,
 	KernelCompareMemoryNeg,
 };
 

@@ -63,6 +63,15 @@ FERALSTATUS KiCompareMemory(
 	{
 		return STATUS_INVALID_MEMORY_LOCATION;
 	}
+	
+	CHAR* srcAsChar = (CHAR*)(Source);
+	CHAR* dstAsChar = (CHAR*)(Dest);
+	
+	BOOL Comparison1 = TRUE;
+	BOOL Comparison2 = TRUE;
+	BOOL Comparison3 = TRUE;
+	BOOL Comparison4 = TRUE;
+	
 	for (UINT64 i = 0; i < Amount; i++)
 	{
 		UINT_PTR* Src = (Source + i);
@@ -74,6 +83,22 @@ FERALSTATUS KiCompareMemory(
 		}
 		*(Val) = TRUE;
 	}
+	
+	UINT32 Index = 0;
+	for (Index = 0; Index < Amount; Index += 4)
+	{
+		Comparison1 &= (dstAsChar[Index + 0] == srcAsChar[Index + 0]);
+		Comparison2 &= (dstAsChar[Index + 1] == srcAsChar[Index + 1]);
+		Comparison3 &= (dstAsChar[Index + 2] == srcAsChar[Index + 2]);
+		Comparison4 &= (dstAsChar[Index + 3] == srcAsChar[Index + 3]);
+	}
+	
+	for (; Index < Amount; ++Index)
+	{
+		Comparison1 &= (dstAsChar[Index + 0] == srcAsChar[Index + 0]);
+	}
+	
+	*(Val) = (Comparison1 && Comparison2 && Comparison3 && Comparison4);
 	return STATUS_SUCCESS;
 }
 
