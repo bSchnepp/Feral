@@ -1,8 +1,8 @@
 /*
-Copyright (c) 2020 Brian Schnepp
+Copyright (c) 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
-obtaining a copy of the software and accompanying documentation covered by
+obtaining  a copy of the software and accompanying documentation covered by
 this license (the "Software") to use, reproduce, display, distribute, execute,
 and transmit the Software, and to prepare derivative works of the Software,
 and to permit third-parties to whom the Software is furnished to do so, all
@@ -24,50 +24,38 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+#include <feral/stdtypes.h>
+
 #if defined(__x86_64__)
-#include <arch/x86_64/cpuio.h>
-#include <arch/x86_64/cpufuncs.h>
+#include <arch/x86_64/cpuinfo.h>
 #endif
 
+#ifndef _FERAL_KRNL_PROCESSOR_H_
+#define _FERAL_KRNL_PROCESSOR_H_
 
-#include <feral/feralstatus.h>
-#include <feral/stdtypes.h>
-#include <feral/handle.h>
-#include <feral/kern/frlos.h>
-#include <mm/mm.h>
+struct KiPrivateProcessorInfo;
 
-#include <feral/kern/krnlfuncs.h>
-#include <feral/kern/krnlbase.h>
-
-#include <krnl.h>
-#include <kern_ver.h>
-
-/* Probably should move these out at some point. */
-typedef struct GDTPointer
+typedef enum KeProcessorFamily
 {
-	UINT16 Limit;
-	UINT64 Base;
-}PACKED GDTPointer;
+	KERNEL_PROCESSOR_FAMILY_INVALID = 0,
+	KERNEL_PROCESSOR_FAMILY_X86_64,
+	KERNEL_PROCESSOR_FAMILY_AARCH64,
+	KERNEL_PROCESSOR_FAMILY_RV64GCH,
+	KERNEL_PROCESSOR_FAMILY_OPENPOWER,
+}KeProcessorFamily;
 
-typedef struct GDTEntry
+typedef struct KiProcessorInfo
 {
-	UINT16 Limit;
-	UINT16 Base;
-	UINT8 BaseMed;
-	UINT8 AccessByte;
-	UINT8 LimitHigh : 4;
-	UINT8 Granularity : 4;
-	UINT8 BaseHigh;
-}PACKED GDTEntry;
+	KeProcessorFamily CpuType;
+	CHAR *ProcessorVendor;
+	CHAR *ProcessorName;
 
+	UINT32 PhysCores;
+	UINT32 VirtCores; /* whatever your branding of SMT is. */
 
-VOID x86CreateGDT()
-{
-	/* nyi */
-}
+	UINT32 CPUStepping; /* In case we need to check for F00F or something.*/
 
+	struct KiPrivateProcessorInfo PrivateInfo;
+}KiProcessorInfo;
 
-VOID KiStartupMachineDependent(VOID)
-{
-	x86InitializeIDT();
-}
+#endif

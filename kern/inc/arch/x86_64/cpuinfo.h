@@ -1,8 +1,8 @@
 /*
-Copyright (c) 2020 Brian Schnepp
+Copyright (c) 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
-obtaining a copy of the software and accompanying documentation covered by
+obtaining  a copy of the software and accompanying documentation covered by
 this license (the "Software") to use, reproduce, display, distribute, execute,
 and transmit the Software, and to prepare derivative works of the Software,
 and to permit third-parties to whom the Software is furnished to do so, all
@@ -24,50 +24,24 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#if defined(__x86_64__)
-#include <arch/x86_64/cpuio.h>
-#include <arch/x86_64/cpufuncs.h>
-#endif
-
-
-#include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
-#include <feral/handle.h>
-#include <feral/kern/frlos.h>
-#include <mm/mm.h>
 
-#include <feral/kern/krnlfuncs.h>
-#include <feral/kern/krnlbase.h>
+#ifndef _FERAL_X86_64_CPUINFO_H_
+#define _FERAL_X86_64_CPUINFO_H_
 
-#include <krnl.h>
-#include <kern_ver.h>
-
-/* Probably should move these out at some point. */
-typedef struct GDTPointer
+typedef enum X8664CPUFeatures
 {
-	UINT16 Limit;
-	UINT64 Base;
-}PACKED GDTPointer;
+	X8664_CPU_FEATURE_NONE =  (0 << 0),
+	X8664_CPU_FEATURE_SSE3 =  (1 << 0),
+	X8664_CPU_FEATURE_SSE4 =  (1 << 1),
+	X8664_CPU_FEATURE_AVX =   (1 << 2),
+	X8664_CPU_FEATURE_AVX2 =  (1 << 3),
+	X8664_CPU_FEATURE_RDTSC = (1 << 4),
+}X8664CPUFeatures;
 
-typedef struct GDTEntry
+typedef struct KiPrivateProcessorInfo
 {
-	UINT16 Limit;
-	UINT16 Base;
-	UINT8 BaseMed;
-	UINT8 AccessByte;
-	UINT8 LimitHigh : 4;
-	UINT8 Granularity : 4;
-	UINT8 BaseHigh;
-}PACKED GDTEntry;
+	X8664CPUFeatures Features;
+}KiPrivateProcessorInfo;
 
-
-VOID x86CreateGDT()
-{
-	/* nyi */
-}
-
-
-VOID KiStartupMachineDependent(VOID)
-{
-	x86InitializeIDT();
-}
+#endif

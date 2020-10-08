@@ -49,8 +49,6 @@ IN THE SOFTWARE.
 #include <krnl.h>
 #include <kern_ver.h>
 
-#include <arch/processor.h>
-
 
 /* hack: include the serial driver in a brute forcey way. */
 #include <drivers/serial/serial.h>

@@ -102,6 +102,4 @@ static FERALSTATUS KiDebugPrint(STRING string)
 	return KiPrintFmt("\n");
 }
 
-FERALSTATUS KiBackspace();
-
 #endif

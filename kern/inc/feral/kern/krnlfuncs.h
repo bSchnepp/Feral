@@ -28,6 +28,9 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
+#ifndef _FERAL_KRNL_FUNCS_H_
+#define _FERAL_KRNL_FUNCS_H_
+
 /* Utility stuff... */
 
 /* Start, end, size. */
@@ -51,3 +54,6 @@ FERALSTATUS FERALAPI KiGetWideStringLength(IN WSTRING, OUT UINT64*);
 /* Equivalent to a kernel panic. In goes in the current system status which
    triggers the panic. */
 FERALSTATUS FERALAPI KiStopError(IN FERALSTATUS);
+
+
+#endif

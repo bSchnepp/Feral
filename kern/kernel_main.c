@@ -30,13 +30,12 @@ IN THE SOFTWARE.
 #include <feral/kern/frlos.h>
 #include <mm/mm.h>
 
-#include <feral/kern/krnlfuncs.h>
 #include <feral/kern/krnlbase.h>
+#include <feral/kern/krnlfuncs.h>
+#include <feral/kern/krnlprocessor.h>
 
 #include <krnl.h>
 #include <kern_ver.h>
-
-#include <arch/processor.h>
 
 typedef struct FeralVersionInfo
 {

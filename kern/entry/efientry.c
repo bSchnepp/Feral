@@ -45,8 +45,6 @@ IN THE SOFTWARE.
 #include <krnl.h>
 #include <kern_ver.h>
 
-#include <arch/processor.h>
-
 
 #if defined(FERAL_BUILD_STANDALONE_UEFI_)
 

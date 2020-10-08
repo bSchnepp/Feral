@@ -81,6 +81,19 @@ extern "C"
 #define INLINE inline
 #define VOID void
 
+/* Compilers in general are usually pretty terrible at 
+ * inlining when you ask it to. Let's force it. */
+#if (defined(__clang__) || defined(__GNUC__))
+#define FORCE_INLINE __attribute__((always_inline))
+#elif defined(_MSC_VER)
+/* Trying to compile Feral with MSVC will almost certainly fail. 
+ * But you can try...
+ */
+#define FORCE_INLINE __forceinline
+#else
+#define FORCE_INLINE inline
+#endif
+
 	typedef unsigned char BYTE;
 	typedef BYTE BOOLEAN;
 	typedef char CCHAR;
@@ -127,8 +140,8 @@ extern "C"
 	typedef int64_t INT_PTR;
 	typedef uint64_t UINT_PTR;
 #elif defined(__i386__)
-typedef int32_t INT_PTR;
-typedef uint32_t UINT_PTR;
+	typedef int32_t INT_PTR;
+	typedef uint32_t UINT_PTR;
 #endif
 
 	typedef INT_PTR LONG_PTR;
