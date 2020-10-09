@@ -89,6 +89,9 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	KiPrintFmt("Loading all drivers...\n");
 	FERALSTATUS KiLoadAllDrivers(VOID);
 
+	/* Formally start processor 0. */
+	KiStartupProcessor(0);
+
 	/* These are macroed away at release builds.
 	 * They're eliminated at build time.
 	 */
@@ -103,10 +106,13 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	for (;;) {}
 }
 
-/* UINT64 just in case there's some crazy 6 billion core server one day. */
-VOID KiStartupProcessor(UINT64 ProcessorNumber)
+/* I don't think the x2APIC will support nearly this many cores, but why not. */
+FERALSTATUS KiStartupProcessor(UINT32 ProcessorNumber)
 {
-	/*  Create a new stack for this core. */
+	/* Create a new GDT for this core */
+	/* Create a new stack for this core. */
+	/* Complete the rest of the startup process... */
+	return STATUS_SUCCESS;
 }
 
 

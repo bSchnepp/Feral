@@ -2,7 +2,7 @@
 Copyright (c) 2018, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
-obtaining a copy of the software and accompanying documentation covered by
+obtaining  a copy of the software and accompanying documentation covered by
 this license (the "Software") to use, reproduce, display, distribute, execute,
 and transmit the Software, and to prepare derivative works of the Software,
 and to permit third-parties to whom the Software is furnished to do so, all
@@ -24,37 +24,42 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_ARCH_x86_64_CPUFUNCS_H_
-#define _FERAL_ARCH_x86_64_CPUFUNCS_H_
+#ifndef _FERAL_KERN_VER_H_
+#define _FERAL_KERN_VER_H_
 
-#include <feral/stdtypes.h>
-
-void cpuid_vendor_func(DWORD* part1, DWORD* part2, DWORD* part3);
-void cpuid_brand_name(DWORD* part1, DWORD* part2, DWORD* part3,
-	DWORD* part4); /* See comment in kernel_main.c for usage. Cleanup later.
-			*/
-UINT32 cpuid_family_number(void);
-
-UINT64 x86_read_cr0(void);
-UINT64 x86_read_cr3(void);
-
-VOID x86_write_cr0(UINT64 val);
-VOID x86_write_cr3(UINT64 val);
-
-#define INTERRUPT __attribute__((interrupt))
-
-typedef struct x86InterruptFrame
+#if defined(__cplusplus)
+extern "C"
 {
-	UINTN IP;
-	UINTN CS;
-	UINTN FLAGS;
-	UINTN SP;
-	UINTN SS;
-} x86InterruptFrame;
+#endif
 
-/* Useful ("stable") functions. Refactor elsewhere later. */
-VOID KiRestoreInterrupts(IN BOOLEAN value);
 
+	// Increment whenever the kernel API changes signifigantly.
+	// For now, since we're unstable, we're *always* changing, so only
+	// actually bother once we get to version 1.0.0 (we should increment to
+	// 0.0.2 when we have the _bare minimum_ features required to be
+	// "usable", ie, it can *a* user mode program.)
+
+#define FERAL_VERSION_MAJOR @FERAL_VERSION_MAJOR@
+#define FERAL_VERSION_MINOR @FERAL_VERSION_MINOR@
+#define FERAL_VERSION_PATCH @FERAL_VERSION_PATCH@
+
+#define FERAL_VERSION_STRING "FERAL Kernel 0.01 Release 'Alpha Aligator'"
+#define FERAL_VERSION_SHORT "Alpha Aligator"
+
+/*
+	Majority of *NIX out there is Linux, and the stuff that isn't Linux is
+   mostly compatible with Linux anyway. Exception are a few odd BSDs, but our
+   toolchain is on Linux, and we need to make it think it's on Linux if we
+   want to run the same binaries natively without recompiling.
+*/
+#define UNAME_NAME "Linux"
+#define UNAME_VERSION "2038.01.19-44-feral" /* Something bogus for -r */
+
+
+
+#if defined(__cplusplus)
+}
+#endif
 
 
 #endif

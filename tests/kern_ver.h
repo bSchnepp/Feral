@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining  a copy of the software and accompanying documentation covered by
@@ -32,18 +32,11 @@ extern "C"
 {
 #endif
 
+/* Dummy header to allow tests to build. */
 
-	// Increment whenever the kernel API changes signifigantly.
-	// For now, since we're unstable, we're *always* changing, so only
-	// actually bother once we get to version 1.0.0 (we should increment to
-	// 0.0.2 when we have the _bare minimum_ features required to be
-	// "usable", ie, it can *a* user mode program.)
-
-
-#define FERAL_VERSION_MAJOR (0000000)
-#define FERAL_VERSION_MINOR (0000000)
-#define FERAL_VERSION_PATCH (0000001)
-
+#define FERAL_VERSION_MAJOR 99
+#define FERAL_VERSION_MINOR 99
+#define FERAL_VERSION_PATCH 99
 
 #define FERAL_VERSION_STRING "FERAL Kernel 0.01 Release 'Alpha Aligator'"
 #define FERAL_VERSION_SHORT "Alpha Aligator"

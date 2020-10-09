@@ -6,6 +6,17 @@ SET(CMAKE_C_STANDARD 11)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
+# Help define kern_ver.h
+SET(FERAL_VERSION_MAJOR 0)
+SET(FERAL_VERSION_MINOR 0)
+SET(FERAL_VERSION_PATCH 1)
+
+CONFIGURE_FILE(
+	"${CMAKE_SOURCE_DIR}/kern/inc/kern_ver.h.in"
+	"${CMAKE_BINARY_DIR}/kern_ver.h"
+	@ONLY)
+
+
 # Assume x86_64 and not EFI for now.
 SET(FERAL_ARCH "x86_64")
 SET(CMAKE_LINKER "ld.lld")
@@ -26,7 +37,9 @@ ELSE()
 MESSAGE(FATAL_ERROR "Unsupported compiler. Use clang. Got ${CMAKE_C_COMPILER}")
 ENDIF()
 
+PROJECT(FERALKER)
 INCLUDE_DIRECTORIES(inc)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 
 # Maybe this will help us organize private headers better...
@@ -41,7 +54,7 @@ OPTION(FERAL_BUILD_STANDALONE_UEFI_ "Enable UEFI build" OFF)
 
 
 
-PROJECT(FERALKER)
+
 
 
 # We're going to end up using all three.

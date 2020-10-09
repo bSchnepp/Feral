@@ -179,9 +179,9 @@ UINT64 TEST_INTERNAL_Lesser = 0;
 
 
 #define ASSERT_TRUE(x, TestName, TestCategory) \
-	ASSERT_EQ_LLD(x, TRUE, TestName, TestCategory);
+	ASSERT_EQ_LLD((long long)x, TRUE, TestName, TestCategory);
 #define ASSERT_FALSE(x, TestName, TestCategory) \
-	ASSERT_EQ_LLD(x, FALSE, TestName, TestCategory);
+	ASSERT_EQ_LLD((long long)x, FALSE, TestName, TestCategory);
 
 
 #endif

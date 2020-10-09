@@ -29,6 +29,77 @@ IN THE SOFTWARE.
 #ifndef _FERAL_X86_64_CPUINFO_H_
 #define _FERAL_X86_64_CPUINFO_H_
 
+#define CPU_x86_64_FAMILY_BULLDOZER (0x15)
+#define CPU_x86_64_FAMILY_JAGUAR (0x16)
+#define CPU_x86_64_FAMILY_PUMA (0x16)
+
+#define CPU_x86_64_FAMILY_ZEN (0x17)
+
+/* These are all the same (*technically*) */
+#define CPU_x86_64_MODEL_ZEN_NAPLES (0x01) /* server */
+#define CPU_x86_64_MODEL_ZEN_WHITEHAVEN (0x01) /* high-end desktop */
+#define CPU_x86_64_MODEL_ZEN_SUMMIT_RIDGE (0x01) /* mainstream */
+
+/* The ones with the GPU in them too */
+#define CPU_x86_64_MODEL_ZEN_RAVEN_RIDGE (0x11)
+
+/* Zen 1 + */
+#define CPU_x86_64_MODEL_ZEN_PINNACLE_RIDGE (0x08)
+/* TODO: Identify Colfax (the new (2018) TR4 stuff)*/
+
+
+/* Zen 2 */
+#define CPU_x86_64_MODEL_ZEN_ROME \
+	(0x10) /* Currently a guess, we have placeholders for now. */
+#define CPU_x86_64_MODEL_MATISSE (0x10)
+#define CPU_x86_64_MODEL_CASTLE_PEAK (0x10)
+/* TODO: Identify Picasso (mobile APUs) */
+
+
+/* Zen 3 */
+/* TODO: Identify Milan (server CPUs succeeding Rome) */
+/* TODO: Identify Vermeer (desktop CPUs succeeding Matisse) */
+/* TODO: Identify Renoir (mobile APUs succeeding Picasso) */
+
+/* Zen 4 */
+/* TODO: Identify Genoa (server CPUs succeding Milan) */
+
+#define CPU_x86_64_FAMILY_INTEL_GENERAL (0x06)
+/* Broadwell and earlier isn't defined (for now). */
+#define CPU_x86_64_MODEL_SKYLAKE_CLIENT_MAINSTREAM (94)
+#define CPU_x86_64_MODEL_SKYLAKE_CLIENT_LOW_POWER (78)
+#define CPU_x86_64_MODEL_SKYLAKE_SERVER (85)
+
+#define CPU_x86_64_MODEL_KABY_LAKE_CLIENT_MAINSTREAM (142)
+#define CPU_x86_64_MODEL_KABY_LAKE_CLIENT_LOW_POWER (158)
+
+#define CPU_x86_64_MODEL_COFFEE_LAKE_CLIENT_MAINSTREAM (158)
+
+
+/* When we ask cpuid for what features we support, lookup in this table
+ * and translate what we care about to an X8664CPUFeatures enum.
+ * That way we find it just once instead of over and over.
+ */
+typedef enum
+{
+	CPUID_FEATURES_ECX_SSE3 = (1 << 0),
+	CPUID_FEATURES_ECX_PCLMUL = (1 << 1),
+	CPUID_FEATURES_ECX_DTES64 = (1 << 2),
+	CPUID_FEATURES_ECX_MONITOR = (1 << 3),
+	CPUID_FEATURES_ECX_DS_CPL = (1 << 4),
+	CPUID_FEATURES_ECX_VMX = (1 << 5),
+	CPUID_FEATURES_ECX_SMX = (1 << 6),
+	CPUID_FEATURES_ECX_EST = (1 << 7),
+	CPUID_FEATURES_ECX_TM2 = (1 << 8),
+	CPUID_FEATURES_ECX_SSSE3 = (1 << 9),
+	CPUID_FEATURES_ECX_CID = (1 << 10),
+	/* there is no 11. OK. Just going to trust that for now. */
+	CPUID_FEATURES_ECX_FMA = (1 << 12),
+	CPUID_FEATURES_ECX_CX16 = (1 << 13),
+	CPUID_FEATURES_ECX_ETPRD = (1 << 14),
+	CPUID_FEATURES_ECX_PDCM = (1 << 15),
+} CPUID_ECX_FEATURES;
+
 typedef enum X8664CPUFeatures
 {
 	X8664_CPU_FEATURE_NONE =  (0 << 0),
@@ -39,9 +110,28 @@ typedef enum X8664CPUFeatures
 	X8664_CPU_FEATURE_RDTSC = (1 << 4),
 }X8664CPUFeatures;
 
+typedef struct GDTPointer
+{
+	UINT16 Limit;
+	UINT64 Base;
+}PACKED GDTPointer;
+
+typedef struct GDTEntry
+{
+	UINT16 Limit;
+	UINT16 Base;
+	UINT8 BaseMed;
+	UINT8 AccessByte;
+	UINT8 LimitHigh : 4;
+	UINT8 Granularity : 4;
+	UINT8 BaseHigh;
+}PACKED GDTEntry;
+
 typedef struct KiPrivateProcessorInfo
 {
 	X8664CPUFeatures Features;
+	GDTPointer CurProcGDT;
+	GDTEntry *CurProcGDTRoot;
 }KiPrivateProcessorInfo;
 
 #endif

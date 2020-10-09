@@ -24,11 +24,10 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#if defined(__x86_64__)
-#include <arch/x86_64/cpuio.h>
-#include <arch/x86_64/cpufuncs.h>
-#endif
 
+#include <arch/x86_64/cpuio.h>
+#include <arch/x86_64/cpuinfo.h>
+#include <arch/x86_64/cpufuncs.h>
 
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
@@ -41,31 +40,6 @@ IN THE SOFTWARE.
 
 #include <krnl.h>
 #include <kern_ver.h>
-
-/* Probably should move these out at some point. */
-typedef struct GDTPointer
-{
-	UINT16 Limit;
-	UINT64 Base;
-}PACKED GDTPointer;
-
-typedef struct GDTEntry
-{
-	UINT16 Limit;
-	UINT16 Base;
-	UINT8 BaseMed;
-	UINT8 AccessByte;
-	UINT8 LimitHigh : 4;
-	UINT8 Granularity : 4;
-	UINT8 BaseHigh;
-}PACKED GDTEntry;
-
-
-VOID x86CreateGDT()
-{
-	/* nyi */
-}
-
 
 VOID KiStartupMachineDependent(VOID)
 {

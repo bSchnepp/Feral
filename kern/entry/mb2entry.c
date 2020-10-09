@@ -29,10 +29,11 @@ IN THE SOFTWARE.
 
 #if defined(__x86_64__)
 #include <arch/x86_64/cpuio.h>
+#include <arch/x86_64/cpuinfo.h>
 #include <arch/x86_64/cpufuncs.h>
 #endif
 
-/* Borrow a bunch from the Feralboot. */
+/* Borrow a bunch from Feralboot. */
 #ifndef _NO_UEFI_STUB_
 #include <libreefi/efi.h>
 #endif
