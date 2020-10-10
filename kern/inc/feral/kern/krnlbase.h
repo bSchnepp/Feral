@@ -45,11 +45,6 @@ typedef struct KrnlPhysicalDisplay
 	VOID *Framebuffer;
 } KrnlPhysicalDisplay;
 
-typedef struct KrnlProcessorInfo
-{
-	
-}KrnlProcessorInfo;
-
 typedef struct KrnlEnvironmentBlock
 {
 	/* Bootloader should help find free memory areas. */

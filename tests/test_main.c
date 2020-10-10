@@ -59,6 +59,22 @@ TEST_STATUS KernelMemCpy()
 	ASSERT_EQ_MEM(&k1, &k2, sizeof(struct SomeStruct), "KernelLib", "KiCopyMemory");
 }
 
+TEST_STATUS KernelMemSet()
+{
+	struct SomeStruct k1 = {0};
+	struct SomeStruct k2 = {4, {'a', 'b', 'c', 'd'}, {11}};
+	KiSetMemoryBytes(&k2, 0, sizeof(struct SomeStruct));
+	ASSERT_EQ_MEM(&k1, &k2, sizeof(struct SomeStruct), "KernelLib", "KiSetMemoryBytes");
+}
+
+TEST_STATUS KernelMemSetNonZero()
+{
+	char Vals[4] = {79, 79, 79, 79};
+	char Vals2[4];
+	KiSetMemoryBytes(&Vals2, 79, 4);
+	ASSERT_EQ_MEM(&Vals, &Vals2, 4, "KernelLib", "KiSetMemoryBytesNonZero");
+}
+
 TEST_STATUS KernelCStringLength()
 {
 	STRING Val1 = "abcdef";
@@ -113,8 +129,10 @@ TestCase Cases[] = {
 	KernelCStringLength,
 	KernelCStringLengthDiff,
 	KernelMemCpy,
+	KernelMemSet,
 	KernelCompareMemory,
 	KernelCompareMemoryNeg,
+	KernelMemSetNonZero,
 };
 
 /* function pointer array is uniform size, unlike something like utf-8,

@@ -36,6 +36,7 @@ IN THE SOFTWARE.
 #include <mm/mm.h>
 
 #include <feral/kern/krnlfuncs.h>
+#include <feral/kern/krnlmacro.h>
 #include <feral/kern/krnlbase.h>
 
 #include <krnl.h>
@@ -112,3 +113,5 @@ VOID KiStartupProcessorMachineDependent(UINT32 Core)
 	}
 	KiRestoreInterrupts(TRUE);
 }
+
+COMPILER_ASSERT(sizeof(GDTEntry) == sizeof(UINT_PTR));

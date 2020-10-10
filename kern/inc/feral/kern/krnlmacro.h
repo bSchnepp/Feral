@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining  a copy of the software and accompanying documentation covered by
@@ -24,33 +24,14 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+#ifndef _FERAL_KERNEL_MACRO_H_
+#define _FERAL_KERNEL_MACRO_H_
 
-#include <feral/stdtypes.h>
-#include <feral/feralstatus.h>
 
-#ifndef _FERAL_KRNL_FUNCS_H_
-#define _FERAL_KRNL_FUNCS_H_
+#define COMPILER_CONCAT_HELPER(x, y) x ## y
+#define COMPILER_CONCAT(x, y) COMPILER_CONCAT_HELPER(x, y)
 
-/* Utility stuff... */
-
-/* Start, end, size. */
-FERALSTATUS FERALAPI KiCopyMemory(IN VOID*, IN VOID*, IN UINT64);
-
-/* First, Second, Size, Equal */
-FERALSTATUS FERALAPI KiCompareMemory(IN VOID*, IN VOID*, IN UINT64, OUT BOOL*);
-
-/* Dest, byte value, amount */
-FERALSTATUS FERALAPI KiSetMemoryBytes(INOUT VOID*, IN UINT8, IN UINT64);
-
-/* TODO: Replace bad temp strlen with this
-   String, length of it. */
-FERALSTATUS FERALAPI KiGetStringLength(IN STRING, OUT UINT64*);
-
-/* Same as above but with a wide string. */
-FERALSTATUS FERALAPI KiGetWideStringLength(IN WSTRING, OUT UINT64*);
-
-/* Equivalent to a kernel panic. In goes in the current system status which
-   triggers the panic. */
-FERALSTATUS FERALAPI KiStopError(IN FERALSTATUS);
+#define COMPILER_ASSERT(condition) 			\
+	typedef char COMPILER_CONCAT(COMPILER_CONCAT(COMPILER_CONCAT(assertion_failed_, __COUNTER__), _), __LINE__)[(2*(!!(condition)))-1]
 
 #endif
