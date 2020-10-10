@@ -6,6 +6,7 @@ global cpuid_brand_name
 global cpuid_family_number
 
 global x86_install_idt
+global x86_install_gdt
 global x86_divide_by_zero
 
 global x86_interrupt_1
@@ -87,6 +88,10 @@ ret
 ; RDI is the parameter.
 x86_install_idt:
 lidt [rdi]
+ret
+
+x86_install_gdt:
+lgdt [rdi]
 ret
 
 

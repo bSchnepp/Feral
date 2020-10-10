@@ -51,15 +51,6 @@ DWORD x86inl(WORD port)
 	return RetVal;
 }
 
-#if 0
-static inline QUAD  x86inq(WORD port)
-{
-	UINT64 RetVal;
-	__asm__ volatile ("inq %1, %0" : "=a"(RetVal) : "Nd"(port));
-	return RetVal;
-}
-#endif
-
 VOID x86outb(WORD port, BYTE val)
 {
 	__asm__ volatile("outb %0, %1" ::"a"(val), "d"(port));
@@ -74,10 +65,3 @@ VOID x86outl(WORD port, DWORD val)
 {
 	__asm__ volatile("outl %0, %1" ::"a"(val), "d"(port));
 }
-
-#if 0
-VOID x86outq(WORD port, QUAD val)
-{
-	__asm__ volatile ("out %0, %1" :: "a"(val), "d"(port));
-}
-#endif

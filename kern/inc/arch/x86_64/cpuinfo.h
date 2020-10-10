@@ -120,11 +120,46 @@ typedef struct GDTEntry
 {
 	UINT16 Limit;
 	UINT16 Base;
-	UINT8 BaseMed;
-	UINT8 AccessByte;
-	UINT8 LimitHigh : 4;
-	UINT8 Granularity : 4;
-	UINT8 BaseHigh;
+
+	union 
+	{
+		struct AsFields
+		{
+			UINT8 MiddleBase;
+			UINT8 Access;
+			UINT8 LimitHigh : 4;
+			UINT8 Flags : 4;
+			UINT8 HighBase;
+		}PACKED AsFields;
+
+		struct AsBytes
+		{
+			UINT8 MiddleBase;
+			UINT8 Access;
+			UINT8 Flags;
+			UINT8 HighBase;
+		}PACKED AsBytes;
+
+		struct AsBits
+		{
+			UINT8 MiddleBase;
+			UINT8 Accessed : 1;
+			UINT8 ReadWritable : 1;
+			UINT8 Direction : 1;
+			UINT8 Executable : 1;
+			UINT8 System : 1;
+			UINT8 PrivLevel : 2;
+			UINT8 Present : 1;
+			UINT8 LimitHigh : 4;
+			UINT8 RESERVED : 1;
+			UINT8 SixtyFourMode : 1;
+			UINT8 SizeBit : 1;
+			UINT8 Granularity : 1;
+			UINT8 HighBase;
+		}PACKED AsBits;
+
+		UINT32 High;
+	}PACKED;
 }PACKED GDTEntry;
 
 typedef struct KiPrivateProcessorInfo

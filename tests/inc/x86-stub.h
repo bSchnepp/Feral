@@ -68,6 +68,13 @@ VOID VgaPrintln(UINT16 foreground, UINT16 background,
 VOID x86_write_cr3(UINT64 cr3);
 
 
+VOID KiStartupProcessorMachineDependent(UINT32 Core);
+
+VOID KiStartupProcessorMachineDependent(UINT32 Core)
+{
+}
+
+
 /* hack to deal with arch-specific stuff */
 void x86_io_stall()
 {

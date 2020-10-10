@@ -47,6 +47,9 @@ typedef struct FeralVersionInfo
 
 static FeralVersionInfo VersionInfo;
 
+VOID KiStartupMachineDependent(VOID);
+VOID KiStartupProcessorMachineDependent(UINT32 Core);
+
 /*
 	This is the kernel's *real* entry point.
 	TODO: some mechanism for a Feral-specific bootloader to skip the
@@ -112,6 +115,7 @@ FERALSTATUS KiStartupProcessor(UINT32 ProcessorNumber)
 	/* Create a new GDT for this core */
 	/* Create a new stack for this core. */
 	/* Complete the rest of the startup process... */
+	KiStartupProcessorMachineDependent(ProcessorNumber);
 	return STATUS_SUCCESS;
 }
 

@@ -45,3 +45,70 @@ VOID KiStartupMachineDependent(VOID)
 {
 	x86InitializeIDT();
 }
+
+static GDTPointer GlobalGDT;
+
+VOID x86_install_gdt(GDTPointer *Pointer);
+
+VOID KiStartupProcessorMachineDependent(UINT32 Core)
+{
+	KiRestoreInterrupts(FALSE);
+	if (Core == 0)
+	{
+		/* setup gdt and idt... */
+		UINT16 Limit = 5;
+		GDTEntry *Entries = (GDTEntry*)MmKernelMalloc(sizeof(GDTEntry) * Limit);
+
+		/* Set up null descriptor */
+		Entries[0].Base = 0;
+		Entries[0].High = 0;
+		Entries[0].Limit = 0;
+
+		/* Set up kernel code */
+		Entries[1].Base = 0;
+		Entries[1].High = 0;
+		Entries[1].Limit = 0;
+		Entries[1].AsBits.SixtyFourMode = 1;
+		Entries[1].AsBits.Present = 1;
+		Entries[1].AsBits.System = 1;
+		Entries[1].AsBits.Executable = 1;
+		Entries[1].AsBits.ReadWritable = 1;
+		Entries[1].AsBits.Granularity = 1;
+
+		/* Set up kernel data. */
+		Entries[2].Base = 0;
+		Entries[2].High = 0;
+		Entries[2].Limit = 0;
+		Entries[2].AsBits.SixtyFourMode = 1;
+		Entries[2].AsBits.Present = 1;
+		Entries[2].AsBits.System = 1;
+		Entries[2].AsBits.ReadWritable = 1;
+
+		/* Set up user code */
+		Entries[3].Base = 0;
+		Entries[3].High = 0;
+		Entries[3].Limit = 0;
+		Entries[3].AsBits.SixtyFourMode = 1;
+		Entries[3].AsBits.Present = 1;
+		Entries[3].AsBits.System = 1;
+		Entries[3].AsBits.Executable = 1;
+		Entries[3].AsBits.ReadWritable = 1;
+		Entries[3].AsBits.Granularity = 1;
+		Entries[3].AsBits.PrivLevel = 3;
+
+		/* Set up user data. */
+		Entries[4].Base = 0;
+		Entries[4].High = 0;
+		Entries[4].Limit = 0;
+		Entries[4].AsBits.SixtyFourMode = 1;
+		Entries[4].AsBits.Present = 1;
+		Entries[4].AsBits.System = 1;
+		Entries[4].AsBits.ReadWritable = 1;
+		Entries[4].AsBits.PrivLevel = 3;
+
+		GlobalGDT.Limit = (sizeof(GDTEntry) * 5) - 1;
+		GlobalGDT.Base = (UINT64)(Entries);
+		x86_install_gdt(&GlobalGDT);
+	}
+	KiRestoreInterrupts(TRUE);
+}
