@@ -219,7 +219,7 @@ typedef int32_t INTN;
 #define NULLPTR NULL
 #endif
 
-	typedef void* POINTER;
+typedef void* POINTER;
 
 #if defined(__cplusplus)
 }
@@ -228,6 +228,6 @@ typedef int32_t INTN;
 #include <feral/feraluser.h>
 
 
-/* TEMPORARY FIXME*/
+/* TEMPORARY FIXME */
 UINT_PTR __stack_chk_guard;
 #endif

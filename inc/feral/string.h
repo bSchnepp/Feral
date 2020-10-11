@@ -27,9 +27,6 @@ IN THE SOFTWARE.
 #ifndef _FERAL_FERAL_STRING_H_
 #define _FERAL_FERAL_STRING_H_
 
-// I don't use C++ in the kernel because, well, it's the kernel. I don't want to
-// set up exceptions and all that, and would much rather not be limited to a
-// very small subset of the language.
 #if defined(__cplusplus)
 extern "C"
 {
@@ -39,56 +36,47 @@ extern "C"
 #include <feral/feralstatus.h>
 
 
-	/* Struct to define a verbose string (O(1) to get the length of the
-	 * string) */
-	typedef struct FERALSTRING
+/* Struct to define a verbose string (O(1) to get the length of the string) */
+typedef struct FERALSTRING
+{
+	UINT64 Length;
+	WSTRING Content;
+} FERALSTRING;
+
+INLINE BOOL FrlStringCmp(FERALSTRING *String1, FERALSTRING *String2)
+{
+	BOOL Condition1 = (String1->Length == String2->Length);
+	BOOL Condition2 = TRUE;
+	BOOL Condition3 = TRUE;
+	BOOL Condition4 = TRUE;
+
+	UINT64 Index;
+	for (Index = 0; Index < String1->Length; Index += 4)
 	{
-		UINT64 Length;
-		WSTRING Content;
-	} FERALSTRING;
-
-	/* Inline functions to do string comparison. We do NOT want the overhead
-	 * of a function call for something trivial. */
-	/* Returns 0 if equal, 1 if they differ in length, and 2 if their
-	 * content differs at some point, -1 for erronous length on a string
-	 * causing an error.*/
-	static BOOL FrlStringCmp(FERALSTRING* String1, FERALSTRING* String2)
-	{
-		if (String1->Length != String2->Length)
-		{
-			/* If they differ in length, there is no way they can
-			 * possibly be equal. */
-			return 1;
-		}
-
-		/* Check for every single letter. If it's not the same, well,
-		 * they're not equal. */
-		for (UINT64 i = 0; i < String1->Length; i++)
-		{
-			if (String1->Content[i] == '\0'
-				|| String2->Content[i] == '\0')
-			{
-				return -1;
-			}
-
-			if (String1->Content[i] != String2->Content[i])
-			{
-				return 2;
-			}
-		}
-		return 0;
+		Condition1 &= (String1->Content[Index + 0] == String2->Content[Index + 0]);
+		Condition2 &= (String1->Content[Index + 1] == String2->Content[Index + 1]);
+		Condition3 &= (String1->Content[Index + 2] == String2->Content[Index + 2]);
+		Condition4 &= (String1->Content[Index + 3] == String2->Content[Index + 3]);
 	}
 
-	/* Create a string. */
-	FERALSTATUS FrlCreateString(
-		IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content);
+	for (; Index < String1->Length; ++Index)
+	{
+		Condition1 &= (String1->Content[Index] == String2->Content[Index]);
+	}
 
-	/* Delete a string. */
-	FERALSTATUS FrlDeleteString(IN FERALSTRING* String);
+	return (Condition1 && Condition2);
+}
 
-	/* Clone a string */
-	FERALSTATUS FrlCloneString(
-		IN FERALSTRING* Source, IN FERALSTRING* OutLocation);
+/* Create a string. */
+FERALSTATUS FrlCreateString(
+	IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content);
+
+/* Delete a string. */
+FERALSTATUS FrlDeleteString(IN FERALSTRING* String);
+
+/* Clone a string */
+FERALSTATUS FrlCloneString(
+	IN FERALSTRING* Source, IN FERALSTRING* OutLocation);
 
 #if defined(__cplusplus)
 }

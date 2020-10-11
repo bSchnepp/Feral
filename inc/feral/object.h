@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2020 Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -24,137 +24,36 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#ifndef _FERAL_OB_H_
-#define _FERAL_OB_H_
-
 #include <feral/stdtypes.h>
 #include <feral/string.h>
 #include <feral/feraluser.h>
-#include <feral/handle.h>
 
-typedef enum FERAL_OBJECT_TYPE
+#ifndef _FERAL_OB_H_
+#define _FERAL_OB_H_
+
+typedef UINT64 Handle;
+
+typedef struct HThread
 {
-	/* What kind of object are we looking at? */
-	FERAL_FILE_OBJECT,
-	FERAL_DRIVER_OBJECT,
-	FERAL_WAVEFRONT_OBJECT,// for graphics stuff...
-	FERAL_FRAME_OBJECT,
-	FERAL_IMAGE_BUFFER_OBJECT,
-	FERAL_DESKTOP_OBJECT,
-	FERAL_CLIPBOARD_OBJECT,
-	FERAL_PROGRAM_OBJECT,
-	FERAL_SERVICE_OBJECT, /* A service is a userspace daemon which
-				 implements a specific set of functions
-				 requested by the kernel. (ie, a FUSE driver, or
-				 a printing service) */
-	FERAL_PACKET_OBJECT, /* A network packet (9P, IP, etc.) */
-	FERAL_NETWORK_OBJECT, /* Connection to some kind of network */
-} FERAL_OBJECT_TYPE;
+	Handle Tag;
+	/* nyi. Maybe priority here? */
+}HThread;
 
-typedef struct FERAL_PERMISSION_DESCRIPTOR
+typedef struct HProcess
 {
-	FERALUSER User;
-	BOOLEAN Read;
-	BOOLEAN Write;
-	BOOLEAN Execute;
-} FERAL_PERMISSION_DESCRIPTOR;
+	Handle Tag;
+	UINT64 NumThreads;
+	Handle *Threads;
+}HProcess;
 
-typedef enum FERAL_OBJECT_OPEN_REASON
+typedef struct HTask
 {
-	OBJECT_CREATE_HANDLE, /* First time referencing this object... */
+	Handle Tag;
+	
+	UINT64 NumSubprocesses;
+	Handle *SubprocessTags;
+}HTask;
 
-	OBJECT_OPEN_HANDLE, /* Opening a reference to an already existing object
-			     */
-	/* Sidenode: if it's been updated on the system (ie, overwritten), the
-	   OS delivers the old version to running programs and new versions to
-	   subsequent programs, ala Linux. */
-
-	OBJECT_CLONE_HANDLE, /* Duplicated handle the program already has */
-
-	OBJECT_INHERIT_HANDLE, /* The parent task opened this, and allowed it's
-				  children to use it. */
-} FERAL_OBJECT_OPEN_REASON;
-
-// Attributes for the descriptor below
-#define OBJ_INHERIT (1 << 0)
-#define OBJ_PERMANANT (1 << 1)
-#define OBJ_EXCLUSIVE (1 << 2)
-#define OBJ_CASE_INSENSITIVE (1 << 3)
-#define OBJ_OPENIF (1 << 4)
-#define OBJ_OPENLINK (1 << 5)
-#define OBJ_KERNEL_HANDLE (1 << 6)
-
-typedef struct OBJECT_ATTRIBUTES
-{
-	UINT64 Length;
-	HANDLE RootDirectory;// TODO: Consider replacing (special type for
-			     // object in RMS)
-	WSTRING ObjectName;
-
-	UINT64 NumReferences;// Increment on every open. Decrement on every
-			     // close. If 0, free this object.
-
-	FERALUSER Owner;// Kernel's name is "SYSTEM", UserID is 0, and it's home
-			// is A:/System/.
-	UINT8 Attributes;
-
-	UINT64 NumOfAuthorizedUsers;// Number of users who can access it
-	FERALUSER* AuthorizedUsers;// And the array with the users allowed to
-				   // use it
-	FERAL_PERMISSION_DESCRIPTOR*
-		Permissions;// With their corresponding permissions. Execute may
-			    // or may not be applicable.
-} OBJECT_ATTRIBUTES;
-
-
-typedef struct ObjectFunction
-{
-	STRING FunctionName;
-	FERALSTATUS(*FunctionReference)
-	(IN UINT64 NumArgs, IN VOID** Stuff);
-} ObjectFunction;
-
-struct FERALOBJECT;
-
-typedef struct FERALOBJECT
-{
-	/* Number of references to this object. If KeFreeObject() is called and
-	   makes this 0, the kernel should deallocate this object and free
-	   everything inside of it.
-	 */
-
-	STRING ObjectName;
-	FERAL_OBJECT_TYPE ObjectType;
-
-	UINT64 NumReferences;
-	UINT64 MaxReferences;
-	VOID* ReferenceTable;
-
-	OBJECT_ATTRIBUTES* Attributes;
-
-	UINT64 MaxMemorySize; /* Memory maximum */
-	UINT64 DiskAllocMaximum; /* Max number of blocks on the filesystem this
-				    object can utilize. */
-
-	BOOL Pageable; /* Can this object get thrown into swapfile if we need
-			  to? */
-
-	UINT64 NumMethods;
-	ObjectFunction* Methods;
-
-	UINT64 RESERVED1;
-	UINT64 RESERVED2;
-	UINT64 RESERVED3;
-	UINT64 RESERVED4;
-
-	VOID* ObjectPointer; /* Pointer to the object in question. */
-} FERALOBJECT;
-
-typedef struct
-{
-	FERALOBJECT* Flink;
-	FERALOBJECT* Blink;
-} LIST_ENTRY;
-
+FERALSTATUS ObInitSystem();
 
 #endif

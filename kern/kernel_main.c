@@ -26,7 +26,6 @@ IN THE SOFTWARE.
 
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
-#include <feral/handle.h>
 #include <feral/kern/frlos.h>
 #include <mm/mm.h>
 

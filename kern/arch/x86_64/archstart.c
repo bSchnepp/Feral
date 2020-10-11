@@ -32,7 +32,6 @@ IN THE SOFTWARE.
 
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
-#include <feral/handle.h>
 #include <feral/kern/frlos.h>
 #include <mm/mm.h>
 
@@ -192,7 +191,7 @@ VOID KiStartupProcessorMachineDependent(UINT32 Core)
 
 
 		/* Unmap low memory, since GDT was last leftover. */
-		((PageMapEntry*)(get_initial_p4_table()))[0] = 0;
+		x86UnmapAddress(get_initial_p4_table(), 0);
 
 		/* Now set up global IDT. */
 		x86InitializeIDT();
