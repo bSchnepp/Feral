@@ -30,6 +30,12 @@ IN THE SOFTWARE.
 #ifndef _FERAL_X86_IDT_H_
 #define _FERAL_X86_IDT_H_
 
+#define X86_PIC_1_COMMAND (0x20)
+#define X86_PIC_1_DATA (0x21)
+
+#define X86_PIC_2_COMMAND (0xA0)
+#define X86_PIC_2_DATA (0xA1)
+
 /*
 	In the future, if the part being
 	interrupted was a *user* process, we need
@@ -57,11 +63,11 @@ typedef struct
 } PACKED IDTDescriptor;
 #endif
 
-typedef struct
+typedef struct IDTPointer
 {
 	UINT16 Limit;
 	UINT_PTR Location;
-} PACKED IDTLocation;
+} PACKED IDTPointer;
 
 
 void x86InitializeIDT(VOID);

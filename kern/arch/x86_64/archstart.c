@@ -28,6 +28,7 @@ IN THE SOFTWARE.
 #include <arch/x86_64/cpuio.h>
 #include <arch/x86_64/cpuinfo.h>
 #include <arch/x86_64/cpufuncs.h>
+#include <arch/x86_64/idt/idt.h>
 
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
@@ -44,12 +45,91 @@ IN THE SOFTWARE.
 
 VOID KiStartupMachineDependent(VOID)
 {
-	x86InitializeIDT();
+	/* Possibly for things like PCI scanning or something. NYI. */
 }
 
 static GDTPointer GlobalGDT;
+static GDTEntry GDTEntries[5];
+
+static IDTDescriptor IDT[256];
+static IDTPointer IDTPTR;
 
 VOID x86_install_gdt(GDTPointer *Pointer);
+
+void x86InitializeIDT()
+{
+	/* Make the PIT happy. */
+	INT32 Divisor = 11931840;
+	x86outb(0x43, 0x36); /* Tell the PIT to accept it. */
+	x86outb(0x40, (Divisor >> 0) & 0xFF);
+	x86outb(0x40, (Divisor >> 8) & 0xFF);
+
+	/* Initialize the PICs. 0x10 for INIT, and 0x01 for disabling stuff. */
+	KiSetMemoryBytes(IDT, 0, (sizeof(IDTDescriptor)) * 256);
+	x86outb(X86_PIC_1_COMMAND, (0x10 | 0x01));
+	x86outb(X86_PIC_2_COMMAND, (0x10 | 0x01));
+	x86_io_stall();
+
+	/* Do the remap! */
+	x86outb(X86_PIC_1_DATA, 0x20); /* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x28); /* Last 8 interrupts */
+	x86_io_stall();
+
+	/* Handle the cascades. */
+	x86outb(X86_PIC_1_DATA, 0x04); /* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x02); /* Last 8 interrupts */
+	x86_io_stall();
+
+	/* Environment info... */
+	x86outb(X86_PIC_1_DATA, 0x01); /* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x01); /* Last 8 interrupts */
+	x86_io_stall();
+
+	/* Leave this alone for now... */
+	x86outb(X86_PIC_1_DATA, 0x01); /* First 7 interrupts */
+	x86outb(X86_PIC_2_DATA, 0x01); /* Last 8 interrupts */
+	x86_io_stall();
+
+	x86outb(X86_PIC_1_DATA, 0xFC); /* Only allow a few IRQs. For now. */
+	x86outb(X86_PIC_2_DATA, 0x80); /* Allow all the PIC 2 IRQs..? */
+
+	IDTPTR.Limit = ((sizeof(IDTDescriptor)) * 256) - 1;
+	UINT_PTR Location = (&IDT);
+	IDTPTR.Location = Location;
+	x86SetupIDTEntries();
+
+	KiPrintFmt("IDT Ready to work...\n");
+	x86_install_idt(&IDTPTR);
+	KiRestoreInterrupts(TRUE);
+}
+
+volatile void x86IDTSetGate(
+	UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
+{
+	/* 0 - 255 happens to be valid, so no need for checking. */
+	IDTDescriptor Descriptor = {0};
+
+	Descriptor.Offset = (UINT16)(Base & 0xFFFF);
+	Descriptor.Offset2 = (UINT16)((Base >> 16) & 0xFFFF);
+	/*
+		Reserved should stay reserved. (on 32-bit x86,
+		these are different fields, but the function
+		is the same: don't do anything with it.
+	*/
+	Descriptor.RESERVED = 0;
+
+	/* And the important bits. */
+	Descriptor.Selector = Selector;
+	Descriptor.TypeAttr = Flags;
+
+/* Handful of embedded x86s out there. May want to support one day. */
+#if defined(__x86_64__)
+	Descriptor.Offset3 = (UINT32)((Base >> 32) & 0xFFFFFFFF);
+	/* No TSS, so set to zero. */
+	Descriptor.IST = 0;
+#endif
+	IDT[Number] = Descriptor;
+}
 
 VOID KiStartupProcessorMachineDependent(UINT32 Core)
 {
@@ -58,60 +138,71 @@ VOID KiStartupProcessorMachineDependent(UINT32 Core)
 	{
 		/* setup gdt and idt... */
 		UINT16 Limit = 5;
-		GDTEntry *Entries = (GDTEntry*)MmKernelMalloc(sizeof(GDTEntry) * Limit);
 
 		/* Set up null descriptor */
-		Entries[0].Base = 0;
-		Entries[0].High = 0;
-		Entries[0].Limit = 0;
+		GDTEntries[0].Base = 0;
+		GDTEntries[0].High = 0;
+		GDTEntries[0].Limit = 0;
 
 		/* Set up kernel code */
-		Entries[1].Base = 0;
-		Entries[1].High = 0;
-		Entries[1].Limit = 0;
-		Entries[1].AsBits.SixtyFourMode = 1;
-		Entries[1].AsBits.Present = 1;
-		Entries[1].AsBits.System = 1;
-		Entries[1].AsBits.Executable = 1;
-		Entries[1].AsBits.ReadWritable = 1;
-		Entries[1].AsBits.Granularity = 1;
+		GDTEntries[1].Base = 0;
+		GDTEntries[1].High = 0;
+		GDTEntries[1].Limit = 0;
+		GDTEntries[1].AsBits.SixtyFourMode = 1;
+		GDTEntries[1].AsBits.Present = 1;
+		GDTEntries[1].AsBits.System = 1;
+		GDTEntries[1].AsBits.Executable = 1;
+		GDTEntries[1].AsBits.ReadWritable = 1;
+		GDTEntries[1].AsBits.Granularity = 1;
 
 		/* Set up kernel data. */
-		Entries[2].Base = 0;
-		Entries[2].High = 0;
-		Entries[2].Limit = 0;
-		Entries[2].AsBits.SixtyFourMode = 1;
-		Entries[2].AsBits.Present = 1;
-		Entries[2].AsBits.System = 1;
-		Entries[2].AsBits.ReadWritable = 1;
+		GDTEntries[2].Base = 0;
+		GDTEntries[2].High = 0;
+		GDTEntries[2].Limit = 0;
+		GDTEntries[2].AsBits.SixtyFourMode = 1;
+		GDTEntries[2].AsBits.Present = 1;
+		GDTEntries[2].AsBits.System = 1;
+		GDTEntries[2].AsBits.ReadWritable = 1;
 
 		/* Set up user code */
-		Entries[3].Base = 0;
-		Entries[3].High = 0;
-		Entries[3].Limit = 0;
-		Entries[3].AsBits.SixtyFourMode = 1;
-		Entries[3].AsBits.Present = 1;
-		Entries[3].AsBits.System = 1;
-		Entries[3].AsBits.Executable = 1;
-		Entries[3].AsBits.ReadWritable = 1;
-		Entries[3].AsBits.Granularity = 1;
-		Entries[3].AsBits.PrivLevel = 3;
+		GDTEntries[3].Base = 0;
+		GDTEntries[3].High = 0;
+		GDTEntries[3].Limit = 0;
+		GDTEntries[3].AsBits.SixtyFourMode = 1;
+		GDTEntries[3].AsBits.Present = 1;
+		GDTEntries[3].AsBits.System = 1;
+		GDTEntries[3].AsBits.Executable = 1;
+		GDTEntries[3].AsBits.ReadWritable = 1;
+		GDTEntries[3].AsBits.Granularity = 1;
+		GDTEntries[3].AsBits.PrivLevel = 3;
 
 		/* Set up user data. */
-		Entries[4].Base = 0;
-		Entries[4].High = 0;
-		Entries[4].Limit = 0;
-		Entries[4].AsBits.SixtyFourMode = 1;
-		Entries[4].AsBits.Present = 1;
-		Entries[4].AsBits.System = 1;
-		Entries[4].AsBits.ReadWritable = 1;
-		Entries[4].AsBits.PrivLevel = 3;
+		GDTEntries[4].Base = 0;
+		GDTEntries[4].High = 0;
+		GDTEntries[4].Limit = 0;
+		GDTEntries[4].AsBits.SixtyFourMode = 1;
+		GDTEntries[4].AsBits.Present = 1;
+		GDTEntries[4].AsBits.System = 1;
+		GDTEntries[4].AsBits.ReadWritable = 1;
+		GDTEntries[4].AsBits.PrivLevel = 3;
 
 		GlobalGDT.Limit = (sizeof(GDTEntry) * 5) - 1;
-		GlobalGDT.Base = (UINT64)(Entries);
+		GlobalGDT.Base = (UINT64)(GDTEntries);
 		x86_install_gdt(&GlobalGDT);
+
+
+		/* Unmap low memory, since GDT was last leftover. */
+		((PageMapEntry*)(get_initial_p4_table()))[0] = 0;
+
+		/* Now set up global IDT. */
+		x86InitializeIDT();
 	}
 	KiRestoreInterrupts(TRUE);
 }
 
 COMPILER_ASSERT(sizeof(GDTEntry) == sizeof(UINT_PTR));
+COMPILER_ASSERT(sizeof(GDTPointer) == sizeof(IDTPointer));
+COMPILER_ASSERT(sizeof(PageMapEntry) == sizeof(UINT_PTR));
+
+COMPILER_ASSERT(sizeof(GDTPointer) > sizeof(UINT64));
+COMPILER_ASSERT(sizeof(IDTPointer) > sizeof(UINT64));

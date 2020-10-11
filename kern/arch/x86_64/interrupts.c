@@ -37,17 +37,7 @@ IN THE SOFTWARE.
 #include <arch/x86_64/mm/pageflags.h>
 
 
-#define X86_PIC_1_COMMAND (0x20)
-#define X86_PIC_1_DATA (0x21)
-
-#define X86_PIC_2_COMMAND (0xA0)
-#define X86_PIC_2_DATA (0xA1)
-
-
-static IDTDescriptor IDT[256];
-static IDTLocation IDTPTR;
-
-extern void x86_install_idt(IDTLocation *Pointer);
+extern void x86_install_idt(IDTPointer *Pointer);
 extern void x86_divide_by_zero(VOID);
 extern void x86_interrupt_3(VOID);
 extern void x86_interrupt_14(VOID);
@@ -141,116 +131,6 @@ INTERRUPT void GenericHandlerPIC1_IRQ7(x86InterruptFrame *Frame)
 	/* Ignore number 7. */
 	x86PICSendEOIPIC1();
 }
-
-void x86InitializeIDT()
-{
-	/* Occasionally, some Zen cores *really* like reclocking themselves
-	 * to 400MHz until you reboot. To err on the side of safety, assume
-	 * we'll need io_stall to put up with these chips.
-	 *
-	 * (On that note, I'd like to blame laptop manufacturers for not using
-	 * the CPU right... this has *never* happened on my desktops.)
-	 *
-	 * This is particularly the case on my 17z. So, we'll have to see if
-	 * I can clean up the mess the BIOS devs did in ring 0, or if I can
-	 * set the kernel up in a way to do that APIC remap trick to escalate to
-	 * ring -2 access and fix it the harder way for specific devices and
-	 * play with writing to pmem in certain places. Will need to do some
-	 * dumping of RAM, probably see if this is even possible, and then
-	 * fight all day with the BIOS to do what I want it to.
-	 *
-	 * It's not a security vulnerability! It's a feature!
-	 */
-
-	/* Make the PIT happy. */
-	INT32 Divisor = 11931840;
-	x86outb(0x43, 0x36); /* Tell the PIT to accept it. */
-	x86outb(0x40, (Divisor >> 0) & 0xFF);
-	x86outb(0x40, (Divisor >> 8) & 0xFF);
-
-	/* Initialize the PICs. 0x10 for INIT, and 0x01 for disabling stuff. */
-	KiSetMemoryBytes(IDT, 0, (sizeof(IDTDescriptor)) * 256);
-	x86outb(X86_PIC_1_COMMAND, (0x10 | 0x01));
-	x86outb(X86_PIC_2_COMMAND, (0x10 | 0x01));
-	x86_io_stall();
-
-	/* Do the remap! */
-	x86outb(X86_PIC_1_DATA, 0x20); /* First 7 interrupts */
-	x86outb(X86_PIC_2_DATA, 0x28); /* Last 8 interrupts */
-	x86_io_stall();
-
-	/* Handle the cascades. */
-	x86outb(X86_PIC_1_DATA, 0x04); /* First 7 interrupts */
-	x86outb(X86_PIC_2_DATA, 0x02); /* Last 8 interrupts */
-	x86_io_stall();
-
-	/* Environment info... */
-	x86outb(X86_PIC_1_DATA, 0x01); /* First 7 interrupts */
-	x86outb(X86_PIC_2_DATA, 0x01); /* Last 8 interrupts */
-	x86_io_stall();
-
-	/* Leave this alone for now... */
-	x86outb(X86_PIC_1_DATA, 0x01); /* First 7 interrupts */
-	x86outb(X86_PIC_2_DATA, 0x01); /* Last 8 interrupts */
-	x86_io_stall();
-
-	x86outb(X86_PIC_1_DATA, 0xFC); /* Only allow a few IRQs. For now. */
-	x86outb(X86_PIC_2_DATA, 0x80); /* Allow all the PIC 2 IRQs..? */
-
-	for (UINTN i = 0; i < 255; ++i)
-	{
-		x86IDTSetGate(i, (UINT_PTR)(GenericHandler), 0x08, 0x8E);
-	}
-	x86IDTSetGate(0x20, (UINT_PTR)(GenericHandlerPIC1_IRQ0), 0x08, 0x8E);
-	x86IDTSetGate(0x21, (UINT_PTR)(GenericHandlerPIC1_IRQ1), 0x08, 0x8E);
-	x86IDTSetGate(0x22, (UINT_PTR)(GenericHandlerPIC1_IRQ2), 0x08, 0x8E);
-	x86IDTSetGate(0x23, (UINT_PTR)(GenericHandlerPIC1_IRQ3), 0x08, 0x8E);
-	x86IDTSetGate(0x24, (UINT_PTR)(GenericHandlerPIC1_IRQ4), 0x08, 0x8E);
-	x86IDTSetGate(0x25, (UINT_PTR)(GenericHandlerPIC1_IRQ5), 0x08, 0x8E);
-	x86IDTSetGate(0x26, (UINT_PTR)(GenericHandlerPIC1_IRQ6), 0x08, 0x8E);
-	x86IDTSetGate(0x27, (UINT_PTR)(GenericHandlerPIC1_IRQ7), 0x08, 0x8E);
-	for (UINTN i = 0x28; i < 0x30; ++i)
-	{
-		x86IDTSetGate(i, (UINT_PTR)(GenericHandlerPIC2), 0x08, 0x8E);
-	}
-	IDTPTR.Limit = ((sizeof(IDTDescriptor)) * 256) - 1;
-	UINT_PTR Location = (&IDT);
-	IDTPTR.Location = Location;
-	x86SetupIDTEntries();
-
-	KiPrintFmt("IDT Ready to work...\n");
-	x86_install_idt(&IDTPTR);
-	KiRestoreInterrupts(TRUE);
-}
-
-volatile void x86IDTSetGate(
-	UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
-{
-	/* 0 - 255 happens to be valid, so no need for checking. */
-	IDTDescriptor Descriptor = {0};
-
-	Descriptor.Offset = (UINT16)(Base & 0xFFFF);
-	Descriptor.Offset2 = (UINT16)((Base >> 16) & 0xFFFF);
-	/*
-		Reserved should stay reserved. (on 32-bit x86,
-		these are different fields, but the function
-		is the same: don't do anything with it.
-	*/
-	Descriptor.RESERVED = 0;
-
-	/* And the important bits. */
-	Descriptor.Selector = Selector;
-	Descriptor.TypeAttr = Flags;
-
-/* Handful of embedded x86s out there. May want to support one day. */
-#if defined(__x86_64__)
-	Descriptor.Offset3 = (UINT32)((Base >> 32) & 0xFFFFFFFF);
-	/* No TSS, so set to zero. */
-	Descriptor.IST = 0;
-#endif
-	IDT[Number] = Descriptor;
-}
-
 
 INTERRUPT void DivideByZero(x86InterruptFrame *Frame)
 {
@@ -436,6 +316,24 @@ INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
 
 volatile void x86SetupIDTEntries()
 {
+	/* In the base case, ensure everything is filled by default. */
+	for (UINTN i = 0; i < 255; ++i)
+	{
+		x86IDTSetGate(i, (UINT_PTR)(GenericHandler), 0x08, 0x8E);
+	}
+	x86IDTSetGate(0x20, (UINT_PTR)(GenericHandlerPIC1_IRQ0), 0x08, 0x8E);
+	x86IDTSetGate(0x21, (UINT_PTR)(GenericHandlerPIC1_IRQ1), 0x08, 0x8E);
+	x86IDTSetGate(0x22, (UINT_PTR)(GenericHandlerPIC1_IRQ2), 0x08, 0x8E);
+	x86IDTSetGate(0x23, (UINT_PTR)(GenericHandlerPIC1_IRQ3), 0x08, 0x8E);
+	x86IDTSetGate(0x24, (UINT_PTR)(GenericHandlerPIC1_IRQ4), 0x08, 0x8E);
+	x86IDTSetGate(0x25, (UINT_PTR)(GenericHandlerPIC1_IRQ5), 0x08, 0x8E);
+	x86IDTSetGate(0x26, (UINT_PTR)(GenericHandlerPIC1_IRQ6), 0x08, 0x8E);
+	x86IDTSetGate(0x27, (UINT_PTR)(GenericHandlerPIC1_IRQ7), 0x08, 0x8E);
+	for (UINTN i = 0x28; i < 0x30; ++i)
+	{
+		x86IDTSetGate(i, (UINT_PTR)(GenericHandlerPIC2), 0x08, 0x8E);
+	}
+
 	/* 0x08 is for kernel code segment offset */
 	/* 0x8E is for interrupt gate. */
 

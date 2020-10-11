@@ -113,7 +113,7 @@ typedef enum X8664CPUFeatures
 typedef struct GDTPointer
 {
 	UINT16 Limit;
-	UINT64 Base;
+	UINT_PTR Base;
 }PACKED GDTPointer;
 
 typedef struct GDTEntry
@@ -123,15 +123,6 @@ typedef struct GDTEntry
 
 	union 
 	{
-		struct AsFields
-		{
-			UINT8 MiddleBase;
-			UINT8 Access;
-			UINT8 LimitHigh : 4;
-			UINT8 Flags : 4;
-			UINT8 HighBase;
-		}PACKED AsFields;
-
 		struct AsBytes
 		{
 			UINT8 MiddleBase;
