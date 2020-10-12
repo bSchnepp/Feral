@@ -42,18 +42,79 @@ IN THE SOFTWARE.
 #include <krnl.h>
 #include <kern_ver.h>
 
-VOID KiStartupMachineDependent(VOID)
-{
-	/* Possibly for things like PCI scanning or something. NYI. */
-}
-
 static GDTPointer GlobalGDT;
 static GDTEntry GDTEntries[5];
 
 static IDTDescriptor IDT[256];
 static IDTPointer IDTPTR;
 
+VOID x86InitializeGDT();
+
+VOID KiStartupMachineDependent(VOID)
+{
+	/* Possibly for things like PCI scanning or something. NYI. */
+}
+
 VOID x86_install_gdt(GDTPointer *Pointer);
+
+
+
+VOID x86InitializeGDT()
+{
+	/* setup gdt and idt... */
+	UINT16 Limit = 5;
+
+	/* Set up null descriptor */
+	GDTEntries[0].Base = 0;
+	GDTEntries[0].High = 0;
+	GDTEntries[0].Limit = 0;
+
+	/* Set up kernel code */
+	GDTEntries[1].Base = 0;
+	GDTEntries[1].High = 0;
+	GDTEntries[1].Limit = 0;
+	GDTEntries[1].AsBits.SixtyFourMode = 1;
+	GDTEntries[1].AsBits.Present = 1;
+	GDTEntries[1].AsBits.System = 1;
+	GDTEntries[1].AsBits.Executable = 1;
+	GDTEntries[1].AsBits.ReadWritable = 1;
+	GDTEntries[1].AsBits.Granularity = 1;
+
+	/* Set up kernel data. */
+	GDTEntries[2].Base = 0;
+	GDTEntries[2].High = 0;
+	GDTEntries[2].Limit = 0;
+	GDTEntries[2].AsBits.SixtyFourMode = 1;
+	GDTEntries[2].AsBits.Present = 1;
+	GDTEntries[2].AsBits.System = 1;
+	GDTEntries[2].AsBits.ReadWritable = 1;
+
+	/* Set up user code */
+	GDTEntries[3].Base = 0;
+	GDTEntries[3].High = 0;
+	GDTEntries[3].Limit = 0;
+	GDTEntries[3].AsBits.SixtyFourMode = 1;
+	GDTEntries[3].AsBits.Present = 1;
+	GDTEntries[3].AsBits.System = 1;
+	GDTEntries[3].AsBits.Executable = 1;
+	GDTEntries[3].AsBits.ReadWritable = 1;
+	GDTEntries[3].AsBits.Granularity = 1;
+	GDTEntries[3].AsBits.PrivLevel = 3;
+
+	/* Set up user data. */
+	GDTEntries[4].Base = 0;
+	GDTEntries[4].High = 0;
+	GDTEntries[4].Limit = 0;
+	GDTEntries[4].AsBits.SixtyFourMode = 1;
+	GDTEntries[4].AsBits.Present = 1;
+	GDTEntries[4].AsBits.System = 1;
+	GDTEntries[4].AsBits.ReadWritable = 1;
+	GDTEntries[4].AsBits.PrivLevel = 3;
+
+	GlobalGDT.Limit = (sizeof(GDTEntry) * 5) - 1;
+	GlobalGDT.Base = (UINT64)(GDTEntries);
+	x86_install_gdt(&GlobalGDT);
+}
 
 void x86InitializeIDT()
 {
@@ -97,9 +158,10 @@ void x86InitializeIDT()
 	IDTPTR.Location = Location;
 	x86SetupIDTEntries();
 
-	KiPrintFmt("IDT Ready to work...\n");
 	x86_install_idt(&IDTPTR);
 	KiRestoreInterrupts(TRUE);
+	
+	KiPrintFmt("IDT Ready to work...\n");
 }
 
 volatile void x86IDTSetGate(
@@ -135,60 +197,10 @@ VOID KiStartupProcessorMachineDependent(UINT32 Core)
 	KiRestoreInterrupts(FALSE);
 	if (Core == 0)
 	{
-		/* setup gdt and idt... */
-		UINT16 Limit = 5;
-
-		/* Set up null descriptor */
-		GDTEntries[0].Base = 0;
-		GDTEntries[0].High = 0;
-		GDTEntries[0].Limit = 0;
-
-		/* Set up kernel code */
-		GDTEntries[1].Base = 0;
-		GDTEntries[1].High = 0;
-		GDTEntries[1].Limit = 0;
-		GDTEntries[1].AsBits.SixtyFourMode = 1;
-		GDTEntries[1].AsBits.Present = 1;
-		GDTEntries[1].AsBits.System = 1;
-		GDTEntries[1].AsBits.Executable = 1;
-		GDTEntries[1].AsBits.ReadWritable = 1;
-		GDTEntries[1].AsBits.Granularity = 1;
-
-		/* Set up kernel data. */
-		GDTEntries[2].Base = 0;
-		GDTEntries[2].High = 0;
-		GDTEntries[2].Limit = 0;
-		GDTEntries[2].AsBits.SixtyFourMode = 1;
-		GDTEntries[2].AsBits.Present = 1;
-		GDTEntries[2].AsBits.System = 1;
-		GDTEntries[2].AsBits.ReadWritable = 1;
-
-		/* Set up user code */
-		GDTEntries[3].Base = 0;
-		GDTEntries[3].High = 0;
-		GDTEntries[3].Limit = 0;
-		GDTEntries[3].AsBits.SixtyFourMode = 1;
-		GDTEntries[3].AsBits.Present = 1;
-		GDTEntries[3].AsBits.System = 1;
-		GDTEntries[3].AsBits.Executable = 1;
-		GDTEntries[3].AsBits.ReadWritable = 1;
-		GDTEntries[3].AsBits.Granularity = 1;
-		GDTEntries[3].AsBits.PrivLevel = 3;
-
-		/* Set up user data. */
-		GDTEntries[4].Base = 0;
-		GDTEntries[4].High = 0;
-		GDTEntries[4].Limit = 0;
-		GDTEntries[4].AsBits.SixtyFourMode = 1;
-		GDTEntries[4].AsBits.Present = 1;
-		GDTEntries[4].AsBits.System = 1;
-		GDTEntries[4].AsBits.ReadWritable = 1;
-		GDTEntries[4].AsBits.PrivLevel = 3;
-
-		GlobalGDT.Limit = (sizeof(GDTEntry) * 5) - 1;
-		GlobalGDT.Base = (UINT64)(GDTEntries);
-		x86_install_gdt(&GlobalGDT);
-
+		/* If we're here, that means the GDT is still in low memory.
+		 * We don't want that, so let's make a new one.
+		 */
+		x86InitializeGDT();
 
 		/* Unmap low memory, since GDT was last leftover. */
 		x86UnmapAddress(get_initial_p4_table(), 0);

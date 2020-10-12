@@ -1,10 +1,10 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.10 FATAL_ERROR)
 
-# Drop support for something older than 99, so
-# we can use anonymous structs and unions and all.
 SET(CMAKE_C_STANDARD 11)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+SET(CMAKE_INSTALL_MESSAGE NEVER)
 
 # Help define kern_ver.h
 SET(FERAL_VERSION_MAJOR 0)
@@ -37,7 +37,7 @@ ELSE()
 MESSAGE(FATAL_ERROR "Unsupported compiler. Use clang. Got ${CMAKE_C_COMPILER}")
 ENDIF()
 
-PROJECT(FERALKER)
+PROJECT(FERALKER C ASM_NASM)
 INCLUDE_DIRECTORIES(inc)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
@@ -52,16 +52,6 @@ SET(CMAKE_SHARED_MODULE_PREFIX "")
 # Let's wait a while for fixing EFI support...
 OPTION(FERAL_BUILD_STANDALONE_UEFI_ "Enable UEFI build" OFF)
 
-
-
-
-
-
-# We're going to end up using all three.
-# Maybe (read: probably) even Rust too.
-ENABLE_LANGUAGE(ASM_NASM)
-ENABLE_LANGUAGE(C)
-
 ADD_SUBDIRECTORY(drivers)
 ADD_SUBDIRECTORY(kern)
 ADD_SUBDIRECTORY(sec)
@@ -75,6 +65,9 @@ TARGET_LINK_LIBRARIES(FERALKER Kernel)
 	
 SET_TARGET_PROPERTIES(FERALKER PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
 
+
+# We should possibly be more careful what we strip instead of just
+# stripping everything.
 IF (CMAKE_BUILD_TYPE STREQUAL Release)
     ADD_CUSTOM_COMMAND(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_STRIP} ${CMAKE_PROJECT_NAME})

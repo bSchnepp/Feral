@@ -42,6 +42,7 @@ typedef enum KeProcessorFamily
 	KERNEL_PROCESSOR_FAMILY_AARCH64,
 	KERNEL_PROCESSOR_FAMILY_RV64GCH,
 	KERNEL_PROCESSOR_FAMILY_OPENPOWER,
+	KERNEL_PROCESSOR_FAMILY_XEN_X86_64, /* Maybe one day? */
 }KeProcessorFamily;
 
 typedef struct KiProcessorInfo

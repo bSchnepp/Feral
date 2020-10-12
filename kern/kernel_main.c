@@ -36,16 +36,6 @@ IN THE SOFTWARE.
 #include <krnl.h>
 #include <kern_ver.h>
 
-typedef struct FeralVersionInfo
-{
-	UINT8 FeralVersionMajor;
-	UINT8 FeralVersionMinor;
-	UINT8 FeralVersionPatch;
-} FeralVersionInfo;
-
-
-static FeralVersionInfo VersionInfo;
-
 VOID KiStartupMachineDependent(VOID);
 VOID KiStartupProcessorMachineDependent(UINT32 Core);
 
@@ -62,15 +52,11 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	 */
 	KiUpdateFirmwareFunctions(EnvBlock->FunctionTable, EnvBlock->CharMap);
 
-	VersionInfo.FeralVersionMajor = FERAL_VERSION_MAJOR;
-	VersionInfo.FeralVersionMinor = FERAL_VERSION_MINOR;
-	VersionInfo.FeralVersionPatch = FERAL_VERSION_PATCH;
-
 	/* Set up memory immediately so we can use the framebuffer */
 	KiStartupSystem(FERAL_SUBSYSTEM_MEMORY_MANAGEMENT);
 	KiPrintFmt("\nStarting Feral Kernel \"%s\" Version %01u.%01u.%01u\n",
-		FERAL_VERSION_SHORT, VersionInfo.FeralVersionMajor,
-		VersionInfo.FeralVersionMinor, VersionInfo.FeralVersionPatch);
+		FERAL_VERSION_SHORT, FERAL_VERSION_MAJOR,
+		FERAL_VERSION_MINOR, FERAL_VERSION_PATCH);
 
 	/* Fmt doesn't properly take 'lu' yet, FIXME TODO... */
 	KiPrintFmt("Found %lu mebibytes of free memory\n",
@@ -86,32 +72,28 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	KiPrintFmt("%s\n", "Preparing execution environment...");
 	KiStartupSystem(FERAL_SUBSYSTEM_ARCH_SPECIFIC);
 
+	/* Formally start processor 0. */
+	KiStartupProcessor(0);
+
+	/* TODO: Get processor count and initialize the other ones. */
+
 
 	/* Only load drivers *after* base system initializtion. */
 	KiPrintFmt("Loading all drivers...\n");
 	FERALSTATUS KiLoadAllDrivers(VOID);
 
-	/* Formally start processor 0. */
-	KiStartupProcessor(0);
-
 	/* These are macroed away at release builds.
 	 * They're eliminated at build time.
 	 */
 	KiDebugPrint("INIT Reached here.");
-	/*
-		TODO: Call up KiStartupProcessor for each processor.
-		Each processor should have it's x87 enabled, so we can do SSE
-		stuff in usermode.
 
-		(also bulldozer will probably cause some drama with that...)
-	 */
+	/* Once kernel initialization is done, don't let it jump back! */
 	for (;;) {}
 }
 
 /* I don't think the x2APIC will support nearly this many cores, but why not. */
 FERALSTATUS KiStartupProcessor(UINT32 ProcessorNumber)
 {
-	/* Create a new GDT for this core */
 	/* Create a new stack for this core. */
 	/* Complete the rest of the startup process... */
 	KiStartupProcessorMachineDependent(ProcessorNumber);

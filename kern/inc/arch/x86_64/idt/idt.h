@@ -69,7 +69,6 @@ typedef struct IDTPointer
 	UINT_PTR Location;
 } PACKED IDTPointer;
 
-
 void x86InitializeIDT(VOID);
 
 volatile void x86IDTSetGate(
