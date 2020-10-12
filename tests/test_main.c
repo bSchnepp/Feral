@@ -34,7 +34,6 @@ IN THE SOFTWARE.
 
 FERALSTATUS KiStartupSystem()
 {
-
 }
 
 /* stubs for some assembly stuff the kernel expects. Maybe fixme?
@@ -56,7 +55,8 @@ TEST_STATUS KernelMemCpy()
 	struct SomeStruct k1 = {0};
 	struct SomeStruct k2 = {4, {'a', 'b', 'c', 'd'}, {11}};
 	KiCopyMemory(&k2, &k1, sizeof(struct SomeStruct));
-	ASSERT_EQ_MEM(&k1, &k2, sizeof(struct SomeStruct), "KernelLib", "KiCopyMemory");
+	ASSERT_EQ_MEM(&k1, &k2, sizeof(struct SomeStruct), "KernelLib",
+		"KiCopyMemory");
 }
 
 TEST_STATUS KernelMemSet()
@@ -64,7 +64,8 @@ TEST_STATUS KernelMemSet()
 	struct SomeStruct k1 = {0};
 	struct SomeStruct k2 = {4, {'a', 'b', 'c', 'd'}, {11}};
 	KiSetMemoryBytes(&k2, 0, sizeof(struct SomeStruct));
-	ASSERT_EQ_MEM(&k1, &k2, sizeof(struct SomeStruct), "KernelLib", "KiSetMemoryBytes");
+	ASSERT_EQ_MEM(&k1, &k2, sizeof(struct SomeStruct), "KernelLib",
+		"KiSetMemoryBytes");
 }
 
 TEST_STATUS KernelMemSetNonZero()
@@ -85,7 +86,7 @@ TEST_STATUS KernelCStringLength()
 
 	KiGetStringLength(Val1, &Len1);
 	KiGetStringLength(Val2, &Len2);
-	
+
 	ASSERT_EQ_LLD(Len1, Len2, "KernelLib", "KiGetStringLength");
 }
 
@@ -99,7 +100,7 @@ TEST_STATUS KernelCStringLengthDiff()
 
 	KiGetStringLength(Val1, &Len1);
 	KiGetStringLength(Val2, &Len2);
-	
+
 	ASSERT_NEQ_LLD(Len1, Len2, "KernelLib", "KiGetStringLengthDiff");
 }
 
@@ -121,7 +122,7 @@ TEST_STATUS KernelCompareMemoryNeg()
 
 	BOOL Value = 0;
 	KiCompareMemory(&k2, &k1, sizeof(struct SomeStruct), &Value);
-	
+
 	ASSERT_FALSE(Value, "KernelLib", "KiCompareMemory");
 }
 

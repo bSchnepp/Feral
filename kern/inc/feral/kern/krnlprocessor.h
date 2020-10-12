@@ -43,7 +43,7 @@ typedef enum KeProcessorFamily
 	KERNEL_PROCESSOR_FAMILY_RV64GCH,
 	KERNEL_PROCESSOR_FAMILY_OPENPOWER,
 	KERNEL_PROCESSOR_FAMILY_XEN_X86_64, /* Maybe one day? */
-}KeProcessorFamily;
+} KeProcessorFamily;
 
 typedef struct KiProcessorInfo
 {
@@ -57,6 +57,6 @@ typedef struct KiProcessorInfo
 	UINT32 CPUStepping; /* In case we need to check for F00F or something.*/
 
 	struct KiPrivateProcessorInfo PrivateInfo;
-}KiProcessorInfo;
+} KiProcessorInfo;
 
 #endif

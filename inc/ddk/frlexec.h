@@ -50,7 +50,7 @@ extern "C"
 	{
 		FERALSTATUS(*LoaderMain)
 		(IN ExecutableFormat Format);
-		
+
 		FERALSTATUS(*LoaderExit)
 		(VOID);
 	} FormatHandler;

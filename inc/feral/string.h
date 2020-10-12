@@ -36,47 +36,53 @@ extern "C"
 #include <feral/feralstatus.h>
 
 
-/* Struct to define a verbose string (O(1) to get the length of the string) */
-typedef struct FERALSTRING
-{
-	UINT64 Length;
-	WSTRING Content;
-} FERALSTRING;
-
-INLINE BOOL FrlStringCmp(FERALSTRING *String1, FERALSTRING *String2)
-{
-	BOOL Condition1 = (String1->Length == String2->Length);
-	BOOL Condition2 = TRUE;
-	BOOL Condition3 = TRUE;
-	BOOL Condition4 = TRUE;
-
-	UINT64 Index;
-	for (Index = 0; Index < String1->Length; Index += 4)
+	/* Struct to define a verbose string (O(1) to get the length of the
+	 * string) */
+	typedef struct FERALSTRING
 	{
-		Condition1 &= (String1->Content[Index + 0] == String2->Content[Index + 0]);
-		Condition2 &= (String1->Content[Index + 1] == String2->Content[Index + 1]);
-		Condition3 &= (String1->Content[Index + 2] == String2->Content[Index + 2]);
-		Condition4 &= (String1->Content[Index + 3] == String2->Content[Index + 3]);
+		UINT64 Length;
+		WSTRING Content;
+	} FERALSTRING;
+
+	INLINE BOOL FrlStringCmp(FERALSTRING* String1, FERALSTRING* String2)
+	{
+		BOOL Condition1 = (String1->Length == String2->Length);
+		BOOL Condition2 = TRUE;
+		BOOL Condition3 = TRUE;
+		BOOL Condition4 = TRUE;
+
+		UINT64 Index;
+		for (Index = 0; Index < String1->Length; Index += 4)
+		{
+			Condition1 &= (String1->Content[Index + 0]
+				       == String2->Content[Index + 0]);
+			Condition2 &= (String1->Content[Index + 1]
+				       == String2->Content[Index + 1]);
+			Condition3 &= (String1->Content[Index + 2]
+				       == String2->Content[Index + 2]);
+			Condition4 &= (String1->Content[Index + 3]
+				       == String2->Content[Index + 3]);
+		}
+
+		for (; Index < String1->Length; ++Index)
+		{
+			Condition1 &= (String1->Content[Index]
+				       == String2->Content[Index]);
+		}
+
+		return (Condition1 && Condition2);
 	}
 
-	for (; Index < String1->Length; ++Index)
-	{
-		Condition1 &= (String1->Content[Index] == String2->Content[Index]);
-	}
+	/* Create a string. */
+	FERALSTATUS FrlCreateString(
+		IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content);
 
-	return (Condition1 && Condition2);
-}
+	/* Delete a string. */
+	FERALSTATUS FrlDeleteString(IN FERALSTRING* String);
 
-/* Create a string. */
-FERALSTATUS FrlCreateString(
-	IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content);
-
-/* Delete a string. */
-FERALSTATUS FrlDeleteString(IN FERALSTRING* String);
-
-/* Clone a string */
-FERALSTATUS FrlCloneString(
-	IN FERALSTRING* Source, IN FERALSTRING* OutLocation);
+	/* Clone a string */
+	FERALSTATUS FrlCloneString(
+		IN FERALSTRING* Source, IN FERALSTRING* OutLocation);
 
 #if defined(__cplusplus)
 }

@@ -28,10 +28,13 @@ IN THE SOFTWARE.
 #define _FERAL_KERNEL_MACRO_H_
 
 
-#define COMPILER_CONCAT_HELPER(x, y) x ## y
+#define COMPILER_CONCAT_HELPER(x, y) x##y
 #define COMPILER_CONCAT(x, y) COMPILER_CONCAT_HELPER(x, y)
 
-#define COMPILER_ASSERT(condition) 			\
-	typedef char COMPILER_CONCAT(COMPILER_CONCAT(COMPILER_CONCAT(assertion_failed_, __COUNTER__), _), __LINE__)[(2*(!!(condition)))-1]
+#define COMPILER_ASSERT(condition) \
+	typedef char COMPILER_CONCAT( \
+		COMPILER_CONCAT( \
+			COMPILER_CONCAT(assertion_failed_, __COUNTER__), _), \
+		__LINE__)[(2 * (!!(condition))) - 1]
 
 #endif

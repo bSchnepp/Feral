@@ -95,7 +95,7 @@ typedef struct SecurityClassCommon
 	SecurityClassStructureType sType;
 	const void* pNext;
 
-}SecurityClassCommon;
+} SecurityClassCommon;
 
 BOOL CheckSecurityClearance(
 	SecurityClearanceLevel userHas, SecurityClearanceLevel wanted);

@@ -32,7 +32,7 @@ extern "C"
 {
 #endif
 
-/* Dummy header to allow tests to build. */
+	/* Dummy header to allow tests to build. */
 
 #define FERAL_VERSION_MAJOR 99
 #define FERAL_VERSION_MINOR 99

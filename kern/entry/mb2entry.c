@@ -332,6 +332,24 @@ VOID kern_init(UINT32 MBINFO)
 				}
 			}
 		}
+		else if (Type == MULTIBOOT_TAG_TYPE_FRAME_BUFFER)
+		{
+			multiboot_tag_framebuffer_common *mb_as_fb
+				= (multiboot_tag_framebuffer_common
+						*)(MultibootInfo);
+			if (mb_as_fb->framebuffer_type
+				!= MULTIBOOT_FRAMEBUFFER_TYPE_RGB)
+			{
+				continue;
+			}
+
+			VgaAutoPrintln(
+				VGA_WHITE, VGA_BLACK, "Got a framebuffer!");
+			CHAR Buf[17];
+			internalItoaBaseChange(
+				mb_as_fb->framebuffer_width, Buf, 10);
+			VgaAutoPrintln(VGA_RED, VGA_BLACK, Buf);
+		}
 		else if (Type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS)
 		{
 			/* For now, we'll just use the ELF sections tag. */
@@ -489,12 +507,12 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
 			return Status;
 		}
 
-		/* First part of manipulating page tables in C... 
+		/* First part of manipulating page tables in C...
 		 * We no longer need lower half, so just wipe it out.
 		 */
 		UINT_PTR *OrigP4 = get_initial_p4_table();
-		//OrigP4[0] = 0x00;
-		//x86_write_cr3(OrigP4);
+		// OrigP4[0] = 0x00;
+		// x86_write_cr3(OrigP4);
 		return STATUS_SUCCESS;
 	}
 	else if (subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC)

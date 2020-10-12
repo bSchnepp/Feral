@@ -349,7 +349,7 @@ volatile void x86SetupIDTEntries()
 VOID KiRestoreInterrupts(BOOLEAN value)
 {
 	if (value)
-	{		
+	{
 		__asm__ __volatile__("sti");
 	}
 	else

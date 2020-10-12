@@ -37,22 +37,22 @@ typedef struct HThread
 {
 	Handle Tag;
 	/* nyi. Maybe priority here? */
-}HThread;
+} HThread;
 
 typedef struct HProcess
 {
 	Handle Tag;
 	UINT64 NumThreads;
 	Handle *Threads;
-}HProcess;
+} HProcess;
 
 typedef struct HTask
 {
 	Handle Tag;
-	
+
 	UINT64 NumSubprocesses;
 	Handle *SubprocessTags;
-}HTask;
+} HTask;
 
 FERALSTATUS ObInitSystem();
 

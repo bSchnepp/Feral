@@ -69,7 +69,7 @@ typedef enum KiSubsystemIdentifier
 FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem);
 FERALSTATUS KiStartupProcessor(UINT32 ProcessorNumber);
 
-#ifdef KERN_DEBUG
+#ifndef NDEBUG
 
 /* hack for serial */
 #ifndef COM1_PORT

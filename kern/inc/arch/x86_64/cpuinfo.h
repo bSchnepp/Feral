@@ -102,34 +102,33 @@ typedef enum
 
 typedef enum X8664CPUFeatures
 {
-	X8664_CPU_FEATURE_NONE =  (0 << 0),
-	X8664_CPU_FEATURE_SSE3 =  (1 << 0),
-	X8664_CPU_FEATURE_SSE4 =  (1 << 1),
-	X8664_CPU_FEATURE_AVX =   (1 << 2),
-	X8664_CPU_FEATURE_AVX2 =  (1 << 3),
+	X8664_CPU_FEATURE_NONE = (0 << 0),
+	X8664_CPU_FEATURE_SSE3 = (1 << 0),
+	X8664_CPU_FEATURE_SSE4 = (1 << 1),
+	X8664_CPU_FEATURE_AVX = (1 << 2),
+	X8664_CPU_FEATURE_AVX2 = (1 << 3),
 	X8664_CPU_FEATURE_RDTSC = (1 << 4),
-}X8664CPUFeatures;
+} X8664CPUFeatures;
 
 typedef struct GDTPointer
 {
 	UINT16 Limit;
 	UINT_PTR Base;
-}PACKED GDTPointer;
+} PACKED GDTPointer;
 
 typedef struct GDTEntry
 {
 	UINT16 Limit;
 	UINT16 Base;
 
-	union 
-	{
+	union {
 		struct AsBytes
 		{
 			UINT8 MiddleBase;
 			UINT8 Access;
 			UINT8 Flags;
 			UINT8 HighBase;
-		}PACKED AsBytes;
+		} PACKED AsBytes;
 
 		struct AsBits
 		{
@@ -147,17 +146,17 @@ typedef struct GDTEntry
 			UINT8 SizeBit : 1;
 			UINT8 Granularity : 1;
 			UINT8 HighBase;
-		}PACKED AsBits;
+		} PACKED AsBits;
 
 		UINT32 High;
-	}PACKED;
-}PACKED GDTEntry;
+	} PACKED;
+} PACKED GDTEntry;
 
 typedef struct KiPrivateProcessorInfo
 {
 	X8664CPUFeatures Features;
 	GDTPointer CurProcGDT;
 	GDTEntry *CurProcGDTRoot;
-}KiPrivateProcessorInfo;
+} KiPrivateProcessorInfo;
 
 #endif

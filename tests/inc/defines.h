@@ -134,7 +134,7 @@ UINT64 TEST_INTERNAL_Lesser = 0;
 			"\033[1;32mPASSED TEST: %s not equal to %s\033[0m\n", \
 			x, y); \
 	}
-	
+
 #define ASSERT_EQ_MEM(x, y, length, TestName, TestCategory) \
 	TEST_INTERNAL_Lesser = (length); \
 	if ((memcmp(x, y, TEST_INTERNAL_Lesser) != 0) \

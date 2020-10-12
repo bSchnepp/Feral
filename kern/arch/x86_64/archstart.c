@@ -160,7 +160,7 @@ void x86InitializeIDT()
 
 	x86_install_idt(&IDTPTR);
 	KiRestoreInterrupts(TRUE);
-	
+
 	KiPrintFmt("IDT Ready to work...\n");
 }
 

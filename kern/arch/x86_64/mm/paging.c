@@ -199,12 +199,17 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	PageMapEntry *PDP = NULLPTR;
 	if (PML4[PageLevels[0]] & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
 	{
-		PML4[PageLevels[0]] &= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
+		PML4[PageLevels[0]]
+			&= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
 		return STATUS_SUCCESS;
-	} else if (PML4[PageLevels[0]] & X86_PAGE_FLAG_PRESENT) {
+	}
+	else if (PML4[PageLevels[0]] & X86_PAGE_FLAG_PRESENT)
+	{
 		PDP = (PageMapEntry *)(PAGE_ALIGN(PML4[PageLevels[0]]));
 		return STATUS_SUCCESS;
-	} else {
+	}
+	else
+	{
 		return STATUS_MEMORY_PAGE_FAILURE;
 	}
 
@@ -212,12 +217,17 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	PageMapEntry *PD = NULLPTR;
 	if (PDP[PageLevels[1]] & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
 	{
-		PDP[PageLevels[1]] &= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
+		PDP[PageLevels[1]]
+			&= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
 		return STATUS_SUCCESS;
-	} else if (PDP[PageLevels[1]] & X86_PAGE_FLAG_PRESENT) {
+	}
+	else if (PDP[PageLevels[1]] & X86_PAGE_FLAG_PRESENT)
+	{
 		PD = (PageMapEntry *)(PAGE_ALIGN(PDP[PageLevels[1]]));
 		return STATUS_SUCCESS;
-	} else {
+	}
+	else
+	{
 		return STATUS_MEMORY_PAGE_FAILURE;
 	}
 
@@ -225,24 +235,35 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	PageMapEntry *PT = NULLPTR;
 	if (PD[PageLevels[2]] & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
 	{
-		PD[PageLevels[2]] &= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
+		PD[PageLevels[2]]
+			&= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
 		return STATUS_SUCCESS;
-	} else if (PD[PageLevels[2]] & X86_PAGE_FLAG_PRESENT) {
+	}
+	else if (PD[PageLevels[2]] & X86_PAGE_FLAG_PRESENT)
+	{
 		PT = (PageMapEntry *)(PAGE_ALIGN(PD[PageLevels[2]]));
 		return STATUS_SUCCESS;
-	} else {
+	}
+	else
+	{
 		return STATUS_MEMORY_PAGE_FAILURE;
 	}
 
 	/* Again for level 1... */
 	if (PT[PageLevels[2]] & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
 	{
-		PT[PageLevels[2]] &= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
+		PT[PageLevels[2]]
+			&= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
 		return STATUS_SUCCESS;
-	} else if (PT[PageLevels[3]] & X86_PAGE_FLAG_PRESENT) {
-		PT[PageLevels[3]] &= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
+	}
+	else if (PT[PageLevels[3]] & X86_PAGE_FLAG_PRESENT)
+	{
+		PT[PageLevels[3]]
+			&= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
 		return STATUS_SUCCESS;
-	} else {
+	}
+	else
+	{
 		return STATUS_MEMORY_PAGE_FAILURE;
 	}
 

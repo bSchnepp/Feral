@@ -39,11 +39,22 @@ IN THE SOFTWARE.
 VOID KiStartupMachineDependent(VOID);
 VOID KiStartupProcessorMachineDependent(UINT32 Core);
 
-/*
-	This is the kernel's *real* entry point.
-	TODO: some mechanism for a Feral-specific bootloader to skip the
-	multiboot stuff and just load this.
-*/
+/**
+ * @brief The main system startup point, after firmware initialization
+ * has completed.
+ *
+ * @details The bootloader prepares the kernel for it's initial state
+ * at runtime, which should be to map the kernel at a high virtual
+ * address and the state of mappings for the lower half of memory is undefined.
+ * The environment block passed to the kernel contains necessary routines
+ * from the hardware abstraction layer to do certain things such as
+ * obtain display sizes and basic user interaction. This function never
+ * returns.
+ *
+ * @param EnvBlock The firmware environment block that the kernel should
+ * use for details about firmware memory locations, graphics primitives,
+ * and some other details about the machine.
+ */
 VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 {
 	/* First off, ensure we load all the drivers,
@@ -55,8 +66,8 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	/* Set up memory immediately so we can use the framebuffer */
 	KiStartupSystem(FERAL_SUBSYSTEM_MEMORY_MANAGEMENT);
 	KiPrintFmt("\nStarting Feral Kernel \"%s\" Version %01u.%01u.%01u\n",
-		FERAL_VERSION_SHORT, FERAL_VERSION_MAJOR,
-		FERAL_VERSION_MINOR, FERAL_VERSION_PATCH);
+		FERAL_VERSION_SHORT, FERAL_VERSION_MAJOR, FERAL_VERSION_MINOR,
+		FERAL_VERSION_PATCH);
 
 	/* Fmt doesn't properly take 'lu' yet, FIXME TODO... */
 	KiPrintFmt("Found %lu mebibytes of free memory\n",
@@ -88,10 +99,24 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	KiDebugPrint("INIT Reached here.");
 
 	/* Once kernel initialization is done, don't let it jump back! */
-	for (;;) {}
+	for (;;)
+	{
+	}
 }
 
-/* I don't think the x2APIC will support nearly this many cores, but why not. */
+/**
+ * @brief Set up and start a processor based on it's number.
+ *
+ * @details A given microcomputer may have more than one physical processing
+ * core, or if SMT is available, several times the physical cores depending
+ * on the amount of logical cores available. This function allows the kernel
+ * to initialize a specific core with a valid stack, and prepare other hardware
+ * details about that processor based on information made available to it.
+ *
+ * @param ProcessorNumber The logical processor number, as a UINT32.
+ *
+ * @return STATUS_SUCCESS on success.
+ */
 FERALSTATUS KiStartupProcessor(UINT32 ProcessorNumber)
 {
 	/* Create a new stack for this core. */
@@ -100,7 +125,7 @@ FERALSTATUS KiStartupProcessor(UINT32 ProcessorNumber)
 	return STATUS_SUCCESS;
 }
 
-
+/* nyi */
 FERALSTATUS KeBootstrapSystem(VOID)
 {
 	/* Bootstrap process to actually get to user mode. */
