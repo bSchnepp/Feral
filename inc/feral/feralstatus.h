@@ -27,8 +27,12 @@ IN THE SOFTWARE.
 #ifndef _FERAL_FERALSTATUS_H_
 #define _FERAL_FERALSTATUS_H_
 
-#include <stdint.h>
 #include <feral/stdtypes.h>
+
+/**
+ * @file feral/feralstatus.h
+ * @brief A series of definitions for error handling and status for the kernel.
+ */
 
 #if defined(__cplusplus)
 extern "C"
@@ -52,6 +56,11 @@ extern "C"
 	(0xC0000000) /* Stopped by the kernel, something VERY bad has \
 			happened. (Disk doesn't exist, I/O error, etc.) */
 
+
+	/**
+	 * @brief A description of the type of status as a result of some
+	 * operation.
+	 */
 	typedef uint32_t FERALSTATUS;
 
 /* Standard internal stuff: */

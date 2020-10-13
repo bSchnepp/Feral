@@ -36,6 +36,11 @@ IN THE SOFTWARE.
 #include <krnl.h>
 #include <kern_ver.h>
 
+/**
+ * @file kern/kernel_main.c
+ * @brief The main entry point of the kernel.
+ */
+
 VOID KiStartupMachineDependent(VOID);
 VOID KiStartupProcessorMachineDependent(UINT32 Core);
 

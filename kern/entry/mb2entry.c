@@ -24,6 +24,11 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+/**
+ * @file entry/mb2entry.c
+ * @internal
+ */
+
 #include <feral/stdtypes.h>
 #include <stdint.h>
 
@@ -74,7 +79,12 @@ static UINT_PTR FreeMemLocs[16];
 static CHAR *cpu_vendor_msg = "CPU Vendor: ";
 
 
-/* temporary, turn into clean later. */
+
+/**
+ * @internal
+ * @brief Reads a register as a series of ASCII characters, and prints
+ * to the VGA console.
+ */
 VOID InternalPrintRegister(UINT32 reg)
 {
 	for (int i = 0; i < 4; i++)
@@ -84,7 +94,11 @@ VOID InternalPrintRegister(UINT32 reg)
 	}
 }
 
-/* ugly hack, refactor sometime later. */
+/**
+ * @internal
+ * @brief Reads the results of the cpuid function for the CPU vendor,
+ * and writes them to the VGA console.
+ */
 VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
 {
 	VgaAutoPrint(VGA_GREEN, VGA_BLACK, cpu_vendor_msg);
