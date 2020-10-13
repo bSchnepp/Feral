@@ -61,12 +61,12 @@ extern "C"
 
 	typedef struct
 	{
-		UINT16* Framebuffer;
-
-		UINT16* SwappedBuffer;
+		UINT8* Framebuffer;
+		UINT8* SwappedBuffer;
 
 		UINT16 ScreenWidth;
 		UINT16 ScreenHeight;
+		UINT16 BPP;
 
 		VgaColorValue Background;
 		VgaColorValue Foreground;
@@ -124,7 +124,8 @@ extern "C"
 
 	VOID VgaSwapBuffers(VOID);
 
-	UINT8 VgaPrepareEnvironment();
+
+	UINT8 VgaPrepareEnvironment(VOID *Framebuffer, UINT16 FramebufferBPP, UINT32 FramebufferWidth, UINT32 FramebufferHeight, BOOL FramebufferTextOnly);
 
 
 #if defined(__cplusplus)

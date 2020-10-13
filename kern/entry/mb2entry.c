@@ -140,22 +140,15 @@ static VOID InternalVgaBackspace()
 
 VOID kern_init(UINT32 MBINFO)
 {
-	UINT8 misc = VgaPrepareEnvironment();
-	KiBlankVgaScreen(25, 80, VGA_BLACK);
-	VgaAutoPrintln(
-		VGA_WHITE, VGA_BLACK, "Starting initial kernel setup...");
-	/* First, request the info from the multiboot header. */
-	if (MBINFO & 0x07)
-	{
-		/*
-		 * If the alignment was wrong, that means that
-		 * this either isn't multiboot, there is a memory issue,
-		 * or that the bootloader doesn't implement the specification
-		 * correctly. In any case, we should immediately
-		 * kernel panic and prevent any further loading.
-		 */
-		KiStopError(STATUS_ERROR);
-	}
+	STRING CommandLine = "";
+	STRING BootloaderName = "Unknown";
+
+	VOID *Framebuffer;
+	UINT16 FramebufferBPP;
+	UINT32 FramebufferWidth;
+	UINT32 FramebufferHeight;
+	BOOL FramebufferTextOnly;
+
 	/*
 	 * This is absolutely terrible code that needs to happen
 	 * in order to make multiboot work right.
@@ -190,10 +183,7 @@ VOID kern_init(UINT32 MBINFO)
 			{
 				if (len != 0)
 				{
-					VgaAutoPrint(VGA_WHITE, VGA_BLACK,
-						"Got command line: ");
-					VgaAutoPrintln(VGA_RED, VGA_BLACK,
-						mb_as_string->string);
+					CommandLine = str;
 				}
 			}
 		}
@@ -201,16 +191,15 @@ VOID kern_init(UINT32 MBINFO)
 		{
 			multiboot_tag_string *mb_as_string
 				= (multiboot_tag_string *)(MultibootInfo);
-			VgaAutoPrint(
-				VGA_WHITE, VGA_BLACK, "Detected bootloader: ");
-			VgaAutoPrintln(VGA_LIGHT_BROWN, VGA_BLACK,
-				mb_as_string->string);
-		}
-		else if (Type == MULTIBOOT_TAG_TYPE_BOOT_DEVICE)
-		{
-			multiboot_tag_bootdev *mb_as_boot_dev
-				= (multiboot_tag_bootdev *)(MultibootInfo);
-			/* Care about this stuff later... */
+			STRING str = mb_as_string->string;
+			UINT64 len = 0;
+			if (KiGetStringLength(str, &len) == STATUS_SUCCESS)
+			{
+				if (len != 0)
+				{
+					BootloaderName = str;
+				}
+			}
 		}
 		else if (Type == MULTIBOOT_TAG_TYPE_MEM_MAP)
 		{
@@ -250,73 +239,6 @@ VOID kern_init(UINT32 MBINFO)
 						  + (UINT_PTR)currentEntry.len;
 					FreeAreasWritten += 2;
 				}
-				else if (currentEntry.type
-					 == E820_MEMORY_TYPE_ACPI)
-				{
-					/* 16 chars will fit the whole address*/
-					CHAR BufBeginAddr[17];
-					CHAR BufEndAddr[17];
-					internalItoaBaseChange(
-						currentEntry.addr, BufBeginAddr,
-						16);
-					internalItoaBaseChange(
-						currentEntry.addr
-							+ currentEntry.len,
-						BufBeginAddr, 16);
-					VgaAutoPrint(VGA_WHITE, VGA_BLACK,
-						"ACPI memory at: 0x");
-					VgaAutoPrint(VGA_GREEN, VGA_BLACK,
-						BufBeginAddr);
-					VgaAutoPrint(VGA_WHITE, VGA_BLACK,
-						", up to 0x");
-					VgaAutoPrintln(
-						VGA_RED, VGA_BLACK, BufEndAddr);
-				}
-				else if (currentEntry.type
-					 == E820_MEMORY_TYPE_NVS)
-				{
-					/* 16 chars will fit the whole address*/
-					CHAR BufBeginAddr[17];
-					CHAR BufEndAddr[17];
-					internalItoaBaseChange(
-						currentEntry.addr, BufBeginAddr,
-						16);
-					internalItoaBaseChange(
-						currentEntry.addr
-							+ currentEntry.len,
-						BufBeginAddr, 16);
-					VgaAutoPrint(VGA_WHITE, VGA_BLACK,
-						"Reserved hardware memory at: "
-						"0x");
-					VgaAutoPrint(VGA_GREEN, VGA_BLACK,
-						BufBeginAddr);
-					VgaAutoPrint(VGA_WHITE, VGA_BLACK,
-						", up to 0x");
-					VgaAutoPrintln(
-						VGA_RED, VGA_BLACK, BufEndAddr);
-				}
-				else if (currentEntry.type
-					 == E820_MEMORY_TYPE_BADMEM)
-				{
-					/* 16 chars will fit the whole address*/
-					CHAR BufBeginAddr[17];
-					CHAR BufEndAddr[17];
-					internalItoaBaseChange(
-						currentEntry.addr, BufBeginAddr,
-						16);
-					internalItoaBaseChange(
-						currentEntry.addr
-							+ currentEntry.len,
-						BufBeginAddr, 16);
-					VgaAutoPrint(VGA_WHITE, VGA_BLACK,
-						"BAD MEMORY at: 0x");
-					VgaAutoPrint(VGA_GREEN, VGA_BLACK,
-						BufBeginAddr);
-					VgaAutoPrint(VGA_WHITE, VGA_BLACK,
-						", up to 0x");
-					VgaAutoPrintln(
-						VGA_RED, VGA_BLACK, BufEndAddr);
-				}
 
 				/* E820_MEMORY_TYPE_RESERVED,
 				 * E820_MEMORY_TYPE_DISABLED,
@@ -337,42 +259,42 @@ VOID kern_init(UINT32 MBINFO)
 			multiboot_tag_framebuffer_common *mb_as_fb
 				= (multiboot_tag_framebuffer_common
 						*)(MultibootInfo);
-			if (mb_as_fb->framebuffer_type
-				!= MULTIBOOT_FRAMEBUFFER_TYPE_RGB)
-			{
-				continue;
-			}
 
-			VgaAutoPrintln(
-				VGA_WHITE, VGA_BLACK, "Got a framebuffer!");
-			CHAR Buf[17];
-			internalItoaBaseChange(
-				mb_as_fb->framebuffer_width, Buf, 10);
-			VgaAutoPrintln(VGA_RED, VGA_BLACK, Buf);
-		}
-		else if (Type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS)
-		{
-			/* For now, we'll just use the ELF sections tag. */
-			multiboot_tag_elf_sections *mb_as_elf
-				= (multiboot_tag_elf_sections *)(MultibootInfo);
-
-			/* 20 is here because multiboot said so. Don't know why,
-			 * but that's the size, so go with it. */
-			UINT64 maxIters
-				= (mb_as_elf->size - 20) / (mb_as_elf->entsize);
-			UINT64 index = 0;
-
-			/* Don't care here... */
-
-			for (UINT64 i = 0; i < maxIters; i++)
-			{
-				ElfSectionHeader64 *currentEntry
-					= (&mb_as_elf->sections
-							[i * mb_as_elf->entsize]);
-				/* todo... */
-			}
+			Framebuffer = mb_as_fb->framebuffer_addr;
+			FramebufferBPP = mb_as_fb->framebuffer_bpp;
+			FramebufferHeight = mb_as_fb->framebuffer_height;
+			FramebufferWidth = mb_as_fb->framebuffer_width;
+			FramebufferTextOnly = (mb_as_fb->type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT);
 		}
 	}
+
+	UINT8 misc = VgaPrepareEnvironment(Framebuffer, FramebufferBPP, FramebufferWidth, FramebufferHeight, FramebufferTextOnly);
+	KiBlankVgaScreen(25, 80, VGA_BLACK);
+	VgaAutoPrintln(
+		VGA_WHITE, VGA_BLACK, "Starting initial kernel setup...");
+
+			CHAR BufBeginAddr[17];
+			CHAR BufEndAddr[17];
+			internalItoaBaseChange(
+				FramebufferWidth, BufBeginAddr,
+			10);
+			internalItoaBaseChange(
+				FramebufferHeight,
+				BufEndAddr, 10);
+			VgaAutoPrint(VGA_WHITE, VGA_BLACK,
+				"VGA resolution is : ");
+			VgaAutoPrint(VGA_GREEN, VGA_BLACK,
+				BufBeginAddr);
+			VgaAutoPrint(VGA_WHITE, VGA_BLACK,
+				"x");
+			VgaAutoPrintln(
+				VGA_RED, VGA_BLACK, BufEndAddr);
+
+	VgaAutoPrint(VGA_LIGHT_GREY, VGA_BLACK, "Found bootloader: ");
+	VgaAutoPrintln(VGA_GREEN, VGA_BLACK, BootloaderName);
+
+	VgaAutoPrint(VGA_LIGHT_GREY, VGA_BLACK, "Found command line: ");
+	VgaAutoPrintln(VGA_GREEN, VGA_BLACK, CommandLine);
 
 	/* This will represent the 4 core registers we need for CPUID stuff. */
 	UINT32 part1 = 0;
@@ -458,6 +380,7 @@ VOID kern_init(UINT32 MBINFO)
 	FirmwareFuncs.GetMaxPhysicalAddress = InternalGetMaxPhysicalAddressFunc;
 	EnvBlock.FunctionTable = &FirmwareFuncs;
 	EnvBlock.CharMap = &CharMap;
+	EnvBlock.Displays = NULLPTR;
 	/* Kernel initialization is done, move on to actual tasks. */
 	KiSystemStartup(&EnvBlock);
 }

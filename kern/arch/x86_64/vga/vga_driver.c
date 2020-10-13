@@ -85,27 +85,31 @@ VOID internalVgaPushUp(VOID)
 	Prepares a VGA context for use by the kernel in
 	pre-initialization stages.
  */
-UINT8 VgaPrepareEnvironment()
+UINT8 VgaPrepareEnvironment(VOID *Framebuffer, UINT16 FramebufferBPP, UINT32 FramebufferWidth, UINT32 FramebufferHeight, BOOL FramebufferTextOnly)
 {
 	// Ensure a bit in port 0x03C2 is set.
 	UINT8 miscreg = x86inb(0x3CC);
 	x86outb(VGA_MISC_OUTPUT_REG, (miscreg | 0xE7));
 
 	CurVgaContext = &(graphicsContext);
-	CurVgaContext->Framebuffer = (UINT16 *)(KERN_PHYS_TO_VIRT(0xB8000));
-	CurVgaContext->ScreenWidth = 80;
-	CurVgaContext->ScreenHeight = 25;
+	CurVgaContext->BPP = FramebufferBPP;
+	CurVgaContext->Framebuffer = (UINT8 *)(KERN_PHYS_TO_VIRT(Framebuffer));
+	CurVgaContext->ScreenWidth = FramebufferWidth;
+	CurVgaContext->ScreenHeight = FramebufferHeight;
 
 	CurVgaContext->Background = VGA_BLACK;
 	CurVgaContext->Foreground = VGA_WHITE;
 	CurVgaContext->Highlight = VGA_LIGHT_BROWN;
 
-	CurVgaContext->TextMode = 1;
+	CurVgaContext->TextMode = FramebufferTextOnly;
 	CurVgaContext->FollowingInput = 0;
 
 	CurVgaContext->CurrentRow = 0;
 	CurVgaContext->CurrentCol = 0;
-	CurVgaContext->SwappedBuffer = OtherBuffer;
+
+	/* Until we can allocate host memory for this, don't use double buffering anymore. */
+	//CurVgaContext->SwappedBuffer = OtherBuffer;
+	CurVgaContext->SwappedBuffer = CurVgaContext->Framebuffer;
 
 	return miscreg;
 }
@@ -194,9 +198,10 @@ VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR Letter,
 	{
 		internalVgaPushUp();
 	}
-	ColorValue Color = ((background << 4) | (foreground)) << 8;
-	UINT16 Offset = PosX + (PosY * CurVgaContext->ScreenWidth);
-	CurVgaContext->SwappedBuffer[Offset] = ((UINT16)(Letter) | Color);
+	ColorValue Color = (foreground << 0) | (background << 4);
+	UINT16 Offset = 2 * (PosX + (PosY * CurVgaContext->ScreenWidth));
+	CurVgaContext->SwappedBuffer[Offset + 0] = Letter;
+	CurVgaContext->SwappedBuffer[Offset + 1] = Color;
 	CurVgaContext->CurrentCol = PosX;
 }
 
