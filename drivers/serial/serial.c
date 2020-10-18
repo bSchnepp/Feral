@@ -40,8 +40,8 @@ volatile VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
 {
 #if defined(__x86_64__) || defined(__i386__)
 	x86outb(SERIAL_LINE_COMMAND(Port), SERIAL_LINE_ENABLE_DLAB);
-	x86outb(Port, (Divisor >> 8) & 0x00FF);
-	x86outb(Port, (Divisor >> 0) & 0x00FF);
+	x86outb(Port, (Divisor >> 0) & 0xFF);
+	x86outb(SERIAL_INTERRUPT_COMMAND(Port), (Divisor >> 8) & 0xFF);
 #endif
 }
 
@@ -95,27 +95,15 @@ FERALSTATUS InitSerialDevice(VOID *OutData)
 {
 	KiPrintFmt("Initializing serial...\n");
 
-#if 0
-	/* ack the current state... */
-	CHAR Ignored = '\0';
-	SerialRecv(COM1_PORT+2, 1, &Ignored);
-	SerialRecv(COM1_PORT+0, 1, &Ignored);
-#endif
-
+#if defined(__x86_64__) || defined(__i386__)
 	SerialSetInterrupts(COM1_PORT, 0);
-#if defined(__x86_64__) || defined(__i386__)
 	x86outb(SERIAL_LINE_COMMAND(COM1_PORT), SERIAL_LINE_ENABLE_DLAB);
-#endif
-
 	SerialConfigureBaudRate(COM1_PORT, 12);
-#if defined(__x86_64__) || defined(__i386__)
 	x86outb(COM1_PORT + 1, 0);
-#endif
 	SerialSetFlags(COM1_PORT, 3);
-#if defined(__x86_64__) || defined(__i386__)
-	x86outb(SERIAL_MODEM_COMMAND(COM1_PORT), 0);
+	SerialSetMode(COM1_PORT, 0xC7);
+	x86outb(SERIAL_MODEM_COMMAND(COM1_PORT), 0x0B);
 #endif
-	SerialSetInterrupts(COM1_PORT, 1);
 
 	BYTE Item;
 	SerialRecv(SERIAL_LINE_STATUS(COM1_PORT), 1, &Item);

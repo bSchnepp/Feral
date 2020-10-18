@@ -102,6 +102,7 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	 * They're eliminated at build time.
 	 */
 	KiDebugPrint("INIT Reached here.");
+	KiDebugPrint("Some other serial string.");
 
 	/* Once kernel initialization is done, don't let it jump back! */
 	for (;;)

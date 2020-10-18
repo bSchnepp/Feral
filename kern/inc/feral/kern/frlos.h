@@ -100,7 +100,7 @@ static FERALSTATUS KiDebugPrint(STRING string)
 	KiPrintWarnLine(string);
 	SerialPrint(string);
 	SerialPrint("\n");
-	return KiPrintFmt("\n");
+	return STATUS_SUCCESS;
 }
 
 #endif
