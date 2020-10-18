@@ -75,6 +75,10 @@ VOID SerialSend(UINT16 Port, CHAR c)
 #if defined(__x86_64__) || defined(__i386__)
 	if ((x86inb(SERIAL_LINE_STATUS(Port)) & (1 << 5)))
 	{
+		if (c == '\n')
+		{
+			x86outb(Port, '\r');	
+		}
 		x86outb(Port, c);
 	}
 #endif
