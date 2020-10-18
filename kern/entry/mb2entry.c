@@ -38,6 +38,8 @@ IN THE SOFTWARE.
 #include <arch/x86_64/cpufuncs.h>
 #endif
 
+#include "charmap_default.inl"
+
 /* Borrow a bunch from Feralboot. */
 #ifndef _NO_UEFI_STUB_
 #include <libreefi/efi.h>
@@ -111,6 +113,7 @@ VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
 static KrnlFirmwareFunctions FirmwareFuncs = {0};
 static KrnlCharMap CharMap = {0};
 static KrnlEnvironmentBlock EnvBlock = {0};
+static KrnlPhysicalDisplay Display = {0};
 
 static STRING GetBiosFirmwareClaim();
 static VOID InternalVgaPrintln(STRING Str, UINT64 Len);
@@ -283,7 +286,7 @@ VOID kern_init(UINT32 MBINFO)
 	}
 
 	UINT8 misc = VgaPrepareEnvironment(Framebuffer, FramebufferBPP, FramebufferWidth, FramebufferHeight, FramebufferTextOnly);
-	KiBlankVgaScreen(25, 80, VGA_BLACK);
+	KiBlankVgaScreen(FramebufferHeight, FramebufferWidth, VGA_BLACK);
 	VgaAutoPrintln(
 		VGA_WHITE, VGA_BLACK, "Starting initial kernel setup...");
 

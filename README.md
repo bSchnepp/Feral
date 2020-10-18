@@ -51,18 +51,11 @@ Feral now uses CMake to build.
 A utility script is included for the common case of building
 for x86_64 and QEMU in `vm_test.sh`, and with the GDB stub enabled in `vm_test_gdb.sh`.
 
-For manually building, you must use Clang as your C compiler. There are currently
-no toolchain files to support building for different architectures, but they
-will be present in a yet-to-be-made `cmake/` directory.
-
-The kernel proper can be built with simply
-```
-mkdir build
-cd build
-cmake .. -DCMAKE_C_COMPILER=clang
-make -j`nproc`
-```
-as a file called `FERALKER`.
+For manually building, you must use Clang as your C compiler. For the x86-64-pc
+target without EFI support, you can use the toolchain file cmake/x86_64-pc.cmake
+with the `-DCMAKE_TOOLCHAIN_FILE=cmake/x86_64-pc.cmake` parameter. This will build
+the kernel proper as 'FERALKER', and some additional steps will be required to create 
+a bootable ISO file. See the `vm_test.sh` file for details.
 
 ## Minimum requirements?
 Feral should run comfortably on any PC implementing the x86-64 instruction set

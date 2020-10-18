@@ -48,6 +48,7 @@ typedef struct KrnlPhysicalDisplay
 typedef struct KrnlEnvironmentBlock
 {
 	/* Bootloader should help find free memory areas. */
+	STRING CommandLineArgs;
 	UINT64 KernelPageSize;
 	UINT64 FreeMemCount;
 	UINT_PTR *FreeMemLocs;
