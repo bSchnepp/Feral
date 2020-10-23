@@ -44,6 +44,9 @@ IN THE SOFTWARE.
 VOID KiStartupMachineDependent(VOID);
 VOID KiStartupProcessorMachineDependent(UINT32 Core);
 
+/* temporary test */
+extern VOID SerialDoKShellPrompt();
+
 /**
  * @brief The main system startup point, after firmware initialization
  * has completed.
@@ -103,6 +106,8 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	 */
 	KiDebugPrint("INIT Reached here.");
 	KiDebugPrint("Some other serial string.");
+
+	SerialDoKShellPrompt();
 
 	/* Once kernel initialization is done, don't let it jump back! */
 	for (;;)

@@ -70,16 +70,19 @@ volatile VOID SerialSetMode(UINT16 Port, UINT8 Data)
 }
 
 
-VOID SerialSend(UINT16 Port, CHAR c)
+VOID SerialSend(UINT16 Port, STRING c, UINT64 Len)
 {
 #if defined(__x86_64__) || defined(__i386__)
-	if ((x86inb(SERIAL_LINE_STATUS(Port)) & (1 << 5)))
+	for (UINT64 Index = 0; Index < Len; ++Index)
 	{
-		if (c == '\n')
+		if ((x86inb(SERIAL_LINE_STATUS(Port)) & (1 << 5)))
 		{
-			x86outb(Port, '\r');	
+			if (c[Index] == '\n')
+			{
+				x86outb(Port, '\r');	
+			}
+			x86outb(Port, c[Index]);
 		}
-		x86outb(Port, c);
 	}
 #endif
 }
@@ -103,7 +106,7 @@ FERALSTATUS InitSerialDevice(VOID *OutData)
 	SerialSetInterrupts(COM1_PORT, 0);
 	x86outb(SERIAL_LINE_COMMAND(COM1_PORT), SERIAL_LINE_ENABLE_DLAB);
 	SerialConfigureBaudRate(COM1_PORT, 12);
-	x86outb(COM1_PORT + 1, 0);
+	x86outb(SERIAL_INTERRUPT_COMMAND(COM1_PORT), 0);
 	SerialSetFlags(COM1_PORT, 3);
 	SerialSetMode(COM1_PORT, 0xC7);
 	x86outb(SERIAL_MODEM_COMMAND(COM1_PORT), 0x0B);
@@ -117,5 +120,6 @@ FERALSTATUS InitSerialDevice(VOID *OutData)
 		return STATUS_ERROR;
 	}
 
+	SerialSetInterrupts(COM1_PORT, 0x02);
 	return STATUS_SUCCESS;
 }

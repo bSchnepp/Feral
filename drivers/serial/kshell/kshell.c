@@ -24,27 +24,41 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+#include <serial.h>
+
 #include <feral/stdtypes.h>
-#include <feral/feralstatus.h>
-
-#ifndef _FERAL_DRIVER_SERIAL_H_
-#define _FERAL_DRIVER_SERIAL_H_
-
-#define COM1_PORT 0x3F8
-#define COM1_DATA (COM1_PORT)
-
-#define SERIAL_INTERRUPT_COMMAND(port) (port + 1)
-#define SERIAL_FIFO_COMMAND(port) (port + 2)
-#define SERIAL_LINE_COMMAND(port) (port + 3)
-#define SERIAL_MODEM_COMMAND(port) (port + 4)
-#define SERIAL_LINE_STATUS(port) (port + 5)
-
-#define SERIAL_LINE_ENABLE_DLAB (0x80)
-#define SERIAL_LINE_ENABLE_FIFO (0xC7)
-
-FERALSTATUS InitSerialDevice(VOID *OutData);
-VOID SerialSend(UINT16 Port, STRING c, UINT64 Len);
-VOID SerialRecv(UINT16 Port, UINT64 Amt, BYTE *Buf);
+#include <feral/kern/krnlfuncs.h>
 
 
-#endif
+CONST STRING Prompt = "frldbg> ";
+CONST UINT64 PromptLen = 8;
+CONST STRING Commands[] = 
+{
+	"!numa",
+	"!paging",
+	"!job",
+	"!task",
+	"!thread",
+};
+
+static CHAR CmdBuffer[1024];
+
+VOID SerialDoKShellPrompt()
+{
+	SerialSend(COM1_PORT, Prompt, PromptLen);
+	KiSetMemoryBytes(CmdBuffer, 0, 1024);
+	UINT16 Index = 0;
+	CHAR CurChar = '\0';
+	while (CurChar != '\n')
+	{
+		SerialRecv(COM1_PORT, 1, &CurChar);
+		CmdBuffer[Index] = CurChar;
+		if (Index != '\0')
+		{
+			Index++;
+		}
+		Index %= 1024;
+	}
+
+	/* parse it or something. */
+}

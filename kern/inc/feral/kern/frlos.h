@@ -26,6 +26,7 @@ IN THE SOFTWARE.
 
 
 #include <feral/feralstatus.h>
+#include <feral/kern/krnlfuncs.h>
 #include <feral/stdtypes.h>
 
 #ifndef _FERAL_FRLOS_H_
@@ -71,14 +72,9 @@ FERALSTATUS KiStartupProcessor(UINT32 ProcessorNumber);
 
 #ifndef NDEBUG
 
-/* hack for serial */
-#ifndef COM1_PORT
-#define COM1_PORT 0x3F8
-#endif
+#include <../../drivers/serial/serial.h>
 
-extern VOID SerialSend(UINT16 Port, CHAR c);
-
-#define SERIAL_PUTCHAR(x) SerialSend(COM1_PORT, x)
+#define SERIAL_PUTCHAR(x) SerialSend(COM1_PORT, x, 1)
 #else
 #define SERIAL_PUTCHAR(x) /* Nothing! */
 #endif
@@ -86,12 +82,9 @@ extern VOID SerialSend(UINT16 Port, CHAR c);
 inline static VOID SerialPrint(STRING X)
 {
 #ifndef _NO_SERIAL_DEBUG_PRINT_
-	UINT64 Index = 0;
-	while (X[Index] != '\0')
-	{
-		SERIAL_PUTCHAR(X[Index]);
-		Index++;
-	}
+	UINT64 Len = 0;
+	KiGetStringLength(X, &Len);
+	SerialSend(COM1_PORT, X, Len);
 #endif
 }
 
