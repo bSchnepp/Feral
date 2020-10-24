@@ -164,6 +164,16 @@ FERALSTATUS x86MapAddress(
 	return STATUS_SUCCESS;
 }
 
+
+VOID FlushTLB()
+{
+	UINT64 Tmp;
+	__asm__ volatile(
+		"movq %%cr3, %0\n"
+		"movq %0, %%cr3\n" 
+		: "=a"(Tmp));
+}
+
 /**
  * Unmaps an address given a handle to the PML4, in virtual memory,
  * to a physical address and a desired virtual address.
@@ -183,10 +193,14 @@ FERALSTATUS x86MapAddress(
  */
 FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 {
-	UINT16 Bitmask = 0xFFF; /* For now, only do 4096 byte pages. */
+UINT16 Bitmask = 0xFFF; /* For now, only do 4096 byte pages. */
 
 	UINT16 PageLevels[4];
 	FERALSTATUS Err = x86FindPageLevels(Virtual, PageLevels);
+
+	PageMapEntry *PDP = NULLPTR;
+	PageMapEntry *PD = NULLPTR;
+	PageMapEntry *PT = NULLPTR;
 
 	if (Err != STATUS_SUCCESS)
 	{
@@ -196,15 +210,16 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	/* TODO: Consider rolling this into a simple loop. */
 
 	/* From the PML4, we need to find the pdpe entry. */
-	PageMapEntry *PDP = NULLPTR;
-	if (PML4[PageLevels[0]].Present && PML4[PageLevels[0]].Huge)
+	
+	if (PML4[PageLevels[0]].Raw & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
 	{
-		PML4[PageLevels[0]].Present = FALSE;
+		PML4[PageLevels[0]].Raw
+			&= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
 		return STATUS_SUCCESS;
 	}
-	else if (PML4[PageLevels[0]].Present)
+	else if (PML4[PageLevels[0]].Raw & X86_PAGE_FLAG_PRESENT)
 	{
-		PDP = (PageMapEntry *)(PAGE_ALIGN(PML4[PageLevels[0]].Raw));
+		PDP = (PageMapEntry *)KERN_PHYS_TO_VIRT(PAGE_ALIGN(PML4[PageLevels[0]].Raw));
 		return STATUS_SUCCESS;
 	}
 	else
@@ -213,15 +228,16 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	}
 
 	/* Again for level 3... */
-	PageMapEntry *PD = NULLPTR;
-	if (PDP[PageLevels[1]].Present && PDP[PageLevels[1]].Huge)
+	
+	if (PDP[PageLevels[1]].Raw & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
 	{
-		PDP[PageLevels[1]].Present = FALSE;
+		PDP[PageLevels[1]].Raw
+			&= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
 		return STATUS_SUCCESS;
 	}
-	else if (PDP[PageLevels[1]].Present)
+	else if (PDP[PageLevels[1]].Raw & X86_PAGE_FLAG_PRESENT)
 	{
-		PD = (PageMapEntry *)(PAGE_ALIGN(PDP[PageLevels[1]].Raw));
+		PD = (PageMapEntry *)KERN_PHYS_TO_VIRT(PAGE_ALIGN(PDP[PageLevels[1]].Raw));
 		return STATUS_SUCCESS;
 	}
 	else
@@ -230,15 +246,16 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	}
 
 	/* Again for level 2... */
-	PageMapEntry *PT = NULLPTR;
-	if (PD[PageLevels[2]].Present && PD[PageLevels[2]].Huge)
+	
+	if (PD[PageLevels[2]].Raw & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
 	{
-		PD[PageLevels[2]].Present = FALSE;
+		PD[PageLevels[2]].Raw
+			&= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
 		return STATUS_SUCCESS;
 	}
-	else if (PD[PageLevels[2]].Present)
+	else if (PD[PageLevels[2]].Raw & X86_PAGE_FLAG_PRESENT)
 	{
-		PT = (PageMapEntry *)(PAGE_ALIGN(PD[PageLevels[2]].Raw));
+		PT = (PageMapEntry *)KERN_PHYS_TO_VIRT(PAGE_ALIGN(PD[PageLevels[2]].Raw));
 		return STATUS_SUCCESS;
 	}
 	else
@@ -247,14 +264,16 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	}
 
 	/* Again for level 1... */
-	if (PT[PageLevels[3]].Present && PT[PageLevels[3]].Huge)
+	if (PT[PageLevels[2]].Raw & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
 	{
-		PT[PageLevels[3]].Present = FALSE;
+		PT[PageLevels[2]].Raw
+			&= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
 		return STATUS_SUCCESS;
 	}
-	else if (PT[PageLevels[3]].Present)
+	else if (PT[PageLevels[3]].Raw & X86_PAGE_FLAG_PRESENT)
 	{
-		PT[PageLevels[3]].Present = FALSE;
+		PT[PageLevels[3]].Raw
+			&= ~(X86_PAGE_FLAG_PRESENT | X86_PAGE_FLAG_WRITABLE);
 		return STATUS_SUCCESS;
 	}
 	else
@@ -264,6 +283,7 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 
 	return STATUS_MEMORY_PAGE_FAILURE;
 }
+
 
 
 FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection, IN KernMemUsage Usage, INOPT VOID *BaseAddr, OUT VOID *Result)

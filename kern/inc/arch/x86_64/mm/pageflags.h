@@ -73,22 +73,22 @@ typedef struct PageMapEntry
 	{
 		struct
 		{
-			UINT8 Present : 1;
-			UINT8 Writable : 1;
-			UINT8 UserAccessible : 1;
-			UINT8 WriteThrough : 1;
-			UINT8 NoCache : 1;
-			UINT8 Accessed : 1;
-			UINT8 Dirty : 1;
-			UINT8 Huge : 1;
-			UINT8 Global : 1;
-			UINT8 Unused : 3;
+			UINT64 Present : 1;
+			UINT64 Writable : 1;
+			UINT64 UserAccessible : 1;
+			UINT64 WriteThrough : 1;
+			UINT64 NoCache : 1;
+			UINT64 Accessed : 1;
+			UINT64 Dirty : 1;
+			UINT64 Huge : 1;
+			UINT64 Global : 1;
+			UINT64 Unused : 3;
 			UINT64 Address : 51;
-			UINT8 NoExecute : 1;
-		};
+			UINT64 NoExecute : 1;
+		}PACKED;
 		UINT64 Raw;
-	};
-}PageMapEntry;
+	}PACKED;
+}PACKED PageMapEntry;
 
 FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels);
 

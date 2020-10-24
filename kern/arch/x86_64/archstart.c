@@ -202,18 +202,18 @@ VOID KiStartupProcessorMachineDependent(UINT32 Core)
 		 */
 		x86InitializeGDT();
 
-		/* Unmap low memory, since GDT was last leftover. */
-		x86UnmapAddress(get_initial_p4_table(), 0);
-
 		/* Now set up global IDT. */
 		x86InitializeIDT();
+
+		/* Unmap low memory, since GDT was last leftover. */
+		x86UnmapAddress(get_initial_p4_table(), 0);
 	}
 	KiRestoreInterrupts(TRUE);
 }
 
 COMPILER_ASSERT(sizeof(GDTEntry) == sizeof(UINT_PTR));
 COMPILER_ASSERT(sizeof(GDTPointer) == sizeof(IDTPointer));
-COMPILER_ASSERT(sizeof(PageMapEntry) >= sizeof(UINT64));
+COMPILER_ASSERT(sizeof(PageMapEntry) == sizeof(UINT64));
 
 COMPILER_ASSERT(sizeof(GDTPointer) > sizeof(UINT64));
 COMPILER_ASSERT(sizeof(IDTPointer) > sizeof(UINT64));
