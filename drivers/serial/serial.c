@@ -36,6 +36,10 @@ IN THE SOFTWARE.
 
 #include "serial.h"
 
+/* We should probably call it by it's proper name, the i8000-something,
+ * instead of just generically calling it "serial".
+ */
+
 volatile VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
 {
 #if defined(__x86_64__) || defined(__i386__)

@@ -213,7 +213,7 @@ VOID KiStartupProcessorMachineDependent(UINT32 Core)
 
 COMPILER_ASSERT(sizeof(GDTEntry) == sizeof(UINT_PTR));
 COMPILER_ASSERT(sizeof(GDTPointer) == sizeof(IDTPointer));
-COMPILER_ASSERT(sizeof(PageMapEntry) == sizeof(UINT_PTR));
+COMPILER_ASSERT(sizeof(PageMapEntry) >= sizeof(UINT64));
 
 COMPILER_ASSERT(sizeof(GDTPointer) > sizeof(UINT64));
 COMPILER_ASSERT(sizeof(IDTPointer) > sizeof(UINT64));

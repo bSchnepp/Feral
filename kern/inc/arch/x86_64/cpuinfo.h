@@ -152,9 +152,61 @@ typedef struct GDTEntry
 	} PACKED;
 } PACKED GDTEntry;
 
+typedef enum CR0_Flags
+{
+	CR0_NONE = (0 << 0),
+	CR0_PROTECTED_MODE = (1U << 0),
+	CR0_COPROCESSOR = (1U << 1),
+	CR0_EMULATION = (1U << 2),
+	CR0_TASK_SWITCHED = (1U << 3),
+	CR0_EXTENSION_TYPE = (1U << 4),
+	CR0_NUMERIC_ERROR = (1U << 5),
+	CR0_WRITE_PROTECT = (1U << 16),
+	CR0_ALIGNMENT_MASK = (1U << 18),
+	CR0_NO_WRITE_THROUGH = (1U << 29),
+	CR0_CACHE_DISABLE = (1U << 30),
+	CR0_PAGING = (1U << 31),
+}CR0_Flags;
+
+typedef enum CR4_Flags
+{
+	CR4_NONE = (0 << 0),
+	CR4_VIRTUAL_8086 = (1U << 0),
+	CR4_VIRT_INTERRUPTS = (1U << 1),
+	CR4_TIME_STAMP_DISABLE = (1U << 2),
+	CR4_DEBUGGING_EXT = (1U << 3),
+	CR4_PAGE_SIZE_EXTENSION = (1U << 4),
+	CR4_PHYS_ADDR_EXT = (1U << 5),
+	CR4_MACHINE_CHECK_EXCEPTION = (1U << 6),
+	CR4_PAGE_GLOBAL_ENABLE = (1U << 7),
+	CR4_PERF_MONITOR = (1U << 8),
+	CR4_FX_SAVE_STORE = (1U << 9),
+	CR4_FLOAT_EXCEPT = (1U << 10),
+	CR4_USER_INST_PREV = (1U << 11),
+	CR4_VM_EXT = (1U << 12),
+	CR4_PCID = (1U << 17),
+	CR4_XSAVE = (1U << 18),
+	CR4_SMEP = (1U << 20),
+	CR4_SMAP = (1U << 21),
+}CR4_Flags;
+
+typedef enum EFER_Flags
+{
+	EFER_NONE = (0U << 0),
+	EFER_LONG_MODE_ENABLE = (1U << 8),
+	EFER_LONG_MODE_ACTIVE = (1U << 10),
+	EFER_NO_EXECUTE_ENABLE = (1U << 11),
+	EFER_SVM_SECURE_ENABLE = (1U << 12),
+	EFER_LONG_MODE_SEGMENT_LIMIT_ENABLE = (1U << 13),
+	EFER_FAST_FXSAVE_FXSTORE_ENABLE = (1U << 14),
+	EFER_TRANSLATION_CACHE_EXT = (1U << 15),
+}EFER_Flags;
+
+
 typedef struct KiPrivateProcessorInfo
 {
 	X8664CPUFeatures Features;
+
 	GDTPointer CurProcGDT;
 	GDTEntry *CurProcGDTRoot;
 } KiPrivateProcessorInfo;

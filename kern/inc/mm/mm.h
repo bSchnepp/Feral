@@ -117,4 +117,27 @@ void *MmKernelMalloc(UINT64 Size);
 
 void MmKernelFree(UINT_PTR Location);
 
+
+typedef enum KernMemProtect
+{
+	KERN_MEM_PROTECT_ALLOW_READ = 0,
+	KERN_MEM_PROTECT_ALLOW_WRITE = 1,
+	KERN_MEM_PROTECT_ALLOW_EXECUTE = 2,
+}KernMemProtect;
+
+typedef enum KernMemUsage
+{
+	KERN_MEM_USAGE_RESERVE = 0,
+	KERN_MEM_USAGE_SWAPPABLE = 1,
+	KERN_MEM_USAGE_DMA = 2,
+	KERN_MEM_USAGE_LARGE_PAGES = 4,
+	KERN_MEM_USAGE_VERY_LARGE_PAGES = 8,
+	KERN_MEM_USAGE_NO_CACHE = 16,
+
+}KernMemUsage;
+
+
+FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection, IN KernMemUsage Usage, INOPT VOID *BaseAddr, OUT VOID *Result);
+FERALSTATUS MmKernelDeallocPages(IN UINT64 Pages, IN VOID *Address);
+
 #endif

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019, Brian Schnepp
+Copyright (c) 2019, 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -32,25 +32,25 @@ IN THE SOFTWARE.
 #define KERN_PHYS_TO_VIRT(x) ((x + KERN_VIRT_OFFSET))
 #define KERN_IS_VIRT ((x & KERN_VIRT_OFFSET) == KERN_VIRT_OFFSET)
 
-#define X86_PAGE_FLAG_PRESENT (1 << 0)
-#define X86_PAGE_FLAG_WRITABLE (1 << 1)
-#define X86_PAGE_FLAG_USER_READ (1 << 2)
-#define X86_PAGE_FLAG_WRITE_PAST_CACHE (1 << 3)
-#define X86_PAGE_FLAG_CACHE_DISABLED (1 << 4)
+#define X86_PAGE_FLAG_PRESENT (1U << 0)
+#define X86_PAGE_FLAG_WRITABLE (1U << 1)
+#define X86_PAGE_FLAG_USER_READ (1U << 2)
+#define X86_PAGE_FLAG_WRITE_PAST_CACHE (1U << 3)
+#define X86_PAGE_FLAG_CACHE_DISABLED (1U << 4)
 
-#define X86_PAGE_ACCESSED_FLAG (1 << 5)
-#define X86_PAGE_DIRTY (1 << 6)
+#define X86_PAGE_ACCESSED_FLAG (1U << 5)
+#define X86_PAGE_DIRTY (1U << 6)
 
-#define X86_PAGE_HUGE (1 << 7)
+#define X86_PAGE_HUGE (1U << 7)
 /* If PGE bit of CR4 is set, then we can use this for global pages. */
-#define X86_PAGE_GLOBAL (1 << 8)
+#define X86_PAGE_GLOBAL (1U << 8)
 
 /* Each entry is 9 bits long. */
 #define X86_PAGE_LEVEL_BITMASK (0x1FF)
 
 /* We can use bits 9 through 11 for whatever we want? */
 
-#define X86_PAGE_NO_EXECUTE (1 << 63)
+#define X86_PAGE_NO_EXECUTE (1U << 63)
 
 #if defined(__i386__)
 #define PAGE_ALIGN(x) (x & 0xFFFFF000)
@@ -66,7 +66,29 @@ IN THE SOFTWARE.
 #define X86_PRESENT_WRITABLE_PAGE_USER \
 	(X86_PRESENT_WRITABLE_PAGE | (X86_PAGE_FLAG_USER_READ))
 
-typedef UINT64 PageMapEntry;
+/* will replace PageMapEntry at some point */
+typedef struct PageMapEntry
+{
+	union
+	{
+		struct
+		{
+			UINT8 Present : 1;
+			UINT8 Writable : 1;
+			UINT8 UserAccessible : 1;
+			UINT8 WriteThrough : 1;
+			UINT8 NoCache : 1;
+			UINT8 Accessed : 1;
+			UINT8 Dirty : 1;
+			UINT8 Huge : 1;
+			UINT8 Global : 1;
+			UINT8 Unused : 3;
+			UINT64 Address : 51;
+			UINT8 NoExecute : 1;
+		};
+		UINT64 Raw;
+	};
+}PageMapEntry;
 
 FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels);
 
