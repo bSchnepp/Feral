@@ -1,8 +1,8 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
-obtaining a copy of the software and accompanying documentation covered by
+obtaining  a copy of the software and accompanying documentation covered by
 this license (the "Software") to use, reproduce, display, distribute, execute,
 and transmit the Software, and to prepare derivative works of the Software,
 and to permit third-parties to whom the Software is furnished to do so, all
@@ -24,29 +24,18 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#include <feral/string.h>
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
-#include <feral/kern/krnlfuncs.h>
-#include <feral/kern/frlos.h>
+
+#ifndef _FERAL_KERN_STIRNG_FUNCS_H_
+#define _FERAL_KERN_STRING_FUNCS_H_
 
 
-FERALSTATUS FrlCreateString(
-	IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content)
-{
-	StringLocation->Length = Length;
-	StringLocation->Content = Content;
-	return STATUS_SUCCESS;
-}
+/* TODO: Replace bad temp strlen with this
+   String, length of it. */
+FERALSTATUS FERALAPI KiGetStringLength(IN STRING, OUT UINT64*);
 
-FERALSTATUS FrlDeleteString(IN FERALSTRING* String)
-{
-	/* TODO */
-	return STATUS_SUCCESS;
-}
+/* Same as above but with a wide string. */
+FERALSTATUS FERALAPI KiGetWideStringLength(IN WSTRING, OUT UINT64*);
 
-FERALSTATUS FrlCloneString(IN FERALSTRING* Source, IN FERALSTRING* OutLocation)
-{
-	/* TODO */
-	return STATUS_SUCCESS;
-}
+#endif

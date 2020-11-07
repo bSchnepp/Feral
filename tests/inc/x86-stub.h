@@ -53,7 +53,7 @@ VOID VgaMoveCursor(UINT32 PosX, UINT32 PosY);
 VOID KiStartupMachineDependent(VOID);
 VOID VgaSetCurrentPosition(UINT16 X, UINT16 Y);
 VOID VgaGetCurrentPosition(UINT16 *X, UINT16 *Y);
-VgaGetFramebufferDimensions(UINT16 *Width, UINT16 *Height);
+VOID VgaGetFramebufferDimensions(UINT16 *Width, UINT16 *Height);
 UINT32 cpuid_vendor_func();
 UINT32 cpuid_brand_name();
 UINT32 cpuid_family_number();
@@ -164,7 +164,7 @@ VOID VgaGetCurrentPosition(UINT16 *X, UINT16 *Y)
 {
 }
 
-VgaGetFramebufferDimensions(UINT16 *Width, UINT16 *Height)
+VOID VgaGetFramebufferDimensions(UINT16 *Width, UINT16 *Height)
 {
 }
 

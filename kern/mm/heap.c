@@ -79,7 +79,7 @@ AllocatorState *MmCreateAllocatorState(
 	State.sType = MM_STRUCTURE_TYPE_HEAP_ALLOCATOR;
 	State.pNext = NULLPTR;
 
-	Arena *ArenaStart = (Arena *)(HeapArea);
+	Arena *ArenaStart = (Arena *)KERN_PHYS_TO_VIRT(HeapArea);
 	/* Space to reserve for nodes. */
 	UINT64 NodeSize = (HeapAmount / (NumArenas * sizeof(Node)));
 

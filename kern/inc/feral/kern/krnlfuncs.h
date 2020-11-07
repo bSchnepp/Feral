@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2018, 2019, 2020 Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining  a copy of the software and accompanying documentation covered by
@@ -28,26 +28,14 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
+#include <feral/kern/krnlmemfuncs.h>
+#include <feral/kern/krnlbinfuncs.h>
+#include <feral/kern/krnlstringfuncs.h>
+
 #ifndef _FERAL_KRNL_FUNCS_H_
 #define _FERAL_KRNL_FUNCS_H_
 
 /* Utility stuff... */
-
-/* Start, end, size. */
-FERALSTATUS FERALAPI KiCopyMemory(IN VOID*, IN VOID*, IN UINT64);
-
-/* First, Second, Size, Equal */
-FERALSTATUS FERALAPI KiCompareMemory(IN VOID*, IN VOID*, IN UINT64, OUT BOOL*);
-
-/* Dest, byte value, amount */
-FERALSTATUS FERALAPI KiSetMemoryBytes(INOUT VOID*, IN UINT8, IN UINT64);
-
-/* TODO: Replace bad temp strlen with this
-   String, length of it. */
-FERALSTATUS FERALAPI KiGetStringLength(IN STRING, OUT UINT64*);
-
-/* Same as above but with a wide string. */
-FERALSTATUS FERALAPI KiGetWideStringLength(IN WSTRING, OUT UINT64*);
 
 /* Equivalent to a kernel panic. In goes in the current system status which
    triggers the panic. */

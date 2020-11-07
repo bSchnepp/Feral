@@ -27,6 +27,7 @@ IN THE SOFTWARE.
 
 #include <feral/feralstatus.h>
 #include <feral/kern/krnlfuncs.h>
+#include <feral/kern/krnlbase.h>
 #include <feral/stdtypes.h>
 
 #ifndef _FERAL_FRLOS_H_
@@ -67,7 +68,7 @@ typedef enum KiSubsystemIdentifier
 } KiSubsystemIdentifier;
 
 /* Bring up a system needed for the kernel. */
-FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem);
+FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem, KrnlEnvironmentBlock *EnvBlock);
 FERALSTATUS KiStartupProcessor(UINT32 ProcessorNumber);
 
 #ifndef NDEBUG

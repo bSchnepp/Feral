@@ -26,6 +26,8 @@ IN THE SOFTWARE.
 
 
 #include <feral/stdtypes.h>
+
+#include <feral/kern/krnlentry.h>
 #include <feral/kern/krnlfirmware.h>
 
 #ifndef _FERAL_KRNL_BASE_H_
@@ -50,8 +52,7 @@ typedef struct KrnlEnvironmentBlock
 	/* Bootloader should help find free memory areas. */
 	STRING CommandLineArgs;
 	UINT64 KernelPageSize;
-	UINT64 FreeMemCount;
-	UINT_PTR *FreeMemLocs;
+	SystemBootInfo BootInfo;
 
 	KrnlFirmwareFunctions *FunctionTable;
 	KrnlCharMap *CharMap;

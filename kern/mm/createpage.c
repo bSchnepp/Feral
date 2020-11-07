@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019, Brian Schnepp
+Copyright (c) 2019, 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -27,9 +27,10 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
-#include <feral/kern/frlos.h>
 
 #include <krnl.h>
+#include <feral/kern/frlos.h>
+#include <feral/kern/krnlfuncs.h>
 
 #include <mm/mm.h>
 #include <mm/page.h>
@@ -39,26 +40,21 @@ extern UINTN kern_start;
 extern UINTN kern_end;
 
 /* Convert the addresses into integers for easier comparison. */
-UINT_PTR kernel_start = &kern_start;
-UINT_PTR kernel_end = &kern_end;
+static UINT_PTR kernel_start = &kern_start;
+static UINT_PTR kernel_end = &kern_end;
 
 typedef struct MemoryManagementState
 {
 	/* We'll need to store how physical address are allocated. */
 	MmPhysicalAllocationInfo *pAllocInfo;
 
-	/* Sum up total free area, right bitshift 3. */
+	/* We'll need the log of the page size divided by 8 to
+	 * find the size needed for the whole thing, along with
+	 * the multiplication of the total amount of memory times
+	 * that number.
+	 */
 	UINT8 *BitmaskUsedFrames;
 	UINT_PTR MaxPAddr;
-
-	/* NOTE: We need to check if the frame goes beyond
-	   the first range. If it did, then we need to move
-	   on to the next one. Keep going for each range
-	   we've got.
-
-	   Each bit represents free or in use. 0 for free,
-	   1 for in use.
-	 */
 } MemoryManagementState;
 
 /* Not the best thing ever, but... */
@@ -78,19 +74,11 @@ FERALSTATUS FERALAPI KiInitializeMemMgr(MmCreateInfo *info)
 	UINT_PTR PmmLocation = 0;
 	UINT_PTR MaximumPAddr = 0;
 
-	for (UINT64 n = 0; n < MmState.pAllocInfo->FreeAreaRangeCount; ++n)
+	for (UINT64 n = 0; n < MmState.pAllocInfo->MemoryAreaRangeCount; ++n)
 	{
-		MmFreeAreaRange range = MmState.pAllocInfo->Ranges[n];
-		if (range.sType != MM_STRUCTURE_TYPE_FREE_AREA_RANGE
-			&& range.sType != MM_STRUCTURE_TYPE_USED_AREA_RANGE)
-		{
-			continue;
-		}
-		else if (range.sType == MM_STRUCTURE_TYPE_FREE_AREA_RANGE)
-		{
-			/* Add the size in to the total. */
-			TotalSystemMemory += range.Size;
-		}
+		MmMemoryRange range = MmState.pAllocInfo->Ranges[n];
+		/* Add the size in to the total. */
+		TotalSystemMemory += range.Size;
 
 		/* What's the end address here? Is it bigger? */
 		if (range.End > MaximumPAddr)
@@ -98,39 +86,37 @@ FERALSTATUS FERALAPI KiInitializeMemMgr(MmCreateInfo *info)
 			MaximumPAddr = range.End;
 		}
 	}
-	UINT_PTR FrameSize = info->pPhysicalAllocationInfo->FrameSize;
-	PmmLocation = kernel_end + FrameSize;
-	// KiPrintFmt("Detected %uMB of free RAM\n", TotalSystemMemory / (1024 *
-	// 1024));
-
-	/* Bit of ehhh here. Assume everything from 0 - MaximumPAddr is valid.
-	 */
-	/* We'll take our total, copy it, and shift it over to be a valid map.
-	 */
-	/* In our model, 1 bit = (FrameSize). 1 byte = 8 * FrameSize. */
-	/* Since the PMM also includes *non-free* RAM, use 0 - MaximumPAddr. */
 	MmState.MaxPAddr = MaximumPAddr;
-	UINT64 BufferSize = (UINT64)(MmState.MaxPAddr) / FrameSize;
+
+	/* The PMM is a bitmap. Each bit represents one of FrameSize.
+	 * As such, the size is the total memory / (8 * FrameSize).
+	 * The kernel also passed us a nice safe place to put the
+	 * PMM, so that should be used as well. 
+	 */
+	PmmLocation = ((UINT_PTR)(info->SafePMMArea));
+	UINT_PTR FrameSize = info->pPhysicalAllocationInfo->FrameSize;
+	UINT64 BufferSize = MmState.MaxPAddr / (8 * FrameSize);
 
 	/* Take our location from before, and use it accordingly. */
-	UINT8 *PmmBitmap = (UINT8 *)(kernel_end | KERN_VIRT_OFFSET) + FrameSize;
+	UINT8 *PmmBitmap = (UINT8 *)(PmmLocation + FrameSize);
 	KiSetMemoryBytes(PmmBitmap, 0, BufferSize);
-	MmState.BitmaskUsedFrames = PmmBitmap;
+	MmState.BitmaskUsedFrames = KERN_PHYS_TO_VIRT(PmmBitmap);
 
 	/* Mark everything as in use. */
-	for (UINT_PTR index = kern_start; index < PmmLocation + BufferSize;
-		index += FrameSize)
+	for (UINT_PTR Index = kernel_start; 
+		Index < (PmmLocation) + BufferSize; 
+		++Index)
 	{
-		VALIDATE_SUCCESS(SetMemoryAlreadyInUse(index, TRUE));
+		VALIDATE_SUCCESS(SetMemoryAlreadyInUse(Index, TRUE));
 	}
 
 	/* Start the heap stuff up. No SMP support yet, so 1 hart. */
 	/* 4M heap should be enough for now? */
 	const UINT64 HeapSize = (1024 * 1024 * 8);
-	UINT_PTR HeapAddr = (KERN_VIRT_OFFSET | (PmmLocation + BufferSize));
+	UINT_PTR HeapAddr = ((PmmLocation) + BufferSize);
 	HeapAddr += FrameSize;
 	MmCreateAllocatorState(1, HeapAddr, HeapSize);
-	for (UINT_PTR Addr = HeapAddr - KERN_VIRT_OFFSET; Addr < (HeapSize);
+	for (UINT_PTR Addr = HeapAddr; Addr < (HeapSize);
 		Addr += MmState.pAllocInfo->FrameSize)
 	{
 		VALIDATE_SUCCESS(SetMemoryAlreadyInUse(Addr, TRUE));
@@ -182,9 +168,10 @@ FERALSTATUS SetMemoryAlreadyInUse(UINT_PTR Location, BOOL Status)
 	*/
 
 	UINT_PTR FrameSize = MmState.pAllocInfo->FrameSize;
-	UINT_PTR BaseAddr = 0;
+	UINT_PTR BaseAddr = (Location * 8) / FrameSize;
+	
 	/* This is the size of each *byte* in our buffer. */
-	UINT_PTR Increment = (FrameSize) << 3;
+	UINT_PTR Increment = (FrameSize) * 8;
 	while (BaseAddr + Increment <= Location)
 	{
 		BaseAddr += Increment;

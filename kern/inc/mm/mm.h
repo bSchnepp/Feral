@@ -37,33 +37,34 @@ typedef enum MmStructureType
 {
 	MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO = 0,
 
-	MM_STRUCTURE_TYPE_PHYSICAL_ALLOCATION_INFO,
-	MM_STRUCTURE_TYPE_PHYSICAL_FRAME_ALLOCATOR,
-	MM_STRUCTURE_TYPE_PHYSICAL_FRAME_BLOCK,
+	MM_STRUCTURE_TYPE_PHYSICAL_ALLOCATION_INFO = 1,
+	MM_STRUCTURE_TYPE_PHYSICAL_FRAME_ALLOCATOR = 2,
+	MM_STRUCTURE_TYPE_PHYSICAL_FRAME_BLOCK = 3,
 
-	MM_STRUCTURE_TYPE_VIRTUAL_ALLOCATION_INFO,
-	MM_STRUCTURE_TYPE_VIRTUAL_FRAME_ALLOCATOR,
-	MM_STRUCTURE_TYPE_VIRTUAL_FRAME_BLOCK,
+	MM_STRUCTURE_TYPE_VIRTUAL_ALLOCATION_INFO = 4,
+	MM_STRUCTURE_TYPE_VIRTUAL_FRAME_ALLOCATOR = 5,
+	MM_STRUCTURE_TYPE_VIRTUAL_FRAME_BLOCK = 6,
 
-	MM_STRUCTURE_TYPE_HEAP_ALLOCATION_INFO,
-	MM_STRUCTURE_TYPE_HEAP_ALLOCATOR,
+	MM_STRUCTURE_TYPE_HEAP_ALLOCATION_INFO = 7,
+	MM_STRUCTURE_TYPE_HEAP_ALLOCATOR = 8,
 
-	MM_STRUCTURE_TYPE_FREE_AREA_RANGE,
-	MM_STRUCTURE_TYPE_USED_AREA_RANGE,
-	MM_STRUCTURE_TYPE_OTHER_AREA_RANGE,
+	MM_STRUCTURE_TYPE_FREE_AREA_RANGE = 9,
+	MM_STRUCTURE_TYPE_USED_AREA_RANGE = 10,
+	MM_STRUCTURE_TYPE_RESERVED_AREA_RANGE = 11,
+	MM_STRUCTURE_TYPE_OTHER_AREA_RANGE = 12,
 
 	MM_STRUCTURE_TYPE_MAX = 0xFFFF
 } MmStructureType;
 
-typedef struct MmFreeAreaRange
+typedef struct MmMemoryRange
 {
-	MmStructureType sType;
-	void *pNext;
+	MmStructureType SType;
+	void *PNext;
 
 	UINT_PTR Start;
 	UINT_PTR End;
 	UINT_PTR Size; /* Not *actually* a pointer, but matches addr size. */
-} MmFreeAreaRange;
+} MmMemoryRange;
 
 
 typedef struct MmPhysicalAllocationInfo
@@ -72,8 +73,8 @@ typedef struct MmPhysicalAllocationInfo
 	void *pNext;
 
 	UINT64 FrameSize; /*Expect 4096 for now. Possibly use 2MB pages?*/
-	UINT64 FreeAreaRangeCount;
-	MmFreeAreaRange *Ranges;
+	UINT64 MemoryAreaRangeCount;
+	MmMemoryRange *Ranges;
 } MmPhysicalAllocationInfo;
 
 
@@ -83,9 +84,8 @@ typedef struct MmCreateInfo
 	void *pNext;
 
 	MmPhysicalAllocationInfo *pPhysicalAllocationInfo;
-	/* TODO on the rest of this. For now, it gets to be identity mapped! */
 
-
+	VOID* SafePMMArea;
 } MmCreateInfo;
 
 typedef struct AllocatorState

@@ -60,12 +60,12 @@ IN THE SOFTWARE.
 /* hack: include the serial driver in a brute forcey way. */
 #include <drivers/serial/serial.h>
 
+/* The initial memory map is done at the end of the kernel memory. */
+extern UINTN kern_end;
+static UINT_PTR kernel_end = &kern_end;
 
 /* hack for now */
-static UINT64 FreeMemCount;
-
-/* Support up to 8 regions. Hack for now until we get a real malloc. */
-static UINT_PTR FreeMemLocs[16];
+static UINT64 MemoryRangeCount;
 
 /*
 	 We'll need to implement a proper driver for VGA later.
@@ -114,6 +114,7 @@ static KrnlFirmwareFunctions FirmwareFuncs = {0};
 static KrnlCharMap CharMap = {0};
 static KrnlEnvironmentBlock EnvBlock = {0};
 static KrnlPhysicalDisplay Display = {0};
+static SystemBootInfo BootInfo = {0};
 
 static STRING GetBiosFirmwareClaim();
 static VOID InternalVgaPrintln(STRING Str, UINT64 Len);
@@ -154,6 +155,70 @@ static VOID InternalVgaBackspace()
 	VgaPutChar(' ');
 	VgaMoveCursor(X, Y);
 }
+
+
+static VOID InternalPutChar(CHAR C)
+{
+	VgaPutChar(C);
+}
+
+VOID HandleMemory(multiboot_tag_mmap *MemoryMap)
+{
+	UINT64 *MemRangeHeader = (UINT64*)kernel_end;
+	BootMemoryRange *MemRange = (BootMemoryRange*)(MemRangeHeader + 1);
+
+	multiboot_mmap_entry CurrentEntry = {0};
+
+	UINT64 Index = 0;
+	UINT64 AreasWritten = 0;
+	UINT64 MaxIndex = (MemoryMap->size) / (MemoryMap->entry_size);
+
+	/* We list all the memory there as either free or hardware reserved. */
+	MemoryRangeCount = MaxIndex;
+	MemRangeHeader[0] = MemoryRangeCount;
+
+	/* Go through all the entries and try to see what type
+	 * it is. */
+	for (Index = 0; Index < MaxIndex; ++Index)
+	{
+		CurrentEntry = MemoryMap->entries[Index];
+		/* Check the Type first. */
+		switch (CurrentEntry.type)
+		{
+			case E820_MEMORY_TYPE_FREE:
+			{
+				MemRange[Index].Usage = MM_STRUCTURE_TYPE_FREE_AREA_RANGE;
+				break;
+			}
+
+			case E820_MEMORY_TYPE_RESERVED:
+			case E820_MEMORY_TYPE_ACPI:
+			case E820_MEMORY_TYPE_NVS:
+			{
+				MemRange[Index].Usage = MM_STRUCTURE_TYPE_RESERVED_AREA_RANGE;
+				break;
+			}
+
+			default:
+			{
+				MemRange[Index].Usage = MM_STRUCTURE_TYPE_OTHER_AREA_RANGE;
+			}
+		}
+		MemRange[Index].Start = (UINT_PTR)CurrentEntry.addr;
+		MemRange[Index].End = MemRange[Index].Start + CurrentEntry.len;
+
+		if (MemRange[Index].End > MaxAddress)
+		{
+			MaxAddress = MemRange[Index].End;
+		}
+	}
+
+	BootInfo.NumMemoryRanges = MemoryRangeCount;
+	BootInfo.MemoryRanges = MemRange;
+}
+
+/* FIXME: formally write a header for this function. */
+UINT_PTR get_initial_p4_table();
 
 VOID kern_init(UINT32 MBINFO)
 {
@@ -220,56 +285,13 @@ VOID kern_init(UINT32 MBINFO)
 		}
 		else if (Type == MULTIBOOT_TAG_TYPE_MEM_MAP)
 		{
+			
 			/* Memory map detected... MB2's kludgy mess here makes
 			 * this a little painful, but we'll go through this
 			 * step-by-step.*/
 			multiboot_tag_mmap *mb_as_mmap_items
 				= (multiboot_tag_mmap *)(MultibootInfo);
-			multiboot_mmap_entry currentEntry = {0};
-
-			UINT64 index = 0;
-			UINT64 maxIters = (mb_as_mmap_items->size)
-					  / mb_as_mmap_items->entry_size;
-
-			/* Issue: We add region for every possible area. They're
-			 * not all free, so we have bigger buffer than needed.
-			 */
-			FreeMemCount = maxIters;
-			UINT64 FreeAreasWritten = 0;
-
-			/* Go through all the entries and try to see what type
-			 * it is. */
-			for (currentEntry = mb_as_mmap_items->entries[0];
-				index < maxIters;
-				currentEntry
-				= mb_as_mmap_items->entries[++index])
-			{
-				/* Check the Type first. */
-				if (currentEntry.type == E820_MEMORY_TYPE_FREE)
-				{
-					/* Write 1: Start pointer */
-					FreeMemLocs[FreeAreasWritten]
-						= (UINT_PTR)currentEntry.addr;
-					/* Write 2: End pointer */
-					FreeMemLocs[FreeAreasWritten + 1]
-						= (UINT_PTR)currentEntry.addr
-						  + (UINT_PTR)currentEntry.len;
-					FreeAreasWritten += 2;
-				}
-
-				/* E820_MEMORY_TYPE_RESERVED,
-				 * E820_MEMORY_TYPE_DISABLED,
-				 * E820_MEMORY_TYPE_INV ignored. */
-			}
-			FreeMemCount = FreeAreasWritten >> 1;
-			for (uint32_t Index = 0; Index < FreeAreasWritten;
-				++Index)
-			{
-				if (FreeMemLocs[Index] > MaxAddress)
-				{
-					MaxAddress = FreeMemLocs[Index];
-				}
-			}
+			HandleMemory(mb_as_mmap_items);
 		}
 		else if (Type == MULTIBOOT_TAG_TYPE_FRAME_BUFFER)
 		{
@@ -282,6 +304,9 @@ VOID kern_init(UINT32 MBINFO)
 			FramebufferHeight = mb_as_fb->framebuffer_height;
 			FramebufferWidth = mb_as_fb->framebuffer_width;
 			FramebufferTextOnly = (mb_as_fb->type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT);
+
+			BootInfo.NumDisplays = 1;
+			BootInfo.FramebufferPAddrs = &(Framebuffer);
 		}
 	}
 
@@ -390,91 +415,18 @@ VOID kern_init(UINT32 MBINFO)
 	 * the screen, so let the rest of the kernel know how to do that, along
 	 * with some other things.
 	 */
-	FirmwareFuncs.PutChar = VgaPutChar;
+	FirmwareFuncs.PutChar = InternalPutChar;
 	FirmwareFuncs.Println = InternalVgaPrintln;
 	FirmwareFuncs.GetFirmwareName = GetBiosFirmwareClaim;
 	FirmwareFuncs.Backspace = InternalVgaBackspace;
 	FirmwareFuncs.GetMaxPhysicalAddress = InternalGetMaxPhysicalAddressFunc;
+
 	EnvBlock.FunctionTable = &FirmwareFuncs;
 	EnvBlock.CharMap = &CharMap;
 	EnvBlock.Displays = NULLPTR;
+	EnvBlock.BootInfo = BootInfo;
 	/* Kernel initialization is done, move on to actual tasks. */
 	KiSystemStartup(&EnvBlock);
-}
-
-/* Bring up a system needed for the kernel. */
-FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem)
-{
-	/* This defines where free memory is and isn't,
-	 * at the start of boot time. We assume users don't
-	 * do anything silly like hotplug memory, and if it's
-	 * valid memory at boot time, it's always valid memory.
-	 *
-	 * We also assume a fairly sane memory layout that doesn't
-	 * have a bunch of fragmentation. If there's too much fragmentation,
-	 * we just ignore the extra memory. That is a problem for now, but
-	 * something we can fix later if it's serious enough.
-	 */
-	if (subsystem == FERAL_SUBSYSTEM_MEMORY_MANAGEMENT)
-	{
-		MmPhysicalAllocationInfo allocInfo;
-		allocInfo.sType = MM_STRUCTURE_TYPE_PHYSICAL_ALLOCATION_INFO;
-		allocInfo.pNext = (void *)(0);
-		allocInfo.FrameSize = 4096;
-
-		allocInfo.FreeAreaRangeCount = FreeMemCount;
-		MmFreeAreaRange ranges[FreeMemCount];
-		for (UINT64 i = 0; i < FreeMemCount; ++i)
-		{
-			ranges[i].sType = MM_STRUCTURE_TYPE_FREE_AREA_RANGE;
-			ranges[i].pNext = (void *)(0);
-			/* We need in groups of 2. i gives us the group of 2
-			   at present.
-			 */
-			ranges[i].Start = FreeMemLocs[i * 2];
-			ranges[i].End = FreeMemLocs[(i * 2) + 1];
-			ranges[i].Size = ranges[i].End - ranges[i].Start;
-		}
-		allocInfo.Ranges = ranges;
-		MmCreateInfo info;
-
-		info.sType = MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO;
-		info.pNext = NULLPTR;
-		info.pPhysicalAllocationInfo = &allocInfo;
-		FERALSTATUS Status = KiInitializeMemMgr(&info);
-		if (Status != STATUS_SUCCESS)
-		{
-			return Status;
-		}
-
-		/* First part of manipulating page tables in C...
-		 * We no longer need lower half, so just wipe it out.
-		 */
-		UINT_PTR *OrigP4 = get_initial_p4_table();
-		// OrigP4[0] = 0x00;
-		// x86_write_cr3(OrigP4);
-		return STATUS_SUCCESS;
-	}
-	else if (subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC)
-	{
-		/* Machine-dependent setup, for things like
-		 * serial drivers, higher resolution VGA, etc.
-		 */
-
-		KiStartupMachineDependent();
-		/* TODO: Enable serial driver
-		 * iff use-serial=true, instead of
-		 * whenever there is the
-		 * command line...
-		 */
-		VOID *Databack = NULLPTR;
-		InitSerialDevice(Databack);
-	}
-	else
-	{
-		/*  Placeholder for more stuff later on. (disks, network...) */
-	}
-	return STATUS_SUCCESS;
 }
 
 #endif

@@ -336,7 +336,6 @@ volatile void x86SetupIDTEntries()
 
 	/* 0x08 is for kernel code segment offset */
 	/* 0x8E is for interrupt gate. */
-
 	/* On number 14 (page fault), install custom handler. */
 	x86IDTSetGate(0x00, (UINT_PTR)(DivideByZero), 0x08, 0x8E);
 	x86IDTSetGate(0x08, (UINT_PTR)(DoubleFaultHandler), 0x08, 0x8E);

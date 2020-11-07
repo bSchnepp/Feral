@@ -31,11 +31,6 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
-
-FERALSTATUS KiStartupSystem()
-{
-}
-
 /* stubs for some assembly stuff the kernel expects. Maybe fixme?
  */
 void *kern_start;

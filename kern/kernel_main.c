@@ -43,6 +43,8 @@ IN THE SOFTWARE.
 
 VOID KiStartupMachineDependent(VOID);
 VOID KiStartupProcessorMachineDependent(UINT32 Core);
+FERALSTATUS KeBootstrapSystem(VOID);
+VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock);
 
 /* temporary test */
 extern VOID SerialDoKShellPrompt();
@@ -72,7 +74,7 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	KiUpdateFirmwareFunctions(EnvBlock->FunctionTable, EnvBlock->CharMap);
 
 	/* Set up memory immediately so we can use the framebuffer */
-	KiStartupSystem(FERAL_SUBSYSTEM_MEMORY_MANAGEMENT);
+	KiStartupSystem(FERAL_SUBSYSTEM_MEMORY_MANAGEMENT, EnvBlock);
 	KiPrintFmt("\nStarting Feral Kernel \"%s\" Version %01u.%01u.%01u\n",
 		FERAL_VERSION_SHORT, FERAL_VERSION_MAJOR, FERAL_VERSION_MINOR,
 		FERAL_VERSION_PATCH);
@@ -89,7 +91,7 @@ VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock)
 	KiPrintFmt("Booted using %s\n",
 		EnvBlock->FunctionTable->GetFirmwareName());
 	KiPrintFmt("%s\n", "Preparing execution environment...");
-	KiStartupSystem(FERAL_SUBSYSTEM_ARCH_SPECIFIC);
+	KiStartupSystem(FERAL_SUBSYSTEM_ARCH_SPECIFIC, EnvBlock);
 
 	/* Formally start processor 0. */
 	KiStartupProcessor(0);
@@ -140,5 +142,79 @@ FERALSTATUS KiStartupProcessor(UINT32 ProcessorNumber)
 FERALSTATUS KeBootstrapSystem(VOID)
 {
 	/* Bootstrap process to actually get to user mode. */
+	return STATUS_SUCCESS;
+}
+
+FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem, 
+	KrnlEnvironmentBlock *EnvBlock)
+{
+	/* This defines where free memory is and isn't,
+	 * at the start of boot time. We assume users don't
+	 * do anything silly like hotplug memory, and if it's
+	 * valid memory at boot time, it's always valid memory.
+	 *
+	 * We also assume a fairly sane memory layout that doesn't
+	 * have a bunch of fragmentation. If there's too much fragmentation,
+	 * we just ignore the extra memory. That is a problem for now, but
+	 * something we can fix later if it's serious enough.
+	 */
+	if (subsystem == FERAL_SUBSYSTEM_MEMORY_MANAGEMENT)
+	{
+		UINT64 MemAmt = EnvBlock->BootInfo.NumMemoryRanges;
+		MmPhysicalAllocationInfo AllocInfo;
+		AllocInfo.sType = MM_STRUCTURE_TYPE_PHYSICAL_ALLOCATION_INFO;
+		AllocInfo.pNext = (void *)(0);
+		AllocInfo.FrameSize = 4096;
+		AllocInfo.MemoryAreaRangeCount = MemAmt;
+
+		BootMemoryRange *BootRange = EnvBlock->BootInfo.MemoryRanges;
+
+		/* Assume everything after that space is also empty. */
+		MmMemoryRange *Ranges = (MmMemoryRange *)
+			(EnvBlock->BootInfo.MemoryRanges 
+			 + EnvBlock->BootInfo.NumMemoryRanges 
+			 + 1);
+
+		for (UINT64 Index = 0; Index < MemAmt; ++Index)
+		{
+			Ranges[Index].SType = BootRange[Index].Usage;
+			Ranges[Index].PNext = (void *)(0);
+
+			Ranges[Index].Start = BootRange[Index].Start;
+			Ranges[Index].End = BootRange[Index].End;
+			Ranges[Index].Size = Ranges[Index].End - Ranges[Index].Start;
+
+			/* Don't use below 1MB memory. Ever. */
+			if (Ranges[Index].Start < (1024 * 1024))
+			{
+				Ranges[Index].SType = MM_STRUCTURE_TYPE_RESERVED_AREA_RANGE;
+			}
+		}
+		AllocInfo.Ranges = Ranges;
+		MmCreateInfo info;
+
+		info.sType = MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO;
+		info.pNext = NULLPTR;
+		info.pPhysicalAllocationInfo = &AllocInfo;
+		info.SafePMMArea = (VOID*)(&(Ranges[MemAmt + 1]));
+		FERALSTATUS Status = KiInitializeMemMgr(&info);
+		if (Status != STATUS_SUCCESS)
+		{
+			return Status;
+		}
+		return STATUS_SUCCESS;
+	}
+	else if (subsystem == FERAL_SUBSYSTEM_ARCH_SPECIFIC)
+	{
+		/* Machine-dependent setup, for things like
+		 * serial drivers, higher resolution VGA, etc.
+		 */
+
+		KiStartupMachineDependent();
+
+		/* FIXME: Dynamically pick what drivers to use */
+		VOID *Databack = NULLPTR;
+		InitSerialDevice(Databack);
+	}
 	return STATUS_SUCCESS;
 }

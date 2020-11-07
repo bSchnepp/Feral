@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ./gen_testfile.sh
-rm -rf build && mkdir -p build && cd build && cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Debug && make -j32
+rm -rf build && mkdir -p build && cd build && cmake .. -DCMAKE_TOOLCHAIN_FILE=./cmake/x86_64-pc.cmake && make -j32
 mv FERALKER FERALKER.NEL
 mkdir -p isofiles/boot/grub
 cp  FERALKER.NEL isofiles/boot

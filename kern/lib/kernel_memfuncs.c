@@ -57,7 +57,7 @@ FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
 }
 
 FERALSTATUS KiCompareMemory(
-	IN VOID* Source, IN VOID* Dest, IN UINT64 Amount, OUT BOOL* Val)
+	IN CONST VOID* Source, IN CONST VOID* Dest, IN UINT64 Amount, OUT BOOL* Val)
 {
 	if ((Source == NULL) || (Dest == NULL))
 	{
@@ -108,9 +108,20 @@ FERALSTATUS FERALAPI KiSetMemoryBytes(
 {
 	UINT8* RealDest = (UINT8*)Dest;
 	/* TODO: Blocks of 8 to speed up performance again */
-	for (UINT64 Index = 0; Index < Amt; ++Index)
+
+	UINT64 Index = 0;
+	for (Index = 0; Index < Amt; Index += 4)
 	{
-		RealDest[Index] = Val;
+		RealDest[Index + 0] = Val;
+		RealDest[Index + 1] = Val;
+		RealDest[Index + 2] = Val;
+		RealDest[Index + 3] = Val;
 	}
+
+	for (; Index < Amt; ++Index)
+	{
+		RealDest[Index + 0] = Val;
+	}
+	
 	return STATUS_SUCCESS;
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -24,29 +24,41 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#include <feral/string.h>
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
-#include <feral/kern/krnlfuncs.h>
-#include <feral/kern/frlos.h>
 
+#include <feral/kern/krnlstringfuncs.h>
 
-FERALSTATUS FrlCreateString(
-	IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content)
+FERALSTATUS KiGetStringLength(IN STRING String, OUT UINT64* Length)
 {
-	StringLocation->Length = Length;
-	StringLocation->Content = Content;
+	if (String == NULL)
+	{
+		return STATUS_INVALID_MEMORY_LOCATION;
+	}
+
+	UINT64 Len = 0;
+	while (String[Len])
+	{
+		Len++;
+	}
+	*Length = Len;
+	
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS FrlDeleteString(IN FERALSTRING* String)
+FERALSTATUS KiGetWideStringLength(IN WSTRING String, OUT UINT64* Length)
 {
-	/* TODO */
-	return STATUS_SUCCESS;
-}
-
-FERALSTATUS FrlCloneString(IN FERALSTRING* Source, IN FERALSTRING* OutLocation)
-{
-	/* TODO */
+	if (String == NULL)
+	{
+		return STATUS_INVALID_MEMORY_LOCATION;
+	}
+	
+	UINT64 Len = 0;
+	while (String[Len])
+	{
+		Len++;
+	}
+	*Length = Len;
+	
 	return STATUS_SUCCESS;
 }

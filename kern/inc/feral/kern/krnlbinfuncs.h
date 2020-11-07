@@ -1,8 +1,8 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2020, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
-obtaining a copy of the software and accompanying documentation covered by
+obtaining  a copy of the software and accompanying documentation covered by
 this license (the "Software") to use, reproduce, display, distribute, execute,
 and transmit the Software, and to prepare derivative works of the Software,
 and to permit third-parties to whom the Software is furnished to do so, all
@@ -24,29 +24,13 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
-#include <feral/string.h>
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
-#include <feral/kern/krnlfuncs.h>
-#include <feral/kern/frlos.h>
 
+#ifndef _FERAL_KERN_BINFUNCS_H_
+#define _FERAL_KERN_BINFUNCS_H_
 
-FERALSTATUS FrlCreateString(
-	IN FERALSTRING* StringLocation, UINT64 Length, WSTRING Content)
-{
-	StringLocation->Length = Length;
-	StringLocation->Content = Content;
-	return STATUS_SUCCESS;
-}
+FERALSTATUS FERALAPI KiLog2Int(IN INT64 Input, OUT INT64 *Result);
+FERALSTATUS FERALAPI KiLog2UInt(IN UINT64 Input, OUT INT64 *Result);
 
-FERALSTATUS FrlDeleteString(IN FERALSTRING* String)
-{
-	/* TODO */
-	return STATUS_SUCCESS;
-}
-
-FERALSTATUS FrlCloneString(IN FERALSTRING* Source, IN FERALSTRING* OutLocation)
-{
-	/* TODO */
-	return STATUS_SUCCESS;
-}
+#endif

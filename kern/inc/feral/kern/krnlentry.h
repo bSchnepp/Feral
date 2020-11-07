@@ -27,26 +27,25 @@ IN THE SOFTWARE.
 #include <mm/mm.h>
 
 #include <feral/stdtypes.h>
-#include <feral/kern/krnlbase.h>
 #include <feral/kern/krnlfirmware.h>
 
 #ifndef _FERAL_KRNL_ENTRY_H_
 #define _FERAL_KRNL_ENTRY_H_
 
-typedef struct EfiMemoryRange
+typedef struct BootMemoryRange
 {
 	MmStructureType Usage;
 	UINT_PTR Start;
 	UINT_PTR End;
-} EfiMemoryRange;
+} BootMemoryRange;
 
-typedef struct EfiBootInfo
+typedef struct SystemBootInfo
 {
 	UINT64 NumDisplays;
 	UINT_PTR *FramebufferPAddrs;
 
 	UINT64 NumMemoryRanges;
-	EfiMemoryRange *MemoryRanges;
-} EfiBootInfo;
+	BootMemoryRange *MemoryRanges;
+} SystemBootInfo;
 
 #endif
