@@ -34,37 +34,17 @@ IN THE SOFTWARE.
 #include <mm/mm.h>
 #include <mm/page.h>
 
-#if defined(__x86_64__) || defined(__i386__)
-/* TODO: Deal with 32-bit x86 not supporting everything. Maybe force PAE? */
-#include <arch/x86_64/mm/pageflags.h>
-#endif
-
-
+/* These are done by the linker. */
 extern UINTN kern_start;
 extern UINTN kern_end;
 
 /* Convert the addresses into integers for easier comparison. */
 UINT_PTR kernel_start = &kern_start;
 UINT_PTR kernel_end = &kern_end;
-/*
-	Let's totally overhaul this.
-
-	The lowest level is the physical memory manager.
-	We get the ranges from the init process,
-	which creates a structure holding valid physical ranges.
-
-	The virtual memory manager handles the mapping somehow to
-	virtual addresses?
-
-	**then** we use kmalloc().
-
-	(in other words, stop mashing everything together because it's making
-	an incoherent mess.)
-*/
 
 typedef struct MemoryManagementState
 {
-	/* For now, we *do not* support huge pages generally. */
+	/* We'll need to store how physical address are allocated. */
 	MmPhysicalAllocationInfo *pAllocInfo;
 
 	/* Sum up total free area, right bitshift 3. */

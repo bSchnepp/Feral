@@ -55,11 +55,31 @@ UINT_PTR ConvertPageEntryToAddress(PageMapEntry *Entry)
  */
 FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels)
 {
+	/* vpn for each level is done with 9 bits. */
 	Levels[0] = (Address >> 12) & 0x1FF;
 	Levels[1] = (Address >> 21) & 0x1FF;
 	Levels[2] = (Address >> 30) & 0x1FF;
 	Levels[3] = (Address >> 39) & 0x1FF;
 	return STATUS_SUCCESS;
+}
+
+/**
+ * Flushes the TLB cache, which should be done
+ * after the page tables are modified in any way.
+ * Upon calling of x86MapAddress or x86UnmapAddress,
+ * this should be called right after.
+ * 
+ * @author Brian Schnepp
+ * @see x86MapAddress
+ * @see x86UnmapAddress
+ */
+VOID FlushTLB()
+{
+	UINT64 Tmp;
+	__asm__ volatile(
+		"movq %%cr3, %0\n"
+		"movq %0, %%cr3\n" 
+		: "=a"(Tmp));
 }
 
 /**
@@ -164,16 +184,6 @@ FERALSTATUS x86MapAddress(
 	return STATUS_SUCCESS;
 }
 
-
-VOID FlushTLB()
-{
-	UINT64 Tmp;
-	__asm__ volatile(
-		"movq %%cr3, %0\n"
-		"movq %0, %%cr3\n" 
-		: "=a"(Tmp));
-}
-
 /**
  * Unmaps an address given a handle to the PML4, in virtual memory,
  * to a physical address and a desired virtual address.
@@ -257,9 +267,9 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	}
 
 	/* Again for level 1... */
-	if (PT[PageLevels[1]].Raw & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
+	if (PT[PageLevels[0]].Raw & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
 	{
-		PT[PageLevels[1]].Raw = 0;
+		PT[PageLevels[0]].Raw = 0;
 		return STATUS_SUCCESS;
 	}
 	else if (PT[PageLevels[0]].Raw & X86_PAGE_FLAG_PRESENT)
