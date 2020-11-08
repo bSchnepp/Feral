@@ -105,7 +105,7 @@ FERALSTATUS FERALAPI KiInitializeMemMgr(MmCreateInfo *info)
 	/* Mark everything as in use. */
 	for (UINT_PTR Index = kernel_start; 
 		Index < (PmmLocation) + BufferSize; 
-		++Index)
+		Index += FrameSize)
 	{
 		VALIDATE_SUCCESS(SetMemoryAlreadyInUse(Index, TRUE));
 	}
@@ -136,14 +136,9 @@ FERALSTATUS GetMemoryAlreadyInUse(UINT_PTR Location, BOOL *Status)
 	  Mult. this by 8 for per byte. Look until expected address > Location.
 	*/
 
+
 	UINT_PTR FrameSize = MmState.pAllocInfo->FrameSize;
-	UINT_PTR BaseAddr = 0;
-	/* This is the size of each *byte* in our buffer. */
-	UINT_PTR Increment = (FrameSize) << 3;
-	while (BaseAddr + Increment <= Location)
-	{
-		BaseAddr += Increment;
-	}
+	UINT_PTR BaseAddr = (Location / (8 * FrameSize));
 
 	/* BaseAddr will now be at the *byte* we want. */
 	/* We take the formula (FrameSize) % 8 in order to find the bit
@@ -168,14 +163,7 @@ FERALSTATUS SetMemoryAlreadyInUse(UINT_PTR Location, BOOL Status)
 	*/
 
 	UINT_PTR FrameSize = MmState.pAllocInfo->FrameSize;
-	UINT_PTR BaseAddr = (Location * 8) / FrameSize;
-	
-	/* This is the size of each *byte* in our buffer. */
-	UINT_PTR Increment = (FrameSize) * 8;
-	while (BaseAddr + Increment <= Location)
-	{
-		BaseAddr += Increment;
-	}
+	UINT_PTR BaseAddr = (Location / (8 * FrameSize));
 
 	/* BaseAddr will now be at the *byte* we want. */
 	/* We take the formula (FrameSize) % 8 in order to find the bit

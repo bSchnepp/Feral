@@ -160,19 +160,19 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem,
 	 */
 	if (subsystem == FERAL_SUBSYSTEM_MEMORY_MANAGEMENT)
 	{
-		UINT64 MemAmt = EnvBlock->BootInfo.NumMemoryRanges;
+		UINT64 MemAmt = EnvBlock->BootInfo->NumMemoryRanges;
 		MmPhysicalAllocationInfo AllocInfo;
 		AllocInfo.sType = MM_STRUCTURE_TYPE_PHYSICAL_ALLOCATION_INFO;
 		AllocInfo.pNext = (void *)(0);
 		AllocInfo.FrameSize = 4096;
 		AllocInfo.MemoryAreaRangeCount = MemAmt;
 
-		BootMemoryRange *BootRange = EnvBlock->BootInfo.MemoryRanges;
+		BootMemoryRange *BootRange = EnvBlock->BootInfo->MemoryRanges;
 
 		/* Assume everything after that space is also empty. */
 		MmMemoryRange *Ranges = (MmMemoryRange *)
-			(EnvBlock->BootInfo.MemoryRanges 
-			 + EnvBlock->BootInfo.NumMemoryRanges 
+			(EnvBlock->BootInfo->MemoryRanges 
+			 + EnvBlock->BootInfo->NumMemoryRanges 
 			 + 1);
 
 		for (UINT64 Index = 0; Index < MemAmt; ++Index)
@@ -196,7 +196,7 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem,
 		info.sType = MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO;
 		info.pNext = NULLPTR;
 		info.pPhysicalAllocationInfo = &AllocInfo;
-		info.SafePMMArea = (VOID*)(&(Ranges[MemAmt + 1]));
+		info.SafePMMArea = (VOID*)(Ranges + MemAmt + 4096);
 		FERALSTATUS Status = KiInitializeMemMgr(&info);
 		if (Status != STATUS_SUCCESS)
 		{

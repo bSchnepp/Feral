@@ -52,7 +52,7 @@ typedef struct KrnlEnvironmentBlock
 	/* Bootloader should help find free memory areas. */
 	STRING CommandLineArgs;
 	UINT64 KernelPageSize;
-	SystemBootInfo BootInfo;
+	SystemBootInfo *BootInfo;
 
 	KrnlFirmwareFunctions *FunctionTable;
 	KrnlCharMap *CharMap;

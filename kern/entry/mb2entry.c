@@ -62,7 +62,8 @@ IN THE SOFTWARE.
 
 /* The initial memory map is done at the end of the kernel memory. */
 extern UINTN kern_end;
-static UINT_PTR kernel_end = &kern_end;
+/* FIXME: There's a buffer overrun somewhere. */
+static UINT_PTR kernel_end = &(kern_end) + 4096;
 
 /* hack for now */
 static UINT64 MemoryRangeCount;
@@ -424,7 +425,7 @@ VOID kern_init(UINT32 MBINFO)
 	EnvBlock.FunctionTable = &FirmwareFuncs;
 	EnvBlock.CharMap = &CharMap;
 	EnvBlock.Displays = NULLPTR;
-	EnvBlock.BootInfo = BootInfo;
+	EnvBlock.BootInfo = &BootInfo;
 	/* Kernel initialization is done, move on to actual tasks. */
 	KiSystemStartup(&EnvBlock);
 }

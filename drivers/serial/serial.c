@@ -94,8 +94,7 @@ VOID SerialSend(UINT16 Port, STRING c, UINT64 Len)
 VOID SerialRecv(UINT16 Port, UINT64 Amt, BYTE *Buf)
 {
 #if defined(__x86_64__) || defined(__i386__)
-	UINT64 Index = 0;
-	while (Index++ < Amt)
+	for (UINT64 Index = 0; Index < Amt; ++Index)
 	{
 		Buf[Index] = x86inb(Port);
 	}

@@ -54,14 +54,7 @@ INTERRUPT void GenericHandlerPIC2(x86InterruptFrame *Frame);
 INTERRUPT void DoubleFaultHandler(x86InterruptFrame *Frame);
 INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame);
 
-INTERRUPT void GenericHandlerPIC1_IRQ0(x86InterruptFrame *Frame);
-INTERRUPT void GenericHandlerPIC1_IRQ1(x86InterruptFrame *Frame);
-INTERRUPT void GenericHandlerPIC1_IRQ2(x86InterruptFrame *Frame);
-INTERRUPT void GenericHandlerPIC1_IRQ3(x86InterruptFrame *Frame);
-INTERRUPT void GenericHandlerPIC1_IRQ4(x86InterruptFrame *Frame);
-INTERRUPT void GenericHandlerPIC1_IRQ5(x86InterruptFrame *Frame);
-INTERRUPT void GenericHandlerPIC1_IRQ6(x86InterruptFrame *Frame);
-INTERRUPT void GenericHandlerPIC1_IRQ7(x86InterruptFrame *Frame);
+
 
 void x86PICSendEOIPIC1(void);
 void x86PICSendEOIPIC2(void);
@@ -81,49 +74,6 @@ void x86DisablePIC(VOID)
 {
 	x86outb(X86_PIC_1_DATA, 0xFF);
 	x86outb(X86_PIC_2_DATA, 0xFF);
-}
-
-
-INTERRUPT void GenericHandlerPIC1_IRQ0(x86InterruptFrame *Frame)
-{
-	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ0) \n");
-	x86PICSendEOIPIC1();
-}
-
-INTERRUPT void GenericHandlerPIC1_IRQ1(x86InterruptFrame *Frame)
-{
-	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ1) \n");
-	x86PICSendEOIPIC1();
-}
-
-INTERRUPT void GenericHandlerPIC1_IRQ2(x86InterruptFrame *Frame)
-{
-	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ2) \n");
-	x86PICSendEOIPIC1();
-}
-
-INTERRUPT void GenericHandlerPIC1_IRQ3(x86InterruptFrame *Frame)
-{
-	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ3) \n");
-	x86PICSendEOIPIC1();
-}
-
-INTERRUPT void GenericHandlerPIC1_IRQ4(x86InterruptFrame *Frame)
-{
-	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ4) \n");
-	x86PICSendEOIPIC1();
-}
-
-INTERRUPT void GenericHandlerPIC1_IRQ5(x86InterruptFrame *Frame)
-{
-	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ5) \n");
-	x86PICSendEOIPIC1();
-}
-
-INTERRUPT void GenericHandlerPIC1_IRQ6(x86InterruptFrame *Frame)
-{
-	KiPrintFmt("Unhandled Interrupt! (PIC1) (IRQ6) \n");
-	x86PICSendEOIPIC1();
 }
 
 INTERRUPT void GenericHandlerPIC1_IRQ7(x86InterruptFrame *Frame)
@@ -155,6 +105,11 @@ INTERRUPT void GenericHandlerPIC2(x86InterruptFrame *Frame)
 }
 
 INTERRUPT void DoubleFaultHandler(x86InterruptFrame *Frame)
+{
+	KiStopError(STATUS_ERROR);
+}
+
+INTERRUPT void PageFaultHandler(x86InterruptFrame *Frame)
 {
 	KiStopError(STATUS_ERROR);
 }
@@ -314,6 +269,36 @@ INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
 }
 
 
+
+/* For easy reference, on the x86, an interrupt with these values
+ * are for these reasons.
+ * 
+ * 0		Divide by zero
+ * 1		Debug exception
+ * 2		Non-maskable interrupt
+ * 3		Breakpoint
+ * 4		Overflow
+ * 5		Bound Range Exceeded
+ * 6		Invalid Opcode
+ * 7		Device Not Available
+ * 8		Double Fault
+ * 9		Coprocessor???
+ * a		Invalid TSS
+ * b		Segment Not Present		
+ * c		Stack Segment Fault
+ * d		General Protection Fault
+ * e		Page Fault
+ * f		Reserved
+ * 10		Floating Point Exception
+ * 11		Alignment Check
+ * 12		Machine Check
+ * 13		SIMD Float Exception
+ * 14		Virtualization Exception
+ * 	Reserved
+ * 1E		Security Exception		
+ * 1F		FPU Error???
+ */
+
 volatile void x86SetupIDTEntries()
 {
 	/* In the base case, ensure everything is filled by default. */
@@ -321,14 +306,6 @@ volatile void x86SetupIDTEntries()
 	{
 		x86IDTSetGate(i, (UINT_PTR)(GenericHandler), 0x08, 0x8E);
 	}
-	x86IDTSetGate(0x20, (UINT_PTR)(GenericHandlerPIC1_IRQ0), 0x08, 0x8E);
-	x86IDTSetGate(0x21, (UINT_PTR)(GenericHandlerPIC1_IRQ1), 0x08, 0x8E);
-	x86IDTSetGate(0x22, (UINT_PTR)(GenericHandlerPIC1_IRQ2), 0x08, 0x8E);
-	x86IDTSetGate(0x23, (UINT_PTR)(GenericHandlerPIC1_IRQ3), 0x08, 0x8E);
-	x86IDTSetGate(0x24, (UINT_PTR)(GenericHandlerPIC1_IRQ4), 0x08, 0x8E);
-	x86IDTSetGate(0x25, (UINT_PTR)(GenericHandlerPIC1_IRQ5), 0x08, 0x8E);
-	x86IDTSetGate(0x26, (UINT_PTR)(GenericHandlerPIC1_IRQ6), 0x08, 0x8E);
-	x86IDTSetGate(0x27, (UINT_PTR)(GenericHandlerPIC1_IRQ7), 0x08, 0x8E);
 	for (UINTN i = 0x28; i < 0x30; ++i)
 	{
 		x86IDTSetGate(i, (UINT_PTR)(GenericHandlerPIC2), 0x08, 0x8E);
@@ -336,10 +313,12 @@ volatile void x86SetupIDTEntries()
 
 	/* 0x08 is for kernel code segment offset */
 	/* 0x8E is for interrupt gate. */
+
 	/* On number 14 (page fault), install custom handler. */
 	x86IDTSetGate(0x00, (UINT_PTR)(DivideByZero), 0x08, 0x8E);
 	x86IDTSetGate(0x08, (UINT_PTR)(DoubleFaultHandler), 0x08, 0x8E);
-	x86IDTSetGate(0x14, (UINT_PTR)(DoubleFaultHandler), 0x08, 0x8E);
+	x86IDTSetGate(0xe, (UINT_PTR)(PageFaultHandler), 0x08, 0x8E);
+
 	x86IDTSetGate(0x20, (UINT_PTR)(PITHandler), 0x08, 0x8E);
 	x86IDTSetGate(0x21, (UINT_PTR)(PS2KeyboardHandler), 0x08, 0x8E);
 	x86IDTSetGate(0x2C, (UINT_PTR)(PS2KeyboardHandler), 0x08, 0x8E);
