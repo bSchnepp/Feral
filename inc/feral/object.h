@@ -54,6 +54,6 @@ typedef struct HTask
 	Handle *SubprocessTags;
 } HTask;
 
-FERALSTATUS ObInitSystem();
+FERALSTATUS ObInitSystem(VOID);
 
 #endif

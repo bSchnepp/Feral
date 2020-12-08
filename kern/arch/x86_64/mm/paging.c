@@ -287,8 +287,39 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 
 
 
-FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection, IN KernMemUsage Usage, INOPT VOID *BaseAddr, OUT VOID *Result)
+/**
+ * @brief Allocates a multiple of pages which are currently
+ * not marked as in use. Optionally, a base address can be specified,
+ * so that a contiguous area of memory at a specific location can be used.
+ * 
+ * @param Pages The number of pages to allocate. Usually multiple of 4Kb.
+ * @param Protection The kind of protection to assign to the pages, such as
+ * read permissions, write permissions, or execute permissions.
+ * @param Usage Additional flags, such as requesting large pages or
+ * for how the pages will be used, such as ignoring cache.
+ * @param BaseAddr An optional parameter for the physical base address to use. 
+ * If not in use, this must be set to NULLPTR.
+ * @param Result The resulting pointer which will be set to NULLPTR if invalid,
+ * or the starting address of the pages allocated if valid.
+ * 
+ * @return STATUS_SUCCESS on success. STATUS_MEMORY_PAGE_FAILURE if the pages
+ * could not be allocated by an internal error, STATUS_MEMORY_PAGE_CONFLICT if
+ * the page is already allocated somewhere else.
+ */
+FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, 
+	IN KernMemProtect Protection, 
+	IN KernMemUsage Usage, 
+	INOPT VOID *BaseAddr, 
+	OUT VOID **Result)
 {
+	PageMapEntry Entry;
+	if (BaseAddr)
+	{
+		
+	}
+
+
+	/* nyi */
 	return STATUS_SUCCESS;
 }
 

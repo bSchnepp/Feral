@@ -48,7 +48,7 @@ VOID SerialDoKShellPrompt()
 	SerialSend(COM1_PORT, Prompt, PromptLen);
 	KiSetMemoryBytes(CmdBuffer, 0, 1024);
 	UINT16 Index = 0;
-	CHAR CurChar = '\0';
+	BYTE CurChar = '\0';
 	while (CurChar != '\n')
 	{
 		SerialRecv(COM1_PORT, 1, &CurChar);

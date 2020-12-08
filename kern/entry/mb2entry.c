@@ -40,11 +40,6 @@ IN THE SOFTWARE.
 
 #include "charmap_default.inl"
 
-/* Borrow a bunch from Feralboot. */
-#ifndef _NO_UEFI_STUB_
-#include <libreefi/efi.h>
-#endif
-
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
 #include <feral/kern/frlos.h>

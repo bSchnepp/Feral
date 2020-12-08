@@ -226,8 +226,4 @@ typedef int32_t INTN;
 #endif
 
 #include <feral/feraluser.h>
-
-
-/* TEMPORARY FIXME */
-UINT_PTR __stack_chk_guard;
 #endif

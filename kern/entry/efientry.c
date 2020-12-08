@@ -86,7 +86,7 @@ VOID FERALAPI kern_init(EfiBootInfo *BootInfo)
 {
 	OrigNumMemoryRanges = BootInfo->NumMemoryRanges;
 	OrigMemoryRanges = BootInfo->MemoryRanges;
-	OrigBootInfo = OrigBootInfo;
+	OrigBootInfo = BootInfo;
 
 	/* Set up the character map. */
 	CharMap.CharMapWidth = 8;

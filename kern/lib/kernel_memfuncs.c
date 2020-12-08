@@ -78,10 +78,10 @@ FERALSTATUS KiCompareMemory(
 		UINT_PTR* Dst = (Dest + i);
 		if (*Src != *Dst)
 		{
-			*(Val) = FALSE;
+			*Val = FALSE;
 			break;
 		}
-		*(Val) = TRUE;
+		*Val = TRUE;
 	}
 
 	UINT32 Index = 0;
@@ -98,7 +98,7 @@ FERALSTATUS KiCompareMemory(
 		Comparison1 &= (dstAsChar[Index + 0] == srcAsChar[Index + 0]);
 	}
 
-	*(Val) = (Comparison1 && Comparison2 && Comparison3 && Comparison4);
+	*Val = (Comparison1 && Comparison2 && Comparison3 && Comparison4);
 	return STATUS_SUCCESS;
 }
 

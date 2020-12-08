@@ -120,10 +120,10 @@ void *InternalMmWorstCaseMalloc(Arena *CurArena, UINT64 Size)
 	UINT64 RequiredNodes = (Size / ALLOC_BLOCK_SIZE) + 1;
 	/* Go up one by one from root. */
 
-	for (Node **Indexer = &(CurArena->Root); (*Indexer)->Last != TRUE;
-		Indexer = &((*Indexer)->Next))
+	for (Node *Indexer = CurArena->Root; Indexer->Last != TRUE;
+		Indexer = Indexer->Next)
 	{
-		if ((*Indexer)->Used)
+		if (Indexer->Used)
 		{
 			continue;
 		}
@@ -131,12 +131,12 @@ void *InternalMmWorstCaseMalloc(Arena *CurArena, UINT64 Size)
 		/* Check if there's the needed adjacent nodes... */
 		UINT64 Count = 0;
 		BOOL Okay = TRUE;
-		for (Node **Subindexer = &(*Indexer);
+		for (Node *Subindexer = Indexer;
 			(((Count++) < RequiredNodes)
-				&& (*Subindexer)->Last != TRUE);
-			Subindexer = &((*Subindexer)->Next))
+				&& Subindexer->Last != TRUE);
+			Subindexer = Subindexer->Next)
 		{
-			if ((*Subindexer)->Used)
+			if (Subindexer->Used)
 			{
 				Okay = FALSE;
 				break;
@@ -146,20 +146,20 @@ void *InternalMmWorstCaseMalloc(Arena *CurArena, UINT64 Size)
 		if (Okay)
 		{
 			/* Set it up! */
-			Node *Current = *Indexer;
-			Node *Previous = (*Indexer)->Previous;
-			Node *Next = (*Indexer)->Next;
+			Node *Current = Indexer;
+			Node *Previous = Indexer->Previous;
+			Node *Next = Indexer->Next;
 			UINT64 Index = Previous->NodeIndex + 1;
 			InternalInitializeNode(Current, Previous, Next, Index);
 
 			/* And reuse the subindexer code to mark as used. */
 
-			for (Node **Subindexer = &(Current);
+			for (Node *Subindexer = Current;
 				(((Count++) < RequiredNodes)
-					&& (*Subindexer)->Last != TRUE);
-				Subindexer = &((*Subindexer)->Next))
+					&& Subindexer->Last != TRUE);
+				Subindexer = Subindexer->Next)
 			{
-				(*Subindexer)->Used = TRUE;
+				Subindexer->Used = TRUE;
 			}
 			return Current->Area;
 		}

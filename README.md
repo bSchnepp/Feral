@@ -33,6 +33,11 @@ owned by the kernel, which opens a socket which accepts incoming traffic.
 It can then be read from, or written to, depending on how the socket was
 opened.
 
+The primary idea is to take the modularity and flexibility of microkernels and graft it into a
+traditional monolithic kernel architecture, sacrificing the ability to do things
+such as restart filesystem drivers while retaining benefits such as clean architecture,
+driver layering, and multiple driver providers.
+
 ## Why Feral?
 
 Feral is created for me to learn more about operating systems design, while departing

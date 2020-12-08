@@ -40,7 +40,7 @@ IN THE SOFTWARE.
  * instead of just generically calling it "serial".
  */
 
-volatile VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
+VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
 {
 #if defined(__x86_64__) || defined(__i386__)
 	x86outb(SERIAL_LINE_COMMAND(Port), SERIAL_LINE_ENABLE_DLAB);
@@ -49,7 +49,7 @@ volatile VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor)
 #endif
 }
 
-volatile VOID SerialSetInterrupts(UINT16 Port, UINT8 Bitmask)
+VOID SerialSetInterrupts(UINT16 Port, UINT8 Bitmask)
 {
 #if defined(__x86_64__) || defined(__i386__)
 	x86outb(SERIAL_FIFO_COMMAND(Port), Bitmask);
@@ -63,12 +63,12 @@ volatile VOID SerialSetInterrupts(UINT16 Port, UINT8 Bitmask)
  * @param Port The port to configure
  * @param Bitmask The mask for how to configure the serial port.
  */
-volatile VOID SerialSetFlags(UINT16 Port, UINT8 Bitmask)
+VOID SerialSetFlags(UINT16 Port, UINT8 Bitmask)
 {
 	x86outb(SERIAL_LINE_COMMAND(Port), Bitmask);
 }
 
-volatile VOID SerialSetMode(UINT16 Port, UINT8 Data)
+VOID SerialSetMode(UINT16 Port, UINT8 Data)
 {
 	x86outb(SERIAL_FIFO_COMMAND(Port), Data);
 }

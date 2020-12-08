@@ -137,7 +137,7 @@ typedef enum KernMemUsage
 }KernMemUsage;
 
 
-FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection, IN KernMemUsage Usage, INOPT VOID *BaseAddr, OUT VOID *Result);
+FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection, IN KernMemUsage Usage, INOPT VOID *BaseAddr, OUT VOID **Result);
 FERALSTATUS MmKernelDeallocPages(IN UINT64 Pages, IN VOID *Address);
 
 #endif
