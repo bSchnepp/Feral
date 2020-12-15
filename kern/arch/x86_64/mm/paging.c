@@ -31,6 +31,11 @@ IN THE SOFTWARE.
 #include <mm/mm.h>
 #include <feral/kern/krnlfuncs.h>
 
+/**
+ * @file arch/x86_64/paging.c
+ * @brief Definitions for x86-specific paging routines
+ */
+
 UINT_PTR ConvertPageEntryToAddress(PageMapEntry *Entry)
 {
 	UINT64 UnhandledAddress = PAGE_ALIGN(Entry->Raw);
@@ -80,6 +85,84 @@ VOID FlushTLB()
 		"movq %%cr3, %0\n"
 		"movq %0, %%cr3\n" 
 		: "=a"(Tmp));
+}
+
+/**
+ * @brief Checks if a particular PML4 has a virtual address listed as being
+ * in use. If it is, then Result will be made true. Otherwise, Result will be
+ * set to false. If Result is false, the address given is safe to allocate,
+ * otherwise, it is already in use.
+ *
+ * @author Brian Schnepp
+ *
+ * @param PML4 The PML4 to reference, which is usually retrived from the CR3
+ * register
+ * @param Address The virtual address to check if in use or not.
+ * @return STATUS_SUCCESS on success. STATUS_MEMORY_PAGE_FAILURE if the PML4
+ * is invalid.
+ */
+FERALSTATUS x86ValidateVirtualAddress(
+	IN PageMapEntry *PML4, 
+	IN UINT_PTR Address, 
+	OUT BOOL *Result)
+{
+	if (PML4 == NULLPTR)
+	{
+		return STATUS_MEMORY_PAGE_FAILURE;
+	}
+
+	PageMapEntry *PDP = NULLPTR;
+	PageMapEntry *PD = NULLPTR;
+	PageMapEntry *PT = NULLPTR;
+
+
+	UINT16 PageLevels[4];
+	FERALSTATUS Err = x86FindPageLevels(Address, PageLevels);
+	if (Err != STATUS_SUCCESS)
+	{
+		return Err;
+	}
+
+	if (PML4[PageLevels[3]].Present)
+	{
+		PDP = (PageMapEntry *)(PAGE_ALIGN(PML4[PageLevels[3]].Raw));
+	}
+	else
+	{
+		*Result = FALSE;
+		return STATUS_SUCCESS;
+	}
+	
+
+	/* TODO: Handle huge flags */
+	if (PDP[PageLevels[2]].Present)
+	{
+		PD = (PageMapEntry *)(PAGE_ALIGN(PDP[PageLevels[2]].Raw));
+	}
+	else
+	{
+		*Result = FALSE;
+		return STATUS_SUCCESS;
+	}
+
+	if (PD[PageLevels[1]].Present)
+	{
+		PT = (PageMapEntry *)(PAGE_ALIGN(PDP[PageLevels[1]].Raw));
+	}
+	else
+	{
+		*Result = FALSE;
+		return STATUS_SUCCESS;
+	}
+	
+	if (PT[PageLevels[0]].Present)
+	{
+		*Result = TRUE;
+		return STATUS_SUCCESS;
+	}
+
+	*Result = FALSE;
+	return STATUS_SUCCESS;
 }
 
 /**
@@ -293,12 +376,22 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
  * so that a contiguous area of memory at a specific location can be used.
  * 
  * @param Pages The number of pages to allocate. Usually multiple of 4Kb.
+ * 
  * @param Protection The kind of protection to assign to the pages, such as
  * read permissions, write permissions, or execute permissions.
+ * 
  * @param Usage Additional flags, such as requesting large pages or
  * for how the pages will be used, such as ignoring cache.
+ * 
+ * @param PML4 The top level page map entry for this architecture.
+ * Generically called 'PML4', as this is the name for x86_64.
+ * 
  * @param BaseAddr An optional parameter for the physical base address to use. 
  * If not in use, this must be set to NULLPTR.
+ * 
+ * @param BaseVAddr The base virtual address to use. 
+ * By default, KERN_PHYS_TO_VIRT(BaseAddr) will be used.
+ * 
  * @param Result The resulting pointer which will be set to NULLPTR if invalid,
  * or the starting address of the pages allocated if valid.
  * 
@@ -309,21 +402,80 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, 
 	IN KernMemProtect Protection, 
 	IN KernMemUsage Usage, 
-	INOPT VOID *BaseAddr, 
+	IN PageMapEntry *PML4,
+	INOPT VOID *BaseAddr,
+	INOPT VOID *BaseVAddr, 
 	OUT VOID **Result)
 {
+	VOID *PAddr = BaseAddr;
+	VOID *VAddr = BaseVAddr;
+
+	UINT16 PageLevels[4];
+
 	PageMapEntry Entry;
-	if (BaseAddr)
+	if (!PAddr)
 	{
-		
+		/* find first free page with the right sizes... FIXME */
+		PAddr = NULL;
 	}
 
+	if (!BaseVAddr)
+	{
+		VAddr = KERN_PHYS_TO_VIRT(PAddr);
+	}
 
-	/* nyi */
+	x86FindPageLevels(PAddr, PageLevels);
+
+	/* Essentially, we're facing a database problem here.
+	 * To avoid making a mess, we need essentially a transaction
+	 * to either commit everything or fail and commit nothing.
+	 * Bad state where some of the pages were mapped is bad API design.
+	 * To do this, iterate through the intended target pages and see 
+	 * if any of them are in use. 
+	 */
+
+	/* First check if physical memory is available. */
+	const static UINT64 PageSize = 4096;
+	for (UINT64 PageIndex = 0; PageIndex < Pages; ++PageIndex)
+	{
+		BOOL PageStatus = FALSE;
+		UINT_PTR Addr = PAddr + (PageSize * PageIndex);
+		FERALSTATUS Status = GetMemoryAlreadyInUse(Addr, &PageStatus);
+		if (PageStatus)
+		{
+			return STATUS_MEMORY_PAGE_CONFLICT;
+		}
+	}
+
+	/* Now check the PML4 is the virtual addresses are available. */
+	for (UINT64 PageIndex = 0; PageIndex < Pages; ++PageIndex)
+	{
+		BOOL Unavailable = FALSE;
+		UINT_PTR Addr = VAddr + (PageSize * PageIndex);
+		x86ValidateVirtualAddress(PML4, Addr, &Unavailable);
+
+		if (Unavailable == TRUE)
+		{
+			return STATUS_MEMORY_PAGE_CONFLICT;
+		}
+	}
+
+	/* Alright, we're safe to allocate! */
+	for (UINT64 PageIndex = 0; PageIndex < Pages; ++PageIndex)
+	{
+		BOOL Unavailable = FALSE;
+		UINT_PTR Addr = VAddr + (PageSize * PageIndex);
+		FERALSTATUS Status = x86MapAddress(PML4, PAddr, VAddr);
+		if (Status != STATUS_SUCCESS)
+		{
+			return Status;
+		}
+	}
 	return STATUS_SUCCESS;
 }
 
 FERALSTATUS MmKernelDeallocPages(IN UINT64 Pages, IN VOID *Address)
 {
+	/* Not yet implemented */
 	return STATUS_SUCCESS;
 }
