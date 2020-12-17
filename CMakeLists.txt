@@ -18,6 +18,12 @@ CONFIGURE_FILE(
 
 PROJECT(FERALKER C ASM_NASM)
 
+IF(NOT EXISTS ${PROJECT_SOURCE_DIR}/.git/hooks/pre-commit)
+	MESSAGE(STATUS "Installing clang format hook to git")
+	FILE(COPY ${PROJECT_SOURCE_DIR}/hooks/pre-commit
+		DESTINATION ${PROJECT_SOURCE_DIR}/.git/hooks)
+ENDIF()
+
 INCLUDE_DIRECTORIES(inc)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 # Maybe this will help us organize private headers better...

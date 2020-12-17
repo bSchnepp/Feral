@@ -68,7 +68,8 @@ typedef enum KiSubsystemIdentifier
 } KiSubsystemIdentifier;
 
 /* Bring up a system needed for the kernel. */
-FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem, KrnlEnvironmentBlock *EnvBlock);
+FERALSTATUS KiStartupSystem(
+	KiSubsystemIdentifier subsystem, KrnlEnvironmentBlock *EnvBlock);
 FERALSTATUS KiStartupProcessor(UINT32 ProcessorNumber);
 
 #ifndef NDEBUG

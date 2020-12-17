@@ -145,8 +145,8 @@ FERALSTATUS KeBootstrapSystem(VOID)
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem, 
-	KrnlEnvironmentBlock *EnvBlock)
+FERALSTATUS KiStartupSystem(
+	KiSubsystemIdentifier subsystem, KrnlEnvironmentBlock *EnvBlock)
 {
 	/* This defines where free memory is and isn't,
 	 * at the start of boot time. We assume users don't
@@ -170,10 +170,9 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem,
 		BootMemoryRange *BootRange = EnvBlock->BootInfo->MemoryRanges;
 
 		/* Assume everything after that space is also empty. */
-		MmMemoryRange *Ranges = (MmMemoryRange *)
-			(EnvBlock->BootInfo->MemoryRanges 
-			 + EnvBlock->BootInfo->NumMemoryRanges 
-			 + 1);
+		MmMemoryRange *Ranges = (MmMemoryRange
+				*)(EnvBlock->BootInfo->MemoryRanges
+				   + EnvBlock->BootInfo->NumMemoryRanges + 1);
 
 		for (UINT64 Index = 0; Index < MemAmt; ++Index)
 		{
@@ -182,12 +181,14 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem,
 
 			Ranges[Index].Start = BootRange[Index].Start;
 			Ranges[Index].End = BootRange[Index].End;
-			Ranges[Index].Size = Ranges[Index].End - Ranges[Index].Start;
+			Ranges[Index].Size
+				= Ranges[Index].End - Ranges[Index].Start;
 
 			/* Don't use below 1MB memory. Ever. */
 			if (Ranges[Index].Start < (1024 * 1024))
 			{
-				Ranges[Index].SType = MM_STRUCTURE_TYPE_RESERVED_AREA_RANGE;
+				Ranges[Index].SType
+					= MM_STRUCTURE_TYPE_RESERVED_AREA_RANGE;
 			}
 		}
 		AllocInfo.Ranges = Ranges;
@@ -196,7 +197,7 @@ FERALSTATUS KiStartupSystem(KiSubsystemIdentifier subsystem,
 		info.sType = MM_STRUCTURE_TYPE_MANAGEMENT_CREATE_INFO;
 		info.pNext = NULLPTR;
 		info.pPhysicalAllocationInfo = &AllocInfo;
-		info.SafePMMArea = (VOID*)(Ranges + MemAmt + 4096);
+		info.SafePMMArea = (VOID *)(Ranges + MemAmt + 4096);
 		FERALSTATUS Status = KiInitializeMemMgr(&info);
 		if (Status != STATUS_SUCCESS)
 		{

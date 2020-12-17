@@ -32,8 +32,7 @@ IN THE SOFTWARE.
 
 CONST STRING Prompt = "frldbg> ";
 CONST UINT64 PromptLen = 8;
-CONST STRING Commands[] = 
-{
+CONST STRING Commands[] = {
 	"!numa",
 	"!paging",
 	"!job",

@@ -166,7 +166,7 @@ typedef enum CR0_Flags
 	CR0_NO_WRITE_THROUGH = (1U << 29),
 	CR0_CACHE_DISABLE = (1U << 30),
 	CR0_PAGING = (1U << 31),
-}CR0_Flags;
+} CR0_Flags;
 
 typedef enum CR4_Flags
 {
@@ -188,7 +188,7 @@ typedef enum CR4_Flags
 	CR4_XSAVE = (1U << 18),
 	CR4_SMEP = (1U << 20),
 	CR4_SMAP = (1U << 21),
-}CR4_Flags;
+} CR4_Flags;
 
 typedef enum EFER_Flags
 {
@@ -200,7 +200,7 @@ typedef enum EFER_Flags
 	EFER_LONG_MODE_SEGMENT_LIMIT_ENABLE = (1U << 13),
 	EFER_FAST_FXSAVE_FXSTORE_ENABLE = (1U << 14),
 	EFER_TRANSLATION_CACHE_EXT = (1U << 15),
-}EFER_Flags;
+} EFER_Flags;
 
 
 typedef struct KiPrivateProcessorInfo

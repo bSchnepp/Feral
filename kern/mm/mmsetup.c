@@ -91,7 +91,7 @@ FERALSTATUS FERALAPI KiInitializeMemMgr(MmCreateInfo *info)
 	/* The PMM is a bitmap. Each bit represents one of FrameSize.
 	 * As such, the size is the total memory / (8 * FrameSize).
 	 * The kernel also passed us a nice safe place to put the
-	 * PMM, so that should be used as well. 
+	 * PMM, so that should be used as well.
 	 */
 	PmmLocation = ((UINT_PTR)(info->SafePMMArea));
 	UINT_PTR FrameSize = info->pPhysicalAllocationInfo->FrameSize;
@@ -103,8 +103,7 @@ FERALSTATUS FERALAPI KiInitializeMemMgr(MmCreateInfo *info)
 	MmState.BitmaskUsedFrames = KERN_PHYS_TO_VIRT(PmmBitmap);
 
 	/* Mark everything as in use. */
-	for (UINT_PTR Index = kernel_start; 
-		Index < (PmmLocation) + BufferSize; 
+	for (UINT_PTR Index = kernel_start; Index < (PmmLocation) + BufferSize;
 		Index += FrameSize)
 	{
 		VALIDATE_SUCCESS(SetMemoryAlreadyInUse(Index, TRUE));

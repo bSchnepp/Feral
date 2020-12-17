@@ -125,7 +125,9 @@ extern "C"
 	VOID VgaSwapBuffers(VOID);
 
 
-	UINT8 VgaPrepareEnvironment(VOID *Framebuffer, UINT16 FramebufferBPP, UINT32 FramebufferWidth, UINT32 FramebufferHeight, BOOL FramebufferTextOnly);
+	UINT8 VgaPrepareEnvironment(VOID* Framebuffer, UINT16 FramebufferBPP,
+		UINT32 FramebufferWidth, UINT32 FramebufferHeight,
+		BOOL FramebufferTextOnly);
 
 
 #if defined(__cplusplus)

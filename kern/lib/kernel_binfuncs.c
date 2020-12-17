@@ -31,15 +31,15 @@ IN THE SOFTWARE.
 
 /**
  * @brief Takes the logarithm of the absolute value of a number by the base 2.
- * That is, 2 can be multiplied by itself by the number returned in Result, 
+ * That is, 2 can be multiplied by itself by the number returned in Result,
  * and the resulting number from that will be the nearest power of two, rounding
  * downwards from the original number. As such, KiLog2Int(-4096) will have the
  * same result as KiLog2Int(8000)
- * 
+ *
  * @author Brian Schnepp
  * @param Input The input number, as an signed 64-bit integer
  * @param Result A pointer to the result of this operation
- * 
+ *
  */
 FERALSTATUS FERALAPI KiLog2Int(IN INT64 Input, OUT INT64 *Result)
 {
@@ -57,15 +57,15 @@ FERALSTATUS FERALAPI KiLog2Int(IN INT64 Input, OUT INT64 *Result)
 
 /**
  * @brief Takes the logarithm of a given number by the base 2.
- * That is, 2 can be multiplied by itself by the number returned in Result, 
+ * That is, 2 can be multiplied by itself by the number returned in Result,
  * and the resulting number from that will be the nearest power of two, rounding
  * downwards from the original number. As such, KiLog2UInt(4096) will have the
  * same result as KiLog2UInt(8000)
- * 
+ *
  * @author Brian Schnepp
  * @param Input The input number, as an unsigned 64-bit integer
  * @param Result A pointer to the result of this operation
- * 
+ *
  */
 FERALSTATUS FERALAPI KiLog2UInt(IN UINT64 Input, OUT INT64 *Result)
 {

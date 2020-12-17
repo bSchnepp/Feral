@@ -160,8 +160,8 @@ static VOID InternalPutChar(CHAR C)
 
 VOID HandleMemory(multiboot_tag_mmap *MemoryMap)
 {
-	UINT64 *MemRangeHeader = (UINT64*)kernel_end;
-	BootMemoryRange *MemRange = (BootMemoryRange*)(MemRangeHeader + 1);
+	UINT64 *MemRangeHeader = (UINT64 *)kernel_end;
+	BootMemoryRange *MemRange = (BootMemoryRange *)(MemRangeHeader + 1);
 
 	multiboot_mmap_entry CurrentEntry = {0};
 
@@ -183,7 +183,8 @@ VOID HandleMemory(multiboot_tag_mmap *MemoryMap)
 		{
 			case E820_MEMORY_TYPE_FREE:
 			{
-				MemRange[Index].Usage = MM_STRUCTURE_TYPE_FREE_AREA_RANGE;
+				MemRange[Index].Usage
+					= MM_STRUCTURE_TYPE_FREE_AREA_RANGE;
 				break;
 			}
 
@@ -191,13 +192,15 @@ VOID HandleMemory(multiboot_tag_mmap *MemoryMap)
 			case E820_MEMORY_TYPE_ACPI:
 			case E820_MEMORY_TYPE_NVS:
 			{
-				MemRange[Index].Usage = MM_STRUCTURE_TYPE_RESERVED_AREA_RANGE;
+				MemRange[Index].Usage
+					= MM_STRUCTURE_TYPE_RESERVED_AREA_RANGE;
 				break;
 			}
 
 			default:
 			{
-				MemRange[Index].Usage = MM_STRUCTURE_TYPE_OTHER_AREA_RANGE;
+				MemRange[Index].Usage
+					= MM_STRUCTURE_TYPE_OTHER_AREA_RANGE;
 			}
 		}
 		MemRange[Index].Start = (UINT_PTR)CurrentEntry.addr;
@@ -281,7 +284,7 @@ VOID kern_init(UINT32 MBINFO)
 		}
 		else if (Type == MULTIBOOT_TAG_TYPE_MEM_MAP)
 		{
-			
+
 			/* Memory map detected... MB2's kludgy mess here makes
 			 * this a little painful, but we'll go through this
 			 * step-by-step.*/
@@ -299,34 +302,29 @@ VOID kern_init(UINT32 MBINFO)
 			FramebufferBPP = mb_as_fb->framebuffer_bpp;
 			FramebufferHeight = mb_as_fb->framebuffer_height;
 			FramebufferWidth = mb_as_fb->framebuffer_width;
-			FramebufferTextOnly = (mb_as_fb->type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT);
+			FramebufferTextOnly
+				= (mb_as_fb->type
+					== MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT);
 
 			BootInfo.NumDisplays = 1;
 			BootInfo.FramebufferPAddrs = &(Framebuffer);
 		}
 	}
 
-	UINT8 misc = VgaPrepareEnvironment(Framebuffer, FramebufferBPP, FramebufferWidth, FramebufferHeight, FramebufferTextOnly);
+	UINT8 misc = VgaPrepareEnvironment(Framebuffer, FramebufferBPP,
+		FramebufferWidth, FramebufferHeight, FramebufferTextOnly);
 	KiBlankVgaScreen(FramebufferHeight, FramebufferWidth, VGA_BLACK);
 	VgaAutoPrintln(
 		VGA_WHITE, VGA_BLACK, "Starting initial kernel setup...");
 
-			CHAR BufBeginAddr[17];
-			CHAR BufEndAddr[17];
-			internalItoaBaseChange(
-				FramebufferWidth, BufBeginAddr,
-			10);
-			internalItoaBaseChange(
-				FramebufferHeight,
-				BufEndAddr, 10);
-			VgaAutoPrint(VGA_WHITE, VGA_BLACK,
-				"VGA resolution is : ");
-			VgaAutoPrint(VGA_GREEN, VGA_BLACK,
-				BufBeginAddr);
-			VgaAutoPrint(VGA_WHITE, VGA_BLACK,
-				"x");
-			VgaAutoPrintln(
-				VGA_RED, VGA_BLACK, BufEndAddr);
+	CHAR BufBeginAddr[17];
+	CHAR BufEndAddr[17];
+	internalItoaBaseChange(FramebufferWidth, BufBeginAddr, 10);
+	internalItoaBaseChange(FramebufferHeight, BufEndAddr, 10);
+	VgaAutoPrint(VGA_WHITE, VGA_BLACK, "VGA resolution is : ");
+	VgaAutoPrint(VGA_GREEN, VGA_BLACK, BufBeginAddr);
+	VgaAutoPrint(VGA_WHITE, VGA_BLACK, "x");
+	VgaAutoPrintln(VGA_RED, VGA_BLACK, BufEndAddr);
 
 	VgaAutoPrint(VGA_LIGHT_GREY, VGA_BLACK, "Found bootloader: ");
 	VgaAutoPrintln(VGA_GREEN, VGA_BLACK, BootloaderName);

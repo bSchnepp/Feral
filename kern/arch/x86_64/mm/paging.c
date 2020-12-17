@@ -73,7 +73,7 @@ FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels)
  * after the page tables are modified in any way.
  * Upon calling of x86MapAddress or x86UnmapAddress,
  * this should be called right after.
- * 
+ *
  * @author Brian Schnepp
  * @see x86MapAddress
  * @see x86UnmapAddress
@@ -83,7 +83,7 @@ VOID FlushTLB()
 	UINT64 Tmp;
 	__asm__ volatile(
 		"movq %%cr3, %0\n"
-		"movq %0, %%cr3\n" 
+		"movq %0, %%cr3\n"
 		: "=a"(Tmp));
 }
 
@@ -102,9 +102,7 @@ VOID FlushTLB()
  * is invalid.
  */
 FERALSTATUS x86ValidateVirtualAddress(
-	IN PageMapEntry *PML4, 
-	IN UINT_PTR Address, 
-	OUT BOOL *Result)
+	IN PageMapEntry *PML4, IN UINT_PTR Address, OUT BOOL *Result)
 {
 	if (PML4 == NULLPTR)
 	{
@@ -132,7 +130,7 @@ FERALSTATUS x86ValidateVirtualAddress(
 		*Result = FALSE;
 		return STATUS_SUCCESS;
 	}
-	
+
 
 	/* TODO: Handle huge flags */
 	if (PDP[PageLevels[2]].Present)
@@ -154,7 +152,7 @@ FERALSTATUS x86ValidateVirtualAddress(
 		*Result = FALSE;
 		return STATUS_SUCCESS;
 	}
-	
+
 	if (PT[PageLevels[0]].Present)
 	{
 		*Result = TRUE;
@@ -302,7 +300,7 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	/* TODO: Consider rolling this into a simple loop. */
 
 	/* From the PML4, we need to find the pdpe entry. */
-	
+
 	if (PML4[PageLevels[3]].Raw & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
 	{
 		PML4[PageLevels[3]].Raw = 0;
@@ -310,7 +308,8 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	}
 	else if (PML4[PageLevels[3]].Raw & X86_PAGE_FLAG_PRESENT)
 	{
-		PDP = (PageMapEntry *)KERN_PHYS_TO_VIRT(PAGE_ALIGN(PML4[PageLevels[3]].Raw));
+		PDP = (PageMapEntry *)KERN_PHYS_TO_VIRT(
+			PAGE_ALIGN(PML4[PageLevels[3]].Raw));
 	}
 	else
 	{
@@ -318,7 +317,7 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	}
 
 	/* Again for level 3... */
-	
+
 	if (PDP[PageLevels[2]].Raw & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
 	{
 		PDP[PageLevels[2]].Raw = 0;
@@ -326,7 +325,8 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	}
 	else if (PDP[PageLevels[2]].Raw & X86_PAGE_FLAG_PRESENT)
 	{
-		PD = (PageMapEntry *)KERN_PHYS_TO_VIRT(PAGE_ALIGN(PDP[PageLevels[2]].Raw));
+		PD = (PageMapEntry *)KERN_PHYS_TO_VIRT(
+			PAGE_ALIGN(PDP[PageLevels[2]].Raw));
 	}
 	else
 	{
@@ -334,7 +334,7 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	}
 
 	/* Again for level 2... */
-	
+
 	if (PD[PageLevels[1]].Raw & (X86_PAGE_FLAG_PRESENT | X86_PAGE_HUGE))
 	{
 		PD[PageLevels[1]].Raw = 0;
@@ -342,7 +342,8 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 	}
 	else if (PD[PageLevels[1]].Raw & X86_PAGE_FLAG_PRESENT)
 	{
-		PT = (PageMapEntry *)KERN_PHYS_TO_VIRT(PAGE_ALIGN(PD[PageLevels[1]].Raw));
+		PT = (PageMapEntry *)KERN_PHYS_TO_VIRT(
+			PAGE_ALIGN(PD[PageLevels[1]].Raw));
 	}
 	else
 	{
@@ -374,38 +375,34 @@ FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
  * @brief Allocates a multiple of pages which are currently
  * not marked as in use. Optionally, a base address can be specified,
  * so that a contiguous area of memory at a specific location can be used.
- * 
+ *
  * @param Pages The number of pages to allocate. Usually multiple of 4Kb.
- * 
+ *
  * @param Protection The kind of protection to assign to the pages, such as
  * read permissions, write permissions, or execute permissions.
- * 
+ *
  * @param Usage Additional flags, such as requesting large pages or
  * for how the pages will be used, such as ignoring cache.
- * 
+ *
  * @param PML4 The top level page map entry for this architecture.
  * Generically called 'PML4', as this is the name for x86_64.
- * 
- * @param BaseAddr An optional parameter for the physical base address to use. 
+ *
+ * @param BaseAddr An optional parameter for the physical base address to use.
  * If not in use, this must be set to NULLPTR.
- * 
- * @param BaseVAddr The base virtual address to use. 
+ *
+ * @param BaseVAddr The base virtual address to use.
  * By default, KERN_PHYS_TO_VIRT(BaseAddr) will be used.
- * 
+ *
  * @param Result The resulting pointer which will be set to NULLPTR if invalid,
  * or the starting address of the pages allocated if valid.
- * 
+ *
  * @return STATUS_SUCCESS on success. STATUS_MEMORY_PAGE_FAILURE if the pages
  * could not be allocated by an internal error, STATUS_MEMORY_PAGE_CONFLICT if
  * the page is already allocated somewhere else.
  */
-FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, 
-	IN KernMemProtect Protection, 
-	IN KernMemUsage Usage, 
-	IN PageMapEntry *PML4,
-	INOPT VOID *BaseAddr,
-	INOPT VOID *BaseVAddr, 
-	OUT VOID **Result)
+FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection,
+	IN KernMemUsage Usage, IN PageMapEntry *PML4, INOPT VOID *BaseAddr,
+	INOPT VOID *BaseVAddr, OUT VOID **Result)
 {
 	VOID *PAddr = BaseAddr;
 	VOID *VAddr = BaseVAddr;
@@ -430,8 +427,8 @@ FERALSTATUS MmKernelAllocPages(IN UINT64 Pages,
 	 * To avoid making a mess, we need essentially a transaction
 	 * to either commit everything or fail and commit nothing.
 	 * Bad state where some of the pages were mapped is bad API design.
-	 * To do this, iterate through the intended target pages and see 
-	 * if any of them are in use. 
+	 * To do this, iterate through the intended target pages and see
+	 * if any of them are in use.
 	 */
 
 	/* First check if physical memory is available. */

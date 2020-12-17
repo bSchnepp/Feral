@@ -42,7 +42,7 @@ FERALSTATUS KiGetStringLength(IN STRING String, OUT UINT64* Length)
 		Len++;
 	}
 	*Length = Len;
-	
+
 	return STATUS_SUCCESS;
 }
 
@@ -52,13 +52,13 @@ FERALSTATUS KiGetWideStringLength(IN WSTRING String, OUT UINT64* Length)
 	{
 		return STATUS_INVALID_MEMORY_LOCATION;
 	}
-	
+
 	UINT64 Len = 0;
 	while (String[Len])
 	{
 		Len++;
 	}
 	*Length = Len;
-	
+
 	return STATUS_SUCCESS;
 }

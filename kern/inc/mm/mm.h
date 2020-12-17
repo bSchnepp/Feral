@@ -85,7 +85,7 @@ typedef struct MmCreateInfo
 
 	MmPhysicalAllocationInfo *pPhysicalAllocationInfo;
 
-	VOID* SafePMMArea;
+	VOID *SafePMMArea;
 } MmCreateInfo;
 
 typedef struct AllocatorState
@@ -123,7 +123,7 @@ typedef enum KernMemProtect
 	KERN_MEM_PROTECT_ALLOW_READ = 0,
 	KERN_MEM_PROTECT_ALLOW_WRITE = 1,
 	KERN_MEM_PROTECT_ALLOW_EXECUTE = 2,
-}KernMemProtect;
+} KernMemProtect;
 
 typedef enum KernMemUsage
 {
@@ -134,16 +134,12 @@ typedef enum KernMemUsage
 	KERN_MEM_USAGE_VERY_LARGE_PAGES = 8,
 	KERN_MEM_USAGE_NO_CACHE = 16,
 
-}KernMemUsage;
+} KernMemUsage;
 
 
-FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, 
-	IN KernMemProtect Protection, 
-	IN KernMemUsage Usage, 
-	IN PageMapEntry *PML4,
-	INOPT VOID *BaseAddr,
-	INOPT VOID *BaseVAddr, 
-	OUT VOID **Result);
+FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection,
+	IN KernMemUsage Usage, IN PageMapEntry *PML4, INOPT VOID *BaseAddr,
+	INOPT VOID *BaseVAddr, OUT VOID **Result);
 
 FERALSTATUS MmKernelDeallocPages(IN UINT64 Pages, IN VOID *Address);
 

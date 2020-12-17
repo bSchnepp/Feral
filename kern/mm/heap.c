@@ -131,9 +131,8 @@ void *InternalMmWorstCaseMalloc(Arena *CurArena, UINT64 Size)
 		/* Check if there's the needed adjacent nodes... */
 		UINT64 Count = 0;
 		BOOL Okay = TRUE;
-		for (Node *Subindexer = Indexer;
-			(((Count++) < RequiredNodes)
-				&& Subindexer->Last != TRUE);
+		for (Node *Subindexer = Indexer; (((Count++) < RequiredNodes)
+						  && Subindexer->Last != TRUE);
 			Subindexer = Subindexer->Next)
 		{
 			if (Subindexer->Used)

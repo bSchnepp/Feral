@@ -67,8 +67,10 @@ VOID internalVgaPushUp(VOID)
 	UINT16 RowSize = 2 * (CurVgaContext->ScreenWidth);
 	char *Src = CurVgaContext->SwappedBuffer + RowSize;
 	char *Dst = CurVgaContext->SwappedBuffer + 0;
-	char *LastRow = CurVgaContext->SwappedBuffer + ((CurVgaContext->ScreenHeight - 1) * RowSize);
-	UINT64 Amt = 2 * (CurVgaContext->ScreenWidth) * (CurVgaContext->ScreenHeight - 1);
+	char *LastRow = CurVgaContext->SwappedBuffer
+			+ ((CurVgaContext->ScreenHeight - 1) * RowSize);
+	UINT64 Amt = 2 * (CurVgaContext->ScreenWidth)
+		     * (CurVgaContext->ScreenHeight - 1);
 	KiCopyMemory(Dst, Src, Amt);
 	KiSetMemoryBytes(LastRow, 0, RowSize);
 	VgaMoveCursor(0, CurVgaContext->ScreenHeight - 1);
@@ -79,7 +81,9 @@ VOID internalVgaPushUp(VOID)
 	Prepares a VGA context for use by the kernel in
 	pre-initialization stages.
  */
-UINT8 VgaPrepareEnvironment(VOID *Framebuffer, UINT16 FramebufferBPP, UINT32 FramebufferWidth, UINT32 FramebufferHeight, BOOL FramebufferTextOnly)
+UINT8 VgaPrepareEnvironment(VOID *Framebuffer, UINT16 FramebufferBPP,
+	UINT32 FramebufferWidth, UINT32 FramebufferHeight,
+	BOOL FramebufferTextOnly)
 {
 	// Ensure a bit in port 0x03C2 is set.
 	UINT8 miscreg = x86inb(0x3CC);
@@ -101,8 +105,9 @@ UINT8 VgaPrepareEnvironment(VOID *Framebuffer, UINT16 FramebufferBPP, UINT32 Fra
 	CurVgaContext->CurrentRow = 0;
 	CurVgaContext->CurrentCol = 0;
 
-	/* Until we can allocate host memory for this, don't use double buffering anymore. */
-	//CurVgaContext->SwappedBuffer = OtherBuffer;
+	/* Until we can allocate host memory for this, don't use double
+	 * buffering anymore. */
+	// CurVgaContext->SwappedBuffer = OtherBuffer;
 	CurVgaContext->SwappedBuffer = CurVgaContext->Framebuffer;
 
 	return miscreg;

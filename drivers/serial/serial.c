@@ -83,7 +83,7 @@ VOID SerialSend(UINT16 Port, STRING c, UINT64 Len)
 		{
 			if (c[Index] == '\n')
 			{
-				x86outb(Port, '\r');	
+				x86outb(Port, '\r');
 			}
 			x86outb(Port, c[Index]);
 		}

@@ -272,7 +272,7 @@ INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
 
 /* For easy reference, on the x86, an interrupt with these values
  * are for these reasons.
- * 
+ *
  * 0		Divide by zero
  * 1		Debug exception
  * 2		Non-maskable interrupt
@@ -284,7 +284,7 @@ INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
  * 8		Double Fault
  * 9		Coprocessor???
  * a		Invalid TSS
- * b		Segment Not Present		
+ * b		Segment Not Present
  * c		Stack Segment Fault
  * d		General Protection Fault
  * e		Page Fault
@@ -295,7 +295,7 @@ INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
  * 13		SIMD Float Exception
  * 14		Virtualization Exception
  * 	Reserved
- * 1E		Security Exception		
+ * 1E		Security Exception
  * 1F		FPU Error???
  */
 

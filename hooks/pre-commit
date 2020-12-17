@@ -1,0 +1,6 @@
+#!/bin/sh
+
+for file in `git grep --cached -l '' | grep -iE '\.(c|cc|cxx|cpp|h|hh|hxx|hpp)$'` ; do
+	clang-format -i ${file}
+	git add ${file}
+done

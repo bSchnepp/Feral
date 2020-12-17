@@ -69,8 +69,7 @@ IN THE SOFTWARE.
 /* will replace PageMapEntry at some point */
 typedef struct PageMapEntry
 {
-	union
-	{
+	union {
 		struct
 		{
 			UINT64 Present : 1;
@@ -85,10 +84,10 @@ typedef struct PageMapEntry
 			UINT64 Unused : 3;
 			UINT64 Address : 51;
 			UINT64 NoExecute : 1;
-		}PACKED;
+		} PACKED;
 		UINT64 Raw;
-	}PACKED;
-}PACKED PageMapEntry;
+	} PACKED;
+} PACKED PageMapEntry;
 
 FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels);
 
