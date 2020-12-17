@@ -80,21 +80,7 @@ FERALSTATUS KiStartupProcessor(UINT32 ProcessorNumber);
 #define SERIAL_PUTCHAR(x) /* Nothing! */
 #endif
 
-inline static VOID SerialPrint(STRING X)
-{
-#ifndef _NO_SERIAL_DEBUG_PRINT_
-	UINT64 Len = 0;
-	KiGetStringLength(X, &Len);
-	SerialSend(COM1_PORT, X, Len);
-#endif
-}
-
-static FERALSTATUS KiDebugPrint(STRING string)
-{
-	KiPrintWarnLine(string);
-	SerialPrint(string);
-	SerialPrint("\n");
-	return STATUS_SUCCESS;
-}
+VOID SerialPrint(STRING X);
+FERALSTATUS KiDebugPrint(STRING string);
 
 #endif

@@ -27,7 +27,7 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 
-#ifndef _FERAL_KERN_STIRNG_FUNCS_H_
+#ifndef _FERAL_KERN_STRING_FUNCS_H_
 #define _FERAL_KERN_STRING_FUNCS_H_
 
 

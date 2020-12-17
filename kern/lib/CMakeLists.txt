@@ -4,5 +4,6 @@ LIST(APPEND KRNL_LIB_SOURCES kernel_binfuncs.c)
 LIST(APPEND KRNL_LIB_SOURCES kernel_memfuncs.c)
 LIST(APPEND KRNL_LIB_SOURCES kernel_printfuncs.c)
 LIST(APPEND KRNL_LIB_SOURCES kernel_stringfuncs.c)
+LIST(APPEND KRNL_LIB_SOURCES kernel_debugfuncs.c)
 
 ADD_LIBRARY(KrnlLib OBJECT ${KRNL_LIB_SOURCES})

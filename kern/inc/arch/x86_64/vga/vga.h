@@ -114,7 +114,7 @@ extern "C"
 
 	VOID VgaSetCurrentPosition(IN UINT16 X, OUT IN UINT16 Y);
 
-	VgaGetFramebufferDimensions(OUT UINT16* Width, OUT UINT16* Height);
+	VOID VgaGetFramebufferDimensions(OUT UINT16* Width, OUT UINT16* Height);
 
 	/* Whenever we set a character, set the position of the cursor to it
 	 * + 1. */

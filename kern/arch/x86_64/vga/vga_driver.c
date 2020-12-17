@@ -36,7 +36,7 @@ IN THE SOFTWARE.
 
 #include <arch/x86_64/mm/pageflags.h>
 
-static VgaContext graphicsContext = {0};
+static VgaContext CurGraphicsContext = {0};
 static UINT16 OtherBuffer[80 * 25];
 static VgaContext *CurVgaContext;
 
@@ -46,37 +46,31 @@ typedef UINT16 ColorValue;
 
 /* Internal function, so suppress warning. */
 VOID internalVgaPushUp(VOID);
-UINT16 internalGetItem(UINT16 row, UINT16 col);
-VOID internalSetItem(UINT16 row, UINT16 col, UINT16 content);
+UINT16 internalGetItem(UINT16 Row, UINT16 Col);
+VOID internalSetItem(UINT16 Row, UINT16 Col, UINT16 content);
 
-UINT16 internalGetItem(UINT16 row, UINT16 col)
+UINT16 internalGetItem(UINT16 Row, UINT16 Col)
 {
 	return CurVgaContext
-		->SwappedBuffer[(row * CurVgaContext->ScreenWidth) + col];
+		->SwappedBuffer[(Row * CurVgaContext->ScreenWidth) + Col];
 }
 
-VOID internalSetItem(UINT16 row, UINT16 col, UINT16 content)
+VOID internalSetItem(UINT16 Row, UINT16 Col, UINT16 content)
 {
-	CurVgaContext->SwappedBuffer[(row * CurVgaContext->ScreenWidth) + col]
+	CurVgaContext->SwappedBuffer[(Row * CurVgaContext->ScreenWidth) + Col]
 		= content;
 }
 
 VOID internalVgaPushUp(VOID)
 {
-	UINT16 row;
-	for (row = 0; row < CurVgaContext->ScreenHeight - 1; ++row)
-	{
-		for (UINT16 col = 0; col < CurVgaContext->ScreenWidth; ++col)
-		{
-			internalSetItem(
-				row, col, internalGetItem(row + 1, col));
-		}
-	}
-
-	for (UINT16 col = 0; col < CurVgaContext->ScreenWidth; ++col)
-	{
-		internalSetItem(row, col, (UINT16)(0));
-	}
+	UINT16 Row = 0;
+	UINT16 RowSize = 2 * (CurVgaContext->ScreenWidth);
+	char *Src = CurVgaContext->SwappedBuffer + RowSize;
+	char *Dst = CurVgaContext->SwappedBuffer + 0;
+	char *LastRow = CurVgaContext->SwappedBuffer + ((CurVgaContext->ScreenHeight - 1) * RowSize);
+	UINT64 Amt = 2 * (CurVgaContext->ScreenWidth) * (CurVgaContext->ScreenHeight - 1);
+	KiCopyMemory(Dst, Src, Amt);
+	KiSetMemoryBytes(LastRow, 0, RowSize);
 	VgaMoveCursor(0, CurVgaContext->ScreenHeight - 1);
 }
 
@@ -91,7 +85,7 @@ UINT8 VgaPrepareEnvironment(VOID *Framebuffer, UINT16 FramebufferBPP, UINT32 Fra
 	UINT8 miscreg = x86inb(0x3CC);
 	x86outb(VGA_MISC_OUTPUT_REG, (miscreg | 0xE7));
 
-	CurVgaContext = &(graphicsContext);
+	CurVgaContext = &(CurGraphicsContext);
 	CurVgaContext->BPP = FramebufferBPP;
 	CurVgaContext->Framebuffer = (UINT8 *)(KERN_PHYS_TO_VIRT(Framebuffer));
 	CurVgaContext->ScreenWidth = FramebufferWidth;
@@ -208,7 +202,7 @@ VOID VgaEntry(VgaColorValue foreground, VgaColorValue background, CHAR Letter,
 /**
 	Clears the current framebuffer, and ensures
 	that the whole screen, from (0, 0) to (width, height),
-	is replaced with a square of the color color.
+	is replaced with a square of the Color Color.
  */
 VOID KiBlankVgaScreen(DWORD Height, DWORD Width, DWORD Color)
 {
@@ -235,7 +229,7 @@ VOID VgaGetCurrentPosition(UINT16 *X, UINT16 *Y)
 	(*X) = CurVgaContext->CurrentCol;
 }
 
-VgaGetFramebufferDimensions(UINT16 *Width, UINT16 *Height)
+VOID VgaGetFramebufferDimensions(UINT16 *Width, UINT16 *Height)
 {
 	(*Width) = CurVgaContext->ScreenWidth;
 	(*Height) = CurVgaContext->ScreenHeight;
@@ -255,7 +249,7 @@ VOID VgaAutoEntry(
 		CurVgaContext->CurrentRow++;
 	}
 
-	/* Now check if row count is too large, in which case, move everything
+	/* Now check if Row count is too large, in which case, move everything
 	 * up one. */
 	if (CurVgaContext->CurrentRow >= CurVgaContext->ScreenHeight)
 	{
@@ -270,7 +264,7 @@ VOID VgaAutoEntry(
 }
 
 /**
-	Puts a character in with the current colors, as
+	Puts a character in with the current Colors, as
 	defined by the VGA context.
  */
 VOID VgaPutChar(CHAR letter)
@@ -325,7 +319,7 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background,
 		}
 		else if (c == '\n')
 		{
-			/* Now, reset the last row's state. */
+			/* Now, reset the last Row's state. */
 			CurVgaContext->CurrentCol = 0;
 			CurVgaContext->CurrentRow++;
 		}

@@ -29,7 +29,7 @@ IN THE SOFTWARE.
 
 #include <feral/kern/krnlfuncs.h>
 
-FERALSTATUS KiCopyMemory(IN VOID* Source, IN VOID* Dest, IN UINT64 Amount)
+FERALSTATUS KiCopyMemory(IN VOID* Dest, IN VOID* Source, IN UINT64 Amount)
 {
 	if ((Source == NULL) || (Dest == NULL))
 	{
