@@ -221,9 +221,6 @@ static VOID HandleMemory(multiboot_tag_mmap *MemoryMap)
 	BootInfo.MemoryRanges = MemRange;
 }
 
-/* FIXME: formally write a header for this function. */
-UINT_PTR get_initial_p4_table(VOID);
-
 VOID kern_init(UINT32 MBINFO);
 
 VOID kern_init(UINT32 MBINFO)

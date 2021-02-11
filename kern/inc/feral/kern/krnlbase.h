@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019, 2020, Brian Schnepp
+Copyright (c) 2019, 2020, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -68,5 +68,8 @@ typedef struct KrnlEnvironmentBlock
 	UINT8 FeralVersionPatch;
 } KrnlEnvironmentBlock;
 
+
+VOID KiSystemStartup(KrnlEnvironmentBlock *Block);
+VOID KiStartupProcessorMachineDependent(UINT32 Core);
 
 #endif

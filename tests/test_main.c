@@ -31,6 +31,7 @@ IN THE SOFTWARE.
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
 #include <feral/kern/krnlmemfuncs.h>
+#include <feral/kern/krnlstringfuncs.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -56,6 +57,7 @@ TEST_STATUS KernelMemCpy()
 	KiCopyMemory(&k2, &k1, sizeof(struct SomeStruct));
 	ASSERT_EQ_MEM(&k1, &k2, sizeof(struct SomeStruct), "KernelLib",
 		"KiCopyMemory");
+	return TEST_STATUS_OK;
 }
 
 TEST_STATUS KernelMemSet()
@@ -65,6 +67,7 @@ TEST_STATUS KernelMemSet()
 	KiSetMemoryBytes(&k2, 0, sizeof(struct SomeStruct));
 	ASSERT_EQ_MEM(&k1, &k2, sizeof(struct SomeStruct), "KernelLib",
 		"KiSetMemoryBytes");
+	return TEST_STATUS_OK;
 }
 
 TEST_STATUS KernelMemSetNonZero()
@@ -73,6 +76,7 @@ TEST_STATUS KernelMemSetNonZero()
 	char Vals2[4];
 	KiSetMemoryBytes(&Vals2, 79, 4);
 	ASSERT_EQ_MEM(&Vals, &Vals2, 4, "KernelLib", "KiSetMemoryBytesNonZero");
+	return TEST_STATUS_OK;
 }
 
 TEST_STATUS KernelCStringLength()
@@ -87,6 +91,7 @@ TEST_STATUS KernelCStringLength()
 	KiGetStringLength(Val2, &Len2);
 
 	ASSERT_EQ_LLD(Len1, Len2, "KernelLib", "KiGetStringLength");
+	return TEST_STATUS_OK;
 }
 
 TEST_STATUS KernelCStringLengthDiff()
@@ -101,6 +106,7 @@ TEST_STATUS KernelCStringLengthDiff()
 	KiGetStringLength(Val2, &Len2);
 
 	ASSERT_NEQ_LLD(Len1, Len2, "KernelLib", "KiGetStringLengthDiff");
+	return TEST_STATUS_OK;
 }
 
 TEST_STATUS KernelCompareMemory()
@@ -112,6 +118,7 @@ TEST_STATUS KernelCompareMemory()
 	KiCopyMemory(&k2, &k1, sizeof(struct SomeStruct));
 	KiCompareMemory(&k2, &k1, sizeof(struct SomeStruct), &Value);
 	ASSERT_TRUE(Value, "KernelLib", "KiCompareMemory");
+	return TEST_STATUS_OK;
 }
 
 TEST_STATUS KernelCompareMemoryNeg()
@@ -123,6 +130,7 @@ TEST_STATUS KernelCompareMemoryNeg()
 	KiCompareMemory(&k2, &k1, sizeof(struct SomeStruct), &Value);
 
 	ASSERT_FALSE(Value, "KernelLib", "KiCompareMemory");
+	return TEST_STATUS_OK;
 }
 
 TestCase Cases[] = {

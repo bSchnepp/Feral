@@ -49,7 +49,7 @@ UINT64 TEST_INTERNAL_Lesser = 0;
 		fprintf(stderr, \
 			"\033[1;31mFAILED TEST: %lld not equal to " \
 			"%lld\033[0m\n", \
-			x, y); \
+			(long long int)x, (long long int)y); \
 		return TEST_STATUS_ERR; \
 	} \
 	else \
@@ -59,7 +59,7 @@ UINT64 TEST_INTERNAL_Lesser = 0;
 		fprintf(stderr, \
 			"\033[1;32mPASSED TEST: %lld is equal to " \
 			"%lld\033[0m\n", \
-			x, y); \
+			(long long int)x, (long long int)y); \
 	}
 
 #define ASSERT_NEQ_LLD(x, y, TestName, TestCategory) \
@@ -70,7 +70,7 @@ UINT64 TEST_INTERNAL_Lesser = 0;
 		fprintf(stderr, \
 			"\033[1;31mFAILED TEST: %lld not equal to " \
 			"%lld\033[0m\n", \
-			x, y); \
+			(long long int)x, (long long int)y); \
 		return TEST_STATUS_ERR; \
 	} \
 	else \
@@ -80,7 +80,7 @@ UINT64 TEST_INTERNAL_Lesser = 0;
 		fprintf(stderr, \
 			"\033[1;32mPASSED TEST: %lld not equal to " \
 			"%lld\033[0m\n", \
-			x, y); \
+			(long long int)x, (long long int)y); \
 	}
 
 #define ASSERT_EQ_STR(x, y, TestName, TestCategory) \

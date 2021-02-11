@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2018, 2019, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining  a copy of the software and accompanying documentation covered by
@@ -120,9 +120,9 @@ void MmKernelFree(UINT_PTR Location);
 
 typedef enum KernMemProtect
 {
-	KERN_MEM_PROTECT_ALLOW_READ = 0,
-	KERN_MEM_PROTECT_ALLOW_WRITE = 1,
-	KERN_MEM_PROTECT_ALLOW_EXECUTE = 2,
+	KERN_MEM_PROTECT_ALLOW_READ = 0b00,
+	KERN_MEM_PROTECT_ALLOW_WRITE = 0b01,
+	KERN_MEM_PROTECT_ALLOW_EXECUTE = 0b10,
 } KernMemProtect;
 
 typedef enum KernMemUsage

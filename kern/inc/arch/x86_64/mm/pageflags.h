@@ -95,4 +95,6 @@ typedef struct PageMapEntry
 FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels);
 VOID FlushTLB(VOID);
 
+PageMapEntry *get_initial_p4_table(VOID);
+
 #endif

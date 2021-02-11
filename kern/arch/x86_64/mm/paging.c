@@ -393,6 +393,10 @@ FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection,
 	IN KernMemUsage Usage, IN PageMapEntry *PML4, INOPT VOID *BaseAddr,
 	INOPT VOID *BaseVAddr, OUT VOID **Result)
 {
+
+	UNUSED(Protection); /* NYI */
+	UNUSED(Usage); /* NYI */
+
 	VOID *PAddr = BaseAddr;
 	VOID *VAddr = BaseVAddr;
 
