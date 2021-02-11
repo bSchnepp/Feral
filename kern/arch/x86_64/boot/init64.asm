@@ -38,7 +38,8 @@ _start64:
 	mov rsp, stack_top - KERN_VIRT_OFFSET
 
 	; Push ebx for when we need it later. (holds multiboot struct)
-	mov [efi_value - KERN_VIRT_OFFSET], rdi
+	mov rax, efi_value - KERN_VIRT_OFFSET
+	mov [rax], rdi
 
 	; Before moving on, make sure the whole BSS section
 	; is zeroed out.
@@ -49,16 +50,19 @@ _start64:
 	cld
 	rep stosb
 	
+	push rbx
 .map_page_tables:
 	; Use huge pages (2MB), map at 2MB * ecx.
 	mov rax, 0x200000
 	mul rcx
 	or rax, 10000011b	; Present, writable, and huge.
-	mov [(p2_table - KERN_VIRT_OFFSET) + rcx * 8], rax	; And now write it to the table.
+	mov ebx, (p2_table - KERN_VIRT_OFFSET)
+	mov [ebx + ecx * 8], eax	; And now write it to the table.
 
 	inc rcx	; Increment it...
 	cmp rcx, 512	; P2 needs 512 entries. (one gigabyte of identity mapping.)
 	jne .map_page_tables
+	pop rbx
 
 gdt_setup:
 	lgdt [gdt_64.gdtpointer]
@@ -88,7 +92,8 @@ kern_start:
 	mov fs, ax
 	mov gs, ax
 	
-	mov rdi, [efi_value - KERN_VIRT_OFFSET]			; Give us the multiboot info we want.
+	mov rax, efi_value - KERN_VIRT_OFFSET
+	mov rdi, [rax]			; Give us the multiboot info we want.
 	mov rsp, qword (stack_top)
 	and rsp, -16	; Guarantee that we're in fact, aligned correctly.	
 
@@ -98,8 +103,7 @@ kern_start:
 
 	; Ensure we still get out GDT in higher half
 	lea rax, [gdt_64.gdtpointer]
-	add rax, KERN_VIRT_OFFSET
-	jmp $
+	; add rax, KERN_VIRT_OFFSET
 	lgdt [rax]
 
 	extern kern_init

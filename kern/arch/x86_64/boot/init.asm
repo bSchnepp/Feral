@@ -96,7 +96,8 @@ _start:
 	jne boot_panic
 	
 	; Push ebx for when we need it later. (holds multiboot struct)
-	mov [multiboot_value - KERN_VIRT_OFFSET], ebx
+	mov eax, multiboot_value - KERN_VIRT_OFFSET
+	mov [eax], ebx
 
 	; Check CPUID...
 	pushfd 
@@ -158,17 +159,19 @@ create_page_tables:
 	; We'll use ECX for this (we already clobbered it earlier from the checking for CPUID.)
 	xor ecx, ecx
 
-
+	push ebx
 .map_page_tables:
 	; Use huge pages (2MB), map at 2MB * ecx.
 	mov eax, 0x200000
 	mul ecx
 	or eax, 10000011b	; Present, writable, and huge.
-	mov [(p2_table - KERN_VIRT_OFFSET) + ecx * 8], eax	; And now write it to the table.
+	mov ebx, (p2_table - KERN_VIRT_OFFSET)
+	mov [ebx + ecx * 8], eax	; And now write it to the table.
 
 	inc ecx	; Increment it...
 	cmp ecx, 512	; P2 needs 512 entries. (one gigabyte of identity mapping.)
 	jne .map_page_tables
+	pop ebx
 
 
 ; OK, now we need to enable paging.
@@ -236,7 +239,8 @@ kern_start:
 	mov fs, ax
 	mov gs, ax
 	
-	mov edi, [multiboot_value - KERN_VIRT_OFFSET]			; Give us the multiboot info we want.
+	mov rax, multiboot_value - KERN_VIRT_OFFSET
+	mov rdi, [rax]			; Give us the multiboot info we want.
 	mov rsp, qword (stack_top)
 	and rsp, -16	; Guarantee that we're in fact, aligned correctly.	
 
