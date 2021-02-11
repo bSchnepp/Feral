@@ -24,6 +24,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
  */
 
+#include <feral/stdtypes.h>
+#include <feral/feralstatus.h>
+
 #ifndef _FERAL_X86_64_PAGE_FLAGS_H_
 #define _FERAL_X86_64_PAGE_FLAGS_H_
 
@@ -90,5 +93,6 @@ typedef struct PageMapEntry
 } PACKED PageMapEntry;
 
 FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels);
+VOID FlushTLB(VOID);
 
 #endif

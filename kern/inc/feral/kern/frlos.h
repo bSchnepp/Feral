@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining  a copy of the software and accompanying documentation covered by
@@ -34,6 +34,8 @@ IN THE SOFTWARE.
 #define _FERAL_FRLOS_H_
 
 /* All kernel functions should return a FERALSTATUS. */
+FERALSTATUS KiBackspace(VOID);
+FERALSTATUS KiPutChar(CHAR c);
 FERALSTATUS KiPrintLine(STRING string);
 FERALSTATUS KiPrintGreyLine(STRING string);
 FERALSTATUS KiPrintWarnLine(STRING string);

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019, Brian Schnepp
+Copyright (c) 2019, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -36,8 +36,6 @@ IN THE SOFTWARE.
 #include <arch/x86_64/cpufuncs.h>
 #include <arch/x86_64/mm/pageflags.h>
 
-
-extern void x86_install_idt(IDTPointer *Pointer);
 extern void x86_divide_by_zero(VOID);
 extern void x86_interrupt_3(VOID);
 extern void x86_interrupt_14(VOID);
@@ -45,7 +43,6 @@ extern void x86_interrupt_33(VOID);
 
 extern VOID VgaSwapBuffers(VOID);
 
-volatile void x86SetupIDTEntries(VOID);
 void x86DisablePIC(VOID);
 INTERRUPT void DivideByZero(x86InterruptFrame *Frame);
 INTERRUPT void GenericHandler(x86InterruptFrame *Frame);
@@ -53,6 +50,8 @@ INTERRUPT void GenericHandlerPIC1(x86InterruptFrame *Frame);
 INTERRUPT void GenericHandlerPIC2(x86InterruptFrame *Frame);
 INTERRUPT void DoubleFaultHandler(x86InterruptFrame *Frame);
 INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame);
+INTERRUPT void PageFaultHandler(x86InterruptFrame *Frame);
+INTERRUPT void PITHandler(x86InterruptFrame *Frame);
 
 
 
@@ -76,41 +75,41 @@ void x86DisablePIC(VOID)
 	x86outb(X86_PIC_2_DATA, 0xFF);
 }
 
-INTERRUPT void GenericHandlerPIC1_IRQ7(x86InterruptFrame *Frame)
-{
-	/* Ignore number 7. */
-	x86PICSendEOIPIC1();
-}
-
 INTERRUPT void DivideByZero(x86InterruptFrame *Frame)
 {
+	UNUSED(Frame);
 	KiPrintFmt("DIVIDING BY ZERO!!!\n");
 }
 
 INTERRUPT void GenericHandler(x86InterruptFrame *Frame)
 {
+	UNUSED(Frame);
 	KiPrintFmt("Unhandled Interrupt!\n");
 }
 
 INTERRUPT void GenericHandlerPIC1(x86InterruptFrame *Frame)
 {
+	UNUSED(Frame);
 	KiPrintFmt("Unhandled Interrupt! (PIC1) \n");
 	x86PICSendEOIPIC1();
 }
 
 INTERRUPT void GenericHandlerPIC2(x86InterruptFrame *Frame)
 {
+	UNUSED(Frame);
 	KiPrintFmt("Unhandled Interrupt! (PIC2) \n");
 	x86PICSendEOIPIC2();
 }
 
 INTERRUPT void DoubleFaultHandler(x86InterruptFrame *Frame)
 {
+	UNUSED(Frame);
 	KiStopError(STATUS_ERROR);
 }
 
 INTERRUPT void PageFaultHandler(x86InterruptFrame *Frame)
 {
+	UNUSED(Frame);
 	KiStopError(STATUS_ERROR);
 }
 
@@ -118,6 +117,7 @@ static UINT8 ScreenTimer = 0;
 
 INTERRUPT void PITHandler(x86InterruptFrame *Frame)
 {
+	UNUSED(Frame);
 	/* Invoke switching of process or something. */
 	if (++ScreenTimer == 16)
 	{
@@ -161,17 +161,17 @@ CHAR ApplyShiftIfNeeded(CHAR In)
 
 #include <keymaps/charmap.inl>
 
-void CheckStatusCode(UINT8 In)
+static void CheckStatusCode(UINT8 In);
+
+static void CheckStatusCode(UINT8 In)
 {
 	BOOL Released = (In & 0x80) != 0x00;
 	UINT8 Index = In & 0x7F;
-	const CHAR *Content = PS2Charmap[Index];
+	CONST CHAR *Content = PS2Charmap[Index];
 
 	UINT64 MaxLength = 6; /* Length of "LShift" */
 	UINT64 ContentLength = 0;
 	KiGetStringLength(Content, &ContentLength);
-	BOOL LeftShift = FALSE;
-	BOOL RightShift = FALSE;
 
 	UINT64 CompareLength
 		= (ContentLength < MaxLength) ? ContentLength : MaxLength;
@@ -223,7 +223,8 @@ void CheckStatusCode(UINT8 In)
 }
 
 /* TODO: Support new keymaps... */
-CHAR InternalConvertPS2KeyToASCII(CHAR In)
+static CHAR InternalConvertPS2KeyToASCII(CHAR In);
+static CHAR InternalConvertPS2KeyToASCII(CHAR In)
 {
 	/* TODO: convert this to a lookup table... */
 	UINT64 ContentLength = 0;
@@ -253,12 +254,12 @@ CHAR InternalConvertPS2KeyToASCII(CHAR In)
 /* We'll need to pull this out into a proper driver later. */
 INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
 {
-	UINT8 Status;
+	UNUSED(Frame);
 	CHAR Keycode;
 	Keycode = x86inb(0x60); /* Data is 0x60. */
 	CheckStatusCode(Keycode);
 	CHAR Letter = InternalConvertPS2KeyToASCII(Keycode);
-	CHAR Buffer[2] = {"\0", "\0"};
+	CHAR Buffer[2] = {'\0', '\0'};
 	Buffer[0] = Letter;
 	Buffer[1] = '\0';
 	if (Letter && (Keycode & 0x7F) == Keycode)
@@ -299,7 +300,7 @@ INTERRUPT void PS2KeyboardHandler(x86InterruptFrame *Frame)
  * 1F		FPU Error???
  */
 
-volatile void x86SetupIDTEntries()
+void x86SetupIDTEntries()
 {
 	/* In the base case, ensure everything is filled by default. */
 	for (UINTN i = 0; i < 255; ++i)

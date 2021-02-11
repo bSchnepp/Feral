@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2018, 2019, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -47,6 +47,7 @@ FERALSTATUS KiUpdateFirmwareFunctions(
 {
 	CurrentCharMap = CharMap;
 	BackingFunctions = Table;
+	return STATUS_SUCCESS;
 }
 
 FERALSTATUS KiPutChar(CHAR c)
@@ -55,7 +56,7 @@ FERALSTATUS KiPutChar(CHAR c)
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS KiBackspace()
+FERALSTATUS KiBackspace(VOID)
 {
 	BackingFunctions->Backspace();
 	return STATUS_SUCCESS;
@@ -96,6 +97,8 @@ FERALSTATUS KiPrint(STRING string)
 
 FERALSTATUS KiMoveCurrentPosition(UINT16 X, UINT16 Y)
 {
+	UNUSED(X);
+	UNUSED(Y);
 	return STATUS_UNSUPPORTED_OPERATION;
 }
 
@@ -125,110 +128,6 @@ FERALSTATUS KiPrintWarnLine(STRING string)
 
 #endif
 /* TODO: implement for other platforms. */
-
-
-/* Internal function: suppress warning (for now) */
-VOID internalItoa(UINT64 val, STRING buf);
-VOID internalSignedItoa(INT64 val, STRING buf);
-VOID internalItoaBaseChange(UINT64 val, STRING buf, UINT8 radix);
-
-
-VOID internalItoaBaseChange(UINT64 val, STRING buf, UINT8 radix)
-{
-	UINT64 len = 0;
-	/* No point in continuing if it's zero. Just give '0' back. */
-	if (val == 0)
-	{
-		*buf = '0';
-		*(buf + 1) = '\0';
-		return;
-	}
-	/* Weird behavior if you exceed 10 + 26 + 26 as radix. */
-	for (UINT64 valCopy = val; valCopy != 0; valCopy /= radix)
-	{
-		/* We need the remainder to see how to encode. */
-		CHAR rem = valCopy % radix;
-		if (rem <= 9 && rem >= 0)
-		{
-			/* It's already a number. Just encode in ASCII. */
-			buf[len++] = rem + '0';
-		}
-		else if (rem < 35)
-		{
-			/* Encode the number as a lowercase letter. */
-			buf[len++] = (rem - 10) + 'a';
-		}
-		else
-		{
-			/* Encode as uppercase. */
-			buf[len++] = (rem - 36) + 'A';
-		}
-	}
-
-	/* It's written BACKWARDS. So flip the order of the string. */
-	for (UINT64 i = 0; i < len / 2; ++i)
-	{
-		CHAR tmp = buf[i];
-		buf[i] = buf[len - i - 1];
-		buf[len - i - 1] = tmp;
-	}
-
-	/* Terminate the string. */
-	buf[len] = '\0';
-}
-
-/*
-	We don't have a kmalloc() yet, so we can't just free and alloc whenever
-   we want. Thus, our internal itoa _must_ be in-place.
-
-	buf must be at least size 2, and is at most going to use 21 characters.
-*/
-VOID internalItoa(UINT64 val, STRING buf)
-{
-	internalItoaBaseChange(val, buf, 10);
-}
-
-
-
-/*
-	We don't have a kmalloc() yet, so we can't just free and alloc whenever
-   we want. Thus, our internal itoa _must_ be in-place.
-
-	buf must be at least size 2, and is at most going to use 22 characters.
-*/
-VOID internalSignedItoa(INT64 val, STRING buf)
-{
-	UINT64 len = 0;
-	UINT64 base = 10;
-
-	if (val >= 0)
-	{
-		return internalItoa(val, buf);
-	}
-
-	/* We can assume we're negative: now we can avoid doing / or %
-	 * on a negative value.
-	 */
-	for (INT64 overzero = 0 - val; overzero != 0; overzero /= base)
-	{
-		CHAR rem = overzero % base;
-		buf[len++] = rem + '0';
-	}
-
-	/* Append the -. Put it at the END since it'll be flipped soon. */
-	buf[len++] = '-';
-
-	/* Flip the string around. */
-	for (UINT64 i = 0; i < len / 2; ++i)
-	{
-		CHAR tmp = buf[i];
-		buf[i] = buf[len - i - 1];
-		buf[len - i - 1] = tmp;
-	}
-
-	/* Terminate the string. */
-	buf[len] = '\0';
-}
 
 FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 {
@@ -277,7 +176,7 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 				/* Create a buffer to store in. Integer is never
 				 * longer than 20, so... */
 				CHAR buf[21] = {0};
-				internalSignedItoa((UINT64)valistnext, buf);
+				KiItoaSigned((UINT64)valistnext, buf);
 				KiPrint(buf);
 			}
 			else if (cur == 'l')
@@ -287,7 +186,7 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 				/* Create a buffer to store in. Integer is never
 				 * longer than 20, so... */
 				CHAR buf[21] = {0};
-				internalSignedItoa((UINT64)valistnext, buf);
+				KiItoaSigned((UINT64)valistnext, buf);
 				KiPrint(buf);
 			}
 			else if (cur == 'u')
@@ -297,7 +196,7 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 				/* Create a buffer to store in. Integer is never
 				 * longer than 21, so... */
 				CHAR buf[22] = {0};
-				internalItoa(valistnext, buf);
+				KiItoa(valistnext, buf);
 				KiPrint(buf);
 			}
 			else if (cur == 'x')
@@ -307,7 +206,7 @@ FERALSTATUS KiPrintFmt(const STRING fmt, ...)
 				/* Create a buffer to store in. Integer is never
 				 * longer than 16, so... */
 				CHAR buf[17] = {0};
-				internalItoaBaseChange(valistnext, buf, 16);
+				KiItoaBase(valistnext, 16, buf);
 				KiPrint(buf);
 			}
 			else if (cur == '%')

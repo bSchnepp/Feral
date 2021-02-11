@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, 2020 Brian Schnepp
+Copyright (c) 2018, 2019, 2020, 2021 Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -47,7 +47,7 @@ FERALSTATUS KeBootstrapSystem(VOID);
 VOID KiSystemStartup(KrnlEnvironmentBlock *EnvBlock);
 
 /* temporary test */
-extern VOID SerialDoKShellPrompt();
+extern VOID SerialDoKShellPrompt(VOID);
 
 /**
  * @brief The main system startup point, after firmware initialization

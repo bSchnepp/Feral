@@ -1,7 +1,10 @@
 #ifndef _INLINE_CHARMAP_INL_
 #define _INLINE_CHARMAP_INL_
 
-static UINT8 **DefaultCharMap =
+#define CHARMAP_NUM_ENTRIES (62)
+#define CHARMAP_BITMAP_HEIGHT (8)
+
+static UINT8 DefaultCharMap[CHARMAP_NUM_ENTRIES][CHARMAP_BITMAP_HEIGHT] =
 {
 	{
 		0b01111110,

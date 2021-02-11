@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020, Brian Schnepp
+Copyright (c) 2020, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -74,8 +74,8 @@ FERALSTATUS KiCompareMemory(IN CONST VOID* Source, IN CONST VOID* Dest,
 
 	for (UINT64 i = 0; i < Amount; i++)
 	{
-		UINT_PTR* Src = (Source + i);
-		UINT_PTR* Dst = (Dest + i);
+		UINT_PTR* Src = (UINT_PTR*)(Source + i);
+		UINT_PTR* Dst = (UINT_PTR*)(Dest + i);
 		if (*Src != *Dst)
 		{
 			*Val = FALSE;

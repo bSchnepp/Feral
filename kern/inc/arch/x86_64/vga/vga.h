@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining  a copy of the software and accompanying documentation covered by
@@ -94,19 +94,19 @@ extern "C"
 	VOID VgaPutChar(CHAR letter);
 
 	VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background,
-		CHAR* string, DWORD length, DWORD posx, DWORD posy);
+		STRING String, DWORD length, DWORD posx, DWORD posy);
 
 	VOID VgaPrint(VgaColorValue foreground, VgaColorValue background,
-		CHAR* string, DWORD length);
+		STRING String, DWORD length);
 
 	VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background,
-		CHAR* string, DWORD length);
+		STRING String, DWORD length);
 
 	VOID VgaAutoPrintln(VgaColorValue Foreground, VgaColorValue Background,
-		CHAR* String);
+		STRING String);
 
 	VOID VgaAutoPrint(VgaColorValue Foreground, VgaColorValue Background,
-		CHAR* String);
+		STRING String);
 
 	VOID VgaMoveCursor(DWORD PosX, DWORD PosY);
 

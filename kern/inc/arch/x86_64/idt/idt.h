@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2018, 2019, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -71,8 +71,12 @@ typedef struct IDTPointer
 
 void x86InitializeIDT(VOID);
 
-volatile void x86IDTSetGate(
+void x86SetupIDTEntries(VOID);
+
+void x86IDTSetGate(
 	IN UINT8 Number, IN UINT_PTR Base, IN UINT16 Selector, IN UINT8 Flags);
+
+void x86_install_idt(IDTPointer *Pointer);
 
 /* A couple of macros we'll need for calling convention purposes. */
 

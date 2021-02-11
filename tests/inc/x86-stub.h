@@ -60,8 +60,6 @@ UINT32 cpuid_family_number();
 VOID VgaPrepareEnvironment();
 VOID KiRestoreInterrupts(BOOL Value);
 VOID *get_initial_p4_table();
-VOID VgaPrintln(
-	UINT16 foreground, UINT16 background, CHAR *string, DWORD length);
 VOID x86_write_cr3(UINT64 cr3);
 
 
@@ -194,10 +192,11 @@ VOID KiRestoreInterrupts(BOOL Value)
 
 VOID *get_initial_p4_table()
 {
+	return NULLPTR;
 }
 
 VOID VgaPrintln(
-	UINT16 foreground, UINT16 background, CHAR *string, DWORD length)
+	UINT16 foreground, UINT16 background, STRING string, DWORD length)
 {
 	printf("%s\n", string);
 }

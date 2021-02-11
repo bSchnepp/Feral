@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020, Brian Schnepp
+Copyright (c) 2020, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -26,6 +26,7 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
+#include <arch/x86_64/mm/paging.h>
 #include <arch/x86_64/mm/pageflags.h>
 
 #include <mm/mm.h>
@@ -35,17 +36,6 @@ IN THE SOFTWARE.
  * @file arch/x86_64/paging.c
  * @brief Definitions for x86-specific paging routines
  */
-
-UINT_PTR ConvertPageEntryToAddress(PageMapEntry *Entry)
-{
-	UINT64 UnhandledAddress = PAGE_ALIGN(Entry->Raw);
-	if (UnhandledAddress >> 47)
-	{
-		/* Higher half address... mirror bit 48. */
-		UnhandledAddress |= 0xFFFF000000000000;
-	}
-	return (UINT_PTR)(UnhandledAddress);
-}
 
 /**
  * Finds the page levels required to allocate a specific, 4KiB aligned
@@ -78,7 +68,7 @@ FERALSTATUS x86FindPageLevels(UINT64 Address, IN OUT UINT16 *Levels)
  * @see x86MapAddress
  * @see x86UnmapAddress
  */
-VOID FlushTLB()
+VOID FlushTLB(VOID)
 {
 	UINT64 Tmp;
 	__asm__ volatile(
@@ -284,7 +274,6 @@ FERALSTATUS x86MapAddress(
  */
 FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual)
 {
-	UINT16 Bitmask = 0xFFF; /* For now, only do 4096 byte pages. */
 	UINT16 PageLevels[4];
 	FERALSTATUS Err = x86FindPageLevels(Virtual, PageLevels);
 
@@ -409,7 +398,6 @@ FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection,
 
 	UINT16 PageLevels[4];
 
-	PageMapEntry Entry;
 	if (!PAddr)
 	{
 		/* find first free page with the right sizes... FIXME */
@@ -421,7 +409,7 @@ FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection,
 		VAddr = KERN_PHYS_TO_VIRT(PAddr);
 	}
 
-	x86FindPageLevels(PAddr, PageLevels);
+	x86FindPageLevels((UINT64)PAddr, PageLevels);
 
 	/* Essentially, we're facing a database problem here.
 	 * To avoid making a mess, we need essentially a transaction
@@ -436,9 +424,9 @@ FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection,
 	for (UINT64 PageIndex = 0; PageIndex < Pages; ++PageIndex)
 	{
 		BOOL PageStatus = FALSE;
-		UINT_PTR Addr = PAddr + (PageSize * PageIndex);
+		UINT_PTR Addr = (UINT_PTR)PAddr + (PageSize * PageIndex);
 		FERALSTATUS Status = GetMemoryAlreadyInUse(Addr, &PageStatus);
-		if (PageStatus)
+		if (PageStatus || Status != STATUS_SUCCESS)
 		{
 			return STATUS_MEMORY_PAGE_CONFLICT;
 		}
@@ -448,7 +436,7 @@ FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection,
 	for (UINT64 PageIndex = 0; PageIndex < Pages; ++PageIndex)
 	{
 		BOOL Unavailable = FALSE;
-		UINT_PTR Addr = VAddr + (PageSize * PageIndex);
+		UINT_PTR Addr = (UINT_PTR)VAddr + (PageSize * PageIndex);
 		x86ValidateVirtualAddress(PML4, Addr, &Unavailable);
 
 		if (Unavailable == TRUE)
@@ -460,19 +448,21 @@ FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection,
 	/* Alright, we're safe to allocate! */
 	for (UINT64 PageIndex = 0; PageIndex < Pages; ++PageIndex)
 	{
-		BOOL Unavailable = FALSE;
-		UINT_PTR Addr = VAddr + (PageSize * PageIndex);
-		FERALSTATUS Status = x86MapAddress(PML4, PAddr, VAddr);
+		FERALSTATUS Status
+			= x86MapAddress(PML4, (UINT_PTR)PAddr, (UINT_PTR)VAddr);
 		if (Status != STATUS_SUCCESS)
 		{
 			return Status;
 		}
 	}
+	*Result = VAddr;
 	return STATUS_SUCCESS;
 }
 
 FERALSTATUS MmKernelDeallocPages(IN UINT64 Pages, IN VOID *Address)
 {
 	/* Not yet implemented */
+	UNUSED(Pages);
+	UNUSED(Address);
 	return STATUS_SUCCESS;
 }

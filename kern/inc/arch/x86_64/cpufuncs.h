@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Brian Schnepp
+Copyright (c) 2018, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -40,6 +40,8 @@ UINT64 x86_read_cr3(void);
 
 VOID x86_write_cr0(UINT64 val);
 VOID x86_write_cr3(UINT64 val);
+
+VOID x86_io_stall(VOID);
 
 #define INTERRUPT __attribute__((interrupt))
 

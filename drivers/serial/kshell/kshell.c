@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020 Brian Schnepp
+Copyright (c) 2020, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining  a copy of the software and accompanying documentation covered by
@@ -42,7 +42,9 @@ CONST STRING Commands[] = {
 
 static CHAR CmdBuffer[1024];
 
-VOID SerialDoKShellPrompt()
+VOID SerialDoKShellPrompt(VOID);
+
+VOID SerialDoKShellPrompt(VOID)
 {
 	SerialSend(COM1_PORT, Prompt, PromptLen);
 	KiSetMemoryBytes(CmdBuffer, 0, 1024);

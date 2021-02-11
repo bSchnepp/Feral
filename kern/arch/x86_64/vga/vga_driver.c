@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2018, 2019, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -32,12 +32,14 @@ IN THE SOFTWARE.
 
 #include <arch/x86_64/vga/vga.h>
 #include <arch/x86_64/vga/vgaregs.h>
+
 #include <arch/x86_64/cpuio.h>
+#include <arch/x86_64/cpufuncs.h>
 
 #include <arch/x86_64/mm/pageflags.h>
 
+
 static VgaContext CurGraphicsContext = {0};
-static UINT16 OtherBuffer[80 * 25];
 static VgaContext *CurVgaContext;
 
 
@@ -63,12 +65,11 @@ VOID internalSetItem(UINT16 Row, UINT16 Col, UINT16 content)
 
 VOID internalVgaPushUp(VOID)
 {
-	UINT16 Row = 0;
 	UINT16 RowSize = 2 * (CurVgaContext->ScreenWidth);
-	char *Src = CurVgaContext->SwappedBuffer + RowSize;
-	char *Dst = CurVgaContext->SwappedBuffer + 0;
-	char *LastRow = CurVgaContext->SwappedBuffer
-			+ ((CurVgaContext->ScreenHeight - 1) * RowSize);
+	UINT8 *Src = CurVgaContext->SwappedBuffer + RowSize;
+	UINT8 *Dst = CurVgaContext->SwappedBuffer + 0;
+	UINT8 *LastRow = CurVgaContext->SwappedBuffer
+			 + ((CurVgaContext->ScreenHeight - 1) * RowSize);
 	UINT64 Amt = 2 * (CurVgaContext->ScreenWidth)
 		     * (CurVgaContext->ScreenHeight - 1);
 	KiCopyMemory(Dst, Src, Amt);
@@ -296,11 +297,11 @@ VOID VgaPutChar(CHAR letter)
 }
 
 VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background,
-	CHAR *string, DWORD length, DWORD posx, DWORD posy)
+	STRING String, DWORD length, DWORD posx, DWORD posy)
 {
 	UINT64 index = 0;
 
-	for (CHAR c = *string; index < length; c = string[++index])
+	for (CHAR c = String[0]; index < length; c = String[++index])
 	{
 		if (posx >= CurVgaContext->ScreenWidth)
 		{
@@ -340,9 +341,9 @@ VOID VgaStringEntry(VgaColorValue foreground, VgaColorValue background,
 }
 
 VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background,
-	CHAR *string, DWORD length)
+	STRING String, DWORD length)
 {
-	VgaStringEntry(foreground, background, string, length,
+	VgaStringEntry(foreground, background, String, length,
 		CurVgaContext->CurrentCol, CurVgaContext->CurrentRow);
 	CurVgaContext->CurrentRow++;
 	CurVgaContext->CurrentCol = 0;
@@ -356,7 +357,7 @@ VOID VgaPrintln(VgaColorValue foreground, VgaColorValue background,
 }
 
 VOID VgaAutoPrintln(
-	VgaColorValue Foreground, VgaColorValue Background, CHAR *String)
+	VgaColorValue Foreground, VgaColorValue Background, STRING String)
 {
 	UINT64 Length = 0;
 	KiGetStringLength(String, &Length);
@@ -364,7 +365,7 @@ VOID VgaAutoPrintln(
 }
 
 VOID VgaAutoPrint(
-	VgaColorValue Foreground, VgaColorValue Background, CHAR *String)
+	VgaColorValue Foreground, VgaColorValue Background, STRING String)
 {
 	UINT64 Length = 0;
 	KiGetStringLength(String, &Length);

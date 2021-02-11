@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2018, 2019, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining  a copy of the software and accompanying documentation covered by
@@ -33,6 +33,7 @@ extern "C"
 #endif
 
 #include <stdint.h>
+#include <stddef.h>
 
 /*  Some function decorators.*/
 /* This is an input to a function. */
@@ -164,12 +165,11 @@ typedef int32_t INTN;
 
 	/* Ensure we define wchar_t. This is important, as we *really* love
 	 * Unicode. */
-	typedef unsigned short wchar_t;
-	typedef wchar_t* WSTRING;
+	typedef const wchar_t* WSTRING;
 	typedef wchar_t WCHAR;
 	/* Also define WIDE CHAR and WIDE STRING. */
 
-	typedef CHAR* STRING;
+	typedef const CHAR* STRING;
 
 	typedef UINT32 COLORREF;
 	typedef int16_t CSHORT;
@@ -223,6 +223,10 @@ typedef int32_t INTN;
 
 #if defined(__cplusplus)
 }
+#endif
+
+#ifndef UNUSED
+#define UNUSED(x) ((void)(x))
 #endif
 
 #include <feral/feraluser.h>

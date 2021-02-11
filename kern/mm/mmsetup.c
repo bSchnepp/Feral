@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019, 2020, Brian Schnepp
+Copyright (c) 2019, 2020, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -40,8 +40,9 @@ extern UINTN kern_start;
 extern UINTN kern_end;
 
 /* Convert the addresses into integers for easier comparison. */
-static UINT_PTR kernel_start = &kern_start;
-static UINT_PTR kernel_end = &kern_end;
+static UINT_PTR kernel_start = (UINT_PTR)&kern_start;
+/* TODO: Use kernel_end? */
+
 
 typedef struct MemoryManagementState
 {
@@ -114,7 +115,7 @@ FERALSTATUS FERALAPI KiInitializeMemMgr(MmCreateInfo *info)
 	const UINT64 HeapSize = (1024 * 1024 * 8);
 	UINT_PTR HeapAddr = ((PmmLocation) + BufferSize);
 	HeapAddr += FrameSize;
-	MmCreateAllocatorState(1, HeapAddr, HeapSize);
+	MmCreateAllocatorState(1, (void *)HeapAddr, HeapSize);
 	for (UINT_PTR Addr = HeapAddr; Addr < (HeapSize);
 		Addr += MmState.pAllocInfo->FrameSize)
 	{

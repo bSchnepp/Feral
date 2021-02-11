@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018 2020, Brian Schnepp
+Copyright (c) 2018, 2020, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining  a copy of the software and accompanying documentation covered by
@@ -26,6 +26,8 @@ IN THE SOFTWARE.
 
 
 #include <feral/stdtypes.h>
+#include <feral/kern/frlos.h>
+
 #include <ddk/frlddk.h>
 #include <ddk/interface.h>
 
@@ -103,6 +105,7 @@ VOID SerialRecv(UINT16 Port, UINT64 Amt, BYTE *Buf)
 
 FERALSTATUS InitSerialDevice(VOID *OutData)
 {
+	UNUSED(OutData);
 	KiPrintFmt("Initializing serial...\n");
 
 #if defined(__x86_64__) || defined(__i386__)

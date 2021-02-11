@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020 Brian Schnepp
+Copyright (c) 2020, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -30,6 +30,9 @@ IN THE SOFTWARE.
 #include <arch/x86_64/cpufuncs.h>
 #include <arch/x86_64/idt/idt.h>
 
+#include <arch/x86_64/mm/pageflags.h>
+#include <arch/x86_64/mm/paging.h>
+
 #include <feral/feralstatus.h>
 #include <feral/stdtypes.h>
 #include <feral/kern/frlos.h>
@@ -48,7 +51,9 @@ static GDTEntry GDTEntries[5];
 static IDTDescriptor IDT[256];
 static IDTPointer IDTPTR;
 
-VOID x86InitializeGDT();
+VOID x86InitializeGDT(VOID);
+VOID KiStartupMachineDependent(VOID);
+VOID x86InitializeGDT(VOID);
 
 VOID KiStartupMachineDependent(VOID)
 {
@@ -59,7 +64,7 @@ VOID x86_install_gdt(GDTPointer *Pointer);
 
 
 
-VOID x86InitializeGDT()
+VOID x86InitializeGDT(VOID)
 {
 	/* setup gdt and idt... */
 	UINT16 Limit = 5;
@@ -111,7 +116,7 @@ VOID x86InitializeGDT()
 	GDTEntries[4].AsBits.ReadWritable = 1;
 	GDTEntries[4].AsBits.PrivLevel = 3;
 
-	GlobalGDT.Limit = (sizeof(GDTEntry) * 5) - 1;
+	GlobalGDT.Limit = (sizeof(GDTEntry) * Limit) - 1;
 	GlobalGDT.Base = (UINT64)(GDTEntries);
 	x86_install_gdt(&GlobalGDT);
 }
@@ -154,7 +159,7 @@ void x86InitializeIDT()
 	x86outb(X86_PIC_2_DATA, 0x80); /* Allow all the PIC 2 IRQs..? */
 
 	IDTPTR.Limit = ((sizeof(IDTDescriptor)) * 256) - 1;
-	UINT_PTR Location = (&IDT);
+	UINT_PTR Location = (UINT_PTR)(&IDT);
 	IDTPTR.Location = Location;
 	x86SetupIDTEntries();
 
@@ -164,8 +169,7 @@ void x86InitializeIDT()
 	KiPrintFmt("IDT Ready to work...\n");
 }
 
-volatile void x86IDTSetGate(
-	UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
+void x86IDTSetGate(UINT8 Number, UINT_PTR Base, UINT16 Selector, UINT8 Flags)
 {
 	/* 0 - 255 happens to be valid, so no need for checking. */
 	IDTDescriptor Descriptor = {0};

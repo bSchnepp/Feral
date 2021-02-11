@@ -30,6 +30,10 @@ IN THE SOFTWARE.
 
 #include <feral/stdtypes.h>
 #include <feral/feralstatus.h>
+#include <feral/kern/krnlmemfuncs.h>
+
+#include <stdlib.h>
+#include <string.h>
 
 /* stubs for some assembly stuff the kernel expects. Maybe fixme?
  */

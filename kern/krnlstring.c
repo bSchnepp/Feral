@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, 2019, Brian Schnepp
+Copyright (c) 2018, 2019, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -42,11 +42,14 @@ FERALSTATUS FrlCreateString(
 FERALSTATUS FrlDeleteString(IN FERALSTRING* String)
 {
 	/* TODO */
+	UNUSED(String);
 	return STATUS_SUCCESS;
 }
 
 FERALSTATUS FrlCloneString(IN FERALSTRING* Source, IN FERALSTRING* OutLocation)
 {
 	/* TODO */
+	UNUSED(Source);
+	UNUSED(OutLocation);
 	return STATUS_SUCCESS;
 }

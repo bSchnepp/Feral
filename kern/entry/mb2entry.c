@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020 Brian Schnepp
+Copyright (c) 2020, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -30,6 +30,7 @@ IN THE SOFTWARE.
  */
 
 #include <feral/stdtypes.h>
+#include <feral/kern/frlos.h>
 #include <stdint.h>
 
 #if defined(__x86_64__)
@@ -50,6 +51,7 @@ IN THE SOFTWARE.
 
 #include <krnl.h>
 #include <kern_ver.h>
+#include <feral/kern/frlos.h>
 
 
 /* hack: include the serial driver in a brute forcey way. */
@@ -57,8 +59,8 @@ IN THE SOFTWARE.
 
 /* The initial memory map is done at the end of the kernel memory. */
 extern UINTN kern_end;
-/* FIXME: There's a buffer overrun somewhere. */
-static UINT_PTR kernel_end = &(kern_end) + 4096;
+/* FIXME: There's a buffer overrun somewhere. We shouldn't need extra space. */
+static UINT_PTR kernel_end = ((UINT_PTR) & (kern_end)) + 4096;
 
 /* hack for now */
 static UINT64 MemoryRangeCount;
@@ -78,12 +80,15 @@ static CHAR *cpu_vendor_msg = "CPU Vendor: ";
 
 
 
+static VOID InternalPrintRegister(UINT32 reg);
+static VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3);
+
 /**
  * @internal
  * @brief Reads a register as a series of ASCII characters, and prints
  * to the VGA console.
  */
-VOID InternalPrintRegister(UINT32 reg)
+static VOID InternalPrintRegister(UINT32 reg)
 {
 	for (int i = 0; i < 4; i++)
 	{
@@ -97,7 +102,7 @@ VOID InternalPrintRegister(UINT32 reg)
  * @brief Reads the results of the cpuid function for the CPU vendor,
  * and writes them to the VGA console.
  */
-VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
+static VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
 {
 	VgaAutoPrint(VGA_GREEN, VGA_BLACK, cpu_vendor_msg);
 	InternalPrintRegister(part1);
@@ -109,14 +114,15 @@ VOID InternalPrintCpuVendor(UINT32 part1, UINT32 part2, UINT32 part3)
 static KrnlFirmwareFunctions FirmwareFuncs = {0};
 static KrnlCharMap CharMap = {0};
 static KrnlEnvironmentBlock EnvBlock = {0};
-static KrnlPhysicalDisplay Display = {0};
 static SystemBootInfo BootInfo = {0};
 
-static STRING GetBiosFirmwareClaim();
+static STRING GetBiosFirmwareClaim(VOID);
 static VOID InternalVgaPrintln(STRING Str, UINT64 Len);
-static VOID InternalVgaBackspace();
+static VOID InternalVgaBackspace(VOID);
 
-static STRING GetBiosFirmwareClaim()
+static VOID HandleMemory(multiboot_tag_mmap *MemoryMap);
+
+static STRING GetBiosFirmwareClaim(VOID)
 {
 	return "PC Compatible BIOS (Multiboot 2)";
 }
@@ -131,7 +137,7 @@ static VOID InternalVgaPrintln(STRING Str, UINT64 Len)
 	VgaPrintln(VGA_WHITE, VGA_BLACK, Str, Len);
 }
 
-static VOID InternalVgaBackspace()
+static VOID InternalVgaBackspace(VOID)
 {
 	UINT16 X = 0;
 	UINT16 Y = 0;
@@ -158,7 +164,7 @@ static VOID InternalPutChar(CHAR C)
 	VgaPutChar(C);
 }
 
-VOID HandleMemory(multiboot_tag_mmap *MemoryMap)
+static VOID HandleMemory(multiboot_tag_mmap *MemoryMap)
 {
 	UINT64 *MemRangeHeader = (UINT64 *)kernel_end;
 	BootMemoryRange *MemRange = (BootMemoryRange *)(MemRangeHeader + 1);
@@ -166,7 +172,6 @@ VOID HandleMemory(multiboot_tag_mmap *MemoryMap)
 	multiboot_mmap_entry CurrentEntry = {0};
 
 	UINT64 Index = 0;
-	UINT64 AreasWritten = 0;
 	UINT64 MaxIndex = (MemoryMap->size) / (MemoryMap->entry_size);
 
 	/* We list all the memory there as either free or hardware reserved. */
@@ -217,7 +222,9 @@ VOID HandleMemory(multiboot_tag_mmap *MemoryMap)
 }
 
 /* FIXME: formally write a header for this function. */
-UINT_PTR get_initial_p4_table();
+UINT_PTR get_initial_p4_table(VOID);
+
+VOID kern_init(UINT32 MBINFO);
 
 VOID kern_init(UINT32 MBINFO)
 {
@@ -245,7 +252,6 @@ VOID kern_init(UINT32 MBINFO)
 	 *
 	 * Each of these tags is then processed based on the ID of it.
 	 */
-	uint64_t MaxMem = 0;
 	for (multiboot_tag *MultibootInfo
 		= (multiboot_tag *)((UINT_PTR)(MBINFO + 8));
 		MultibootInfo->type != MULTIBOOT_TAG_TYPE_END;
@@ -298,7 +304,7 @@ VOID kern_init(UINT32 MBINFO)
 				= (multiboot_tag_framebuffer_common
 						*)(MultibootInfo);
 
-			Framebuffer = mb_as_fb->framebuffer_addr;
+			Framebuffer = (VOID *)mb_as_fb->framebuffer_addr;
 			FramebufferBPP = mb_as_fb->framebuffer_bpp;
 			FramebufferHeight = mb_as_fb->framebuffer_height;
 			FramebufferWidth = mb_as_fb->framebuffer_width;
@@ -307,20 +313,20 @@ VOID kern_init(UINT32 MBINFO)
 					== MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT);
 
 			BootInfo.NumDisplays = 1;
-			BootInfo.FramebufferPAddrs = &(Framebuffer);
+			BootInfo.FramebufferPAddrs = (UINT_PTR *)&(Framebuffer);
 		}
 	}
 
-	UINT8 misc = VgaPrepareEnvironment(Framebuffer, FramebufferBPP,
-		FramebufferWidth, FramebufferHeight, FramebufferTextOnly);
+	VgaPrepareEnvironment(Framebuffer, FramebufferBPP, FramebufferWidth,
+		FramebufferHeight, FramebufferTextOnly);
 	KiBlankVgaScreen(FramebufferHeight, FramebufferWidth, VGA_BLACK);
 	VgaAutoPrintln(
 		VGA_WHITE, VGA_BLACK, "Starting initial kernel setup...");
 
 	CHAR BufBeginAddr[17];
 	CHAR BufEndAddr[17];
-	internalItoaBaseChange(FramebufferWidth, BufBeginAddr, 10);
-	internalItoaBaseChange(FramebufferHeight, BufEndAddr, 10);
+	KiItoa(FramebufferWidth, BufBeginAddr);
+	KiItoa(FramebufferHeight, BufEndAddr);
 	VgaAutoPrint(VGA_WHITE, VGA_BLACK, "VGA resolution is : ");
 	VgaAutoPrint(VGA_GREEN, VGA_BLACK, BufBeginAddr);
 	VgaAutoPrint(VGA_WHITE, VGA_BLACK, "x");
@@ -369,9 +375,6 @@ VOID kern_init(UINT32 MBINFO)
 
 	UINT32 familyStuff = cpuid_family_number();
 	UINT32 actualFamily = (familyStuff >> 8) & 15;
-	UINT32 extendedModel = (familyStuff >> 16) & (0xF);
-	UINT32 baseModel = (familyStuff >> 4) & (0xF);
-	UINT32 actualModel = baseModel + (extendedModel << 4);
 
 	if (actualFamily == 0x6 || actualFamily == 0xF)
 	{

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020, Brian Schnepp
+Copyright (c) 2020, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -37,5 +37,8 @@ x86MapAddress(PageMapEntry *PML4, UINT_PTR Physical, UINT_PTR Virtual);
 
 
 FERALSTATUS x86UnmapAddress(PageMapEntry *PML4, UINT_PTR Virtual);
+
+FERALSTATUS x86ValidateVirtualAddress(
+	IN PageMapEntry *PML4, IN UINT_PTR Address, OUT BOOL *Result);
 
 #endif

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020 Brian Schnepp
+Copyright (c) 2020, 2021, Brian Schnepp
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining  a copy of the software and accompanying documentation covered by
@@ -41,6 +41,11 @@ IN THE SOFTWARE.
 
 #define SERIAL_LINE_ENABLE_DLAB (0x80)
 #define SERIAL_LINE_ENABLE_FIFO (0xC7)
+
+VOID SerialConfigureBaudRate(UINT16 Port, UINT16 Divisor);
+VOID SerialSetInterrupts(UINT16 Port, UINT8 Bitmask);
+VOID SerialSetFlags(UINT16 Port, UINT8 Bitmask);
+VOID SerialSetMode(UINT16 Port, UINT8 Data);
 
 FERALSTATUS InitSerialDevice(VOID *OutData);
 VOID SerialSend(UINT16 Port, STRING c, UINT64 Len);

@@ -94,7 +94,6 @@ AllocatorState *MmCreateAllocatorState(
 			The first node needs to point to an area outside where
 			nodes will ever be written to.
 		 */
-		UINT_PTR NodeChunkSize = HeapSize / (sizeof(Node));
 		UINT_PTR *ReinterpretHeap
 			= (UINT_PTR *)(&(ArenaStart[Counter]) + NumArenas);
 
