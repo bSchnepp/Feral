@@ -192,3 +192,10 @@ FERALSTATUS SetMemoryAlreadyInUse(UINT_PTR Location, BOOL Status)
 		return STATUS_MEMORY_ACCESS_VIOLATION;
 	}
 }
+
+FERALSTATUS MmLookupFreeMemoryPage(OUT UINT_PTR *Location)
+{
+	UNUSED(Location);
+	/* Not yet implemented */
+	return STATUS_ERROR;
+}

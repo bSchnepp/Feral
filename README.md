@@ -93,8 +93,6 @@ and are only there to help in documentation.
 
 ## Overall goals:
  - Lightweight core kernel. Majority of functionality in drivers. Processes communiate to libos (syscalls go to a kernel table which tells a libos driver that this was called.)
- 
- - Much more clear, explicit kernel operations. Eliminate guessing--the kernel is *VERY* clear about exactly what it will do.
 
  - Drivers handle system calls to allow running "foreign" programs unmodified, such as the GNU Mach version of GCC, or everyone's favorite DOS game set on Mars.
 
