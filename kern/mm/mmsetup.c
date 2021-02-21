@@ -193,9 +193,40 @@ FERALSTATUS SetMemoryAlreadyInUse(UINT_PTR Location, BOOL Status)
 	}
 }
 
+/**
+ * @brief Looks for a free physical page in the current physical memory
+ * manager, which may be allocated freely in future operations.
+ *
+ * @author Brian Schnepp
+ * @param Location The resulting location that should be written to when
+ * a page is found. If no free page is found, it is set to 0.
+ *
+ * @return STATUS_SUCCESS on a free page located, STATUS_MEMORY_PAGE_FAILURE
+ * if none was found.
+ */
 FERALSTATUS MmLookupFreeMemoryPage(OUT UINT_PTR *Location)
 {
 	UNUSED(Location);
-	/* Not yet implemented */
-	return STATUS_ERROR;
+
+	for (UINT64 PageBlock = 0; PageBlock < MmState.MaxPAddr; PageBlock++)
+	{
+		for (UINT8 Bit = 0; Bit < 8; ++Bit)
+		{
+			if (((MmState.BitmaskUsedFrames[PageBlock])
+				    & (1 << Bit))
+				== 0)
+			{
+				/* A free page was found. */
+				*Location = (MmState.pAllocInfo->FrameSize
+						    * PageBlock * 8)
+					    + (Bit
+						    * MmState.pAllocInfo
+							      ->FrameSize);
+				return STATUS_SUCCESS;
+			}
+		}
+	}
+
+	*Location = 0;
+	return STATUS_MEMORY_PAGE_FAILURE;
 }
