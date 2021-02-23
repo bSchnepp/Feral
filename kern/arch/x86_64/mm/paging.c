@@ -429,7 +429,7 @@ FERALSTATUS MmKernelAllocPages(IN UINT64 Pages, IN KernMemProtect Protection,
 	{
 		BOOL PageStatus = FALSE;
 		UINT_PTR Addr = (UINT_PTR)PAddr + (PageSize * PageIndex);
-		FERALSTATUS Status = GetMemoryAlreadyInUse(Addr, &PageStatus);
+		FERALSTATUS Status = MmLookupPhysFrame(Addr, &PageStatus);
 		if (PageStatus || Status != STATUS_SUCCESS)
 		{
 			return STATUS_MEMORY_PAGE_CONFLICT;

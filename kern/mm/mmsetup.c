@@ -44,6 +44,14 @@ static UINT_PTR kernel_start = (UINT_PTR)&kern_start;
 /* TODO: Use kernel_end? */
 
 
+inline static BOOL InteralGetValueOfBit(UINT8 Val, UINT8 BitNum);
+
+inline static BOOL InteralGetValueOfBit(UINT8 Val, UINT8 BitNum)
+{
+	return ((Val) & (1 << BitNum)) != 0;
+}
+
+
 typedef struct MemoryManagementState
 {
 	/* We'll need to store how physical address are allocated. */
@@ -107,7 +115,7 @@ FERALSTATUS FERALAPI KiInitializeMemMgr(MmCreateInfo *info)
 	for (UINT_PTR Index = kernel_start; Index < (PmmLocation) + BufferSize;
 		Index += FrameSize)
 	{
-		VALIDATE_SUCCESS(SetMemoryAlreadyInUse(Index, TRUE));
+		VALIDATE_SUCCESS(MmAllocatePhysFrame(Index, TRUE));
 	}
 
 	/* Start the heap stuff up. No SMP support yet, so 1 hart. */
@@ -119,12 +127,12 @@ FERALSTATUS FERALAPI KiInitializeMemMgr(MmCreateInfo *info)
 	for (UINT_PTR Addr = HeapAddr; Addr < (HeapSize);
 		Addr += MmState.pAllocInfo->FrameSize)
 	{
-		VALIDATE_SUCCESS(SetMemoryAlreadyInUse(Addr, TRUE));
+		VALIDATE_SUCCESS(MmAllocatePhysFrame(Addr, TRUE));
 	}
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS GetMemoryAlreadyInUse(UINT_PTR Location, BOOL *Status)
+FERALSTATUS MmLookupPhysFrame(UINT_PTR Location, BOOL *Status)
 {
 	/* Can't talk about a physical address we don't have. */
 	if (Location > MmState.MaxPAddr)
@@ -150,7 +158,7 @@ FERALSTATUS GetMemoryAlreadyInUse(UINT_PTR Location, BOOL *Status)
 	return STATUS_SUCCESS;
 }
 
-FERALSTATUS SetMemoryAlreadyInUse(UINT_PTR Location, BOOL Status)
+FERALSTATUS MmAllocatePhysFrame(UINT_PTR Location, BOOL Status)
 {
 	/* Can't talk about a physical address we don't have. */
 	if (Location > MmState.MaxPAddr)
@@ -204,24 +212,21 @@ FERALSTATUS SetMemoryAlreadyInUse(UINT_PTR Location, BOOL Status)
  * @return STATUS_SUCCESS on a free page located, STATUS_MEMORY_PAGE_FAILURE
  * if none was found.
  */
-FERALSTATUS MmLookupFreeMemoryPage(OUT UINT_PTR *Location)
+FERALSTATUS MmLookupFreePhysFrame(OUT UINT_PTR *Location)
 {
-	UNUSED(Location);
-
+	UINT64 FrameSize = MmState.pAllocInfo->FrameSize;
+	volatile UINT8 *Bitmap = MmState.BitmaskUsedFrames;
 	for (UINT64 PageBlock = 0; PageBlock < MmState.MaxPAddr; PageBlock++)
 	{
 		for (UINT8 Bit = 0; Bit < 8; ++Bit)
 		{
-			if (((MmState.BitmaskUsedFrames[PageBlock])
-				    & (1 << Bit))
-				== 0)
+			if (InteralGetValueOfBit(Bitmap[PageBlock], Bit) == 0)
 			{
 				/* A free page was found. */
-				*Location = (MmState.pAllocInfo->FrameSize
-						    * PageBlock * 8)
-					    + (Bit
-						    * MmState.pAllocInfo
-							      ->FrameSize);
+				UINT64 Base = (FrameSize * PageBlock * 8);
+				UINT64 Offset = (Bit * FrameSize);
+
+				*Location = Base + Offset;
 				return STATUS_SUCCESS;
 			}
 		}
